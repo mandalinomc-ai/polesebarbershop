@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="format-detection" content="telephone=yes" />
+  <meta name="description" content="Polese Barbershop di Felice Polese — barbiere d'élite a Benevento. Nuovo salone in Corso Dante 45. Taglio, barba e grooming premium." />
+  <meta name="keywords" content="barbiere Benevento, barbershop Benevento, Felice Polese, Polese Barbershop, taglio uomo Benevento" />
+  <meta name="author" content="Felice Polese" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="geo.region" content="IT-BN" />
+  <meta name="geo.placename" content="Benevento" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="it_IT" />
+  <meta property="og:site_name" content="Polese Barbershop" />
+  <meta property="og:title" content="Polese Barbershop — Prossimamente | Benevento" />
+  <meta property="og:description" content="Barberia d'élite di Felice Polese. Nuovo locale Corso Dante 45, Benevento." />
+  <meta property="og:url" content="https://polesebarbershop.vercel.app/" />
+  <meta property="og:image" content="https://polesebarbershop.vercel.app/assets/images/og-cover.svg" />
+  <meta property="og:image:alt" content="Polese Barbershop — Felice Polese" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Polese Barbershop — Felice Polese" />
+  <meta name="twitter:description" content="Barberia d'élite a Benevento. Prossimamente Corso Dante 45." />
+  <meta name="twitter:image" content="https://polesebarbershop.vercel.app/assets/images/og-cover.svg" />
+
+  <title>Polese Barbershop — Prossimamente | Benevento</title>
+  <link rel="canonical" href="https://polesebarbershop.vercel.app/" />
+  <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/images/logo.svg" />
+  <link rel="manifest" href="site.webmanifest" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Vai al contenuto</a>
+
+  <!-- ═══ MODALITÀ COMING SOON (IS_COMING_SOON = true) ═══ -->
+  <div id="coming-soon" class="coming-soon-view bg-noise">
+    <div class="coming-soon-glow"></div>
+    <div class="watermark" aria-hidden="true"></div>
+
+    <div class="coming-soon-inner">
+      <img src="assets/images/logo.svg" alt="Polese Barbershop — monogramma Felice Polese" class="coming-soon-logo" width="120" height="120" />
+
+      <p class="coming-soon-brand" data-config="brand">FELICE POLESE</p>
+      <h1 class="coming-soon-title font-serif">Prossimamente</h1>
+
+      <p class="coming-soon-msg">
+        <span data-config="name">Polese Barbershop</span> di <span data-config="brand">Felice Polese</span>
+        si trasferisce nel nuovo salone d'élite in centro a Benevento.
+        Taglio sartoriale, barba curata e rasatura tradizionale — l'esperienza grooming che meriti.
+      </p>
+
+      <div class="coming-soon-address reveal visible">
+        <span class="eyebrow">Nuova sede</span>
+        <strong data-config="address">Corso Dante n. 45</strong>
+        <span><span data-config="postalCode">82100</span> <span data-config="city">Benevento</span> (<span data-config="province">BN</span>)</span>
+        <a class="map-link" data-config-href="maps" href="#" target="_blank" rel="noopener noreferrer">Apri in Google Maps →</a>
+      </div>
+
+      <div id="countdown" class="countdown reveal visible" aria-live="polite">
+        <div class="countdown-item">
+          <span class="countdown-value" data-unit="days">00</span>
+          <span class="countdown-label">Giorni</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-value" data-unit="hours">00</span>
+          <span class="countdown-label">Ore</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-value" data-unit="minutes">00</span>
+          <span class="countdown-label">Min</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-value" data-unit="seconds">00</span>
+          <span class="countdown-label">Sec</span>
+        </div>
+        <p class="countdown-done" hidden>Il nuovo salone è pronto ad accoglierti.</p>
+      </div>
+
+      <form id="notify-form" class="notify-form reveal visible" novalidate>
+        <p class="eyebrow">Resta aggiornato</p>
+        <input id="notify-name" class="input-lux" type="text" name="name" placeholder="Il tuo nome" required autocomplete="name" />
+        <input id="notify-contact" class="input-lux" type="text" name="contact" placeholder="WhatsApp o email" required autocomplete="tel" />
+        <button type="submit" class="btn btn-gold btn-magnetic">Avvisami all'apertura</button>
+        <p id="notify-feedback" class="notify-feedback" hidden role="status"></p>
+      </form>
+
+      <div class="coming-soon-social">
+        <a data-config-href="instagram" href="#" target="_blank" rel="noopener noreferrer me" aria-label="Instagram">
+          <span data-config="instagramHandle">@felicepolese_barber</span>
+        </a>
+        <a data-config-href="whatsapp" href="#" target="_blank" rel="noopener noreferrer" class="wa-link" hidden>WhatsApp</a>
+      </div>
+    </div>
+
+    <noscript>
+      <p style="max-width:640px;margin:1rem auto;padding:0 1rem;text-align:center;color:#A8A8A8;">
+        Polese Barbershop — barbiere a Benevento di Felice Polese. Prossima apertura Corso Dante 45.
+        Telefono: <span data-config="phoneDisplay">351 252 3087</span>.
+        Instagram: @felicepolese_barber.
+      </p>
+    </noscript>
+
+    <footer class="coming-soon-footer">
+      © <span data-config="name">Polese Barbershop</span> · <span data-config="brand">FELICE POLESE</span>
+    </footer>
+  </div>
+
+  <!-- ═══ SITO COMPLETO (IS_COMING_SOON = false) ═══ -->
+  <div id="full-site" hidden>
+    <header id="site-header" class="site-header">
+      <a href="#hero" class="header-logo">
+        <img src="assets/images/logo.svg" alt="Logo Polese Barbershop" width="44" height="44" />
+        <span data-config="name">Polese Barbershop</span>
+      </a>
+
+      <nav aria-label="Principale">
+        <ul class="nav-desktop">
+          <li><a href="#about">Chi siamo</a></li>
+          <li><a href="#services">Servizi</a></li>
+          <li><a href="#gallery">Galleria</a></li>
+          <li><a href="#contact">Contatti</a></li>
+        </ul>
+      </nav>
+
+      <a href="#contact" class="btn btn-gold btn-magnetic header-cta">Prenota</a>
+
+      <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-panel" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </header>
+
+    <div id="nav-backdrop" class="nav-backdrop" aria-hidden="true"></div>
+    <nav id="nav-panel" class="nav-panel" aria-label="Menu mobile">
+      <ul>
+        <li><a href="#about">Chi siamo</a></li>
+        <li><a href="#services">Servizi</a></li>
+        <li><a href="#gallery">Galleria</a></li>
+        <li><a href="#contact">Contatti</a></li>
+      </ul>
+    </nav>
+
+    <main id="main-content">
+      <section id="hero" class="hero">
+        <div class="hero-bg"></div>
+        <div class="watermark" aria-hidden="true"></div>
+        <div class="hero-content reveal">
+          <p class="eyebrow hero-eyebrow" data-config="brand">FELICE POLESE</p>
+          <h1 class="hero-title font-serif"><span data-config="name">Polese Barbershop</span></h1>
+          <p class="hero-text" data-config="tagline">L'Arte della Barberia d'Élite</p>
+          <p class="hero-text">Taglio sartoriale, rasatura tradizionale e grooming premium nel cuore di Benevento.</p>
+          <div class="hero-actions">
+            <a href="#contact" class="btn btn-gold btn-magnetic">Prenota ora</a>
+            <a href="#services" class="btn btn-outline btn-magnetic">Scopri i servizi</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section-pad bg-noise">
+        <div class="eyebrow reveal">Il brand</div>
+        <h2 class="section-title font-serif reveal reveal-d1">Tradizione &amp; precisione</h2>
+        <div class="about-grid">
+          <div class="about-visual reveal">
+            <img src="assets/images/logo.svg" alt="" width="160" height="160" />
+          </div>
+          <div class="reveal reveal-d2">
+            <p class="prose">
+              <strong data-config="brand">FELICE POLESE</strong>
+              interpreta la barberia come un rituale di cura e stile. Ogni dettaglio — dalla consulenza al finish —
+              è pensato per l'uomo che non accetta compromessi.
+            </p>
+            <p class="prose">
+              Il nuovo salone in <span data-config="address">Corso Dante n. 45</span>, <span data-config="city">Benevento</span>
+              è un ambiente dark, elegante e riservato, dove l'artigianalità incontra il design contemporaneo.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="services" class="section-pad" style="background:var(--graphite);">
+        <div class="eyebrow reveal">Servizi</div>
+        <h2 class="section-title font-serif reveal reveal-d1">Menu grooming</h2>
+        <div class="services-grid">
+          <article class="service-card reveal">
+            <h3>Taglio sartoriale</h3>
+            <p>Consulenza viso, taglio su misura e styling con prodotti premium.</p>
+            <span class="service-price">da € 25</span>
+          </article>
+          <article class="service-card reveal reveal-d1">
+            <h3>Barba &amp; rasatura</h3>
+            <p>Rasatura calda, rifinitura barba e trattamenti lenitivi post-rasatura.</p>
+            <span class="service-price">da € 18</span>
+          </article>
+          <article class="service-card reveal reveal-d2">
+            <h3>Combo premium</h3>
+            <p>Taglio + barba + trattamento viso. L'esperienza completa Polese.</p>
+            <span class="service-price">da € 40</span>
+          </article>
+          <article class="service-card reveal">
+            <h3>Trattamento viso</h3>
+            <p>Pulizia, scrub e maschera rigenerante per una pelle curata.</p>
+            <span class="service-price">da € 20</span>
+          </article>
+          <article class="service-card reveal reveal-d1">
+            <h3>Colorazione barba</h3>
+            <p>Copertura naturale e rifinitura tono su tono.</p>
+            <span class="service-price">da € 15</span>
+          </article>
+          <article class="service-card reveal reveal-d2">
+            <h3>Consulenza grooming</h3>
+            <p>Percorso personalizzato per stile, prodotti e manutenzione.</p>
+            <span class="service-price">Su richiesta</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="gallery" class="section-pad bg-noise">
+        <div class="eyebrow reveal">Atmosfera</div>
+        <h2 class="section-title font-serif reveal reveal-d1">Il salone</h2>
+        <div class="gallery-grid" aria-label="Galleria Polese Barbershop">
+          <figure class="gallery-item reveal">
+            <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=80&auto=format&fit=crop" alt="Taglio capelli uomo in barbershop" width="600" height="600" loading="lazy" decoding="async" />
+          </figure>
+          <figure class="gallery-item reveal reveal-d1 gallery-tall">
+            <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=600&q=80&auto=format&fit=crop" alt="Rasatura barba tradizionale" width="600" height="900" loading="lazy" decoding="async" />
+          </figure>
+          <figure class="gallery-item reveal reveal-d2">
+            <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=600&q=80&auto=format&fit=crop" alt="Interno barbershop premium" width="600" height="600" loading="lazy" decoding="async" />
+          </figure>
+          <figure class="gallery-item reveal">
+            <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=600&q=80&auto=format&fit=crop" alt="Strumenti da barbiere professionali" width="600" height="600" loading="lazy" decoding="async" />
+          </figure>
+          <figure class="gallery-item reveal reveal-d1">
+            <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&q=80&auto=format&fit=crop" alt="Styling barba uomo" width="600" height="600" loading="lazy" decoding="async" />
+          </figure>
+        </div>
+      </section>
+
+      <section id="contact" class="section-pad" style="background:var(--graphite);">
+        <div class="eyebrow reveal">Contatti</div>
+        <h2 class="section-title font-serif reveal reveal-d1">Prenota il tuo appuntamento</h2>
+        <div class="contact-grid">
+          <div class="contact-info reveal">
+            <p><strong>Indirizzo</strong><br /><span data-config="addressFull">Corso Dante n. 45, 82100 Benevento BN</span></p>
+            <p><strong>Telefono</strong><br /><a data-config-href="phone" href="tel:+393512523087" class="contact-link"><span data-config="phoneDisplay">351 252 3087</span></a></p>
+            <p><strong>Orari</strong><br /><span data-config="hours.weekdays">Mar — Sab · 09:30 — 20:00</span><br /><span data-config="hours.monday">Lun · Chiuso</span><br /><span data-config="hours.sunday">Dom · Chiuso</span></p>
+            <p>
+              <a data-config-href="instagram" href="#" target="_blank" rel="noopener noreferrer me" class="contact-link"><span data-config="instagramHandle">@felicepolese_barber</span></a>
+              ·
+              <a data-config-href="maps" href="#" target="_blank" rel="noopener noreferrer" class="contact-link">Maps</a>
+              ·
+              <a data-config-href="fresha" href="#" target="_blank" rel="noopener noreferrer" class="contact-link">Prenota su Fresha</a>
+            </p>
+          </div>
+          <form id="booking-form" class="reveal reveal-d1" novalidate>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;">
+              <input id="book-name" class="input-lux" type="text" placeholder="Nome e cognome" required autocomplete="name" />
+              <select id="book-service" class="input-lux">
+                <option value="">Seleziona servizio</option>
+                <option>Taglio sartoriale</option>
+                <option>Barba &amp; rasatura</option>
+                <option>Combo premium</option>
+                <option>Trattamento viso</option>
+              </select>
+              <input id="book-date" class="input-lux" type="date" />
+              <input id="book-contact" class="input-lux" type="text" placeholder="WhatsApp o telefono" required autocomplete="tel" />
+              <button type="submit" class="btn btn-gold btn-magnetic">Invia richiesta</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© <span data-config="name">Polese Barbershop</span> · <span data-config="brand">FELICE POLESE</span></span>
+      <span data-config="addressFull">Corso Dante n. 45, Benevento</span>
+    </footer>
+  </div>
+
+  <a id="wa-fab" class="wa-fab" data-config-href="whatsapp" href="#" target="_blank" rel="noopener noreferrer" aria-label="Scrivici su WhatsApp" title="WhatsApp">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/seo.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

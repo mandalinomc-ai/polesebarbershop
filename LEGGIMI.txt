@@ -1,0 +1,43 @@
+POLESE BARBERSHOP
+=================
+
+Brand: FELICE POLESE — Barberia d'élite a Benevento
+Nuovo locale: Corso Dante n. 45, 82100 Benevento BN
+
+SITO LIVE
+---------
+  https://polesebarbershop.vercel.app
+
+REPOSITORY GITHUB
+-----------------
+  https://github.com/mandalinomc-ai/polesebarbershop
+
+AVVIO LOCALE
+------------
+  Doppio click su AVVIA.cmd
+  oppure apri index.html
+
+CONTATTI (già configurati)
+--------------------------
+  Tel / WhatsApp: 351 252 3087
+  Instagram: @felicepolese_barber
+  Fresha: prenotazione online (sede attuale fino al trasferimento)
+
+MODALITÀ COMING SOON
+--------------------
+  assets/js/config.js → IS_COMING_SOON: true
+
+  Attiva: landing Prossimamente + countdown + form avviso
+  Disattiva (IS_COMING_SOON: false): sito completo indicizzabile
+
+SEO INCLUSO
+-----------
+  Meta Open Graph + Twitter Card
+  Schema.org HairSalon (JSON-LD)
+  robots.txt, sitemap.xml, site.webmanifest
+  noindex in Coming Soon · index quando live
+
+DEPLOY
+------
+  cd progetti-ai\polesebarbershop
+  npx vercel deploy --prod --yes

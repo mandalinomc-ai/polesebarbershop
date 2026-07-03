@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" role="img" aria-label="Polese Barbershop  monogramma FP">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E6D5A8"/>
+      <stop offset="45%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#9A7B43"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" stroke="url(#gold)" stroke-width="1.5" opacity="0.85"/>
+  <circle cx="60" cy="60" r="48" stroke="#FAFAFA" stroke-width="0.5" opacity="0.2"/>
+  <!-- F -->
+  <path d="M38 34h28M38 34v52M38 58h20" stroke="#FAFAFA" stroke-width="3.5" stroke-linecap="square"/>
+  <!-- P -->
+  <path d="M72 34v52M72 34h18c8 0 14 5 14 13s-6 13-14 13H72" stroke="url(#gold)" stroke-width="3.5" stroke-linecap="square" stroke-linejoin="round"/>
+  <!-- Scissors -->
+  <g transform="translate(24,78) rotate(-25)" stroke="#FAFAFA" stroke-width="1.2" stroke-linecap="round">
+    <circle cx="4" cy="4" r="3" fill="none"/>
+    <circle cx="14" cy="4" r="3" fill="none"/>
+    <path d="M6 6L18 18M14 6L2 18"/>
+  </g>
+  <!-- Straight razor -->
+  <g transform="translate(78,76) rotate(20)" stroke="url(#gold)" stroke-width="1.2" stroke-linecap="round">
+    <path d="M0 8 Q12 0 24 8 L28 10 L24 12 Q12 4 0 12 Z" fill="none"/>
+    <path d="M28 10 L32 10"/>
+  </g>
+  <!-- Clippers -->
+  <g transform="translate(52,88)" stroke="#FAFAFA" stroke-width="1" stroke-linecap="round" opacity="0.9">
+    <rect x="0" y="0" width="16" height="10" rx="2" fill="none"/>
+    <path d="M3 3v4M6 3v4M9 3v4M12 3v4"/>
+    <path d="M8 10v4"/>
+  </g>
+</svg>
