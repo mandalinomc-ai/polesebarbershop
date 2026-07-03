@@ -200,7 +200,22 @@ select.input-lux { appearance: none; cursor: pointer; }
   background: radial-gradient(ellipse at 50% 30%, rgba(201, 169, 98, 0.14), transparent 65%);
   pointer-events: none;
 }
-.coming-soon-logo { width: clamp(88px, 18vw, 120px); margin-bottom: 1.75rem; animation: float 8s ease-in-out infinite; }
+.coming-soon-logo {
+  width: clamp(100px, 20vw, 140px);
+  height: auto;
+  margin-bottom: 1.75rem;
+  animation: float 8s ease-in-out infinite;
+  filter: drop-shadow(0 0 24px rgba(201, 169, 98, 0.35));
+  display: block;
+}
+.header-logo img,
+.about-visual img {
+  display: block;
+  height: auto;
+  filter: drop-shadow(0 0 12px rgba(201, 169, 98, 0.2));
+}
+.header-logo img { width: 44px; height: 44px; }
+.about-visual img { width: 42%; max-width: 180px; opacity: 1; }
 .coming-soon-title {
   font-size: clamp(2.2rem, 7vw, 4rem);
   font-weight: 500;
@@ -333,7 +348,6 @@ select.input-lux { appearance: none; cursor: pointer; }
 }
 .site-header.header-hidden { transform: translateY(-110%); }
 .header-logo { display: flex; align-items: center; gap: 0.85rem; text-decoration: none; color: inherit; }
-.header-logo img { width: 44px; height: 44px; }
 .header-logo span {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 1.15rem;
@@ -482,7 +496,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   position: relative;
   overflow: hidden;
 }
-.about-visual img { width: 40%; opacity: 0.9; }
+.about-visual img { width: 42%; max-width: 180px; opacity: 1; }
 
 /* Gallery */
 .gallery-grid {
