@@ -46,14 +46,6 @@
     document.documentElement.classList.toggle('is-live', !isSoon);
     document.body.classList.toggle('mode-coming-soon', isSoon);
     document.body.classList.toggle('mode-live', !isSoon);
-
-    var soonView = qs('#coming-soon');
-    var fullSite = qs('#full-site');
-    if (soonView) soonView.hidden = !isSoon;
-    if (fullSite) fullSite.hidden = isSoon;
-
-    var waFab = qs('#wa-fab');
-    if (waFab) waFab.hidden = isSoon && !cfg.whatsapp;
   }
 
   function initReveal() {
@@ -72,12 +64,13 @@
           }
         });
       },
-      { threshold: 0.1, rootMargin: '0px 0px -32px 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
     );
     els.forEach(function (el) { observer.observe(el); });
   }
 
   function initCountdown() {
+    if (!cfg.IS_COMING_SOON) return;
     var root = qs('#countdown');
     if (!root || !cfg.openingDate) return;
 
@@ -120,30 +113,26 @@
       if (!name || !contact) return;
 
       var msg =
-        'Ciao, vorrei essere avvisato all\'apertura del nuovo ' + cfg.name + '.\n\n' +
+        'Ciao, vorrei essere avvisato all\'apertura del nuovo ' + cfg.name + ' in ' + cfg.address + ', ' + cfg.city + '.\n\n' +
         'Nome: ' + name + '\n' +
-        'Contatto: ' + contact + '\n' +
-        'Nuovo indirizzo: ' + (cfg.addressFull || cfg.address + ', ' + cfg.city);
+        'WhatsApp: ' + contact;
 
       var url = buildWhatsAppUrl(msg);
       if (url) {
         window.open(url, '_blank', 'noopener,noreferrer');
+        var feedback = qs('#notify-feedback', form);
+        if (feedback) {
+          feedback.hidden = false;
+          feedback.textContent = 'Perfetto! Completa l\'invio su WhatsApp.';
+        }
+        form.reset();
       }
-
-      var feedback = qs('#notify-feedback', form);
-      if (feedback) {
-        feedback.hidden = false;
-        feedback.textContent = url
-          ? 'Grazie! Ti risponderemo su WhatsApp.'
-          : 'Grazie! La tua richiesta è stata registrata.';
-      }
-      form.reset();
     });
   }
 
   function initBookingForm() {
     var form = qs('#booking-form');
-    if (!form) return;
+    if (!form || cfg.IS_COMING_SOON) return;
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -223,8 +212,6 @@
       if (href) {
         el.href = href;
         el.hidden = false;
-      } else if (key !== 'whatsapp' && key !== 'phone') {
-        el.hidden = true;
       }
     });
   }
@@ -244,15 +231,6 @@
     });
   }
 
-  function initGalleryImages() {
-    qsa('.gallery-item img').forEach(function (img) {
-      img.addEventListener('error', function () {
-        img.closest('.gallery-item').classList.add('gallery-fallback');
-        img.remove();
-      });
-    });
-  }
-
   applySiteMode();
   injectConfigText();
   injectConfigLinks();
@@ -263,5 +241,4 @@
   initNav();
   initHeaderScroll();
   initMagneticButtons();
-  initGalleryImages();
 })();

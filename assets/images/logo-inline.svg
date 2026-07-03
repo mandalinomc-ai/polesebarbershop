@@ -1,0 +1,23 @@
+<!-- Logo inline  sempre visibile, non dipende da file esterni -->
+<svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="logoGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E6D5A8"/>
+      <stop offset="50%" stop-color="#C9A962"/>
+      <stop offset="100%" stop-color="#9A7B43"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="#111111"/>
+  <circle cx="60" cy="60" r="56" fill="none" stroke="url(#logoGold)" stroke-width="3"/>
+  <text x="60" y="70" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="700" fill="#FFFFFF">FP</text>
+  <g transform="translate(20, 84) rotate(-20)" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round">
+    <circle cx="5" cy="5" r="4"/><circle cx="16" cy="5" r="4"/>
+    <path d="M7 7 L18 18 M14 7 L3 18"/>
+  </g>
+  <g transform="translate(78, 82) rotate(15)" stroke="url(#logoGold)" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M0 10 Q13 0 26 10 L32 12 L26 14 Q13 4 0 14 Z"/><path d="M32 12 L38 12"/>
+  </g>
+  <g transform="translate(48, 94)" stroke="#FFFFFF" stroke-width="1.5" fill="none" stroke-linecap="round">
+    <rect x="0" y="0" width="22" height="13" rx="2"/><path d="M4 4v5M8 4v5M12 4v5M17 4v5M11 13v4"/>
+  </g>
+</svg>
