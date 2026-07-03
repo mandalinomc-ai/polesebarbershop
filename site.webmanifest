@@ -1,17 +1,17 @@
 {
   "name": "Polese Barbershop",
   "short_name": "Polese",
-  "description": "Barberia d'élite a Benevento — Felice Polese",
+  "description": "Barberia d'élite — Felice Polese, Benevento",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0A0A0A",
-  "theme_color": "#0A0A0A",
+  "background_color": "#0B0B0B",
+  "theme_color": "#0B0B0B",
   "lang": "it",
   "icons": [
     {
-      "src": "/assets/images/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/assets/images/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0A0A0A" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0B0B0B" />
+  <link rel="icon" href="assets/images/logo-512.png" type="image/png" />
+  <link rel="apple-touch-icon" href="assets/images/logo-512.png" />
+  <meta name="color-scheme" content="dark light" />
   <meta name="description" content="Polese Barbershop di Felice Polese — barbiere d'élite a Benevento. Nuovo salone Corso Dante 45." />
   <meta name="robots" content="noindex, follow" />
   <title>Polese Barbershop — Prossimamente | Benevento</title>
-  <link rel="icon" href="assets/images/logo.svg" type="image/svg+xml" />
-  <link rel="manifest" href="site.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -18,28 +18,11 @@
 <body>
   <a class="skip-link" href="#main-content">Vai al contenuto</a>
 
-  <!-- Sprite logo (sempre caricato, niente file esterni) -->
-  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
-    <symbol id="logo-fp" viewBox="0 0 120 120">
-      <circle cx="60" cy="60" r="56" fill="#111111"/>
-      <circle cx="60" cy="60" r="56" fill="none" stroke="#C9A962" stroke-width="3"/>
-      <circle cx="60" cy="60" r="50" fill="none" stroke="#FAFAFA" stroke-width="0.75" opacity="0.2"/>
-      <text x="60" y="70" text-anchor="middle" font-family="Georgia, serif" font-size="48" font-weight="700" fill="#FFFFFF">FP</text>
-      <g transform="translate(20,84) rotate(-20)" stroke="#FFF" stroke-width="2" fill="none" stroke-linecap="round">
-        <circle cx="5" cy="5" r="4"/><circle cx="16" cy="5" r="4"/><path d="M7 7 L18 18 M14 7 L3 18"/>
-      </g>
-      <g transform="translate(78,82) rotate(15)" stroke="#C9A962" stroke-width="2" fill="none" stroke-linecap="round">
-        <path d="M0 10 Q13 0 26 10 L32 12 L26 14 Q13 4 0 14 Z"/><path d="M32 12 L38 12"/>
-      </g>
-      <g transform="translate(48,94)" stroke="#FFF" stroke-width="1.5" fill="none" stroke-linecap="round">
-        <rect x="0" y="0" width="22" height="13" rx="2"/><path d="M4 4v5M8 4v5M12 4v5M17 4v5M11 13v4"/>
-      </g>
-    </symbol>
-  </svg>
+  <link rel="manifest" href="site.webmanifest" />
 
   <header id="site-header" class="site-header">
     <a href="#hero" class="header-logo">
-      <svg class="brand-logo brand-logo--sm" role="img" aria-label="Polese Barbershop"><use href="#logo-fp"/></svg>
+      <img src="assets/images/logo.png" alt="Felice Polese — Polese Barbershop" class="brand-logo brand-logo--sm" width="512" height="331" />
       <span data-config="name">Polese Barbershop</span>
     </a>
     <nav aria-label="Principale">
@@ -73,7 +56,7 @@
       <div class="hero-bg"></div>
       <div class="hero-glow"></div>
       <div class="hero-inner hero-inner--soon">
-        <svg class="brand-logo brand-logo--hero" role="img" aria-label="Polese Barbershop — Felice Polese"><use href="#logo-fp"/></svg>
+        <img src="assets/images/logo.png" alt="Felice Polese — logo ufficiale Polese Barbershop" class="brand-logo brand-logo--hero" width="512" height="331" />
         <p class="coming-soon-brand" data-config="brand">FELICE POLESE</p>
         <h1 class="hero-title font-serif">Prossimamente</h1>
         <p class="hero-soon-msg">
@@ -122,12 +105,12 @@
       </div>
     </section>
 
-    <section id="about" class="section-pad bg-noise">
+    <section id="about" class="section-pad bg-marble-light">
       <div class="eyebrow reveal">Il brand</div>
       <h2 class="section-title font-serif reveal reveal-d1">Tradizione &amp; precisione</h2>
       <div class="about-grid">
         <div class="about-visual reveal">
-          <svg class="brand-logo brand-logo--about" role="img" aria-label="Logo Polese Barbershop"><use href="#logo-fp"/></svg>
+          <img src="assets/images/logo.png" alt="Logo Felice Polese" class="brand-logo brand-logo--about" width="512" height="331" />
         </div>
         <div class="reveal reveal-d2">
           <p class="prose"><strong data-config="brand">FELICE POLESE</strong> interpreta la barberia come rituale di cura e stile. Taglio uomo, barba e rasatura con precisione artigianale.</p>
@@ -149,15 +132,15 @@
       </div>
     </section>
 
-    <section id="gallery" class="section-pad bg-noise">
+    <section id="gallery" class="section-pad bg-marble-light">
       <div class="eyebrow reveal">Atmosfera</div>
       <h2 class="section-title font-serif reveal reveal-d1">Il salone</h2>
       <div class="gallery-grid">
-        <figure class="gallery-item reveal"><img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=80&auto=format&fit=crop" alt="Taglio uomo barbershop" width="600" height="600" loading="lazy" /></figure>
-        <figure class="gallery-item gallery-tall reveal reveal-d1"><img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=600&q=80&auto=format&fit=crop" alt="Rasatura barba" width="600" height="900" loading="lazy" /></figure>
-        <figure class="gallery-item reveal reveal-d2"><img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=600&q=80&auto=format&fit=crop" alt="Interno barbershop" width="600" height="600" loading="lazy" /></figure>
-        <figure class="gallery-item reveal"><img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=600&q=80&auto=format&fit=crop" alt="Strumenti barbiere" width="600" height="600" loading="lazy" /></figure>
-        <figure class="gallery-item reveal reveal-d1"><img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&q=80&auto=format&fit=crop" alt="Styling barba" width="600" height="600" loading="lazy" /></figure>
+        <figure class="gallery-item reveal"><img src="assets/images/gallery/fresha-01.jpg" alt="Interno salone Polese Barbershop — marmo e postazioni" width="1400" height="900" loading="lazy" /></figure>
+        <figure class="gallery-item gallery-tall reveal reveal-d1"><img src="assets/images/hero-bg.jpg" alt="Salone Felice Polese Benevento" width="1400" height="900" loading="lazy" /></figure>
+        <figure class="gallery-item reveal reveal-d2"><img src="assets/images/gallery/fresha-02.jpg" alt="Postazione barbiere Polese" width="1400" height="900" loading="lazy" /></figure>
+        <figure class="gallery-item reveal"><img src="assets/images/brand-products.jpg" alt="Linea prodotti Felice Polese" width="1400" height="900" loading="lazy" /></figure>
+        <figure class="gallery-item reveal reveal-d1"><img src="assets/images/gallery/fresha-00.jpg" alt="Prodotti grooming Felice Polese" width="1400" height="900" loading="lazy" /></figure>
       </div>
     </section>
 

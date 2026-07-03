@@ -1,0 +1,10 @@
+{
+  "logo": "logo.jpg",
+  "brand": "brand-products.jpg",
+  "gallery": [
+    "gallery/fresha-00.jpg",
+    "gallery/fresha-01.jpg",
+    "gallery/fresha-02.jpg",
+    "gallery/fresha-03.jpg"
+  ]
+}

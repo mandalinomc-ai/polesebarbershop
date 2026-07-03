@@ -33,7 +33,7 @@
     : cfg.name + ' — ' + cfg.tagline + ' | ' + cfg.city;
   var description = isSoon ? cfg.seo.comingSoonDescription : cfg.seo.liveDescription;
   var url = cfg.siteUrl || window.location.href.split('?')[0];
-  var ogImage = (cfg.siteUrl || '') + '/assets/images/og-cover.svg';
+  var ogImage = (cfg.siteUrl || '') + '/assets/images/hero-bg.jpg';
 
   document.title = title;
   setMeta('description', description);
@@ -83,7 +83,7 @@
         telephone: cfg.phone,
         email: cfg.email,
         image: ogImage,
-        logo: (cfg.siteUrl || '') + '/assets/images/logo.svg',
+        logo: (cfg.siteUrl || '') + '/assets/images/logo.png',
         priceRange: '€€',
         address: {
           '@type': 'PostalAddress',
