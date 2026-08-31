@@ -48,34 +48,37 @@ PAGINE LEGALI
   /privacy-policy
   /terms
 
-COME ANDARE LIVE (tu devi fare questi 4 passi)
-----------------------------------------------
-  1. Supabase
-     Crea un progetto su https://supabase.com
-     SQL Editor → incolla ed esegui  supabase/migrations/001_schema.sql
-     (unico schema: tabelle barbers, services, appointments + RLS.
-      Non esiste una seconda migration 001_appointments.)
-     Copia Project URL e service_role key.
+COME ANDARE LIVE — 4 click (io non posso creare gli account al posto tuo)
+------------------------------------------------------------------------
+  Servono il tuo login Google/GitHub. Incolla le chiavi nel modulo che
+  ti ho aperto qui, e le STESSE su Vercel. Piani gratuiti, niente Twilio.
 
-  2. Resend
-     Crea un account su https://resend.com
-     Genera una API key. Verifica il dominio (o usa l'indirizzo di test).
-     Imposta RESEND_FROM (es. Polese Barbershop <prenotazioni@tuodominio.it>).
+  1. Supabase (database) — https://supabase.com
+     Start your project → continua con GitHub.
+     New project → nome polesebarbershop → region Frankfurt → Create.
+     A sinistra SQL Editor → New query → incolla TUTTO
+     supabase/migrations/001_schema.sql → Run.
+     Ingranaggio (Project Settings) → API:
+       Project URL          → SUPABASE_URL
+       service_role (Reveal, la lunga, NON «anon») → SUPABASE_SERVICE_ROLE_KEY
 
-  3. Variabili ambiente (Vercel → Project → Settings → Environment Variables)
-     NEXT_PUBLIC_SITE_URL=https://polesebarbershop.vercel.app
-     SUPABASE_URL=...
-     SUPABASE_SERVICE_ROLE_KEY=...
-     NEXT_PUBLIC_SUPABASE_URL=...   (stesso URL)
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-     RESEND_API_KEY=...
-     RESEND_FROM=...
-     ADMIN_EMAIL=info@polesebarbershop.it
-     ADMIN_PASSWORD=...  (password forte, almeno 4 caratteri)
+  2. Resend (email) — https://resend.com
+     Sign up → API Keys → Create API Key → copia (inizia con re_).
+     Fino a quando non verifichi polesebarbershop.it usa:
+       RESEND_FROM=Polese Barbershop <beth.t@example.com>
+     (con questo mittente di test le email arrivano solo a te)
 
-  4. Deploy
-     Vercel collega il repo e fa il build (`npm run build`).
-     Verifica: prenota un Taglio Pro, ricevi email + .ics, apri /admin.
+  3. Password admin
+     Scegli tu una password (almeno 4 caratteri) → ADMIN_PASSWORD
+     Email avvisi: info@polesebarbershop.it (o la tua)
+
+  4. Vercel (sito live) — https://vercel.com
+     progetto polesebarbershop → Settings → Environment Variables
+     Incolla le stesse chiavi + NEXT_PUBLIC_SITE_URL=https://polesebarbershop.vercel.app
+     Deployments → Redeploy.
+
+  Senza questi 4 click la prenotazione resta attiva: conferma + file .ics,
+  ma NON salva nel database e NON manda email. Chiama il +39 327 015 6225.
 
 TEST
 ----
