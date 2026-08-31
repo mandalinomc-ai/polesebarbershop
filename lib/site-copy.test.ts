@@ -6,8 +6,12 @@ import {
   SALON_CONTACT,
   SALON_CONTACT_MESSAGE,
   ADMIN_EMAIL_FALLBACK,
+  HERO_CTA,
+  HERO_BEFORE_OPENING,
   getWhatsAppUrl,
   getMailtoUrl,
+  getHeroHeadline,
+  getBookingConfirmWhatsAppUrl,
 } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
@@ -99,5 +103,48 @@ describe("public copy vs official identity", () => {
     expect(header).not.toMatch(/gestionale/i);
     expect(header).not.toMatch(/Dashboard/);
     expect(chrome).toMatch(/href="\/gestionale"/);
+  });
+
+  it("keeps shop WhatsApp on wa.me/393270156225 without Twilio", () => {
+    expect(SITE.whatsapp).toBe("393270156225");
+    expect(SITE.phone).toBe("+39 327 015 6225");
+    expect(getWhatsAppUrl()).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
+    const confirm = getBookingConfirmWhatsAppUrl({
+      firstName: "Mario",
+      service: "Taglio Standard",
+      dateLabel: "martedì 1 settembre 2026",
+      timeLabel: "09:30",
+      barberName: "Felice",
+    });
+    expect(confirm).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
+    expect(confirm).toContain(encodeURIComponent("ho prenotato"));
+    const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
+    expect(chrome).toMatch(/getWhatsAppUrl/);
+    const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
+    expect(wizard).toMatch(/getBookingConfirmWhatsAppUrl/);
+    expect(wizard).not.toMatch(/twilio/i);
+    const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
+    expect(crm).toMatch(/waMeUrl/);
+    expect(crm).toMatch(/niente Twilio/);
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
+      dependencies?: Record<string, string>;
+    };
+    expect(pkg.dependencies?.twilio).toBeUndefined();
+  });
+
+  it("shows Prenota già ora with a mini calendar before official opening", () => {
+    expect(HERO_CTA).toBe("Prenota già ora");
+    expect(HERO_BEFORE_OPENING).toBe("Prenota già ora, prima dell'apertura ufficiale");
+    expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
+    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
+    expect(hero).toMatch(/HeroCalendar/);
+    expect(hero).toMatch(/hero-cta-primary/);
+    expect(hero).toMatch(/getHeroHeadline/);
+    const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
+    expect(layout).toMatch(/mode-live/);
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+    expect(css).not.toMatch(/mode-coming-soon \.hero-inner--live \{ display: none/);
+    expect(css).toMatch(/hero-day-scroller/);
+    expect(css).toMatch(/hero--story/);
   });
 });

@@ -37,4 +37,17 @@ describe("mobile QA (390px)", () => {
     expect(crm).toMatch(/walkin-service/);
     expect(css).toMatch(/\.crm-mobile-logout \{ display: inline-flex; \}/);
   });
+
+  it("keeps the story hero CTA and date scroller usable at 390px", () => {
+    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
+    const calendar = readFileSync(join(process.cwd(), "components/site/HeroCalendar.tsx"), "utf8");
+    expect(hero).toMatch(/hero--story/);
+    expect(hero).toMatch(/hero-cta-primary/);
+    expect(css).toMatch(/\.hero\.hero--story/);
+    expect(css).toMatch(/hero-cta-primary/);
+    expect(css).toMatch(/\.day-chip \{[\s\S]*?min-height:\s*44px/);
+    expect(calendar).toMatch(/hero-day-scroller/);
+    expect(calendar).toMatch(/prenota/);
+    expect(chrome).toMatch(/HERO_CTA/);
+  });
 });

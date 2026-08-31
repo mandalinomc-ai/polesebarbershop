@@ -1,6 +1,30 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { POST } from "@/app/api/bookings/route";
 import { DELETE, GET } from "@/app/api/bookings/[token]/route";
+
+const ENV_KEYS = [
+  "SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_SECRET_KEY",
+  "RESEND_API_KEY",
+];
+
+function withoutCloud() {
+  const saved: Record<string, string | undefined> = {};
+  beforeEach(() => {
+    for (const key of ENV_KEYS) {
+      saved[key] = process.env[key];
+      delete process.env[key];
+    }
+  });
+  afterEach(() => {
+    for (const key of ENV_KEYS) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  });
+}
 
 function payload(overrides: Record<string, unknown> = {}) {
   return {
@@ -28,6 +52,7 @@ async function postBooking(body: unknown) {
 }
 
 describe("POST /api/bookings", () => {
+  withoutCloud();
   it("rejects missing GDPR consent (Zod, server-side)", async () => {
     const res = await postBooking(payload({ gdprConsent: false }));
     expect(res.status).toBe(400);
@@ -73,6 +98,7 @@ describe("POST /api/bookings", () => {
 });
 
 describe("GET/DELETE /api/bookings/[token]", () => {
+  withoutCloud();
   it("exposes Italian manage/cancel endpoints even without Supabase", async () => {
     const ctx = { params: Promise.resolve({ token: "a".repeat(24) }) };
     const getRes = await GET(new Request("http://localhost/api/bookings/token"), ctx);

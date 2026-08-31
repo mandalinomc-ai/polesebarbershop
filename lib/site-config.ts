@@ -50,6 +50,67 @@ export const CANCEL_HOURS_BEFORE = 3;
 export const SALON_CONTACT_MESSAGE =
   "Ciao, vorrei parlare con il salone per un'informazione.";
 
+/** Homepage / stories CTA — booking stays visible before official opening. */
+export const HERO_CTA = "Prenota già ora";
+export const HERO_BEFORE_OPENING =
+  "Prenota già ora, prima dell'apertura ufficiale";
+export const BOOKING_DATE_PARAM = "data";
+export const BOOKING_DATE_STORAGE_KEY = "polese-booking-date";
+export const BOOKING_DATE_EVENT = "polese-booking-date";
+
+export function wallDateRome(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+export function isBeforeOfficialOpening(now: Date = new Date()): boolean {
+  return wallDateRome(now) < SITE.openingDate;
+}
+
+export function getHeroHeadline(now: Date = new Date()): string {
+  return isBeforeOfficialOpening(now) ? HERO_BEFORE_OPENING : "Prenota il tuo posto";
+}
+
+export type BookingConfirmCopy = {
+  firstName?: string;
+  service: string;
+  dateLabel: string;
+  timeLabel: string;
+  barberName?: string;
+};
+
+export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
+  const who = opts.firstName?.trim() ? ` sono ${opts.firstName.trim()} e` : "";
+  const barber = opts.barberName ? ` con ${opts.barberName}` : "";
+  return `Ciao,${who} ho prenotato ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}${barber} da ${SITE.name}.`;
+}
+
+export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
+  return getWhatsAppUrl(getBookingConfirmMessage(opts));
+}
+
+export function bookingWizardHref(date?: string): string {
+  if (!date) return "/#prenota";
+  return `/?${BOOKING_DATE_PARAM}=${encodeURIComponent(date)}#prenota`;
+}
+
+export function readBookingDateFromLocation(): string | null {
+  if (typeof window === "undefined") return null;
+  const query = new URLSearchParams(window.location.search).get(BOOKING_DATE_PARAM);
+  if (query && /^\d{4}-\d{2}-\d{2}$/.test(query)) return query;
+  try {
+    const stored = sessionStorage.getItem(BOOKING_DATE_STORAGE_KEY);
+    if (stored && /^\d{4}-\d{2}-\d{2}$/.test(stored)) return stored;
+  } catch {
+    /* private mode */
+  }
+  return null;
+}
+
 export const SALON_CONTACT = {
   id: "scrivici",
   title: "Parla con il salone",

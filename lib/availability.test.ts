@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BARBERS } from "./catalog";
-import { getAvailableSlots, getFirstBookableDate, weekdayOfDate, wallTimeToUtc, isClosedDay, mondayOfWeek } from "./availability";
+import { getAvailableSlots, getFirstBookableDate, weekdayOfDate, wallTimeToUtc, isClosedDay, mondayOfWeek, listOpenDayChips } from "./availability";
 
 const TUESDAY = "2026-09-01";
 const MONDAY = "2026-08-31";
@@ -22,6 +22,11 @@ describe("timezone helpers", () => {
   it("first bookable date is max(today, opening 2026-09-01)", () => {
     expect(getFirstBookableDate(wallTimeToUtc("2026-08-31", "18:00"))).toBe("2026-09-01");
     expect(getFirstBookableDate(wallTimeToUtc("2026-09-03", "08:00"))).toBe("2026-09-03");
+  });
+  it("lists open day chips from the first bookable Tuesday", () => {
+    const chips = listOpenDayChips(3, wallTimeToUtc("2026-08-31", "18:00"));
+    expect(chips.map((c) => c.date)).toEqual(["2026-09-01", "2026-09-02", "2026-09-03"]);
+    expect(chips[0]?.dow.toLowerCase()).toMatch(/mar/);
   });
 });
 

@@ -241,12 +241,15 @@ select.input-lux { appearance: none; cursor: pointer; }
   filter: invert(1) drop-shadow(0 8px 24px rgba(0, 0, 0, 0.16));
 }
 
-/* Modalità Coming Soon vs Live */
+/* Modalità Coming Soon vs Live — la prenotazione NON si nasconde mai. */
 .mode-live .hero-inner--soon,
 .mode-live .header-cta--soon,
 .mode-live #contact-soon-notice { display: none !important; }
 
-.mode-coming-soon .hero-inner--live { display: none !important; }
+.mode-coming-soon .hero-inner--live,
+.mode-coming-soon .header-cta--live,
+.mode-coming-soon #booking-wizard,
+.mode-coming-soon .hero-calendar { display: block !important; }
 
 .mode-coming-soon #contact-soon-notice { display: block; }
 
@@ -314,7 +317,7 @@ select.input-lux { appearance: none; cursor: pointer; }
   position: relative;
   z-index: 2;
   max-width: 42rem;
-  display: none;
+  display: block;
 }
 .mode-live .hero-inner--live { display: block; }
 .mode-live .hero--soon { align-items: flex-end; }
@@ -549,6 +552,32 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   max-width: 32rem;
 }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 0.85rem; }
+.hero-kicker {
+  color: var(--gold);
+  font-size: clamp(1.05rem, 3.4vw, 1.4rem);
+  line-height: 1.35;
+  margin: 0 0 0.85rem;
+  font-weight: 500;
+  max-width: 34rem;
+}
+.hero-calendar {
+  margin-top: 1.35rem;
+  width: 100%;
+  max-width: 100%;
+}
+.hero-calendar-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--silk);
+  margin: 0 0 0.55rem;
+}
+.hero-day-scroller { margin-bottom: 0; }
+a.day-chip {
+  text-decoration: none;
+  display: inline-block;
+  box-sizing: border-box;
+}
 
 /* Services */
 .services-grid {
@@ -1423,6 +1452,29 @@ img { max-width: 100%; }
   .header-logo { min-width: 0; }
   .hero-title { overflow-wrap: anywhere; }
   .hero-actions .btn { min-height: 44px; }
+  .hero.hero--story {
+    min-height: 100svh;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding-top: calc(var(--header-h) + 0.65rem + var(--safe-top));
+    padding-bottom: calc(1.15rem + var(--safe-bottom));
+  }
+  .hero--story .hero-inner--live { width: 100%; max-width: 100%; }
+  .hero--story .brand-logo--hero {
+    width: min(148px, 40vw);
+    margin-bottom: 0.55rem;
+    animation: none;
+  }
+  .hero--story .hero-title {
+    font-size: clamp(1.85rem, 9vw, 2.35rem);
+    margin-bottom: 0.4rem;
+  }
+  .hero--story .hero-text { margin-bottom: 0.95rem; }
+  .hero--story .hero-cta-primary {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .hero-day-scroller { -webkit-overflow-scrolling: touch; }
   .consult-actions .btn { min-height: 44px; }
   .section-pad { padding: 3.25rem var(--pad-x); }
   .fresha-booking { min-width: 0; max-width: 100%; }

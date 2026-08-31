@@ -214,7 +214,8 @@ select.input-lux { appearance: none; cursor: pointer; }
 
 .mode-coming-soon .hero-inner--live,
 .mode-coming-soon .header-cta--live,
-.mode-coming-soon #booking-form { display: none !important; }
+.mode-coming-soon #booking-form,
+.mode-coming-soon #booking-wizard { display: block !important; }
 
 .mode-coming-soon #contact-soon-notice { display: block; }
 

@@ -14,9 +14,15 @@ import {
   formatItalianDate,
   getAvailableSlots,
   getFirstBookableDate,
-  isClosedDay,
+  listOpenDayChips,
 } from "@/lib/availability";
-import { CANCEL_HOURS_BEFORE, SITE } from "@/lib/site-config";
+import {
+  BOOKING_DATE_EVENT,
+  CANCEL_HOURS_BEFORE,
+  SITE,
+  getBookingConfirmWhatsAppUrl,
+  readBookingDateFromLocation,
+} from "@/lib/site-config";
 import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
 
@@ -28,34 +34,6 @@ type ApiSlot = {
   label: string;
   barberId: string;
 };
-
-type DayChip = { date: string; dow: string; day: string };
-
-function openDays(from: string, count: number): DayChip[] {
-  const days: DayChip[] = [];
-  const [y, m, d] = from.split("-").map(Number);
-  const cursor = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  const dowFmt = new Intl.DateTimeFormat("it-IT", {
-    weekday: "short",
-    timeZone: "UTC",
-  });
-  const dayFmt = new Intl.DateTimeFormat("it-IT", {
-    day: "numeric",
-    timeZone: "UTC",
-  });
-  while (days.length < count) {
-    const iso = cursor.toISOString().slice(0, 10);
-    if (!isClosedDay(iso)) {
-      days.push({
-        date: iso,
-        dow: dowFmt.format(cursor).replace(".", ""),
-        day: dayFmt.format(cursor),
-      });
-    }
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  return days;
-}
 
 function initials(name: string) {
   return name
@@ -85,7 +63,7 @@ export function FreshaBookingFlow() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [barberId, setBarberId] = useState("anyone");
   const firstBookable = useMemo(() => getFirstBookableDate(), []);
-  const days = useMemo(() => openDays(firstBookable, 16), [firstBookable]);
+  const days = useMemo(() => listOpenDayChips(16), []);
   const [date, setDate] = useState(days[0]?.date || firstBookable);
   const [slots, setSlots] = useState<ApiSlot[]>([]);
   const [slotsState, setSlotsState] = useState<
@@ -123,6 +101,19 @@ export function FreshaBookingFlow() {
     [selectedServices],
   );
   const barber = BARBERS.find((b) => b.id === barberId);
+
+  useEffect(() => {
+    const apply = (iso: string | null) => {
+      if (!iso) return;
+      if (days.some((d) => d.date === iso)) setDate(iso);
+    };
+    apply(readBookingDateFromLocation());
+    const onPick = (event: Event) => {
+      apply((event as CustomEvent<string>).detail);
+    };
+    window.addEventListener(BOOKING_DATE_EVENT, onPick);
+    return () => window.removeEventListener(BOOKING_DATE_EVENT, onPick);
+  }, [days]);
 
   const localSlots = useCallback((): ApiSlot[] => {
     if (!date || totals.durationMin <= 0) return [];
@@ -305,6 +296,20 @@ export function FreshaBookingFlow() {
                 Scarica .ics
               </a>
             ) : null}
+            <a
+              className="btn btn-outline btn-magnetic"
+              href={getBookingConfirmWhatsAppUrl({
+                firstName,
+                service: totals.names,
+                dateLabel: formatItalianDate(date),
+                timeLabel: slot?.label || "",
+                barberName: success.barberName,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp salone
+            </a>
           </div>
           {success.emailSent ? (
             <p className="booking-open-note">
@@ -601,9 +606,9 @@ export function FreshaBookingFlow() {
 export function BookingSectionNote() {
   return (
     <p className="booking-open-note">
-      Prenota online in cinque passi. Orari {SITE.hours.weekdays}. Primo giorno
-      disponibile: {formatItalianDate(getFirstBookableDate())}. Barbieri: Felice
-      e Davide.
+      Prenota già ora, prima dell&apos;apertura ufficiale. Cinque passi online.
+      Orari {SITE.hours.weekdays}. Primo giorno disponibile:{" "}
+      {formatItalianDate(getFirstBookableDate())}. Barbieri: Felice e Davide.
     </p>
   );
 }

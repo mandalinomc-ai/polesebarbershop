@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CANCEL_HOURS_BEFORE, SITE } from "@/lib/site-config";
+import { CANCEL_HOURS_BEFORE, SITE, getBookingConfirmWhatsAppUrl, getWhatsAppUrl } from "@/lib/site-config";
 import { icsDataUri } from "@/lib/ics";
 
 type Appointment = {
@@ -132,6 +132,20 @@ export function ManageAppointment({ token }: { token: string }) {
             <a className="btn btn-outline btn-magnetic" href={icsHref}>
               Scarica .ics (promemoria 30 min)
             </a>
+            <a
+              className="btn btn-outline btn-magnetic"
+              href={getBookingConfirmWhatsAppUrl({
+                firstName: data.firstName,
+                service: data.serviceNames,
+                dateLabel: data.dateLabel,
+                timeLabel: data.timeLabel,
+                barberName: data.barberName,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp salone
+            </a>
             <button
               type="button"
               className="btn btn-outline btn-danger"
@@ -164,6 +178,15 @@ export function ManageAppointment({ token }: { token: string }) {
         <Link href="/#prenota" className="contact-link">
           Prenota un nuovo orario
         </Link>
+        {" · "}
+        <a
+          href={getWhatsAppUrl()}
+          className="contact-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          WhatsApp
+        </a>
         {" · "}
         <Link href="/terms" className="contact-link">
           Termini e disdetta

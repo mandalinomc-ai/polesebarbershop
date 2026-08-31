@@ -220,6 +220,28 @@ export function listBookableDates(
   return dates;
 }
 
+export type DayChip = { date: string; dow: string; day: string };
+
+export function listOpenDayChips(count: number, now: Date = new Date()): DayChip[] {
+  const dowFmt = new Intl.DateTimeFormat("it-IT", {
+    weekday: "short",
+    timeZone: "UTC",
+  });
+  const dayFmt = new Intl.DateTimeFormat("it-IT", {
+    day: "numeric",
+    timeZone: "UTC",
+  });
+  return listBookableDates(count, now).map((iso) => {
+    const { y, m, d } = parseDateParts(iso);
+    const cursor = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+    return {
+      date: iso,
+      dow: dowFmt.format(cursor).replace(".", ""),
+      day: dayFmt.format(cursor),
+    };
+  });
+}
+
 function appointmentsForBarber(
   appointments: ExistingAppointment[],
   barberId: string,

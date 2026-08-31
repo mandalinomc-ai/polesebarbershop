@@ -124,9 +124,9 @@ export function LandingSections() {
       </section>
 
       <section id="prenota" className="section-pad section-dark">
-        <div className="eyebrow reveal">Prenotazione</div>
+        <div className="eyebrow reveal">Prenota già ora</div>
         <h2 className="section-title font-serif reveal reveal-d1">
-          Prenota il tuo posto
+          Prima dell&apos;apertura ufficiale
         </h2>
         <div className="booking-layout reveal">
           <BookingSectionNote />

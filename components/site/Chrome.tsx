@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SITE, SALON_CONTACT, getWhatsAppUrl } from "@/lib/site-config";
+import { SITE, SALON_CONTACT, HERO_CTA, getWhatsAppUrl } from "@/lib/site-config";
 
 const LINKS = [
   { href: "/#about", label: "Chi siamo" },
@@ -70,7 +70,7 @@ export function Header() {
           </ul>
         </nav>
         <a href="/#prenota" className="btn btn-gold btn-magnetic header-cta header-cta--live">
-          Prenota ora
+          {HERO_CTA}
         </a>
         <button
           id="nav-toggle"
@@ -109,7 +109,7 @@ export function Header() {
           ))}
           <li>
             <a href="/#prenota" className="nav-panel-cta" onClick={() => setOpen(false)}>
-              Prenota ora
+              {HERO_CTA}
             </a>
           </li>
         </ul>
