@@ -1,14 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
-import { SITE, getMapsUrl, isComingSoon } from "@/lib/site-config";
+import { SITE, getMapsUrl } from "@/lib/site-config";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
@@ -38,16 +33,8 @@ export const metadata: Metadata = {
     url: SITE.siteUrl,
     images: [{ url: ogImage, alt: `${SITE.name} — ${SITE.brand}` }],
   },
-  twitter: {
-    card: "summary_large_image",
-    title,
-    description,
-    images: [ogImage],
-  },
-  icons: {
-    icon: "/assets/images/logo-512.png",
-    apple: "/assets/images/logo-512.png",
-  },
+  twitter: { card: "summary_large_image", title, description, images: [ogImage] },
+  icons: { icon: "/assets/images/logo-512.png", apple: "/assets/images/logo-512.png" },
   manifest: "/site.webmanifest",
 };
 
@@ -68,20 +55,13 @@ function jsonLd() {
         name: SITE.name,
         description,
         inLanguage: "it-IT",
-        publisher: { "@id": `${SITE.siteUrl}#business` },
       },
       {
         "@type": "HairSalon",
         "@id": `${SITE.siteUrl}#business`,
         name: SITE.name,
-        alternateName: SITE.legalName,
-        description,
-        url: SITE.siteUrl,
         telephone: SITE.phone,
         email: SITE.email,
-        image: ogImage,
-        logo: `${SITE.siteUrl}/assets/images/logo.png`,
-        priceRange: "€€",
         vatID: SITE.vatNumber,
         taxID: SITE.fiscalCode,
         address: {
@@ -92,64 +72,37 @@ function jsonLd() {
           postalCode: SITE.postalCode,
           addressCountry: "IT",
         },
-        geo: {
-          "@type": "GeoCoordinates",
-          latitude: SITE.latitude,
-          longitude: SITE.longitude,
-        },
+        geo: { "@type": "GeoCoordinates", latitude: SITE.latitude, longitude: SITE.longitude },
         openingHoursSpecification: [
           {
             "@type": "OpeningHoursSpecification",
-            dayOfWeek: [
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-            ],
+            dayOfWeek: ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
             opens: "09:30",
             closes: "20:00",
           },
         ],
         sameAs: [SITE.instagram],
-        founder: { "@type": "Person", name: "Felice Polese" },
         employee: [
           { "@type": "Person", name: "Felice" },
           { "@type": "Person", name: "Davide" },
         ],
-        areaServed: { "@type": "City", name: SITE.city },
         hasMap: getMapsUrl(),
       },
     ],
   };
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const soon = isComingSoon();
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="it"
-      className={`scroll-smooth ${inter.variable} ${cormorant.variable} ${soon ? "is-coming-soon" : "is-live"}`}
-    >
+    <html lang="it" className={`scroll-smooth ${inter.variable} ${cormorant.variable} is-live`}>
       <head>
-        <meta name="geo.region" content={`IT-${SITE.province}`} />
-        <meta name="geo.placename" content={SITE.city} />
-        <meta
-          name="geo.position"
-          content={`${SITE.latitude};${SITE.longitude}`}
-        />
-        <meta name="ICBM" content={`${SITE.latitude}, ${SITE.longitude}`} />
         <script
           id="schema-json"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
         />
       </head>
-      <body className={soon ? "mode-coming-soon" : "mode-live"}>{children}</body>
+      <body className="mode-live">{children}</body>
     </html>
   );
 }

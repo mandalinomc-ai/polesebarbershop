@@ -1,294 +1,127 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import {
-  findSlot,
-  formatItalianDate,
-  formatWallDate,
-  formatWallTime,
-  getAvailableSlots,
-  getFirstBookableDate,
-  wallTimeToUtc,
-} from "@/lib/availability";
-import {
-  ANYONE_BARBER_ID,
-  getBarber,
-  resolveServices,
-  totalsForServices,
-} from "@/lib/catalog";
-import {
-  customerConfirmEmail,
-  ownerNewBookingEmail,
-  sendEmail,
-} from "@/lib/email";
-import { scheduleWhatsAppReminder } from "@/lib/qstash";
+import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
+import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
+import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@/lib/email";
+import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
 import { SITE, getSiteUrl } from "@/lib/site-config";
-import {
-  getSupabaseAdmin,
-  isSupabaseConfigured,
-  SUPABASE_MISSING_IT,
-  type AppointmentRow,
-} from "@/lib/supabase";
-import {
-  customerConfirmMessage,
-  normalizeWhatsAppNumber,
-  ownerNewBookingMessage,
-  sendWhatsAppMessage,
-} from "@/lib/whatsapp";
+import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
+import { bookingSchema, flattenZodError } from "@/lib/validations";
+import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type BookingBody = {
-  serviceIds?: string[];
-  barberId?: string;
-  startsAt?: string;
-  date?: string;
-  startTime?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  customer?: {
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    phone?: string;
-  };
-};
-
-function isEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-async function loadDayAppointments(date: string) {
-  const db = getSupabaseAdmin();
-  if (!db) return [];
-  const dayStart = wallTimeToUtc(date, "00:00").toISOString();
-  const dayEnd = wallTimeToUtc(date, "23:59").toISOString();
-  const { data } = await db
-    .from("appointments")
-    .select("barber_id, starts_at, ends_at")
-    .eq("status", "confirmed")
-    .gte("starts_at", dayStart)
-    .lte("starts_at", dayEnd);
-  return (data || []).map(
-    (row: { barber_id: string; starts_at: string; ends_at: string }) => ({
-      barberId: row.barber_id,
-      startsAt: row.starts_at,
-      endsAt: row.ends_at,
-    }),
-  );
-}
-
 export async function POST(request: Request) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
-  }
-  const db = getSupabaseAdmin();
-  if (!db) {
-    return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
-  }
-
-  let body: BookingBody;
-  try {
-    body = (await request.json()) as BookingBody;
-  } catch {
+  let raw: unknown;
+  try { raw = await request.json(); } catch {
     return NextResponse.json({ error: "Richiesta non valida." }, { status: 400 });
   }
-
-  const serviceIds = body.serviceIds || [];
-  const services = resolveServices(serviceIds);
-  if (!services || !services.length) {
-    return NextResponse.json(
-      { error: "Seleziona almeno un servizio valido." },
-      { status: 400 },
-    );
+  const parsed = bookingSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: flattenZodError(parsed.error) }, { status: 400 });
   }
+  const body = parsed.data;
+  const services = resolveServices(body.serviceIds);
+  if (!services) return NextResponse.json({ error: "Seleziona almeno un servizio valido." }, { status: 400 });
+  if (!getBarber(body.barberId)) return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
 
-  const requestedBarber = body.barberId || ANYONE_BARBER_ID;
-  if (!getBarber(requestedBarber)) {
-    return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
-  }
-
-  let startsAt: Date | null = body.startsAt ? new Date(body.startsAt) : null;
-  if ((!startsAt || Number.isNaN(startsAt.getTime())) && body.date && body.startTime) {
-    startsAt = wallTimeToUtc(body.date, body.startTime);
-  }
-  if (!startsAt || Number.isNaN(startsAt.getTime())) {
-    return NextResponse.json({ error: "Orario non valido." }, { status: 400 });
+  const totals = totalsForServices(services);
+  if (body.date < getFirstBookableDate()) {
+    return NextResponse.json({ error: "Le prenotazioni aprono dal 1 settembre 2026." }, { status: 400 });
   }
 
-  const firstName = (body.customer?.firstName || body.firstName || "").trim();
-  const lastName = (body.customer?.lastName || body.lastName || "").trim();
-  const email = (body.customer?.email || body.email || "").trim().toLowerCase();
-  const phoneRaw = (body.customer?.phone || body.phone || "").trim();
-  const phone = normalizeWhatsAppNumber(phoneRaw);
-
-  if (!firstName || !lastName) {
-    return NextResponse.json({ error: "Inserisci nome e cognome." }, { status: 400 });
-  }
-  if (!isEmail(email)) {
-    return NextResponse.json({ error: "Email non valida." }, { status: 400 });
-  }
-  if (!phone) {
-    return NextResponse.json(
-      { error: "Numero WhatsApp non valido." },
-      { status: 400 },
-    );
-  }
-
-  const { durationMin, price, names } = totalsForServices(services);
-  const date = formatWallDate(startsAt);
-  const firstBookable = getFirstBookableDate();
-  if (date < firstBookable) {
-    return NextResponse.json(
-      { error: "Le prenotazioni aprono dal 1 settembre 2026." },
-      { status: 400 },
-    );
-  }
-
-  const appointments = await loadDayAppointments(date);
+  const startsAt = wallTimeToUtc(body.date, body.startTime);
   const slots = getAvailableSlots({
-    date,
-    barberId: requestedBarber,
-    durationMinutes: durationMin,
-    appointments,
+    date: body.date,
+    barberId: body.barberId,
+    durationMinutes: totals.durationMin,
+    appointments: await loadDayAppointments(body.date),
   });
   const slot = findSlot(slots, startsAt);
   if (!slot) {
-    return NextResponse.json(
-      { error: "Questo orario non è più disponibile. Scegline un altro." },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: "Questo orario non è più disponibile. Scegline un altro." }, { status: 409 });
   }
 
-  const assignedBarberId = slot.barberId;
-  const barber = getBarber(assignedBarberId);
+  const barberName = getBarber(slot.barberId)?.name || slot.barberId;
   const manageToken = randomBytes(24).toString("hex");
-
-  const insert = {
-    status: "confirmed" as const,
-    manage_token: manageToken,
-    customer_first_name: firstName,
-    customer_last_name: lastName,
-    customer_email: email,
-    customer_phone: phone,
-    barber_id: assignedBarberId,
-    service_ids: services.map((s) => s.id),
-    service_names: names,
-    duration_minutes: durationMin,
-    total_price: price,
-    starts_at: slot.startIso,
-    ends_at: slot.endIso,
-  };
-
-  const { data, error } = await db
-    .from("appointments")
-    .insert(insert)
-    .select("*")
-    .single();
-
-  if (error) {
-    const overlap =
-      error.code === "23P01" ||
-      /overlap|exclusion|appointments_no_overlap/i.test(error.message);
-    return NextResponse.json(
-      {
-        error: overlap
-          ? "Questo orario è appena stato prenotato. Scegline un altro."
-          : "Impossibile salvare la prenotazione. Riprova.",
-      },
-      { status: overlap ? 409 : 500 },
-    );
-  }
-
-  const row = data as AppointmentRow;
   const manageUrl = `${getSiteUrl()}/appuntamento/${manageToken}`;
   const timeLabel = formatWallTime(slot.start);
-  const dateLabel = formatItalianDate(date);
-  const barberName = barber?.name || assignedBarberId;
-  const ownerPhone = process.env.OWNER_PHONE || SITE.phone;
-  const ownerEmail = process.env.OWNER_EMAIL || SITE.email;
-
-  const customerEmail = customerConfirmEmail({
-    firstName,
-    service: names,
-    barber: barberName,
-    date: dateLabel,
-    time: timeLabel,
-    manageUrl,
-    priceLabel: `€ ${price}`,
+  const dateLabel = formatItalianDate(body.date);
+  const icsContent = buildIcs({
+    uid: `${manageToken}@polesebarbershop.it`,
+    startsAt: slot.start,
+    endsAt: slot.end,
+    summary: `${SITE.name} — ${totals.names}`,
+    description: `${totals.names} con ${barberName}. ${SITE.addressFull}. Tel ${SITE.phone}. ${manageUrl}`,
+    location: SITE.addressFull,
+    url: manageUrl,
   });
-  const ownerMail = ownerNewBookingEmail({
-    firstName,
-    lastName,
-    phone,
-    email,
-    service: names,
-    barber: barberName,
-    date: dateLabel,
-    time: timeLabel,
-    priceLabel: `€ ${price}`,
+  const filename = icsFilename(body.date, body.startTime);
+  const gcal = googleCalendarUrl({
+    startsAt: slot.start, endsAt: slot.end,
+    summary: `${SITE.name} — ${totals.names}`,
+    description: `${totals.names} con ${barberName}`,
+    location: SITE.addressFull,
   });
 
-  await Promise.allSettled([
-    sendEmail({ to: email, ...customerEmail }),
-    sendEmail({ to: ownerEmail, ...ownerMail }),
-    sendWhatsAppMessage(
-      phone,
-      customerConfirmMessage({
-        firstName,
-        service: names,
-        barber: barberName,
-        date: dateLabel,
-        time: timeLabel,
-        manageUrl,
-      }),
-    ),
-    sendWhatsAppMessage(
-      ownerPhone,
-      ownerNewBookingMessage({
-        firstName,
-        lastName,
-        phone,
-        service: names,
-        date: dateLabel,
-        time: timeLabel,
-        barber: barberName,
-      }),
-    ),
-  ]);
+  const warnings: string[] = [];
+  let persisted = false;
+  let appointmentId: string | null = null;
+  let row: AppointmentRow | null = null;
 
-  let qstashMessageId: string | undefined;
-  try {
-    const scheduled = await scheduleWhatsAppReminder({
-      appointmentId: row.id,
-      manageToken,
-      startsAt: slot.start,
-    });
-    qstashMessageId = scheduled.messageId;
-  } catch (err) {
-    console.error("qstash schedule", err);
+  if (!isSupabaseConfigured()) {
+    warnings.push(SUPABASE_MISSING_IT);
+  } else {
+    const db = getSupabaseAdmin();
+    if (!db) warnings.push(SUPABASE_MISSING_IT);
+    else {
+      const { data, error } = await db.from("appointments").insert({
+        status: "confirmed",
+        manage_token: manageToken,
+        customer_first_name: body.firstName,
+        customer_last_name: body.lastName,
+        customer_email: body.email,
+        customer_phone: body.phone,
+        gdpr_consent_at: new Date().toISOString(),
+        barber_id: slot.barberId,
+        service_ids: services.map((s) => s.id),
+        services_snapshot: servicesSnapshot(services),
+        starts_at: slot.startIso,
+        ends_at: slot.endIso,
+        duration_min: totals.durationMin,
+        price_cents: totals.priceEuro * 100,
+        is_walk_in: false,
+        notes: body.notes || null,
+        source: "online",
+      }).select("*").single();
+      if (error) {
+        const overlap = error.code === "23P01" || /overlap|exclusion/i.test(error.message);
+        return NextResponse.json(
+          { error: overlap ? "Questo orario è appena stato prenotato. Scegline un altro." : "Impossibile salvare la prenotazione. Riprova." },
+          { status: overlap ? 409 : 500 },
+        );
+      }
+      row = data as AppointmentRow;
+      persisted = true;
+      appointmentId = row.id;
+    }
   }
 
-  if (qstashMessageId) {
-    await db
-      .from("appointments")
-      .update({ qstash_message_id: qstashMessageId })
-      .eq("id", row.id);
-  }
+  const emails = await sendBookingEmails({
+    customerEmail: body.email,
+    customer: customerConfirmEmail({ firstName: body.firstName, service: totals.names, barber: barberName, date: dateLabel, time: timeLabel, manageUrl, priceLabel: totals.priceLabel }),
+    owner: ownerNewBookingEmail({ firstName: body.firstName, lastName: body.lastName, phone: body.phone, email: body.email, service: totals.names, barber: barberName, date: dateLabel, time: timeLabel, priceLabel: totals.priceLabel }),
+    ics: { filename, content: icsContent },
+  });
+  if (!emails.customer.ok) warnings.push(emails.customer.error);
+  if (!emails.admin.ok) warnings.push(`Email admin: ${emails.admin.error}`);
 
   return NextResponse.json({
-    ok: true,
-    appointmentId: row.id,
-    manageToken,
-    manageUrl,
-    barberId: assignedBarberId,
-    barberName,
-    startsAt: slot.startIso,
-    endsAt: slot.endIso,
-    durationMinutes: durationMin,
-    totalPrice: price,
-    serviceNames: names,
+    ok: true, persisted, emailSent: Boolean(emails.customer.ok), appointmentId, manageToken, manageUrl,
+    barberId: slot.barberId, barberName, startsAt: slot.startIso, endsAt: slot.endIso,
+    durationMinutes: totals.durationMin, totalPrice: totals.priceEuro, priceLabel: totals.priceLabel,
+    serviceNames: totals.names, dateLabel, timeLabel, ics: icsContent, icsFilename: filename,
+    googleCalendarUrl: gcal, warnings, appointment: row ? publicAppointment(row) : null,
   });
 }

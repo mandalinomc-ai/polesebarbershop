@@ -3,8 +3,7 @@ import { SITE } from "./site-config";
 export type DayHours = { open: string; close: string } | null;
 
 export const SHOP_HOURS: Record<number, DayHours> = {
-  0: null,
-  1: null,
+  0: null, 1: null,
   2: { open: "09:30", close: "20:00" },
   3: { open: "09:30", close: "20:00" },
   4: { open: "09:30", close: "20:00" },
@@ -12,19 +11,18 @@ export const SHOP_HOURS: Record<number, DayHours> = {
   6: { open: "09:30", close: "20:00" },
 };
 
-export type ServiceCategory = "Taglio" | "Barba" | "Trattamenti";
+export type ServiceCategory = "capelli" | "barba" | "colore";
 
 export const SERVICE_CATEGORY_LABEL: Record<ServiceCategory, string> = {
-  Taglio: "Taglio",
-  Barba: "Barba",
-  Trattamenti: "Trattamenti",
+  capelli: "Capelli",
+  barba: "Barba",
+  colore: "Colore & Trattamenti",
 };
 
 export type Service = {
   id: string;
   name: string;
   category: ServiceCategory;
-  price: number;
   priceEuro: number;
   priceMaxEuro: number | null;
   isVariablePrice: boolean;
@@ -32,36 +30,19 @@ export type Service = {
   description: string;
 };
 
-function svc(
-  id: string,
-  name: string,
-  category: ServiceCategory,
-  price: number,
-  durationMin: number,
-  description: string,
-): Service {
-  return {
-    id,
-    name,
-    category,
-    price,
-    priceEuro: price,
-    priceMaxEuro: null,
-    isVariablePrice: false,
-    durationMin,
-    description,
-  };
-}
-
 export const SERVICES: Service[] = [
-  svc("taglio-sartoriale", "Taglio sartoriale", "Taglio", 25, 45, "Consulenza viso, taglio su misura e styling premium."),
-  svc("barba-rasatura", "Barba & rasatura", "Barba", 18, 30, "Rasatura calda e rifinitura barba con trattamenti lenitivi."),
-  svc("colorazione-barba", "Colorazione barba", "Barba", 15, 20, "Copertura naturale tono su tono."),
-  svc("combo-premium", "Combo premium", "Trattamenti", 40, 75, "Taglio + barba + trattamento viso. L'esperienza completa."),
-  svc("trattamento-viso", "Trattamento viso", "Trattamenti", 20, 30, "Pulizia, scrub e maschera rigenerante."),
+  { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, isVariablePrice: false, durationMin: 25, description: "Shampoo specifico + Black Mask" },
+  { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 30, description: "Taglio classico" },
+  { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Solo styling / piega" },
+  { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 20, description: "Panno caldo con vaporizzatore + oli con fragranze" },
+  { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Rifinitura / modellatura classica" },
+  { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, isVariablePrice: true, durationMin: 45, description: "Meches / schiariture. Prezzo definito in salone." },
+  { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, isVariablePrice: true, durationMin: 45, description: "Decolorazione cutanea. Prezzo definito in salone." },
+  { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, isVariablePrice: true, durationMin: 30, description: "Tintura capelli. Prezzo definito in salone." },
+  { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, isVariablePrice: true, durationMin: 20, description: "Tintura barba. Prezzo definito in salone." },
 ];
 
-export const SERVICE_CATEGORIES: ServiceCategory[] = ["Taglio", "Barba", "Trattamenti"];
+export const SERVICE_CATEGORIES: ServiceCategory[] = ["capelli", "barba", "colore"];
 
 export type Barber = {
   id: string;
@@ -74,33 +55,14 @@ export type Barber = {
 export const ANYONE_BARBER_ID = "anyone";
 
 export const BARBERS: Barber[] = [
-  {
-    id: ANYONE_BARBER_ID,
-    name: "Chiunque sia disponibile",
-    title: "Assegniamo il barbiere con più disponibilità",
-    virtual: true,
-    hours: SHOP_HOURS,
-  },
-  {
-    id: "felice",
-    name: "Felice Polese",
-    title: "Master barber · " + SITE.name,
-    virtual: false,
-    hours: SHOP_HOURS,
-  },
+  { id: ANYONE_BARBER_ID, name: "Chiunque sia disponibile", title: "Assegniamo la poltrona libera tra Felice e Davide", virtual: true, hours: SHOP_HOURS },
+  { id: "felice", name: "Felice", title: "Master barber · " + SITE.name, virtual: false, hours: SHOP_HOURS },
+  { id: "davide", name: "Davide", title: "Barber · poltrona indipendente", virtual: false, hours: SHOP_HOURS },
 ];
 
-export function getService(id: string): Service | undefined {
-  return SERVICES.find((s) => s.id === id);
-}
-
-export function getBarber(id: string): Barber | undefined {
-  return BARBERS.find((b) => b.id === id);
-}
-
-export function getRealBarbers(barbers: Barber[] = BARBERS): Barber[] {
-  return barbers.filter((b) => !b.virtual);
-}
+export function getService(id: string) { return SERVICES.find((s) => s.id === id); }
+export function getBarber(id: string) { return BARBERS.find((b) => b.id === id); }
+export function getRealBarbers(barbers: Barber[] = BARBERS) { return barbers.filter((b) => !b.virtual); }
 
 export function resolveServices(ids: string[]): Service[] | null {
   const unique = [...new Set(ids)];
@@ -111,40 +73,23 @@ export function resolveServices(ids: string[]): Service[] | null {
 }
 
 export function formatPrice(service: Service): string {
-  return `€ ${service.price}`;
+  if (service.isVariablePrice) return `da ${service.priceEuro} €`;
+  return `${service.priceEuro} €`;
 }
 
 export function formatPriceRange(service: Service): string {
+  if (service.isVariablePrice && service.priceMaxEuro != null) {
+    return `da ${service.priceEuro} € a ${service.priceMaxEuro} €`;
+  }
   return formatPrice(service);
 }
 
-export function totalsForServices(services: Service[]): {
-  durationMin: number;
-  price: number;
-  priceEuro: number;
-  priceMaxEuro: number;
-  isVariable: boolean;
-  names: string;
-  priceLabel: string;
-} {
+export function totalsForServices(services: Service[]) {
   const durationMin = services.reduce((sum, s) => sum + s.durationMin, 0);
-  const price = services.reduce((sum, s) => sum + s.price, 0);
+  const priceEuro = services.reduce((sum, s) => sum + s.priceEuro, 0);
+  const priceMaxEuro = services.reduce((sum, s) => sum + (s.priceMaxEuro ?? s.priceEuro), 0);
+  const isVariable = services.some((s) => s.isVariablePrice);
   const names = services.map((s) => s.name).join(" + ");
-  return {
-    durationMin,
-    price,
-    priceEuro: price,
-    priceMaxEuro: price,
-    isVariable: false,
-    names,
-    priceLabel: `€ ${price}`,
-  };
-}
-
-export function servicesByCategory(): Record<ServiceCategory, Service[]> {
-  return {
-    Taglio: SERVICES.filter((s) => s.category === "Taglio"),
-    Barba: SERVICES.filter((s) => s.category === "Barba"),
-    Trattamenti: SERVICES.filter((s) => s.category === "Trattamenti"),
-  };
+  const priceLabel = isVariable ? `da ${priceEuro} €` : `${priceEuro} €`;
+  return { durationMin, priceEuro, priceMaxEuro, isVariable, names, priceLabel };
 }

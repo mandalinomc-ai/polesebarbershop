@@ -2,45 +2,46 @@ POLESE BARBERSHOP
 =================
 
 Brand: FELICE POLESE — Barberia d'élite a Benevento
-Nuovo locale: Corso Dante n. 45, 82100 Benevento BN
+Sede: Corso Dante Alighieri, 44 – 82100 Benevento (BN)
+C.F.: PLSFLC04S21A783K | P.IVA: 01894030624
 
 SITO LIVE
 ---------
   https://polesebarbershop.vercel.app
-
-REPOSITORY GITHUB
------------------
-  https://github.com/mandalinomc-ai/polesebarbershop
 
 AVVIO LOCALE
 ------------
   npm install
   npm run dev
   Apri http://localhost:3000
-
   Windows: doppio click su AVVIA.cmd
 
 PRENOTAZIONI
 ------------
-  Wizard in stile Fresha nella sezione #prenota (e pagina /prenota).
-  Primo giorno prenotabile: max(oggi, 1 settembre 2026).
-  Conferma via email (Resend) e WhatsApp (Twilio).
-  Promemoria WhatsApp 30 minuti prima (QStash).
+  Wizard 5 passi (Fresha): Servizi → Barbiere → Data/ora → Dati → Conferma.
+  Barbieri: Felice e Davide + «Chiunque sia disponibile».
+  Primo giorno: max(oggi, 1 settembre 2026).
+  Conferma + email Resend con allegato .ics (VALARM 30 minuti).
+  Nessun Twilio / QStash.
 
-  Copia .env.example in .env.local e inserisci le chiavi.
-  Applica la migration Supabase: supabase/migrations/001_appointments.sql
+  Copia .env.example in .env.local
+  Migration: supabase/migrations/001_schema.sql
+
+AREA ADMIN
+----------
+  /admin — agenda, walk-in, incassi. Password: ADMIN_PASSWORD
 
 CONTATTI
 --------
-  Tel / WhatsApp: 351 252 3087
+  Tel: +39 327 015 6225
   Instagram: @felicepolese_barber
+
+PAGINE LEGALI
+-------------
+  /privacy-policy  /terms
+  Tutti i prezzi sono da intendersi IVA inclusa.
 
 TEST
 ----
-  npm test          (vitest — algoritmo slot)
-  npm run build     (Next.js)
-
-DEPLOY
-------
-  Vercel rileva Next.js automaticamente.
-  Imposta le variabili d'ambiente elencate in .env.example.
+  npm test
+  npm run build

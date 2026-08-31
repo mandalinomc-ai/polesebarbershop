@@ -11,4 +11,4 @@ node_modules
 out
 coverage
 *.log
-*.tsbuildinfo
+tsconfig.tsbuildinfo

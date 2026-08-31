@@ -124,11 +124,24 @@ export function WhatsAppFab() {
 
 export function Footer() {
   return (
-    <footer className="site-footer">
-      <span>
-        © {SITE.name} · {SITE.brand}
-      </span>
-      <span>{SITE.addressFull}</span>
+    <footer className="site-footer legal-footer">
+      <div>
+        <p>
+          {SITE.name} | {SITE.addressFull}
+        </p>
+        <p>
+          C.F.: {SITE.fiscalCode} | P.IVA: {SITE.vatNumber}
+        </p>
+        <p>{SITE.pricesIncludeVat}</p>
+      </div>
+      <div className="footer-links">
+        <a href="/privacy-policy">Privacy</a>
+        <a href="/terms">Termini</a>
+        <a href="/admin">Admin</a>
+        <a href={SITE.instagram} target="_blank" rel="noopener noreferrer">
+          {SITE.instagramHandle}
+        </a>
+      </div>
     </footer>
   );
 }
