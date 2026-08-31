@@ -44,7 +44,7 @@ export function Hero() {
             WhatsApp
           </a>
           <a href={getMapsUrl()} className="btn btn-outline btn-magnetic" target="_blank" rel="noopener noreferrer">
-            Maps
+            Raggiungici ora
           </a>
         </div>
         <HeroCalendar />

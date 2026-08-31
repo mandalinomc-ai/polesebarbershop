@@ -3,7 +3,7 @@ import { formatItalianDate, formatWallDate, formatWallTime } from "@/lib/availab
 import { namesFromSnapshot, publicAppointment, shouldAttachCalendarReminder } from "@/lib/appointments";
 import { customerCancelEmail, ownerCancelEmail, sendCancelEmails } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
-import { SITE, CANCEL_HOURS_BEFORE, getSiteUrl } from "@/lib/site-config";
+import { SITE, CANCEL_HOURS_BEFORE, CANCEL_NOTICE_IT, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -87,7 +87,7 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
     }
     const hoursLeft = (new Date(row.starts_at).getTime() - Date.now()) / 3_600_000;
     if (hoursLeft < CANCEL_HOURS_BEFORE) {
-      return NextResponse.json({ error: `La disdetta è possibile fino a ${CANCEL_HOURS_BEFORE} ore prima. Chiama il ${SITE.phone}.` }, { status: 400 });
+      return NextResponse.json({ error: `La disdetta è possibile fino a ${CANCEL_NOTICE_IT} prima. Chiama il ${SITE.phone}.` }, { status: 400 });
     }
     const { data, error } = await db.from("appointments").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", row.id).select("*").single();
     if (error) return NextResponse.json({ error: "Impossibile annullare la prenotazione." }, { status: 500 });

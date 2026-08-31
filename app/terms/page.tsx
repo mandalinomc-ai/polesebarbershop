@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Header, Footer, ClientEffects } from "@/components/site/Chrome";
-import { SITE, CANCEL_HOURS_BEFORE } from "@/lib/site-config";
+import { SITE, CANCEL_NOTICE_IT } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: `Termini e condizioni — ${SITE.name}`,
@@ -28,7 +28,7 @@ export default function TermsPage() {
           </p>
           <h2>Disdetta</h2>
           <p>
-            Puoi disdire gratuitamente fino a {CANCEL_HOURS_BEFORE} ore prima
+            Puoi disdire gratuitamente fino a {CANCEL_NOTICE_IT} prima
             dell&apos;appuntamento, dal link ricevuto via email
             (/appuntamento/…). Oltre tale termine chiama il {SITE.phone}. La
             disdetta libera subito lo slot e annulla il promemoria di 30 minuti

@@ -1,4 +1,4 @@
-import { Header, Footer, WhatsAppFab } from "@/components/site/Chrome";
+import { Header, Footer, SiteFabs } from "@/components/site/Chrome";
 import { ManageAppointment } from "./ManageAppointment";
 import { SITE } from "@/lib/site-config";
 import type { Metadata } from "next";
@@ -21,7 +21,7 @@ export default async function AppointmentPage({
         <ManageAppointment token={token} />
       </main>
       <Footer />
-      <WhatsAppFab />
+      <SiteFabs />
     </>
   );
 }

@@ -50,4 +50,12 @@ describe("mobile QA (390px)", () => {
     expect(calendar).toMatch(/prenota/);
     expect(chrome).toMatch(/HERO_CTA/);
   });
+
+  it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
+    expect(chrome).toMatch(/fab-stack/);
+    expect(chrome).toMatch(/aria-label="Raggiungici ora"/);
+    expect(chrome.indexOf("<MapsFab />")).toBeLessThan(chrome.indexOf("<WhatsAppFab />"));
+    expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
+    expect(css).toMatch(/\.wa-fab,\s*\n\.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
+  });
 });

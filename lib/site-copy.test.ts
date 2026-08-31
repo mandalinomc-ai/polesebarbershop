@@ -15,6 +15,10 @@ import {
   getSocialChannels,
   getWhatsAppChatUrl,
   getPrenotaUrl,
+  getMapsUrl,
+  MAPS_DESTINATION,
+  CANCEL_HOURS_BEFORE,
+  CANCEL_NOTICE_IT,
 } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
@@ -178,5 +182,32 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/SocialTextLinks/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.qr-card \{[\s\S]*?min-height:\s*44px/);
+  });
+
+  it("stacks a Maps FAB Raggiungici ora to Corso Dante Alighieri 44", () => {
+    expect(CANCEL_HOURS_BEFORE).toBe(1);
+    expect(MAPS_DESTINATION).toBe("Corso Dante Alighieri 44, 82100 Benevento");
+    expect(getMapsUrl()).toContain("maps.google.com");
+    expect(getMapsUrl()).toContain("destination=");
+    expect(getMapsUrl()).toContain(encodeURIComponent("Corso Dante Alighieri 44"));
+    expect(CANCEL_NOTICE_IT).toBe("1 ora");
+    const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
+    expect(chrome).toMatch(/id="maps-fab"/);
+    expect(chrome).toMatch(/aria-label="Raggiungici ora"/);
+    expect(chrome).toMatch(/Raggiungici ora — Corso Dante Alighieri, 44/);
+    expect(chrome).toMatch(/fab-stack/);
+    expect(chrome).toMatch(/<MapsFab \/>/);
+    expect(chrome).toMatch(/<WhatsAppFab \/>/);
+    const stack = chrome.slice(chrome.indexOf("fab-stack"));
+    expect(stack.indexOf("<MapsFab")).toBeLessThan(stack.indexOf("<WhatsAppFab"));
+    const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
+    expect(page).toMatch(/SiteFabs/);
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+    expect(css).toMatch(/\.maps-fab \{/);
+    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
+    expect(hero).toMatch(/Raggiungici ora/);
+    const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8");
+    expect(terms).toMatch(/CANCEL_NOTICE_IT/);
+    expect(terms).not.toMatch(/24h|24 ore/);
   });
 });

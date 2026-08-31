@@ -27,6 +27,7 @@
   --pad-x: clamp(1.25rem, 4vw, 2rem);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 html {
@@ -200,27 +201,59 @@ select.input-lux { appearance: none; cursor: pointer; }
 .map-link { font-size: 0.78rem; letter-spacing: 0.08em; margin-top: 0.35rem; }
 .map-link:hover, .contact-link:hover { opacity: 0.75; }
 
-.wa-fab {
+.fab-stack {
   position: fixed;
   right: calc(1rem + var(--safe-right, 0px));
   bottom: calc(1rem + var(--safe-bottom));
   z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.wa-fab,
+.maps-fab {
+  position: relative;
   width: 56px;
   height: 56px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.wa-fab {
   background: #25D366;
   color: #fff;
   box-shadow: 0 8px 28px rgba(37, 211, 102, 0.35);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .wa-fab:hover {
   transform: scale(1.06);
   box-shadow: 0 12px 36px rgba(37, 211, 102, 0.45);
 }
-.mode-coming-soon .wa-fab { bottom: calc(1rem + var(--safe-bottom)); }
+.maps-fab {
+  background: var(--gold);
+  color: var(--void);
+  box-shadow: 0 8px 28px rgba(201, 169, 98, 0.38);
+}
+.maps-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 36px rgba(201, 169, 98, 0.5);
+}
+.fab-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.mode-coming-soon .fab-stack { bottom: calc(1rem + var(--safe-bottom)); }
 
 /* Logo ufficiale Felice Polese (PDF: bianco su trasparente per il dark luxury) */
 .brand-logo {
@@ -1597,7 +1630,13 @@ img { max-width: 100%; }
   .admin-modal { width: 100%; padding: 1.15rem 1rem; }
   .admin-head-actions { flex-direction: column; align-items: stretch; }
   .admin-head-actions .btn { width: 100%; }
-  .wa-fab { width: 48px; height: 48px; }
+  .wa-fab,
+  .maps-fab {
+    width: 48px;
+    height: 48px;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 720px) {

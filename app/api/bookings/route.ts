@@ -121,8 +121,28 @@ export async function POST(request: Request) {
 
   const emails = await sendBookingEmails({
     customerEmail: body.email,
-    customer: customerConfirmEmail({ firstName: body.firstName, service: totals.names, barber: barberName, date: dateLabel, time: timeLabel, manageUrl, priceLabel: totals.priceLabel }),
-    owner: ownerNewBookingEmail({ firstName: body.firstName, lastName: body.lastName, phone: body.phone, email: body.email, service: totals.names, barber: barberName, date: dateLabel, time: timeLabel, priceLabel: totals.priceLabel }),
+    customer: customerConfirmEmail({
+      firstName: body.firstName,
+      service: totals.names,
+      barber: barberName,
+      date: dateLabel,
+      time: timeLabel,
+      manageUrl,
+    }),
+    owner: ownerNewBookingEmail({
+      firstName: body.firstName,
+      lastName: body.lastName,
+      phone: body.phone,
+      email: body.email,
+      service: totals.names,
+      durationMin: totals.durationMin,
+      barber: barberName,
+      date: dateLabel,
+      time: timeLabel,
+      priceLabel: totals.priceLabel,
+      notes: body.notes,
+      manageUrl,
+    }),
     ics: { filename, content: icsContent },
   });
   if (!emails.customer.ok) warnings.push(emails.customer.error);

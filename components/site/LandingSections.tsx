@@ -178,7 +178,7 @@ export function LandingSections() {
                 rel="noopener noreferrer"
                 className="contact-link"
               >
-                Maps
+                Raggiungici ora
               </a>
             </p>
           </div>

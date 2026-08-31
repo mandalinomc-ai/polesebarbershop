@@ -1,4 +1,4 @@
-import { Header, Footer, WhatsAppFab, ClientEffects } from "@/components/site/Chrome";
+import { Header, Footer, SiteFabs, ClientEffects } from "@/components/site/Chrome";
 import { BookingSectionNote, FreshaBookingFlow } from "@/components/booking/FreshaBookingFlow";
 import { SITE } from "@/lib/site-config";
 import type { Metadata } from "next";
@@ -21,7 +21,7 @@ export default function PrenotaPage() {
         </div>
       </main>
       <Footer />
-      <WhatsAppFab />
+      <SiteFabs />
       <ClientEffects />
     </>
   );

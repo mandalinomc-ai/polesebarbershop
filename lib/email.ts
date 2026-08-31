@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { SITE, getAdminEmail } from "./site-config";
+import { CANCEL_NOTICE_IT, SITE, getAdminEmail } from "./site-config";
 
 export type EmailSendResult =
   | { ok: true; skipped?: boolean; id?: string }
@@ -108,31 +108,125 @@ function wrap(inner: string) {
   </div></body></html>`;
 }
 
+const CUSTOMER_CONFIRM_ADDRESS = "Corso Dante Alighieri 44";
+
 export function customerConfirmEmail(opts: {
-  firstName: string; service: string; barber: string; date: string; time: string; manageUrl: string; priceLabel: string;
+  firstName: string;
+  service: string;
+  barber: string;
+  date: string;
+  time: string;
+  manageUrl?: string;
+  priceLabel?: string;
 }) {
+  const manage = opts.manageUrl?.trim() || "";
+  const textLines = [
+    `Ciao ${opts.firstName}, la tua prenotazione da Barbershop Polese è confermata! 💈`,
+    "",
+    `📅 Data e Ora: ${opts.date} alle ${opts.time}`,
+    `✂️ Servizio: ${opts.service}`,
+    `👤 Barber: ${opts.barber}`,
+    `📍 Dove siamo: ${CUSTOMER_CONFIRM_ADDRESS}`,
+    "",
+    `Per modifiche o disdette ti preghiamo di avvisarci con almeno ${CANCEL_NOTICE_IT} di anticipo.`,
+  ];
+  if (manage) {
+    textLines.push("", `Gestisci o disdici: ${manage}`);
+  }
+  textLines.push("", "Ti aspettiamo! 🔥");
+  const text = textLines.join("\n");
+
+  const name = escapeHtml(opts.firstName);
+  const service = escapeHtml(opts.service);
+  const barber = escapeHtml(opts.barber);
+  const date = escapeHtml(opts.date);
+  const time = escapeHtml(opts.time);
+  const manageHref = manage ? escapeHtml(manage) : "";
+  const manageHtml = manage
+    ? `<p style="margin:20px 0 0;"><a href="${manageHref}" style="color:#C9A962;">Gestisci o disdici</a></p>`
+    : "";
+
   return {
     subject: `Prenotazione confermata — ${SITE.name}`,
-    text: `Ciao ${opts.firstName}, prenotazione ${opts.service} con ${opts.barber} il ${opts.date} alle ${opts.time} (${opts.priceLabel}). ICS in allegato (promemoria 30 min). ${opts.manageUrl}`,
-    html: wrap(`<p>Ciao ${opts.firstName},</p><p>prenotazione <strong>confermata</strong>.</p><p><strong>${opts.service}</strong> · ${opts.priceLabel}<br/>con ${opts.barber}<br/>${opts.date} alle ${opts.time}</p><p>In allegato il file .ics: un solo promemoria, 30 minuti prima.</p><p><a href="${opts.manageUrl}" style="color:#C9A962;">Gestisci o disdici</a> (fino a 3 ore prima). Se disdici, lo slot si libera e il promemoria non parte.</p>`),
+    text,
+    html: wrap(`
+      <p style="font-size:18px;line-height:1.55;">Ciao ${name}, la tua prenotazione da Barbershop Polese è confermata! 💈</p>
+      <p style="margin:24px 0 8px;letter-spacing:0.18em;text-transform:uppercase;font-size:11px;color:#C9A962;">Dettagli</p>
+      <p style="line-height:1.8;margin:0;">📅 Data e Ora: <strong>${date}</strong> alle <strong>${time}</strong><br/>
+      ✂️ Servizio: <strong>${service}</strong><br/>
+      👤 Barber: <strong>${barber}</strong><br/>
+      📍 Dove siamo: ${CUSTOMER_CONFIRM_ADDRESS}</p>
+      <p style="margin-top:24px;">Per modifiche o disdette ti preghiamo di avvisarci con almeno <strong>${CANCEL_NOTICE_IT}</strong> di anticipo.</p>
+      ${manageHtml}
+      <p style="margin-top:24px;font-size:18px;">Ti aspettiamo! 🔥</p>
+      <p style="font-size:13px;color:#B5B5B5;">In allegato il file .ics (promemoria 30 minuti prima).</p>`),
   };
 }
 
 export function ownerNewBookingEmail(opts: {
-  firstName: string; lastName: string; phone: string; email: string; service: string; barber: string; date: string; time: string; priceLabel: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  service: string;
+  durationMin: number;
+  barber: string;
+  date: string;
+  time: string;
+  priceLabel: string;
+  notes?: string;
+  manageUrl?: string;
 }) {
+  const notes = opts.notes?.trim() || "";
+  const manage = opts.manageUrl?.trim() || "";
+  const textLines = [
+    "NUOVA PRENOTAZIONE",
+    "",
+    `Nome: ${opts.firstName}`,
+    `Cognome: ${opts.lastName}`,
+    `Telefono: ${opts.phone}`,
+    `Email: ${opts.email}`,
+    `Servizio/i: ${opts.service}`,
+    `Durata: ${opts.durationMin} min`,
+    `Prezzo: ${opts.priceLabel}`,
+    `Barbiere: ${opts.barber}`,
+    `Data: ${opts.date}`,
+    `Ora: ${opts.time}`,
+  ];
+  if (notes) textLines.push(`Note: ${notes}`);
+  if (manage) textLines.push(`Gestisci: ${manage}`);
+  const text = textLines.join("\n");
+
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:6px 12px 6px 0;color:#B5B5B5;vertical-align:top;white-space:nowrap;">${label}</td><td style="padding:6px 0;color:#F4F2EF;">${escapeHtml(value)}</td></tr>`;
+
   return {
-    subject: `Nuova prenotazione — ${opts.firstName} ${opts.lastName}`,
-    text: `Nuova prenotazione: ${opts.firstName} ${opts.lastName} (${opts.phone}, ${opts.email}) — ${opts.service} (${opts.priceLabel}) con ${opts.barber} il ${opts.date} alle ${opts.time}.`,
-    html: wrap(`<p>Nuova prenotazione</p><p>${opts.firstName} ${opts.lastName}<br/>${opts.phone} · ${opts.email}<br/>${opts.service} · ${opts.priceLabel}<br/>${opts.date} alle ${opts.time}<br/>Barbiere: ${opts.barber}</p>`),
+    subject: `NUOVA PRENOTAZIONE — ${opts.firstName} ${opts.lastName}`,
+    text,
+    html: wrap(`
+      <p style="letter-spacing:0.2em;text-transform:uppercase;font-size:12px;color:#C9A962;">NUOVA PRENOTAZIONE</p>
+      <table style="border-collapse:collapse;font-size:15px;line-height:1.45;">
+        ${row("Nome", opts.firstName)}
+        ${row("Cognome", opts.lastName)}
+        ${row("Telefono", opts.phone)}
+        ${row("Email", opts.email)}
+        ${row("Servizio/i", opts.service)}
+        ${row("Durata", `${opts.durationMin} min`)}
+        ${row("Prezzo", opts.priceLabel)}
+        ${row("Barbiere", opts.barber)}
+        ${row("Data", opts.date)}
+        ${row("Ora", opts.time)}
+        ${notes ? row("Note", notes) : ""}
+      </table>
+      ${manage ? `<p style="margin-top:20px;"><a href="${escapeHtml(manage)}" style="color:#C9A962;">Apri / gestisci prenotazione</a></p>` : ""}`),
   };
 }
 
 export function customerCancelEmail(opts: { firstName: string; service: string; date: string; time: string }) {
   return {
     subject: `Prenotazione annullata — ${SITE.name}`,
-    text: `Ciao ${opts.firstName}, la prenotazione per ${opts.service} del ${opts.date} alle ${opts.time} è stata annullata. Lo slot è di nuovo libero. Apri l'allegato .ics di disdetta per togliere l'appuntamento e il promemoria di 30 minuti dal calendario.`,
-    html: wrap(`<p>Ciao ${opts.firstName},</p><p>la prenotazione per <strong>${opts.service}</strong> del ${opts.date} alle ${opts.time} è stata <strong>annullata</strong>.</p><p>Lo slot è di nuovo libero: non partirà il promemoria di 30 minuti. Apri l'allegato .ics di disdetta per rimuovere l'evento dal calendario.</p>`),
+    text: `Ciao ${opts.firstName}, la prenotazione per ${opts.service} del ${opts.date} alle ${opts.time} è stata annullata. Grazie per averci avvisato con almeno ${CANCEL_NOTICE_IT} di anticipo. Lo slot è di nuovo libero. Apri l'allegato .ics di disdetta per togliere l'appuntamento e il promemoria di 30 minuti dal calendario.`,
+    html: wrap(`<p>Ciao ${escapeHtml(opts.firstName)},</p><p>la prenotazione per <strong>${escapeHtml(opts.service)}</strong> del ${escapeHtml(opts.date)} alle ${escapeHtml(opts.time)} è stata <strong>annullata</strong>.</p><p>Grazie per averci avvisato con almeno <strong>${CANCEL_NOTICE_IT}</strong> di anticipo. Lo slot è di nuovo libero: non partirà il promemoria di 30 minuti. Apri l'allegato .ics di disdetta per rimuovere l'evento dal calendario.</p>`),
   };
 }
 
@@ -141,8 +235,8 @@ export function ownerCancelEmail(opts: {
 }) {
   return {
     subject: `Prenotazione annullata — ${opts.firstName} ${opts.lastName}`,
-    text: `Disdetta: ${opts.firstName} ${opts.lastName} (${opts.email}) — ${opts.service} il ${opts.date} alle ${opts.time}. Lo slot è di nuovo libero.`,
-    html: wrap(`<p>Prenotazione <strong>annullata</strong></p><p>${opts.firstName} ${opts.lastName}<br/>${opts.email}<br/>${opts.service}<br/>${opts.date} alle ${opts.time}</p><p>Lo slot è di nuovo libero. In allegato il file .ics di disdetta.</p>`),
+    text: `Disdetta (preavviso ${CANCEL_NOTICE_IT}): ${opts.firstName} ${opts.lastName} (${opts.email}) — ${opts.service} il ${opts.date} alle ${opts.time}. Lo slot è di nuovo libero.`,
+    html: wrap(`<p>Prenotazione <strong>annullata</strong> (preavviso ${CANCEL_NOTICE_IT})</p><p>${escapeHtml(opts.firstName)} ${escapeHtml(opts.lastName)}<br/>${escapeHtml(opts.email)}<br/>${escapeHtml(opts.service)}<br/>${escapeHtml(opts.date)} alle ${escapeHtml(opts.time)}</p><p>Lo slot è di nuovo libero. In allegato il file .ics di disdetta.</p>`),
   };
 }
 
@@ -163,8 +257,16 @@ export async function sendBookingEmails(opts: {
   ics: { filename: string; content: string };
 }) {
   const customer = await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics });
-  // Admin/owner: ADMIN_EMAIL → OWNER_EMAIL → felicepolese550@gmail.com
-  const admin = await sendEmail({ to: getAdminEmail(), ...opts.owner, ics: opts.ics });
+  // Always send to configured admin (ADMIN_EMAIL → OWNER_EMAIL → salon Gmail).
+  // Resend test-mode may only deliver to the Resend account owner; that must not fail the booking.
+  let admin: EmailSendResult;
+  try {
+    admin = await sendEmail({ to: getAdminEmail(), ...opts.owner, ics: opts.ics });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invio email admin fallito";
+    logEmailError("admin non inviata, prenotazione confermata comunque", { error: message });
+    admin = { ok: false, error: message };
+  }
   return { customer, admin };
 }
 

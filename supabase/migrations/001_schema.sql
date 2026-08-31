@@ -128,9 +128,9 @@ declare appt public.appointments;
 begin
   if p_token is null or length(trim(p_token)) < 16 then raise exception 'Token non valido'; end if;
   update public.appointments set status = 'cancelled', cancelled_at = now()
-  where manage_token = p_token and status in ('pending','confirmed') and starts_at > now() + interval '3 hours'
+  where manage_token = p_token and status in ('pending','confirmed') and starts_at > now() + interval '1 hour'
   returning * into appt;
-  if appt is null then raise exception 'Appuntamento non trovato o non cancellabile (disdetta almeno 3 ore prima)'; end if;
+  if appt is null then raise exception 'Appuntamento non trovato o non cancellabile (disdetta almeno 1 ora prima)'; end if;
   return appt;
 end;
 $$;

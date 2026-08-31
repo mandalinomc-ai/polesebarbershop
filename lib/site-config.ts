@@ -44,7 +44,10 @@ export const SITE = {
 export const SLOT_STEP_MINUTES = 5;
 export const MIN_NOTICE_MINUTES = 15;
 export const REMINDER_LEAD_MINUTES = 30;
-export const CANCEL_HOURS_BEFORE = 3;
+export const CANCEL_HOURS_BEFORE = 1;
+/** Italian copy: "1 ora" (not "1 ore" / not 24h). */
+export const CANCEL_NOTICE_IT = "1 ora";
+export const MAPS_DESTINATION = "Corso Dante Alighieri 44, 82100 Benevento";
 
 /** Generic salon contact — info, hours, prices or a quick tip. */
 export const SALON_CONTACT_MESSAGE =
@@ -121,7 +124,7 @@ export const SALON_CONTACT = {
 } as const;
 
 export function getMapsUrl(): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SITE.addressFull)}`;
+  return `https://maps.google.com/?destination=${encodeURIComponent(MAPS_DESTINATION)}`;
 }
 
 export function getWhatsAppUrl(message?: string): string {

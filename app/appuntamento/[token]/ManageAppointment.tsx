@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CANCEL_HOURS_BEFORE, SITE, getBookingConfirmWhatsAppUrl, getWhatsAppUrl } from "@/lib/site-config";
+import { CANCEL_NOTICE_IT, SITE, getBookingConfirmWhatsAppUrl, getWhatsAppUrl } from "@/lib/site-config";
 import { icsDataUri } from "@/lib/ics";
 
 type Appointment = {
@@ -124,7 +124,7 @@ export function ManageAppointment({ token }: { token: string }) {
       {!cancelled ? (
         <>
           <p className="booking-open-note" style={{ marginTop: "1.25rem" }}>
-            Puoi disdire gratuitamente fino a {CANCEL_HOURS_BEFORE} ore prima.
+            Puoi disdire gratuitamente fino a {CANCEL_NOTICE_IT} prima.
             Lo slot si libera e il promemoria di 30 minuti non parte. Oltre tale
             termine chiama il {SITE.phone}.
           </p>
