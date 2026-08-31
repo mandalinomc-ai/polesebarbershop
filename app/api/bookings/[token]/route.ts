@@ -3,7 +3,7 @@ import { formatItalianDate, formatWallDate, formatWallTime } from "@/lib/availab
 import { namesFromSnapshot, publicAppointment, shouldAttachCalendarReminder } from "@/lib/appointments";
 import { customerCancelEmail, sendEmail } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
-import { SITE, CANCEL_HOURS_BEFORE } from "@/lib/site-config";
+import { SITE, CANCEL_HOURS_BEFORE, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -29,6 +29,7 @@ export async function GET(request: Request, ctx: RouteCtx) {
     if (wantIcs) {
       const names = namesFromSnapshot(row.services_snapshot);
       const cancelled = !shouldAttachCalendarReminder(row.status);
+      const manageUrl = `${getSiteUrl()}/appuntamento/${row.manage_token}`;
       const ics = buildIcs({
         uid: `${row.manage_token}@polesebarbershop.it`,
         startsAt: new Date(row.starts_at),
@@ -38,6 +39,7 @@ export async function GET(request: Request, ctx: RouteCtx) {
           ? `Prenotazione annullata. ${names}`
           : names,
         location: SITE.addressFull,
+        url: manageUrl,
         cancelled,
       });
       const start = new Date(row.starts_at);
@@ -65,13 +67,23 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
     const { db, row } = await loadByToken(token);
     if (!db || !row) return NextResponse.json({ error: "Appuntamento non trovato." }, { status: 404 });
     if (row.status === "cancelled") {
-      return NextResponse.json({
-        ok: true,
-        alreadyCancelled: true,
-        slotFreed: true,
-        reminderCancelled: true,
-        ...publicAppointment(row),
-      });
+    return NextResponse.json({
+      ok: true,
+      alreadyCancelled: true,
+      slotFreed: true,
+      reminderCancelled: true,
+      ics: buildIcs({
+        uid: `${row.manage_token}@polesebarbershop.it`,
+        startsAt: new Date(row.starts_at),
+        endsAt: new Date(row.ends_at),
+        summary: `${SITE.name} — ${namesFromSnapshot(row.services_snapshot)}`,
+        description: `Prenotazione annullata. ${namesFromSnapshot(row.services_snapshot)}`,
+        location: SITE.addressFull,
+        url: `${getSiteUrl()}/appuntamento/${row.manage_token}`,
+        cancelled: true,
+      }),
+      ...publicAppointment(row),
+    });
     }
     const hoursLeft = (new Date(row.starts_at).getTime() - Date.now()) / 3_600_000;
     if (hoursLeft < CANCEL_HOURS_BEFORE) {
@@ -81,6 +93,7 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
     if (error) return NextResponse.json({ error: "Impossibile annullare la prenotazione." }, { status: 500 });
     const start = new Date(row.starts_at);
     const names = namesFromSnapshot(row.services_snapshot);
+    const manageUrl = `${getSiteUrl()}/appuntamento/${row.manage_token}`;
     const cancelIcs = buildIcs({
       uid: `${row.manage_token}@polesebarbershop.it`,
       startsAt: new Date(row.starts_at),
@@ -88,6 +101,7 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
       summary: `${SITE.name} — ${names}`,
       description: `Prenotazione annullata. ${names}`,
       location: SITE.addressFull,
+      url: manageUrl,
       cancelled: true,
     });
     if (row.customer_email) {

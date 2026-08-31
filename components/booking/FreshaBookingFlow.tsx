@@ -17,7 +17,7 @@ import {
   isClosedDay,
 } from "@/lib/availability";
 import { CANCEL_HOURS_BEFORE, SITE } from "@/lib/site-config";
-import { normalizeItalianPhone } from "@/lib/phone";
+import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
 
 const STEPS = ["Servizi", "Barbiere", "Data e ora", "I tuoi dati", "Conferma"] as const;
@@ -73,8 +73,11 @@ function downloadIcs(filename: string, content: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
 export function FreshaBookingFlow() {
@@ -153,8 +156,7 @@ export function FreshaBookingFlow() {
         warning?: string;
       };
       if (!res.ok) throw new Error(json.error || "Errore orari");
-      const incoming = json.slots || [];
-      setSlots(incoming.length ? incoming : localSlots());
+      setSlots(Array.isArray(json.slots) ? json.slots : []);
       setSlotsWarning(json.warning || "");
       setSlotsState("ready");
     } catch (err) {
@@ -193,7 +195,7 @@ export function FreshaBookingFlow() {
         firstName.trim().length > 1 &&
         lastName.trim().length > 1 &&
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
-        Boolean(normalizeItalianPhone(`+39${phone}`)) &&
+        Boolean(resolveBookingPhone(phone)) &&
         gdpr
       );
     }
@@ -216,7 +218,7 @@ export function FreshaBookingFlow() {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           email: email.trim(),
-          phone: `+39${phone}`,
+          phone: resolveBookingPhone(phone) || phone,
           gdprConsent: true,
         }),
       });
@@ -458,6 +460,8 @@ export function FreshaBookingFlow() {
                 className="input-lux"
                 placeholder="Nome"
                 autoComplete="given-name"
+                autoCapitalize="words"
+                enterKeyHint="next"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
@@ -466,6 +470,8 @@ export function FreshaBookingFlow() {
                 className="input-lux"
                 placeholder="Cognome"
                 autoComplete="family-name"
+                autoCapitalize="words"
+                enterKeyHint="next"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
@@ -473,8 +479,10 @@ export function FreshaBookingFlow() {
               <input
                 className="input-lux"
                 type="email"
+                inputMode="email"
                 placeholder="Email"
                 autoComplete="email"
+                enterKeyHint="next"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -484,13 +492,16 @@ export function FreshaBookingFlow() {
                   className="input-lux phone-prefix"
                   value="+39"
                   readOnly
+                  tabIndex={-1}
                   aria-label="Prefisso Italia"
                 />
                 <input
                   className="input-lux"
                   type="tel"
+                  inputMode="tel"
                   placeholder="327 015 6225"
                   autoComplete="tel-national"
+                  enterKeyHint="done"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
@@ -544,7 +555,7 @@ export function FreshaBookingFlow() {
               <li>
                 Telefono{" "}
                 <strong>
-                  {normalizeItalianPhone(`+39${phone}`) || `+39 ${phone}`}
+                  {normalizeItalianPhone(phone) || resolveBookingPhone(phone) || `+39 ${phone}`}
                 </strong>
               </li>
             </ul>

@@ -35,3 +35,11 @@ export function normalizeWhatsAppNumber(raw: string): string | null {
 }
 
 export const normalizeItalianPhone = normalizeWhatsAppNumber;
+
+/** Wizard phone field: national digits or a full +39 number. */
+export function resolveBookingPhone(raw: string): string | null {
+  const direct = normalizeItalianPhone(raw);
+  if (direct) return direct;
+  if (/^\s*\+/.test(raw)) return null;
+  return normalizeItalianPhone(`+39${raw}`);
+}

@@ -89,43 +89,53 @@ export function GestionalePanel() {
   const [bulkOpen, setBulkOpen] = useState(false);
 
   const loadAgenda = useCallback(async () => {
-    const res = await fetch(`/api/admin/appointments?date=${date}`);
-    if (res.status === 401) {
-      setAuth("needed");
-      return false;
-    }
-    const json = (await res.json()) as Agenda & { error?: string };
-    if (!res.ok) {
-      setError(json.error || "Impossibile caricare l'agenda.");
+    try {
+      const res = await fetch(`/api/admin/appointments?date=${date}`);
+      if (res.status === 401) {
+        setAuth("needed");
+        return false;
+      }
+      const json = (await res.json()) as Agenda & { error?: string };
+      if (!res.ok) {
+        setError(json.error || "Impossibile caricare l'agenda.");
+        setAuth((prev) => (prev === "unknown" ? "needed" : prev));
+        return false;
+      }
+      setAgenda(json);
       setAuth("ok");
+      if (json.warning) setCrmWarning(json.warning);
+      return true;
+    } catch {
+      setError("Connessione non disponibile. Riprova.");
+      setAuth((prev) => (prev === "ok" ? "ok" : "needed"));
       return false;
     }
-    setAgenda(json);
-    setAuth("ok");
-    if (json.warning) setCrmWarning(json.warning);
-    return true;
   }, [date]);
 
   const loadCrm = useCallback(async () => {
-    const res = await fetch(`/api/admin/crm?date=${date}`);
-    if (res.status === 401) {
-      setAuth("needed");
-      return;
+    try {
+      const res = await fetch(`/api/admin/crm?date=${date}`);
+      if (res.status === 401) {
+        setAuth("needed");
+        return;
+      }
+      const json = (await res.json()) as {
+        clients?: ClientRecord[];
+        stats?: CrmStats;
+        warning?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(json.error || "Impossibile caricare i clienti.");
+        return;
+      }
+      setClients(json.clients || []);
+      setStats(json.stats || null);
+      if (json.warning) setCrmWarning(json.warning);
+      else setCrmWarning("");
+    } catch {
+      setError("Connessione non disponibile. Riprova.");
     }
-    const json = (await res.json()) as {
-      clients?: ClientRecord[];
-      stats?: CrmStats;
-      warning?: string;
-      error?: string;
-    };
-    if (!res.ok) {
-      setError(json.error || "Impossibile caricare i clienti.");
-      return;
-    }
-    setClients(json.clients || []);
-    setStats(json.stats || null);
-    if (json.warning) setCrmWarning(json.warning);
-    else setCrmWarning("");
   }, [date]);
 
   const load = useCallback(async () => {
@@ -193,6 +203,7 @@ export function GestionalePanel() {
               className="input-lux"
               autoComplete="username"
               name="username"
+              inputMode="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="admin"
@@ -275,6 +286,16 @@ export function GestionalePanel() {
             />
             <button type="button" className="btn btn-gold" onClick={() => setWalkOpen(true)}>
               <Plus size={16} aria-hidden /> Walk-in
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline crm-mobile-logout"
+              onClick={async () => {
+                await fetch("/api/admin/logout", { method: "POST" });
+                setAuth("needed");
+              }}
+            >
+              <LogOut size={16} aria-hidden /> Esci
             </button>
           </div>
         </header>
@@ -603,24 +624,24 @@ function ClientiView({
             <tbody>
               {clients.map((c) => (
                 <tr key={c.key} className={open?.key === c.key ? "is-open" : ""}>
-                  <td>
+                  <td data-label="Cliente">
                     <button type="button" className="crm-link" onClick={() => onSelect(open?.key === c.key ? null : c)}>
                       {c.name || "—"}
                     </button>
                   </td>
-                  <td>{c.phone || "—"}</td>
-                  <td>{c.email || "—"}</td>
-                  <td>{c.services.slice(0, 2).map((s) => s.name).join(", ") || "—"}</td>
-                  <td>
+                  <td data-label="Telefono">{c.phone || "—"}</td>
+                  <td data-label="Email">{c.email || "—"}</td>
+                  <td data-label="Servizi">{c.services.slice(0, 2).map((s) => s.name).join(", ") || "—"}</td>
+                  <td data-label="Visite">
                     {c.visitCount}
                     {c.cancelledCount ? ` (${c.cancelledCount} ann.)` : ""}
                   </td>
-                  <td>
+                  <td data-label="Ultima">
                     {c.lastVisitAt ? new Date(c.lastVisitAt).toLocaleDateString("it-IT") : "—"}
                     {c.lastVisitStatus === "cancelled" ? " · annullata" : ""}
                   </td>
-                  <td>{formatEuroCents(c.spendCents)}</td>
-                  <td>
+                  <td data-label="Spesa">{formatEuroCents(c.spendCents)}</td>
+                  <td data-label="Contatta">
                     <button type="button" className="crm-icon-btn" onClick={() => onNotify(c)} aria-label="Contatta">
                       <Mail size={16} />
                     </button>
@@ -908,18 +929,24 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
         </label>
         <label>
           Servizi
-          <select
-            className="input-lux"
-            multiple
-            value={serviceIds}
-            onChange={(e) => setServiceIds(Array.from(e.target.selectedOptions).map((o) => o.value))}
-          >
+          <div className="walkin-services">
             {SERVICES.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} · {formatPrice(s)}
-              </option>
+              <label key={s.id} className={`walkin-service${serviceIds.includes(s.id) ? " selected" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={serviceIds.includes(s.id)}
+                  onChange={() =>
+                    setServiceIds((curr) =>
+                      curr.includes(s.id) ? curr.filter((id) => id !== s.id) : [...curr, s.id],
+                    )
+                  }
+                />
+                <span>
+                  {s.name} · {formatPrice(s)}
+                </span>
+              </label>
             ))}
-          </select>
+          </div>
         </label>
         <label>
           Orario
@@ -946,7 +973,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
           <button type="button" className="btn btn-outline" onClick={onClose}>
             Chiudi
           </button>
-          <button type="submit" className="btn btn-gold" disabled={saving}>
+          <button type="submit" className="btn btn-gold" disabled={saving || serviceIds.length === 0}>
             {saving ? "Salvataggio…" : "Salva walk-in"}
           </button>
         </div>

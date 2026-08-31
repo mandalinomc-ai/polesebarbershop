@@ -90,7 +90,7 @@ export function buildIcs(input: IcsInput): string {
     `LOCATION:${escapeIcsText(input.location ?? SITE.addressFull)}`,
   ];
   if (input.url) {
-    lines.push(`URL:${input.url}`);
+    lines.push(`URL:${input.url.replace(/\\/g, "/")}`);
   }
   if (!cancelled) {
     lines.push(

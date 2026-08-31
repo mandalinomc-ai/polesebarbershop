@@ -40,6 +40,15 @@ describe("ics", () => {
     expect(ics.endsWith("\r\n")).toBe(true);
   });
 
+  it("includes the manage URL on confirmed events", () => {
+    const ics = buildIcs({
+      ...base,
+      url: "https://polesebarbershop.vercel.app/appuntamento/abc123",
+    });
+    expect(ics).toContain("https://polesebarbershop.vercel.app/appuntamento/abc123");
+    expect(ics).toContain("TRIGGER:-PT30M");
+  });
+
   it("omits VALARM on cancelled events so the 30-min reminder does not fire", () => {
     const ics = buildIcs({ ...base, cancelled: true });
     expect(ics).toContain("METHOD:CANCEL");

@@ -21,7 +21,8 @@ export function Header() {
     const onScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 24);
-      setHidden(y > lastY && y > 120);
+      const mobile = window.matchMedia("(max-width: 899px)").matches;
+      setHidden(!mobile && y > lastY && y > 120);
       lastY = y;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -30,6 +31,14 @@ export function Header() {
 
   useEffect(() => {
     document.body.classList.toggle("nav-open", open);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    if (open) window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.classList.remove("nav-open");
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   return (
@@ -69,12 +78,18 @@ export function Header() {
           type="button"
           aria-expanded={open}
           aria-controls="nav-panel"
-          aria-label="Menu"
+          aria-label={open ? "Chiudi menu" : "Menu"}
           onClick={() => setOpen((v) => !v)}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+          {open ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          )}
         </button>
       </header>
       <div
@@ -93,7 +108,7 @@ export function Header() {
             </li>
           ))}
           <li>
-            <a href="/#prenota" onClick={() => setOpen(false)}>
+            <a href="/#prenota" className="nav-panel-cta" onClick={() => setOpen(false)}>
               Prenota ora
             </a>
           </li>
