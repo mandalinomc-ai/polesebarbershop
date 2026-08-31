@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SITE, SALON_CONTACT, HERO_CTA, getWhatsAppUrl } from "@/lib/site-config";
+import { SITE, SALON_CONTACT, HERO_CTA, getWhatsAppUrl, getMailtoUrl } from "@/lib/site-config";
+import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
 
 const LINKS = [
   { href: "/#about", label: "Chi siamo" },
@@ -138,17 +139,32 @@ export function WhatsAppFab() {
 export function Footer() {
   return (
     <footer className="site-footer legal-footer">
-      <div>
-        <p>
-          {SITE.name} | {SITE.addressFull}
-        </p>
-        <p>
-          Tel. <a href={`tel:${SITE.phoneTel}`}>{SITE.phone}</a>
-        </p>
-        <p>
-          C.F.: {SITE.fiscalCode} | P.IVA: {SITE.vatNumber}
-        </p>
-        <p>{SITE.pricesIncludeVat}</p>
+      <div className="footer-main">
+        <div className="footer-identity">
+          <p>
+            {SITE.name} | {SITE.addressFull}
+          </p>
+          <p>
+            Tel. <a href={`tel:${SITE.phoneTel}`}>{SITE.phone}</a>
+          </p>
+          <p>
+            Email{" "}
+            <a href={getMailtoUrl()}>{SITE.email}</a>
+          </p>
+          <p className="footer-hours">
+            <strong>Orari</strong>
+            <br />
+            {SITE.hours.weekdays}
+            <br />
+            {SITE.hours.monday} · {SITE.hours.sunday}
+          </p>
+          <p>
+            C.F.: {SITE.fiscalCode} | P.IVA: {SITE.vatNumber}
+          </p>
+          <p>{SITE.pricesIncludeVat}</p>
+          <SocialTextLinks />
+        </div>
+        <SocialQrGrid variant="footer" />
       </div>
       <div className="footer-links">
         <a href="/privacy-policy">Privacy</a>

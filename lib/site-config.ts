@@ -129,6 +129,58 @@ export function getWhatsAppUrl(message?: string): string {
   return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
 }
 
+/** Direct chat QR / link — no prefilled text. */
+export function getWhatsAppChatUrl(): string {
+  return `https://wa.me/${SITE.whatsapp}`;
+}
+
+export function getPrenotaUrl(): string {
+  return `${getSiteUrl()}/#prenota`;
+}
+
+export type SocialChannel = {
+  id: "instagram" | "whatsapp" | "prenota";
+  label: string;
+  handle: string;
+  href: string;
+  qr: string;
+  qrPayload: string;
+  external: boolean;
+};
+
+/** Instagram, WhatsApp and prenota — QR PNG per canale (il PDF logo non li aveva). */
+export function getSocialChannels(): SocialChannel[] {
+  return [
+    {
+      id: "instagram",
+      label: "Instagram",
+      handle: SITE.instagramHandle,
+      href: SITE.instagram,
+      qr: "/assets/images/qr/instagram.png",
+      qrPayload: SITE.instagram,
+      external: true,
+    },
+    {
+      id: "whatsapp",
+      label: "WhatsApp",
+      handle: SITE.phone,
+      href: getWhatsAppChatUrl(),
+      qr: "/assets/images/qr/whatsapp.png",
+      qrPayload: getWhatsAppChatUrl(),
+      external: true,
+    },
+    {
+      id: "prenota",
+      label: HERO_CTA,
+      handle: "Online",
+      href: "/#prenota",
+      qr: "/assets/images/qr/prenota.png",
+      qrPayload: getPrenotaUrl(),
+      external: false,
+    },
+  ];
+}
+
 export function getMailtoUrl(message?: string): string {
   const body = message || SALON_CONTACT_MESSAGE;
   const params = new URLSearchParams({

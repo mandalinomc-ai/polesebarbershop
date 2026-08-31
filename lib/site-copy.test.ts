@@ -12,6 +12,9 @@ import {
   getMailtoUrl,
   getHeroHeadline,
   getBookingConfirmWhatsAppUrl,
+  getSocialChannels,
+  getWhatsAppChatUrl,
+  getPrenotaUrl,
 } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
@@ -146,5 +149,34 @@ describe("public copy vs official identity", () => {
     expect(css).not.toMatch(/mode-coming-soon \.hero-inner--live \{ display: none/);
     expect(css).toMatch(/hero-day-scroller/);
     expect(css).toMatch(/hero--story/);
+  });
+
+  it("puts hours, Instagram, WhatsApp and prenota QR on contact and footer", () => {
+    expect(SITE.hours.weekdays).toBe("Mar — Sab · 09:30 — 20:00");
+    expect(SITE.hours.monday).toMatch(/Chiuso/);
+    expect(SITE.hours.sunday).toMatch(/Chiuso/);
+    expect(SITE.instagramHandle).toBe("@felicepolese_barber");
+    expect(SITE.instagram).toBe("https://instagram.com/felicepolese_barber");
+    expect(getWhatsAppChatUrl()).toBe("https://wa.me/393270156225");
+    expect(getPrenotaUrl()).toMatch(/\/#prenota$/);
+    const channels = getSocialChannels();
+    expect(channels.map((c) => c.id)).toEqual(["instagram", "whatsapp", "prenota"]);
+    expect(channels[1]?.qrPayload).toBe("https://wa.me/393270156225");
+    expect(channels[2]?.label).toBe(HERO_CTA);
+    for (const ch of channels) {
+      const file = join(process.cwd(), "public", ch.qr.replace(/^\//, ""));
+      expect(statSync(file).isFile()).toBe(true);
+      expect(statSync(file).size).toBeGreaterThan(2000);
+    }
+    const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
+    expect(contact).toMatch(/contact-hours/);
+    expect(contact).toMatch(/SocialQrGrid/);
+    expect(contact).toMatch(/SocialTextLinks/);
+    const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
+    expect(chrome).toMatch(/footer-hours/);
+    expect(chrome).toMatch(/SocialQrGrid/);
+    expect(chrome).toMatch(/SocialTextLinks/);
+    const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
+    expect(css).toMatch(/\.qr-card \{[\s\S]*?min-height:\s*44px/);
   });
 });

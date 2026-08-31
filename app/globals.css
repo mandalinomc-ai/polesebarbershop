@@ -678,6 +678,70 @@ a.day-chip {
 .contact-info strong { color: var(--pearl); font-weight: 500; }
 .bg-marble-light .contact-info p { color: #444; }
 .bg-marble-light .contact-info strong { color: var(--ink); }
+.contact-hours { margin-bottom: 1.25rem; }
+.social-text-links { margin: 0 0 1rem; }
+
+.contact-qr { margin-top: 2rem; }
+.qr-intro {
+  margin: 0 0 0.85rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #555;
+}
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.contact-qr .qr-grid { margin-top: 0; }
+.qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.55rem 0.35rem;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(10, 10, 10, 0.1);
+}
+.qr-card img {
+  width: 100%;
+  max-width: 132px;
+  height: auto;
+  aspect-ratio: 1;
+  background: #fff;
+  image-rendering: pixelated;
+}
+.qr-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.qr-handle {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: #555;
+  word-break: break-word;
+}
+.site-footer .qr-grid { margin-top: 0; }
+.site-footer .qr-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.site-footer .qr-label { color: var(--ink); }
+.site-footer .qr-handle { color: #444; }
+@media (max-width: 520px) {
+  .qr-card { padding: 0.4rem 0.2rem; }
+  .qr-card img { max-width: 96px; }
+  .qr-handle { font-size: 0.62rem; }
+}
 
 .consult-card {
   padding: 1.75rem 1.5rem;
@@ -715,12 +779,34 @@ a.day-chip {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   font-size: 0.72rem;
   color: rgba(168, 168, 168, 0.7);
   letter-spacing: 0.06em;
+}
+.footer-main {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+}
+@media (min-width: 800px) {
+  .footer-main {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.footer-hours {
+  margin: 0.55rem 0;
+  line-height: 1.7;
+}
+.footer-hours strong {
+  color: var(--pearl);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
 }
 
 @keyframes float {
@@ -1009,7 +1095,7 @@ a.day-chip {
   margin: 1.5rem 0;
 }
 .booking-layout { max-width: 640px; margin-top: 1.5rem; }
-.legal-footer { align-items: flex-start; }
+.legal-footer { align-items: flex-start; flex-direction: column; }
 .legal-footer p { margin: 0.2rem 0; }
 .legal-footer a { color: var(--gold); text-decoration: none; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 1rem; }

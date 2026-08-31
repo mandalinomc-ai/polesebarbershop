@@ -1,4 +1,5 @@
 import { SITE, SALON_CONTACT, getMapsUrl, getWhatsAppUrl, getMailtoUrl } from "@/lib/site-config";
+import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
 import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
@@ -153,7 +154,7 @@ export function LandingSections() {
                 {SITE.phone}
               </a>
             </p>
-            <p>
+            <p className="contact-hours">
               <strong>Orari</strong>
               <br />
               {SITE.hours.weekdays}
@@ -163,15 +164,14 @@ export function LandingSections() {
               {SITE.hours.sunday}
             </p>
             <p>
-              <a
-                href={SITE.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="contact-link"
-              >
-                {SITE.instagramHandle}
+              <strong>Email</strong>
+              <br />
+              <a href={getMailtoUrl()} className="contact-link">
+                {SITE.email}
               </a>
-              {" · "}
+            </p>
+            <SocialTextLinks />
+            <p>
               <a
                 href={getMapsUrl()}
                 target="_blank"
@@ -203,6 +203,10 @@ export function LandingSections() {
               </a>
             </div>
           </aside>
+        </div>
+        <div className="contact-qr reveal">
+          <p className="qr-intro">Inquadra per Instagram, WhatsApp o prenota online</p>
+          <SocialQrGrid variant="contact" />
         </div>
       </section>
     </>
