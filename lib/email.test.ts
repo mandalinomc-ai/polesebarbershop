@@ -41,7 +41,7 @@ describe("sendEmail", () => {
 
   it("sends via Resend when a re_ key is present, with base64 ICS", async () => {
     process.env.RESEND_API_KEY = "re_test_fake_key";
-    process.env.RESEND_FROM = "Polese Barbershop <beth.t@example.com>";
+    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
     expect(isResendConfigured()).toBe(true);
 
     const fetchMock = vi.fn().mockResolvedValue({
