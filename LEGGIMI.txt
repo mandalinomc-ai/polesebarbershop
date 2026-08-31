@@ -80,7 +80,8 @@ COME ANDARE LIVE — 4 click (io non posso creare gli account al posto tuo)
      supabase/migrations/001_schema.sql → Run.
      Ingranaggio (Project Settings) → API:
        Project URL          → SUPABASE_URL
-       service_role (Reveal, la lunga, NON «anon») → SUPABASE_SERVICE_ROLE_KEY
+       secret key (sb_secret_…) o JWT service_role → SUPABASE_SERVICE_ROLE_KEY
+       Poi SQL Editor: 001_schema.sql e opzionale 002_crm_indexes.sql.
 
   2. Resend (email) — https://resend.com
      Sign up → API Keys → Create API Key → copia (inizia con re_).

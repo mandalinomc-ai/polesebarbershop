@@ -26,13 +26,29 @@ export type AppointmentRow = {
   cancelled_at: string | null;
 };
 
+export function getSupabaseUrl() {
+  return (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
+}
+
+/** JWT service_role or new sb_secret_… secret key. */
+export function getSupabaseSecretKey() {
+  const key = (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    ""
+  ).trim();
+  return key || "";
+}
+
 export function isSupabaseConfigured() {
-  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return Boolean(getSupabaseUrl() && getSupabaseSecretKey());
 }
 
 export function getSupabaseAdmin(): SupabaseClient | null {
-  if (!isSupabaseConfigured()) return null;
-  return createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string, {
+  const url = getSupabaseUrl();
+  const key = getSupabaseSecretKey();
+  if (!url || !key) return null;
+  return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
