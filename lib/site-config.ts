@@ -71,7 +71,8 @@ export function wallDateRome(now: Date = new Date()): string {
 }
 
 export function isBeforeOfficialOpening(now: Date = new Date()): boolean {
-  return wallDateRome(now) < SITE.openingDate;
+  // Keep story copy through the opening civil date in Rome (not UTC midnight).
+  return wallDateRome(now) <= SITE.openingDate;
 }
 
 export function getHeroHeadline(now: Date = new Date()): string {
