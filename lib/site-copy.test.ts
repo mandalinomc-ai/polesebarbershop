@@ -1,0 +1,51 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { SITE } from "./site-config";
+
+const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
+const SOURCE_EXT = /\.(ts|tsx|js|jsx|html|txt|xml|css|json|sql|cmd)$/;
+
+function walk(dir: string, acc: string[] = []): string[] {
+  for (const name of readdirSync(dir)) {
+    if (SKIP_DIRS.has(name)) continue;
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) {
+      walk(path, acc);
+    } else if (SOURCE_EXT.test(name) && name !== "package-lock.json") {
+      acc.push(path);
+    }
+  }
+  return acc;
+}
+
+describe("public copy vs official identity", () => {
+  it("uses the official phone, address, CF and P.IVA", () => {
+    expect(SITE.phone).toBe("+39 327 015 6225");
+    expect(SITE.address).toBe("Corso Dante Alighieri, 44");
+    expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
+    expect(SITE.vatNumber).toBe("01894030624");
+    expect(SITE.pricesIncludeVat).toMatch(/IVA inclusa/);
+  });
+
+  it("has no leftover 351 number, Corso Dante 45, or old listino in source", () => {
+    const files = walk(process.cwd());
+    const banned = [
+      /351\s*252\s*3087/,
+      /Corso Dante n\. 45/,
+      /Corso Dante 45/,
+      /Taglio sartoriale/,
+      /Combo premium/,
+    ];
+    const hits: string[] = [];
+    for (const file of files) {
+      const text = readFileSync(file, "utf8");
+      for (const re of banned) {
+        if (re.test(text) && !/\.test\.ts$/.test(file)) {
+          hits.push(`${file}: ${re}`);
+        }
+      }
+    }
+    expect(hits).toEqual([]);
+  });
+});

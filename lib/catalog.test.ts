@@ -19,14 +19,15 @@ describe("catalog", () => {
     expect(pro.durationMin).toBe(25);
     expect(formatPrice(pro)).toBe("50 €");
   });
-  it("does not include the old Taglio sartoriale €25 item", () => {
-    expect(SERVICES.some((s) => /sartoriale/i.test(s.name))).toBe(false);
+  it("does not include leftover Taglio sartoriale / Combo premium items", () => {
+    expect(SERVICES.some((s) => /sartoriale|combo premium/i.test(s.name))).toBe(false);
   });
-  it("sums duration and uses da X € when any service is variable", () => {
+  it("sums duration and uses a da–a range when any service is variable", () => {
     const totals = totalsForServices(resolveServices(["taglio-pro", "decolorazione-meches"])!);
     expect(totals.durationMin).toBe(70);
     expect(totals.priceEuro).toBe(90);
+    expect(totals.priceMaxEuro).toBe(150);
     expect(totals.isVariable).toBe(true);
-    expect(totals.priceLabel).toBe("da 90 €");
+    expect(totals.priceLabel).toBe("da 90 € a 150 €");
   });
 });

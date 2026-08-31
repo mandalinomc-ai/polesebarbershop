@@ -889,6 +889,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .booking-layout { max-width: 640px; margin-top: 1.5rem; }
 .legal-footer { align-items: flex-start; }
 .legal-footer p { margin: 0.2rem 0; }
+.legal-footer a { color: var(--gold); text-decoration: none; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 1rem; }
 .footer-links a { color: var(--silk); text-decoration: none; }
 .footer-links a:hover { color: var(--pearl); }

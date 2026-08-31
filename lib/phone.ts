@@ -1,7 +1,7 @@
 const DEFAULT_COUNTRY = "39";
 
 /**
- * Normalise a phone number for WhatsApp.
+ * Normalise an Italian phone number to E.164 (+39…).
  * Italian mobiles (starting with 3, 9–10 digits) default to +39.
  * Accepts already-prefixed international numbers.
  */

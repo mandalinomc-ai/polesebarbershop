@@ -90,6 +90,10 @@ export function totalsForServices(services: Service[]) {
   const priceMaxEuro = services.reduce((sum, s) => sum + (s.priceMaxEuro ?? s.priceEuro), 0);
   const isVariable = services.some((s) => s.isVariablePrice);
   const names = services.map((s) => s.name).join(" + ");
-  const priceLabel = isVariable ? `da ${priceEuro} €` : `${priceEuro} €`;
+  const priceLabel = isVariable
+    ? priceMaxEuro > priceEuro
+      ? `da ${priceEuro} € a ${priceMaxEuro} €`
+      : `da ${priceEuro} €`
+    : `${priceEuro} €`;
   return { durationMin, priceEuro, priceMaxEuro, isVariable, names, priceLabel };
 }

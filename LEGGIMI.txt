@@ -3,45 +3,83 @@ POLESE BARBERSHOP
 
 Brand: FELICE POLESE — Barberia d'élite a Benevento
 Sede: Corso Dante Alighieri, 44 – 82100 Benevento (BN)
+Tel: +39 327 015 6225
 C.F.: PLSFLC04S21A783K | P.IVA: 01894030624
+Tutti i prezzi sono da intendersi IVA inclusa.
 
 SITO LIVE
 ---------
   https://polesebarbershop.vercel.app
+  Stack: Next.js (questo è il sito). Non usare vecchi file HTML statici.
 
 AVVIO LOCALE
 ------------
   npm install
+  Copia .env.example in .env.local (puoi lasciare vuoti Supabase/Resend)
   npm run dev
   Apri http://localhost:3000
   Windows: doppio click su AVVIA.cmd
 
 PRENOTAZIONI
 ------------
-  Wizard 5 passi (Fresha): Servizi → Barbiere → Data/ora → Dati → Conferma.
-  Barbieri: Felice e Davide + «Chiunque sia disponibile».
-  Primo giorno: max(oggi, 1 settembre 2026).
-  Conferma + email Resend con allegato .ics (VALARM 30 minuti).
-  Nessun Twilio / QStash.
-
-  Copia .env.example in .env.local
-  Migration: supabase/migrations/001_schema.sql
+  Wizard 5 passi: Servizi → Barbiere → Data/ora → Dati + GDPR → Conferma.
+  Listino ufficiale: CAPELLI / BARBA / COLORE (prezzi variabili «da X € a Y €»).
+  Barbieri: Felice e Davide (poltrone indipendenti) + «Chiunque sia disponibile».
+  Primo giorno prenotabile: max(oggi, 1 settembre 2026). Chiuso lunedì e domenica.
+  Conferma sempre con file .ics (VALARM 30 minuti) anche se il database o Resend
+  non sono ancora configurati. In quel caso il cliente vede un avviso e può
+  scaricare il calendario; chiama il salone al +39 327 015 6225 per conferma.
+  Email Resend a cliente + admin (quando RESEND_API_KEY è impostata).
+  Nessun Twilio, QStash o WhatsApp come canale primario di prenotazione.
+  Il pulsante WhatsApp in pagina è solo contatto rapido.
 
 AREA ADMIN
 ----------
-  /admin — agenda, walk-in, incassi. Password: ADMIN_PASSWORD
-
-CONTATTI
---------
-  Tel: +39 327 015 6225
-  Instagram: @felicepolese_barber
+  /admin — agenda a colonne (Felice | Davide), Walk-in, incassi giorno/settimana.
+  Sessione cookie httpOnly con ADMIN_PASSWORD.
+  Serve Supabase configurato (altrimenti l'agenda non può leggere/salvare).
 
 PAGINE LEGALI
 -------------
-  /privacy-policy  /terms
-  Tutti i prezzi sono da intendersi IVA inclusa.
+  /privacy-policy
+  /terms
+
+COME ANDARE LIVE (tu devi fare questi 4 passi)
+----------------------------------------------
+  1. Supabase
+     Crea un progetto su https://supabase.com
+     SQL Editor → incolla ed esegui  supabase/migrations/001_schema.sql
+     (unico schema: tabelle barbers, services, appointments + RLS.
+      Non esiste una seconda migration 001_appointments.)
+     Copia Project URL e service_role key.
+
+  2. Resend
+     Crea un account su https://resend.com
+     Genera una API key. Verifica il dominio (o usa l'indirizzo di test).
+     Imposta RESEND_FROM (es. Polese Barbershop <prenotazioni@tuodominio.it>).
+
+  3. Variabili ambiente (Vercel → Project → Settings → Environment Variables)
+     NEXT_PUBLIC_SITE_URL=https://polesebarbershop.vercel.app
+     SUPABASE_URL=...
+     SUPABASE_SERVICE_ROLE_KEY=...
+     NEXT_PUBLIC_SUPABASE_URL=...   (stesso URL)
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+     RESEND_API_KEY=...
+     RESEND_FROM=...
+     ADMIN_EMAIL=info@polesebarbershop.it
+     ADMIN_PASSWORD=...  (password forte, almeno 4 caratteri)
+
+  4. Deploy
+     Vercel collega il repo e fa il build (`npm run build`).
+     Verifica: prenota un Taglio Pro, ricevi email + .ics, apri /admin.
 
 TEST
 ----
   npm test
   npm run build
+
+CONTATTI
+--------
+  Tel / WhatsApp contatto: +39 327 015 6225
+  Instagram: @felicepolese_barber
+  Indirizzo: Corso Dante Alighieri, 44 – 82100 Benevento (BN)

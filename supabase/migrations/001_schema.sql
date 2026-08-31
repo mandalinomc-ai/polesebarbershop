@@ -1,4 +1,5 @@
--- Polese Barbershop schema + seed + RLS (no Twilio/QStash)
+-- Polese Barbershop — UNICO schema (barbers, services, appointments + RLS).
+-- Sostituisce eventuali vecchie 001_appointments.sql. Nessun Twilio/QStash.
 create extension if not exists pgcrypto;
 create extension if not exists btree_gist;
 

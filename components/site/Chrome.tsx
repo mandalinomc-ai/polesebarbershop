@@ -130,6 +130,9 @@ export function Footer() {
           {SITE.name} | {SITE.addressFull}
         </p>
         <p>
+          Tel. <a href={`tel:${SITE.phoneTel}`}>{SITE.phone}</a>
+        </p>
+        <p>
           C.F.: {SITE.fiscalCode} | P.IVA: {SITE.vatNumber}
         </p>
         <p>{SITE.pricesIncludeVat}</p>

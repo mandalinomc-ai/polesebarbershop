@@ -6,7 +6,7 @@ import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
   SERVICES,
-  formatPrice,
+  formatPriceRange,
   totalsForServices,
   type Service,
 } from "@/lib/catalog";
@@ -368,7 +368,7 @@ export function FreshaBookingFlow() {
                         {s.durationMin} min · {s.description}
                       </small>
                     </span>
-                    <span className="meta">{formatPrice(s)}</span>
+                    <span className="meta">{formatPriceRange(s)}</span>
                   </button>
                 ))}
               </div>

@@ -3,7 +3,7 @@ import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
   SERVICES,
-  formatPrice,
+  formatPriceRange,
 } from "@/lib/catalog";
 import {
   BookingSectionNote,
@@ -89,7 +89,7 @@ export function LandingSections() {
                   <h3>{s.name}</h3>
                   <p>{s.description}</p>
                   <span className="service-price">
-                    {formatPrice(s)} · {s.durationMin} min
+                    {formatPriceRange(s)} · {s.durationMin} min
                   </span>
                 </article>
               ))}
