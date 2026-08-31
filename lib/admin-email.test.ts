@@ -24,10 +24,10 @@ describe("getAdminEmail", () => {
     expect(getAdminEmail()).toBe("owner@example.com");
   });
 
-  it("falls back to mandalinomc@gmail.com, not only info@polesebarbershop.it", () => {
+  it("falls back to info@polesebarbershop.it, not GitHub Gmail", () => {
     delete process.env.ADMIN_EMAIL;
     delete process.env.OWNER_EMAIL;
-    expect(getAdminEmail()).toBe("mandalinomc@gmail.com");
-    expect(getAdminEmail()).not.toBe("info@polesebarbershop.it");
+    expect(getAdminEmail()).toBe("info@polesebarbershop.it");
+    expect(getAdminEmail()).not.toBe("mandalinomc@gmail.com");
   });
 });

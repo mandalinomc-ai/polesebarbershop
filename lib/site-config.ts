@@ -85,6 +85,6 @@ export function getAdminEmail(): string {
   return (
     process.env.ADMIN_EMAIL ||
     process.env.OWNER_EMAIL ||
-    "mandalinomc@gmail.com"
+    SITE.email
   );
 }

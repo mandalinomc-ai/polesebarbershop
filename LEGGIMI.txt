@@ -71,7 +71,7 @@ COME ANDARE LIVE — 4 click (io non posso creare gli account al posto tuo)
 
   3. Password admin
      Scegli tu una password (almeno 4 caratteri) → ADMIN_PASSWORD
-     Email avvisi: ADMIN_EMAIL o OWNER_EMAIL (default mandalinomc@gmail.com)
+     Email avvisi: ADMIN_EMAIL o OWNER_EMAIL (default info@polesebarbershop.it)
 
   4. Vercel (sito live) — https://vercel.com
      progetto polesebarbershop → Settings → Environment Variables
