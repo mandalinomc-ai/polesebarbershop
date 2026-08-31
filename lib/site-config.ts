@@ -82,5 +82,9 @@ export function getSiteUrl(): string {
 }
 
 export function getAdminEmail(): string {
-  return process.env.ADMIN_EMAIL || SITE.email;
+  return (
+    process.env.ADMIN_EMAIL ||
+    process.env.OWNER_EMAIL ||
+    "mandalinomc@gmail.com"
+  );
 }

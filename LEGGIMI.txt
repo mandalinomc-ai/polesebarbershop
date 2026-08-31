@@ -16,6 +16,7 @@ AVVIO LOCALE
 ------------
   npm install
   Copia .env.example in .env.local (puoi lasciare vuoti Supabase/Resend)
+  In locale la password di /admin sta in .env.local (ADMIN_PASSWORD). Non committare quel file.
   npm run dev
   Apri http://localhost:3000
   Windows: doppio click su AVVIA.cmd
@@ -40,7 +41,7 @@ PRENOTAZIONI
 AREA ADMIN
 ----------
   /admin — agenda a colonne (Felice | Davide), Walk-in, incassi giorno/settimana.
-  Sessione cookie httpOnly con ADMIN_PASSWORD.
+  Sessione cookie httpOnly con ADMIN_PASSWORD (in locale: .env.local).
   Serve Supabase configurato (altrimenti l'agenda non può leggere/salvare).
 
 PAGINE LEGALI
@@ -70,7 +71,7 @@ COME ANDARE LIVE — 4 click (io non posso creare gli account al posto tuo)
 
   3. Password admin
      Scegli tu una password (almeno 4 caratteri) → ADMIN_PASSWORD
-     Email avvisi: info@polesebarbershop.it (o la tua)
+     Email avvisi: ADMIN_EMAIL o OWNER_EMAIL (default mandalinomc@gmail.com)
 
   4. Vercel (sito live) — https://vercel.com
      progetto polesebarbershop → Settings → Environment Variables
