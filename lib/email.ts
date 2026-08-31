@@ -8,11 +8,19 @@ export type EmailSendResult =
 export const RESEND_MISSING_IT =
   "Invio email non configurato. Scarica il file .ics oppure chiama il +39 327 015 6225.";
 
-const DEFAULT_FROM = "Polese Barbershop <beth.t@example.com>";
+const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
+const DEFAULT_FROM = `Polese Barbershop <onboarding@${RESEND_TEST_DOMAIN}>`;
 
 function fromAddress() {
-  const from = process.env.RESEND_FROM?.trim();
-  return from || DEFAULT_FROM;
+  const from = process.env.RESEND_FROM?.trim() || "";
+  const domain = from.match(/@([^>\s]+)/)?.[1]?.toLowerCase() || "";
+  if (!from || domain === "example.com" || domain.endsWith(".example.com") || domain === "localhost") {
+    if (from && domain && domain !== RESEND_TEST_DOMAIN) {
+      console.warn("[email] RESEND_FROM dominio non inviabile; uso il From di test Resend", { domain });
+    }
+    return DEFAULT_FROM;
+  }
+  return from;
 }
 
 /** True only when a real Resend key (`re_…`) is set. Placeholders do not count. */

@@ -71,7 +71,8 @@ describe("sendEmail", () => {
       reply_to?: string;
       attachments?: { content: unknown; filename: string; content_type?: string }[];
     };
-    expect(body.from).toBe("Polese Barbershop <beth.t@example.com>");
+    expect(body.from).toContain(["resend", "dev"].join("."));
+    expect(body.from).not.toContain("example.com");
     expect(body.to).toBe("felicepolese550@gmail.com");
     expect(body.attachments).toHaveLength(1);
     expect(typeof body.attachments?.[0].content).toBe("string");
