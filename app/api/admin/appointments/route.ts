@@ -62,7 +62,20 @@ export async function GET(request: Request) {
     .gte("starts_at", wallTimeToUtc(date, "00:00").toISOString())
     .lte("starts_at", wallTimeToUtc(date, "23:59").toISOString())
     .order("starts_at", { ascending: true });
-  if (dayErr) return NextResponse.json({ error: "Impossibile caricare l'agenda." }, { status: 500 });
+  if (dayErr) {
+    const schemaMissing =
+      dayErr.code === "PGRST205" ||
+      /schema cache|Could not find the table|does not exist/i.test(dayErr.message || "");
+    return NextResponse.json({
+      date,
+      weekStart,
+      appointments: [],
+      takings: { dayCents: 0, weekCents: 0 },
+      warning: schemaMissing
+        ? "Database collegato ma manca lo schema SQL (001_schema.sql). L'agenda è vuota."
+        : "Impossibile caricare l'agenda.",
+    }, { status: schemaMissing ? 200 : 500 });
+  }
 
   const { data: weekRows } = await db.from("appointments").select("price_cents, status")
     .gte("starts_at", wallTimeToUtc(weekStart, "00:00").toISOString())

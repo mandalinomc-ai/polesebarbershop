@@ -65,10 +65,11 @@ export async function isAdminRequest() {
 }
 
 export function adminCookieOptions() {
+  const onVercel = process.env.VERCEL === "1";
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
+    secure: process.env.NODE_ENV === "production" && onVercel,
+    sameSite: "lax" as const,
     path: "/",
     maxAge: 60 * 60 * 12,
   };

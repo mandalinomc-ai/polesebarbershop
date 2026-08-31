@@ -97,14 +97,25 @@ export async function POST(request: Request) {
       }).select("*").single();
       if (error) {
         const overlap = error.code === "23P01" || /overlap|exclusion/i.test(error.message);
-        return NextResponse.json(
-          { error: overlap ? "Questo orario è appena stato prenotato. Scegline un altro." : "Impossibile salvare la prenotazione. Riprova." },
-          { status: overlap ? 409 : 500 },
+        if (overlap) {
+          return NextResponse.json(
+            { error: "Questo orario è appena stato prenotato. Scegline un altro." },
+            { status: 409 },
+          );
+        }
+        const schemaMissing =
+          error.code === "PGRST205" ||
+          /schema cache|Could not find the table|does not exist/i.test(error.message || "");
+        warnings.push(
+          schemaMissing
+            ? "Database collegato ma manca lo schema: esegui supabase/migrations/001_schema.sql nel SQL Editor. Conferma e file .ics restano validi. Chiama il +39 327 015 6225."
+            : "Impossibile salvare nel database. Conferma e file .ics restano validi. Chiama il +39 327 015 6225.",
         );
+      } else {
+        row = data as AppointmentRow;
+        persisted = true;
+        appointmentId = row.id;
       }
-      row = data as AppointmentRow;
-      persisted = true;
-      appointmentId = row.id;
     }
   }
 

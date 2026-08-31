@@ -39,7 +39,10 @@ export async function GET(request: Request) {
       date,
       clients: [],
       stats,
-      warning: "Impossibile caricare i clienti. Riprova più tardi.",
+      warning:
+        error.code === "PGRST205" || /schema cache|Could not find the table/i.test(error.message || "")
+          ? "Database collegato ma manca lo schema SQL (001_schema.sql). Anagrafica vuota finché non lo esegui."
+          : "Impossibile caricare i clienti. Riprova più tardi.",
     });
   }
 
