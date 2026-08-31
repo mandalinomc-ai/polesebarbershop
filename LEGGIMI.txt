@@ -88,6 +88,7 @@ COME ANDARE LIVE — 4 click (io non posso creare gli account al posto tuo)
      Fino a quando non verifichi polesebarbershop.it usa:
        RESEND_FROM=Polese Barbershop <beth.t@example.com>
      (con questo mittente di test le email arrivano solo a te)
+     Senza login Resend (Google/GitHub) la chiave non si crea da qui: la prenotazione resta confermata con .ics, l'email non parte.
 
   3. Accesso gestionale
      Default: utente admin e password admin.

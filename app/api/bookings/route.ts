@@ -126,7 +126,9 @@ export async function POST(request: Request) {
     ics: { filename, content: icsContent },
   });
   if (!emails.customer.ok) warnings.push(emails.customer.error);
-  if (!emails.admin.ok) warnings.push(`Email admin: ${emails.admin.error}`);
+  if (!emails.admin.ok && emails.admin.error !== emails.customer.error) {
+    warnings.push(`Email admin: ${emails.admin.error}`);
+  }
 
   return NextResponse.json({
     ok: true, persisted, emailSent: Boolean(emails.customer.ok), appointmentId, manageToken, manageUrl,

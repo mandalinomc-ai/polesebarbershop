@@ -66,6 +66,8 @@ describe("POST /api/bookings", () => {
     expect(json.ics).toContain("Corso Dante Alighieri");
     expect(json.ics).toContain("+39 327 015 6225");
     expect(json.warnings.length).toBeGreaterThan(0);
+    expect(json.warnings.some((w) => /ics|327 015 6225/i.test(w))).toBe(true);
+    expect(json.warnings.filter((w) => /^Email admin:/i.test(w))).toEqual([]);
     expect(json.manageUrl).toMatch(/\/appuntamento\//);
   });
 });

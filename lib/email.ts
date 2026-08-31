@@ -3,13 +3,17 @@ import { SITE, getAdminEmail } from "./site-config";
 
 export type EmailSendResult =
   | { ok: true; skipped?: boolean; id?: string }
-  | { ok: false; error: string };
+  | { ok: false; skipped?: boolean; error: string };
 
 export const RESEND_MISSING_IT =
   "Invio email non configurato. Scarica il file .ics oppure chiama il +39 327 015 6225.";
 
 function fromAddress() {
   return process.env.RESEND_FROM || `${SITE.name} <prenotazioni@polesebarbershop.it>`;
+}
+
+export function isResendConfigured() {
+  return Boolean(process.env.RESEND_API_KEY?.trim());
 }
 
 export async function sendEmail(opts: {
@@ -19,7 +23,7 @@ export async function sendEmail(opts: {
   text?: string;
   ics?: { filename: string; content: string };
 }): Promise<EmailSendResult> {
-  if (!process.env.RESEND_API_KEY) return { ok: false, error: RESEND_MISSING_IT };
+  if (!isResendConfigured()) return { ok: false, skipped: true, error: RESEND_MISSING_IT };
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { data, error } = await resend.emails.send({
