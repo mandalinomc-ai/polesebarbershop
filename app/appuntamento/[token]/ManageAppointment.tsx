@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CANCEL_HOURS_BEFORE, SITE } from "@/lib/site-config";
+import { icsDataUri } from "@/lib/ics";
 
 type Appointment = {
   status: string;
@@ -14,6 +16,9 @@ type Appointment = {
   dateLabel: string;
   timeLabel: string;
   cancelledAt: string | null;
+  ics?: string;
+  slotFreed?: boolean;
+  reminderCancelled?: boolean;
 };
 
 export function ManageAppointment({ token }: { token: string }) {
@@ -46,7 +51,7 @@ export function ManageAppointment({ token }: { token: string }) {
   }, [token]);
 
   async function cancel() {
-    if (!confirm("Vuoi davvero disdire questo appuntamento?")) return;
+    if (!confirm("Vuoi davvero disdire questo appuntamento? Lo slot tornerà libero.")) return;
     setCancelling(true);
     setError("");
     try {
@@ -83,6 +88,7 @@ export function ManageAppointment({ token }: { token: string }) {
   if (!data) return null;
 
   const cancelled = data.status === "cancelled";
+  const icsHref = `/api/bookings/${token}?ics=1`;
 
   return (
     <div className="manage-card">
@@ -116,23 +122,51 @@ export function ManageAppointment({ token }: { token: string }) {
       </ul>
       {error ? <p className="field-error">{error}</p> : null}
       {!cancelled ? (
-        <button
-          type="button"
-          className="btn btn-outline btn-danger"
-          style={{ marginTop: "1.5rem", width: "100%" }}
-          disabled={cancelling}
-          onClick={() => void cancel()}
-        >
-          {cancelling ? "Annullamento…" : "Disdici appuntamento"}
-        </button>
+        <>
+          <p className="booking-open-note" style={{ marginTop: "1.25rem" }}>
+            Puoi disdire gratuitamente fino a {CANCEL_HOURS_BEFORE} ore prima.
+            Lo slot si libera e il promemoria di 30 minuti non parte. Oltre tale
+            termine chiama il {SITE.phone}.
+          </p>
+          <div className="success-actions" style={{ justifyContent: "stretch" }}>
+            <a className="btn btn-outline btn-magnetic" href={icsHref}>
+              Scarica .ics (promemoria 30 min)
+            </a>
+            <button
+              type="button"
+              className="btn btn-outline btn-danger"
+              disabled={cancelling}
+              onClick={() => void cancel()}
+            >
+              {cancelling ? "Annullamento…" : "Disdici appuntamento"}
+            </button>
+          </div>
+        </>
       ) : (
-        <p className="booking-open-note" style={{ marginTop: "1.25rem" }}>
-          Prenotazione annullata.
-        </p>
+        <>
+          <p className="booking-open-note" style={{ marginTop: "1.25rem" }}>
+            Prenotazione annullata. Lo slot è di nuovo libero: il promemoria di
+            30 minuti non parte. Apri il file .ics di disdetta per togliere
+            l&apos;evento dal calendario.
+          </p>
+          {data.ics ? (
+            <a className="btn btn-outline btn-magnetic" href={icsDataUri(data.ics)} download>
+              Rimuovi dal calendario
+            </a>
+          ) : (
+            <a className="btn btn-outline btn-magnetic" href={icsHref}>
+              Rimuovi dal calendario
+            </a>
+          )}
+        </>
       )}
       <p style={{ marginTop: "1.25rem" }}>
         <Link href="/#prenota" className="contact-link">
           Prenota un nuovo orario
+        </Link>
+        {" · "}
+        <Link href="/terms" className="contact-link">
+          Termini e disdetta
         </Link>
       </p>
     </div>

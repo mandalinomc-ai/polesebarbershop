@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { POST } from "@/app/api/bookings/route";
+import { DELETE, GET } from "@/app/api/bookings/[token]/route";
 
 function payload(overrides: Record<string, unknown> = {}) {
   return {
@@ -50,6 +51,7 @@ describe("POST /api/bookings", () => {
       warnings: string[];
       barberName: string;
       timeLabel: string;
+      manageUrl: string;
     };
     expect(json.ok).toBe(true);
     expect(json.persisted).toBe(false);
@@ -58,8 +60,40 @@ describe("POST /api/bookings", () => {
     expect(json.timeLabel).toBe("09:30");
     expect(json.ics).toContain("BEGIN:VALARM");
     expect(json.ics).toContain("TRIGGER:-PT30M");
+    expect(json.ics.match(/BEGIN:VALARM/g)).toEqual(["BEGIN:VALARM"]);
+    expect(json.ics).not.toMatch(/TRIGGER:-PT1H/);
+    expect(json.ics).not.toMatch(/TRIGGER:-P1D/);
     expect(json.ics).toContain("Corso Dante Alighieri");
     expect(json.ics).toContain("+39 327 015 6225");
     expect(json.warnings.length).toBeGreaterThan(0);
+    expect(json.manageUrl).toMatch(/\/appuntamento\//);
+  });
+});
+
+describe("GET/DELETE /api/bookings/[token]", () => {
+  it("exposes Italian manage/cancel endpoints even without Supabase", async () => {
+    const ctx = { params: Promise.resolve({ token: "a".repeat(24) }) };
+    const getRes = await GET(new Request("http://localhost/api/bookings/token"), ctx);
+    expect(getRes.status).toBe(503);
+    const delRes = await DELETE(
+      new Request("http://localhost/api/bookings/token", { method: "DELETE" }),
+      ctx,
+    );
+    expect(delRes.status).toBe(503);
+    const json = (await delRes.json()) as { error: string };
+    expect(json.error).toMatch(/prenotazione|database/i);
+  });
+
+  it("rejects a short manage token as non valido", async () => {
+    const ctx = { params: Promise.resolve({ token: "short" }) };
+    const getRes = await GET(new Request("http://localhost/api/bookings/short"), ctx);
+    expect(getRes.status).toBe(400);
+    const json = (await getRes.json()) as { error: string };
+    expect(json.error).toMatch(/token non valido/i);
+    const delRes = await DELETE(
+      new Request("http://localhost/api/bookings/short", { method: "DELETE" }),
+      ctx,
+    );
+    expect(delRes.status).toBe(400);
   });
 });

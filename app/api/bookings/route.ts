@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const gcal = googleCalendarUrl({
     startsAt: slot.start, endsAt: slot.end,
     summary: `${SITE.name} — ${totals.names}`,
-    description: `${totals.names} con ${barberName}`,
+    description: `${totals.names} con ${barberName}. Promemoria: 30 minuti prima.`,
     location: SITE.addressFull,
   });
 

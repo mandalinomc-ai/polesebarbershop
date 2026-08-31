@@ -46,13 +46,35 @@ export const MIN_NOTICE_MINUTES = 15;
 export const REMINDER_LEAD_MINUTES = 30;
 export const CANCEL_HOURS_BEFORE = 3;
 
+/** Generic salon contact — info, hours, prices or a quick tip. */
+export const SALON_CONTACT_MESSAGE =
+  "Ciao, vorrei parlare con il salone per un'informazione.";
+
+export const SALON_CONTACT = {
+  id: "consulenza",
+  title: "Parla con il salone",
+  eyebrow: "Scrivici",
+  body: "Puoi scriverci per info, orari, prezzi o un consiglio. Felice e Davide ti rispondono dal salone.",
+  cta: "WhatsApp",
+  prefill: SALON_CONTACT_MESSAGE,
+} as const;
+
 export function getMapsUrl(): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SITE.addressFull)}`;
 }
 
 export function getWhatsAppUrl(message?: string): string {
-  const text = message || `Ciao ${SITE.name}, vorrei informazioni sui vostri servizi.`;
+  const text = message || SALON_CONTACT_MESSAGE;
   return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
+}
+
+export function getMailtoUrl(message?: string): string {
+  const body = message || SALON_CONTACT_MESSAGE;
+  const params = new URLSearchParams({
+    subject: `Informazione — ${SITE.name}`,
+    body,
+  });
+  return `mailto:${SITE.email}?${params.toString()}`;
 }
 
 export function getSiteUrl(): string {

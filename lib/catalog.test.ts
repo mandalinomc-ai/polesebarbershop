@@ -22,6 +22,10 @@ describe("catalog", () => {
   it("does not include leftover Taglio sartoriale / Combo premium items", () => {
     expect(SERVICES.some((s) => /sartoriale|combo premium/i.test(s.name))).toBe(false);
   });
+  it("does not list a specialist consult service", () => {
+    const blob = SERVICES.map((s) => `${s.id} ${s.name} ${s.description}`).join(" ");
+    expect(blob).not.toMatch(/tricolog|dermatolog|caduta capelli/i);
+  });
   it("sums duration and uses a da–a range when any service is variable", () => {
     const totals = totalsForServices(resolveServices(["taglio-pro", "decolorazione-meches"])!);
     expect(totals.durationMin).toBe(70);

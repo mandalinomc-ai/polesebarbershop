@@ -20,8 +20,8 @@ export function Hero() {
           Felice e Davide — taglio, barba, colore e trattamenti a {SITE.address}, {SITE.city}.
         </p>
         <div className="hero-actions">
-          <a href="#prenota" className="btn btn-gold btn-magnetic">Prenota ora</a>
-          <a href="#services" className="btn btn-outline btn-magnetic">Listino</a>
+          <a href="/#prenota" className="btn btn-gold btn-magnetic">Prenota ora</a>
+          <a href="/#services" className="btn btn-outline btn-magnetic">Servizi</a>
           <a href={getMapsUrl()} className="btn btn-outline btn-magnetic" target="_blank" rel="noopener noreferrer">Maps</a>
         </div>
       </div>

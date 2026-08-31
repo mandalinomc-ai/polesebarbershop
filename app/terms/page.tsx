@@ -29,9 +29,11 @@ export default function TermsPage() {
           <h2>Disdetta</h2>
           <p>
             Puoi disdire gratuitamente fino a {CANCEL_HOURS_BEFORE} ore prima
-            dell&apos;appuntamento, dal link ricevuto via email. Oltre tale termine
-            chiama il {SITE.phone}. I no-show reiterati possono comportare la
-            richiesta di un acconto per prenotazioni successive.
+            dell&apos;appuntamento, dal link ricevuto via email
+            (/appuntamento/…). Oltre tale termine chiama il {SITE.phone}. La
+            disdetta libera subito lo slot e annulla il promemoria di 30 minuti
+            (file .ics di cancellazione). I no-show reiterati possono comportare
+            la richiesta di un acconto per prenotazioni successive.
           </p>
           <h2>Orari</h2>
           <p>

@@ -5,6 +5,15 @@ import { getSupabaseAdmin, type AppointmentRow } from "@/lib/supabase";
 export type DayBusy = { barberId: string; startsAt: string; endsAt: string };
 const BLOCKING = ["pending", "confirmed", "walk_in", "completed"] as const;
 
+/** Cancelled appointments free the chair and must not get the 30-min reminder. */
+export function occupiesSlot(status: string): boolean {
+  return (BLOCKING as readonly string[]).includes(status);
+}
+
+export function shouldAttachCalendarReminder(status: string): boolean {
+  return occupiesSlot(status) && status !== "cancelled";
+}
+
 export async function loadDayAppointments(date: string): Promise<DayBusy[]> {
   const db = getSupabaseAdmin();
   if (!db) return [];
@@ -15,7 +24,7 @@ export async function loadDayAppointments(date: string): Promise<DayBusy[]> {
     .lte("starts_at", wallTimeToUtc(date, "23:59").toISOString());
   if (error) return [];
   return (data || [])
-    .filter((row: { status: string }) => (BLOCKING as readonly string[]).includes(row.status))
+    .filter((row: { status: string }) => occupiesSlot(row.status))
     .map((row: { barber_id: string; starts_at: string; ends_at: string }) => ({
       barberId: row.barber_id,
       startsAt: row.starts_at,

@@ -32,7 +32,9 @@ export async function sendEmail(opts: {
         ? [{
             filename: opts.ics.filename,
             content: Buffer.from(opts.ics.content, "utf8"),
-            contentType: "text/calendar; charset=utf-8; method=PUBLISH",
+            contentType: /METHOD:CANCEL/.test(opts.ics.content)
+              ? "text/calendar; charset=utf-8; method=CANCEL"
+              : "text/calendar; charset=utf-8; method=PUBLISH",
           }]
         : undefined,
     });
@@ -59,7 +61,7 @@ export function customerConfirmEmail(opts: {
   return {
     subject: `Prenotazione confermata — ${SITE.name}`,
     text: `Ciao ${opts.firstName}, prenotazione ${opts.service} con ${opts.barber} il ${opts.date} alle ${opts.time} (${opts.priceLabel}). ICS in allegato (promemoria 30 min). ${opts.manageUrl}`,
-    html: wrap(`<p>Ciao ${opts.firstName},</p><p>prenotazione <strong>confermata</strong>.</p><p><strong>${opts.service}</strong> · ${opts.priceLabel}<br/>con ${opts.barber}<br/>${opts.date} alle ${opts.time}</p><p>In allegato il file .ics (promemoria 30 minuti prima).</p><p><a href="${opts.manageUrl}" style="color:#C9A962;">Gestisci o disdici</a></p>`),
+    html: wrap(`<p>Ciao ${opts.firstName},</p><p>prenotazione <strong>confermata</strong>.</p><p><strong>${opts.service}</strong> · ${opts.priceLabel}<br/>con ${opts.barber}<br/>${opts.date} alle ${opts.time}</p><p>In allegato il file .ics: un solo promemoria, 30 minuti prima.</p><p><a href="${opts.manageUrl}" style="color:#C9A962;">Gestisci o disdici</a> (fino a 3 ore prima). Se disdici, lo slot si libera e il promemoria non parte.</p>`),
   };
 }
 
@@ -76,8 +78,8 @@ export function ownerNewBookingEmail(opts: {
 export function customerCancelEmail(opts: { firstName: string; service: string; date: string; time: string }) {
   return {
     subject: `Prenotazione annullata — ${SITE.name}`,
-    text: `Ciao ${opts.firstName}, la prenotazione per ${opts.service} del ${opts.date} alle ${opts.time} è stata annullata.`,
-    html: wrap(`<p>Ciao ${opts.firstName},</p><p>la prenotazione per <strong>${opts.service}</strong> del ${opts.date} alle ${opts.time} è stata <strong>annullata</strong>.</p>`),
+    text: `Ciao ${opts.firstName}, la prenotazione per ${opts.service} del ${opts.date} alle ${opts.time} è stata annullata. Lo slot è di nuovo libero. Apri l'allegato .ics di disdetta per togliere l'appuntamento e il promemoria di 30 minuti dal calendario.`,
+    html: wrap(`<p>Ciao ${opts.firstName},</p><p>la prenotazione per <strong>${opts.service}</strong> del ${opts.date} alle ${opts.time} è stata <strong>annullata</strong>.</p><p>Lo slot è di nuovo libero: non partirà il promemoria di 30 minuti. Apri l'allegato .ics di disdetta per rimuovere l'evento dal calendario.</p>`),
   };
 }
 

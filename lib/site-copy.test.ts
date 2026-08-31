@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SITE } from "./site-config";
+import { SITE, SALON_CONTACT, SALON_CONTACT_MESSAGE, getWhatsAppUrl } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
 const SOURCE_EXT = /\.(ts|tsx|js|jsx|html|txt|xml|css|json|sql|cmd)$/;
@@ -36,6 +36,10 @@ describe("public copy vs official identity", () => {
       /Corso Dante 45/,
       /Taglio sartoriale/,
       /Combo premium/,
+      /tricolog/i,
+      /dermatolog/i,
+      /caduta capelli/i,
+      /Consulenza Tricologica/,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -47,5 +51,18 @@ describe("public copy vs official identity", () => {
       }
     }
     expect(hits).toEqual([]);
+  });
+
+  it("uses a generic salon contact message without specialist consult language", () => {
+    expect(SALON_CONTACT.title).toBe("Parla con il salone");
+    expect(SALON_CONTACT.prefill).toBe(SALON_CONTACT_MESSAGE);
+    expect(SALON_CONTACT_MESSAGE).toBe(
+      "Ciao, vorrei parlare con il salone per un'informazione.",
+    );
+    expect(SALON_CONTACT.body).toMatch(/info, orari, prezzi o un consiglio/i);
+    expect(getWhatsAppUrl()).toContain(encodeURIComponent(SALON_CONTACT_MESSAGE));
+    expect(SALON_CONTACT.body + SALON_CONTACT.title + SALON_CONTACT_MESSAGE).not.toMatch(
+      /tricolog|dermatolog|caduta/i,
+    );
   });
 });

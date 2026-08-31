@@ -1,4 +1,4 @@
-import { SITE, getMapsUrl } from "@/lib/site-config";
+import { SITE, SALON_CONTACT, getMapsUrl, getWhatsAppUrl, getMailtoUrl } from "@/lib/site-config";
 import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
@@ -182,6 +182,27 @@ export function LandingSections() {
               </a>
             </p>
           </div>
+          <aside id="consulenza" className="consult-card reveal reveal-d1">
+            <p className="eyebrow">{SALON_CONTACT.eyebrow}</p>
+            <h3 className="font-serif">{SALON_CONTACT.title}</h3>
+            <p>{SALON_CONTACT.body}</p>
+            <div className="consult-actions">
+              <a
+                className="btn btn-gold btn-magnetic"
+                href={getWhatsAppUrl(SALON_CONTACT.prefill)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {SALON_CONTACT.cta}
+              </a>
+              <a className="btn btn-outline btn-magnetic" href={getMailtoUrl()}>
+                Email
+              </a>
+              <a className="btn btn-outline btn-magnetic" href={`tel:${SITE.phoneTel}`}>
+                Chiama
+              </a>
+            </div>
+          </aside>
         </div>
       </section>
     </>

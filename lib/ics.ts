@@ -1,4 +1,4 @@
-import { SITE, TIMEZONE } from "./site-config";
+import { REMINDER_LEAD_MINUTES, SITE, TIMEZONE } from "./site-config";
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
@@ -58,23 +58,31 @@ export type IcsInput = {
   location?: string;
   url?: string;
   stamp?: Date;
+  /** Cancelled bookings get METHOD:CANCEL and no VALARM reminder. */
+  cancelled?: boolean;
 };
 
+export const ICS_REMINDER_TRIGGER = `-PT${REMINDER_LEAD_MINUTES}M`;
+
 /**
- * Build a VCALENDAR with a 30-minute VALARM display reminder.
+ * Build a VCALENDAR. Confirmed events have exactly one VALARM (-PT30M).
+ * Cancelled events have no alarm so the 30-minute reminder does not fire.
  */
 export function buildIcs(input: IcsInput): string {
   const stamp = formatIcsUtc(input.stamp ?? new Date());
+  const cancelled = Boolean(input.cancelled);
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//Polese Barbershop//Prenotazioni//IT",
     "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
+    `METHOD:${cancelled ? "CANCEL" : "PUBLISH"}`,
     `X-WR-TIMEZONE:${TIMEZONE}`,
     "BEGIN:VEVENT",
     `UID:${input.uid}`,
     `DTSTAMP:${stamp}`,
+    `SEQUENCE:${cancelled ? 1 : 0}`,
+    `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`,
     `DTSTART:${formatIcsUtc(input.startsAt)}`,
     `DTEND:${formatIcsUtc(input.endsAt)}`,
     `SUMMARY:${escapeIcsText(input.summary)}`,
@@ -84,15 +92,16 @@ export function buildIcs(input: IcsInput): string {
   if (input.url) {
     lines.push(`URL:${input.url}`);
   }
-  lines.push(
-    "BEGIN:VALARM",
-    "ACTION:DISPLAY",
-    "TRIGGER:-PT30M",
-    "DESCRIPTION:Promemoria: appuntamento da Polese Barbershop tra 30 minuti",
-    "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  );
+  if (!cancelled) {
+    lines.push(
+      "BEGIN:VALARM",
+      "ACTION:DISPLAY",
+      `TRIGGER:${ICS_REMINDER_TRIGGER}`,
+      "DESCRIPTION:Promemoria: appuntamento da Polese Barbershop tra 30 minuti",
+      "END:VALARM",
+    );
+  }
+  lines.push("END:VEVENT", "END:VCALENDAR");
   return lines.map(foldIcsLine).join("\r\n") + "\r\n";
 }
 

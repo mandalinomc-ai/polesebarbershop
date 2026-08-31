@@ -26,12 +26,16 @@ PRENOTAZIONI
   Listino ufficiale: CAPELLI / BARBA / COLORE (prezzi variabili «da X € a Y €»).
   Barbieri: Felice e Davide (poltrone indipendenti) + «Chiunque sia disponibile».
   Primo giorno prenotabile: max(oggi, 1 settembre 2026). Chiuso lunedì e domenica.
-  Conferma sempre con file .ics (VALARM 30 minuti) anche se il database o Resend
-  non sono ancora configurati. In quel caso il cliente vede un avviso e può
-  scaricare il calendario; chiama il salone al +39 327 015 6225 per conferma.
+  Conferma sempre con file .ics (un solo VALARM: 30 minuti prima, niente
+  avvisi a 1 giorno o 1 ora) anche se il database o Resend non sono ancora
+  configurati. In quel caso il cliente vede un avviso e può scaricare il
+  calendario; chiama il salone al +39 327 015 6225 per conferma.
+  Disdetta: /appuntamento/[token] (DELETE). Lo slot si libera; il promemoria
+  di 30 minuti non parte (ICS METHOD:CANCEL, senza VALARM).
   Email Resend a cliente + admin (quando RESEND_API_KEY è impostata).
   Nessun Twilio, QStash o WhatsApp come canale primario di prenotazione.
-  Il pulsante WhatsApp in pagina è solo contatto rapido.
+  Il pulsante WhatsApp e «Parla con il salone» sono contatto rapido
+  (messaggio generico, senza consulenza specialistica).
 
 AREA ADMIN
 ----------

@@ -51,8 +51,9 @@ export default function PrivacyPage() {
             diritto di reclamo al Garante per la protezione dei dati personali.
           </p>
           <p>
-            Per disdire un appuntamento usa il link ricevuto via email oppure
-            chiama il {SITE.phone}.
+            Per disdire un appuntamento usa il link ricevuto via email
+            (/appuntamento/…) oppure chiama il {SITE.phone}. La disdetta libera
+            lo slot e il promemoria di 30 minuti non parte.
           </p>
         </div>
       </main>

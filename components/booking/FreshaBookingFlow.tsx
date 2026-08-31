@@ -16,7 +16,7 @@ import {
   getFirstBookableDate,
   isClosedDay,
 } from "@/lib/availability";
-import { SITE } from "@/lib/site-config";
+import { CANCEL_HOURS_BEFORE, SITE } from "@/lib/site-config";
 import { normalizeItalianPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
 
@@ -274,8 +274,9 @@ export function FreshaBookingFlow() {
             alle {slot?.label} · {totals.priceLabel}.
           </p>
           <p className="prose">
-            Aggiungi l&apos;appuntamento al calendario: il file .ics include un
-            promemoria 30 minuti prima (Apple Calendar, Google Calendar).
+            Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file
+            .ics ha un solo promemoria: 30 minuti prima. Nessun avviso a 1 giorno
+            o a 1 ora.
           </p>
           <div className="success-actions">
             {success.ics ? (
@@ -284,7 +285,7 @@ export function FreshaBookingFlow() {
                 className="btn btn-gold btn-magnetic"
                 onClick={() => downloadIcs(success.icsFilename, success.ics)}
               >
-                Scarica .ics
+                Apple Calendar (.ics)
               </button>
             ) : null}
             {success.googleCalendarUrl ? (
@@ -298,8 +299,8 @@ export function FreshaBookingFlow() {
               </a>
             ) : null}
             {success.ics ? (
-              <a className="btn btn-outline btn-magnetic" href={icsDataUri(success.ics)}>
-                Apri nel calendario
+              <a className="btn btn-outline btn-magnetic" href={icsDataUri(success.ics)} download={success.icsFilename}>
+                Scarica .ics
               </a>
             ) : null}
           </div>
@@ -316,6 +317,8 @@ export function FreshaBookingFlow() {
           {success.manageUrl !== "#" ? (
             <p>
               <a href={success.manageUrl}>Gestisci o disdici l&apos;appuntamento</a>
+              {" — "}puoi annullare fino a {CANCEL_HOURS_BEFORE} ore prima; lo
+              slot si libera e il promemoria di 30 minuti non parte.
             </p>
           ) : null}
         </div>
@@ -542,8 +545,9 @@ export function FreshaBookingFlow() {
             </ul>
             {submitError ? <p className="field-error">{submitError}</p> : null}
             <p className="booking-open-note" style={{ marginTop: "1rem" }}>
-              Riceverai una email di conferma con file .ics (promemoria 30
-              minuti prima). {SITE.pricesIncludeVat}
+              Riceverai una email di conferma con file .ics (un solo
+              promemoria, 30 minuti prima). Puoi disdire dal link in email.
+              {" "}{SITE.pricesIncludeVat}
             </p>
           </>
         )}
