@@ -1,0 +1,32 @@
+{
+  "name": "polesebarbershop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Polese Barbershop — sito e prenotazioni online con WhatsApp",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "@upstash/qstash": "^2.8.1",
+    "next": "^15.5.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "resend": "^4.8.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.9"
+  }
+}

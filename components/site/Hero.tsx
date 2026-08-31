@@ -58,8 +58,8 @@ export function Hero() {
             src="/assets/images/logo.png"
             alt="Felice Polese — logo ufficiale Polese Barbershop"
             className="brand-logo brand-logo--hero"
-            width={1209}
-            height={823}
+            width={512}
+            height={331}
           />
           <p className="coming-soon-brand">{SITE.brand}</p>
           <h1 className="hero-title font-serif">Prossimamente</h1>

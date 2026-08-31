@@ -2,7 +2,8 @@ POLESE BARBERSHOP
 =================
 
 Brand: FELICE POLESE — Barberia d'élite a Benevento
-Nuovo locale: Corso Dante n. 45, 82100 Benevento BN
+Sede: Corso Dante Alighieri, 44 – 82100 Benevento (BN)
+C.F.: PLSFLC04S21A783K | P.IVA: 01894030624
 
 SITO LIVE
 ---------
@@ -14,30 +15,45 @@ REPOSITORY GITHUB
 
 AVVIO LOCALE
 ------------
-  Doppio click su AVVIA.cmd
-  oppure apri index.html
+  npm install
+  npm run dev
+  Apri http://localhost:3000
 
-CONTATTI (già configurati)
---------------------------
-  Tel / WhatsApp: 351 252 3087
+  Windows: doppio click su AVVIA.cmd
+
+PRENOTAZIONI
+------------
+  Wizard in 5 passi (stile Fresha): Servizi → Barbiere → Data/ora → Dati → Conferma.
+  Barbieri: Felice e Davide (poltrone indipendenti) + «Chiunque sia disponibile».
+  Primo giorno prenotabile: max(oggi, 1 settembre 2026).
+  Conferma a schermo + email Resend con allegato .ics (VALARM 30 minuti).
+  Nessun Twilio / QStash: il promemoria è nativo del calendario del telefono.
+
+  Copia .env.example in .env.local e inserisci le chiavi.
+  Applica la migration Supabase: supabase/migrations/001_schema.sql
+
+AREA ADMIN
+----------
+  /admin — agenda per barbiere, walk-in, incassi giorno/settimana.
+  Password: variabile ADMIN_PASSWORD (cookie httpOnly).
+
+CONTATTI
+--------
+  Tel: +39 327 015 6225
   Instagram: @felicepolese_barber
-  Fresha: prenotazione online (sede attuale fino al trasferimento)
 
-MODALITÀ COMING SOON
---------------------
-  assets/js/config.js → IS_COMING_SOON: true
+PAGINE LEGALI
+-------------
+  /privacy-policy  /terms
+  Tutti i prezzi sono da intendersi IVA inclusa.
 
-  Attiva: landing Prossimamente + countdown + form avviso
-  Disattiva (IS_COMING_SOON: false): sito completo indicizzabile
-
-SEO INCLUSO
------------
-  Meta Open Graph + Twitter Card
-  Schema.org HairSalon (JSON-LD)
-  robots.txt, sitemap.xml, site.webmanifest
-  noindex in Coming Soon · index quando live
+TEST
+----
+  npm test          (vitest — slot, catalogo, .ics, Zod)
+  npm run build     (Next.js)
 
 DEPLOY
 ------
-  cd progetti-ai\polesebarbershop
-  npx vercel deploy --prod --yes
+  Vercel rileva Next.js automaticamente (piano free).
+  Imposta le variabili d'ambiente elencate in .env.example.
+  Non committare mai i segreti.

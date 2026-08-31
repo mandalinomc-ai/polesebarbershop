@@ -3,4 +3,11 @@
 Thumbs.db
 fresha-temp.html
 
-.vercel
+node_modules
+.env
+.env.local
+.env.*.local
+.next
+out
+coverage
+*.log

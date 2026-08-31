@@ -1,0 +1,28 @@
+import { Header, Footer, WhatsAppFab, ClientEffects } from "@/components/site/Chrome";
+import { BookingSectionNote, FreshaBookingFlow } from "@/components/booking/FreshaBookingFlow";
+import { SITE } from "@/lib/site-config";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: `Prenota — ${SITE.name}`,
+  description: `Prenota taglio, barba e trattamenti da ${SITE.name}, ${SITE.address}, ${SITE.city}.`,
+};
+
+export default function PrenotaPage() {
+  return (
+    <>
+      <Header />
+      <main id="main-content" className="manage-page">
+        <p className="eyebrow">Prenotazione</p>
+        <h1 className="section-title font-serif">{SITE.name}</h1>
+        <div style={{ maxWidth: 640, margin: "1.5rem auto 0" }}>
+          <BookingSectionNote />
+          <FreshaBookingFlow />
+        </div>
+      </main>
+      <Footer />
+      <WhatsAppFab />
+      <ClientEffects />
+    </>
+  );
+}

@@ -15,10 +15,6 @@ function fromAddress(): string {
   );
 }
 
-function isResendConfigured(): boolean {
-  return Boolean(process.env.RESEND_API_KEY);
-}
-
 export async function sendEmail(opts: {
   to: string;
   subject: string;
@@ -26,8 +22,8 @@ export async function sendEmail(opts: {
   text?: string;
   ics?: { filename: string; content: string };
 }): Promise<EmailSendResult> {
-  if (!isResendConfigured()) {
-    return { ok: false, error: RESEND_MISSING_IT };
+  if (!process.env.RESEND_API_KEY) {
+    return { ok: true, skipped: true };
   }
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
@@ -62,7 +58,6 @@ function wrap(inner: string): string {
 <html lang="it">
 <body style="margin:0;background:#0B0B0B;color:#F4F2EF;font-family:Georgia,'Times New Roman',serif;">
   <div style="max-width:560px;margin:0 auto;padding:32px 24px;">
-    <img src="${SITE.siteUrl}/assets/images/logo.png" alt="Felice Polese — Polese Barbershop" width="180" style="display:block;width:180px;height:auto;margin:0 0 20px;" />
     <p style="letter-spacing:0.28em;text-transform:uppercase;font-size:11px;color:#C9A962;font-family:system-ui,sans-serif;">${SITE.brand}</p>
     <h1 style="font-weight:500;font-size:28px;margin:8px 0 24px;">${SITE.name}</h1>
     ${inner}

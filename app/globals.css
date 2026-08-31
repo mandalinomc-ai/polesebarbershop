@@ -856,3 +856,139 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   color: #e8b4b4;
   border-color: rgba(232, 180, 180, 0.35);
 }
+
+.gdpr-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--silk);
+  line-height: 1.55;
+  cursor: pointer;
+}
+.gdpr-row a { color: var(--gold); }
+.gdpr-row input { margin-top: 0.25rem; accent-color: var(--gold); }
+.success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+.booking-layout { max-width: 640px; margin-top: 1.5rem; }
+.legal-footer { align-items: flex-start; }
+.legal-footer p { margin: 0.2rem 0; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 1rem; }
+.footer-links a { color: var(--silk); text-decoration: none; }
+.footer-links a:hover { color: var(--pearl); }
+.legal-page {
+  min-height: 100dvh;
+  padding: calc(var(--header-h) + 3rem) var(--pad-x) 4rem;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+.legal-prose { color: var(--silk); line-height: 1.75; margin-top: 2rem; }
+.legal-prose h2 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  color: var(--pearl);
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 2rem 0 0.75rem;
+}
+.legal-prose a { color: var(--gold); }
+.admin-shell {
+  min-height: 100dvh;
+  padding: 2rem var(--pad-x) 4rem;
+  background: var(--void);
+  color: var(--pearl);
+}
+.admin-login {
+  max-width: 24rem;
+  margin: 12vh auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.admin-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.admin-head h1 { margin: 0.25rem 0 0; font-size: 2rem; font-weight: 500; }
+.admin-head-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.takings {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+@media (min-width: 700px) { .takings { grid-template-columns: 1fr 1fr; } }
+.takings article {
+  border: 1px solid rgba(201, 169, 98, 0.25);
+  padding: 1.25rem;
+  background: var(--graphite);
+}
+.takings span { color: var(--silk); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.takings strong {
+  display: block;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--gold);
+  margin: 0.35rem 0;
+}
+.agenda-columns {
+  display: grid;
+  gap: 1.25rem;
+}
+@media (min-width: 900px) { .agenda-columns { grid-template-columns: 1fr 1fr; } }
+.agenda-col h2 { font-size: 1.75rem; font-weight: 500; margin: 0 0 1rem; }
+.agenda-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--graphite);
+}
+.agenda-card header { display: flex; justify-content: space-between; color: var(--gold); }
+.agenda-card p { margin: 0.35rem 0; color: var(--silk); }
+.agenda-price { color: var(--pearl) !important; }
+.agenda-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.agenda-actions button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--pearl);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+.agenda-card.status-cancelled { opacity: 0.55; }
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+.admin-modal {
+  width: min(100%, 28rem);
+  background: var(--graphite);
+  border: 1px solid rgba(201, 169, 98, 0.3);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 90dvh;
+  overflow: auto;
+}
+.admin-modal label { color: var(--silk); font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.admin-modal h2 { margin: 0; font-size: 1.75rem; font-weight: 500; }
+
+.font-sans { font-family: var(--font-inter), Inter, system-ui, sans-serif; }
+.font-serif { font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif; }
