@@ -89,6 +89,15 @@ describe("public copy vs official identity", () => {
     expect(gitignore).toMatch(/^\.env\.local$/m);
     const example = readFileSync(join(process.cwd(), ".env.example"), "utf8");
     expect(example).toMatch(/^ADMIN_PASSWORD=$/m);
+    expect(example).toMatch(/^ADMIN_USER=$/m);
     expect(example).not.toMatch(/ADMIN_PASSWORD=admin/);
+  });
+
+  it("keeps the public header free of CRM chrome", () => {
+    const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
+    const header = chrome.slice(0, chrome.indexOf("export function WhatsAppFab"));
+    expect(header).not.toMatch(/gestionale/i);
+    expect(header).not.toMatch(/Dashboard/);
+    expect(chrome).toMatch(/href="\/gestionale"/);
   });
 });

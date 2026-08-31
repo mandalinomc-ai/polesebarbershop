@@ -138,7 +138,7 @@ export function Footer() {
       <div className="footer-links">
         <a href="/privacy-policy">Privacy</a>
         <a href="/terms">Termini</a>
-        <a href="/admin">Admin</a>
+        <a href="/gestionale">Gestionale</a>
         <a href={SITE.instagram} target="_blank" rel="noopener noreferrer">
           {SITE.instagramHandle}
         </a>

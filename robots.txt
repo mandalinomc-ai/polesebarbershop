@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /gestionale
+Disallow: /admin
+Disallow: /api/admin
 
 Sitemap: https://polesebarbershop.vercel.app/sitemap.xml

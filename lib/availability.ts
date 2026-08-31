@@ -199,6 +199,12 @@ export function addDays(date: string, days: number): string {
   return next.toISOString().slice(0, 10);
 }
 
+/** Monday (ISO week) of the civil date YYYY-MM-DD. */
+export function mondayOfWeek(date: string): string {
+  const dow = weekdayOfDate(date);
+  return addDays(date, dow === 0 ? -6 : 1 - dow);
+}
+
 export function listBookableDates(
   count: number,
   now: Date = new Date(),

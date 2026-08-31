@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingSchema, walkInSchema } from "./validations";
+import { bookingSchema, walkInSchema, adminLoginSchema } from "./validations";
 import { normalizeItalianPhone } from "./phone";
 
 describe("phone + booking validation", () => {
@@ -53,5 +53,13 @@ describe("phone + booking validation", () => {
     });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.startTime).toBe("09:30");
+  });
+
+  it("accepts gestionale login with username or id", () => {
+    expect(adminLoginSchema.safeParse({ username: "admin", password: "admin" }).success).toBe(true);
+    const asId = adminLoginSchema.safeParse({ id: "admin", password: "admin" });
+    expect(asId.success).toBe(true);
+    if (asId.success) expect(asId.data.username).toBe("admin");
+    expect(adminLoginSchema.safeParse({ password: "admin" }).success).toBe(false);
   });
 });

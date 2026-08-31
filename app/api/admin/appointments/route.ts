@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { addDays, formatWallDate, formatWallTime, wallTimeToUtc, weekdayOfDate } from "@/lib/availability";
+import { addDays, formatWallDate, formatWallTime, mondayOfWeek, wallTimeToUtc } from "@/lib/availability";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { namesFromSnapshot, publicAppointment } from "@/lib/appointments";
+import { isPaidStatus } from "@/lib/crm";
 import { getBarber } from "@/lib/catalog";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { adminAppointmentsQuerySchema, flattenZodError } from "@/lib/validations";
@@ -10,10 +11,8 @@ import { adminAppointmentsQuerySchema, flattenZodError } from "@/lib/validations
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function mondayOf(date: string) {
-  const dow = weekdayOfDate(date);
-  return addDays(date, dow === 0 ? -6 : 1 - dow);
-}
+const AGENDA_EMPTY_IT =
+  "Database non collegato. L'agenda è vuota finché non configuri Supabase.";
 
 function serialize(row: AppointmentRow) {
   const start = new Date(row.starts_at);
@@ -32,16 +31,32 @@ function serialize(row: AppointmentRow) {
 
 export async function GET(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
-  if (!isSupabaseConfigured()) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
   const { searchParams } = new URL(request.url);
   const parsed = adminAppointmentsQuerySchema.safeParse({
     date: searchParams.get("date") || undefined,
   });
   if (!parsed.success) return NextResponse.json({ error: flattenZodError(parsed.error) }, { status: 400 });
   const date = parsed.data.date || formatWallDate(new Date());
-  const weekStart = mondayOf(date);
+  const weekStart = mondayOfWeek(date);
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({
+      date,
+      weekStart,
+      appointments: [],
+      takings: { dayCents: 0, weekCents: 0 },
+      warning: AGENDA_EMPTY_IT,
+    });
+  }
   const db = getSupabaseAdmin();
-  if (!db) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
+  if (!db) {
+    return NextResponse.json({
+      date,
+      weekStart,
+      appointments: [],
+      takings: { dayCents: 0, weekCents: 0 },
+      warning: AGENDA_EMPTY_IT,
+    });
+  }
 
   const { data: dayRows, error: dayErr } = await db.from("appointments").select("*")
     .gte("starts_at", wallTimeToUtc(date, "00:00").toISOString())
@@ -53,9 +68,8 @@ export async function GET(request: Request) {
     .gte("starts_at", wallTimeToUtc(weekStart, "00:00").toISOString())
     .lt("starts_at", wallTimeToUtc(addDays(weekStart, 7), "00:00").toISOString());
 
-  const paid = (s: string) => s === "confirmed" || s === "walk_in" || s === "completed";
-  const dayTakings = (dayRows || []).filter((r: AppointmentRow) => paid(r.status)).reduce((s: number, r: AppointmentRow) => s + r.price_cents, 0);
-  const weekTakings = (weekRows || []).filter((r: { status: string }) => paid(r.status)).reduce((s: number, r: { price_cents: number }) => s + r.price_cents, 0);
+  const dayTakings = (dayRows || []).filter((r: AppointmentRow) => isPaidStatus(r.status)).reduce((s: number, r: AppointmentRow) => s + r.price_cents, 0);
+  const weekTakings = (weekRows || []).filter((r: { status: string }) => isPaidStatus(r.status)).reduce((s: number, r: { price_cents: number }) => s + r.price_cents, 0);
 
   return NextResponse.json({
     date, weekStart,

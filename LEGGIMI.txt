@@ -16,9 +16,11 @@ AVVIO LOCALE
 ------------
   npm install
   Copia .env.example in .env.local (puoi lasciare vuoti Supabase/Resend)
-  In locale la password di /admin sta in .env.local (ADMIN_PASSWORD). Non committare quel file.
+  In locale, se non imposti nulla, l'accesso /gestionale è utente admin
+  e password admin (default nel codice). Non committare .env.local.
   npm run dev
   Apri http://localhost:3000
+  Gestionale: http://localhost:3000/gestionale
   Windows: doppio click su AVVIA.cmd
 
 PRENOTAZIONI
@@ -38,11 +40,28 @@ PRENOTAZIONI
   Il pulsante WhatsApp e «Parla con il salone» sono contatto rapido
   (messaggio generico, senza consulenza specialistica).
 
-AREA ADMIN
-----------
-  /admin — agenda a colonne (Felice | Davide), Walk-in, incassi giorno/settimana.
-  Sessione cookie httpOnly con ADMIN_PASSWORD (in locale: .env.local).
-  Serve Supabase configurato (altrimenti l'agenda non può leggere/salvare).
+GESTIONALE (CRM interno, stile YGITAL)
+--------------------------------------
+  URL: /gestionale  ( /admin reindirizza lì )
+  Login: utente admin · password admin
+  (oppure ADMIN_USER / ADMIN_PASSWORD se li imposti)
+  Sessione cookie httpOnly, separata dal sito pubblico.
+  Header del sito NON è il CRM: solo un link discreto «Gestionale» nel footer.
+
+  Dashboard: anagrafica clienti (nome, telefono, email), servizi prenotati,
+  visite (inclusi gli annullati, contrassegnati), ultima visita, spesa.
+  Statistiche: visite per cliente, servizi più frequenti, tasso disdetta/no-show,
+  incassi giorno/settimana (walk-in + prenotazioni).
+  Agenda a colonne Felice | Davide + Walk-in.
+
+  Notifiche gratis dal pannello:
+  - Email via Resend se c'è RESEND_API_KEY, altrimenti errore in italiano.
+  - WhatsApp senza Twilio: apre https://wa.me/<numero>?text= sul WhatsApp
+    del barbiere (costo zero). Messaggi precompilati: promemoria, promo, follow-up.
+    WhatsApp massivo: un link wa.me per cliente.
+
+  Senza Supabase l'interfaccia resta usabile (stati vuoti).
+  Indici opzionali: supabase/migrations/002_crm_indexes.sql
 
 PAGINE LEGALI
 -------------
@@ -69,9 +88,10 @@ COME ANDARE LIVE — 4 click (io non posso creare gli account al posto tuo)
        RESEND_FROM=Polese Barbershop <beth.t@example.com>
      (con questo mittente di test le email arrivano solo a te)
 
-  3. Password admin
-     Scegli tu una password (almeno 4 caratteri) → ADMIN_PASSWORD
-     Email avvisi: ADMIN_EMAIL o OWNER_EMAIL (default felicepolese550@gmail.com)
+  3. Accesso gestionale
+     Default: utente admin e password admin.
+     In produzione imposta ADMIN_USER e ADMIN_PASSWORD (almeno 4 caratteri).
+     Email avvisi prenotazioni: ADMIN_EMAIL o OWNER_EMAIL (default felicepolese550@gmail.com)
 
   4. Vercel (sito live) — https://vercel.com
      progetto polesebarbershop → Settings → Environment Variables

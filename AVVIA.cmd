@@ -16,5 +16,6 @@ if not exist node_modules (
 )
 echo.
 echo Apri http://localhost:3000
+echo Gestionale: http://localhost:3000/gestionale
 echo.
 call npm run dev

@@ -2,38 +2,61 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
 export const ADMIN_COOKIE = "polese_admin";
+export const DEFAULT_ADMIN_USER = "admin";
+export const DEFAULT_ADMIN_PASSWORD = "admin";
 
-function expectedToken(password: string) {
-  return createHmac("sha256", password).update("polese-admin-session").digest("hex");
+function expectedToken(user: string, password: string) {
+  return createHmac("sha256", `${user}:${password}`).update("polese-admin-session").digest("hex");
+}
+
+function safeEqual(a: string, b: string) {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
+/** Username for /gestionale. Env ADMIN_USER, otherwise `admin`. */
+export function getAdminUser() {
+  const value = process.env.ADMIN_USER?.trim();
+  return value ? value : DEFAULT_ADMIN_USER;
+}
+
+/**
+ * Password for /gestionale. Env ADMIN_PASSWORD if set (any length),
+ * otherwise `admin` so local/dev works without .env.
+ */
+export function getAdminPassword() {
+  const value = process.env.ADMIN_PASSWORD;
+  if (value == null || value.length === 0) return DEFAULT_ADMIN_PASSWORD;
+  return value;
 }
 
 export function isAdminConfigured() {
-  return Boolean(process.env.ADMIN_PASSWORD && process.env.ADMIN_PASSWORD.length >= 4);
+  return getAdminPassword().length >= 4;
 }
 
 export function verifyAdminPassword(password: string) {
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) return false;
-  const a = Buffer.from(password);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  return safeEqual(password, getAdminPassword());
+}
+
+export function verifyAdminCredentials(username: string, password: string) {
+  if (!isAdminConfigured()) return false;
+  const userOk = safeEqual(username.trim().toLowerCase(), getAdminUser().toLowerCase());
+  const passOk = safeEqual(password, getAdminPassword());
+  return userOk && passOk;
 }
 
 export function createAdminToken() {
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password) return null;
-  return expectedToken(password);
+  if (!isAdminConfigured()) return null;
+  return expectedToken(getAdminUser(), getAdminPassword());
 }
 
 export function isAdminTokenValid(token: string | undefined | null) {
   if (!token) return false;
   const expected = createAdminToken();
   if (!expected) return false;
-  const a = Buffer.from(token);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  return safeEqual(token, expected);
 }
 
 export async function isAdminRequest() {
@@ -52,4 +75,4 @@ export function adminCookieOptions() {
 }
 
 export const ADMIN_MISSING_IT =
-  "Area admin non configurata: imposta ADMIN_PASSWORD nelle variabili d'ambiente.";
+  "Area gestionale non configurata: ADMIN_PASSWORD deve avere almeno 4 caratteri.";

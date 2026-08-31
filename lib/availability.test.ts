@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BARBERS } from "./catalog";
-import { getAvailableSlots, getFirstBookableDate, weekdayOfDate, wallTimeToUtc, isClosedDay } from "./availability";
+import { getAvailableSlots, getFirstBookableDate, weekdayOfDate, wallTimeToUtc, isClosedDay, mondayOfWeek } from "./availability";
 
 const TUESDAY = "2026-09-01";
 const MONDAY = "2026-08-31";
@@ -16,6 +16,8 @@ describe("timezone helpers", () => {
     expect(isClosedDay(MONDAY)).toBe(true);
     expect(isClosedDay(SUNDAY)).toBe(true);
     expect(isClosedDay(TUESDAY)).toBe(false);
+    expect(mondayOfWeek("2026-09-02")).toBe("2026-08-31");
+    expect(mondayOfWeek("2026-09-06")).toBe("2026-08-31");
   });
   it("first bookable date is max(today, opening 2026-09-01)", () => {
     expect(getFirstBookableDate(wallTimeToUtc("2026-08-31", "18:00"))).toBe("2026-09-01");

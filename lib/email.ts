@@ -45,6 +45,12 @@ export async function sendEmail(opts: {
   }
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (ch) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch] || ch,
+  );
+}
+
 function wrap(inner: string) {
   return `<!DOCTYPE html><html lang="it"><body style="margin:0;background:#0B0B0B;color:#F4F2EF;font-family:Georgia,serif;">
   <div style="max-width:560px;margin:0 auto;padding:32px 24px;">
@@ -80,6 +86,16 @@ export function customerCancelEmail(opts: { firstName: string; service: string; 
     subject: `Prenotazione annullata — ${SITE.name}`,
     text: `Ciao ${opts.firstName}, la prenotazione per ${opts.service} del ${opts.date} alle ${opts.time} è stata annullata. Lo slot è di nuovo libero. Apri l'allegato .ics di disdetta per togliere l'appuntamento e il promemoria di 30 minuti dal calendario.`,
     html: wrap(`<p>Ciao ${opts.firstName},</p><p>la prenotazione per <strong>${opts.service}</strong> del ${opts.date} alle ${opts.time} è stata <strong>annullata</strong>.</p><p>Lo slot è di nuovo libero: non partirà il promemoria di 30 minuti. Apri l'allegato .ics di disdetta per rimuovere l'evento dal calendario.</p>`),
+  };
+}
+
+export function staffCrmEmail(opts: { firstName: string; subject: string; body: string }) {
+  const name = escapeHtml(opts.firstName || "ciao");
+  const body = escapeHtml(opts.body).replace(/\n/g, "<br/>");
+  return {
+    subject: opts.subject,
+    text: opts.body,
+    html: wrap(`<p>Ciao ${name},</p><p>${body}</p>`),
   };
 }
 

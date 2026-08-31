@@ -60,8 +60,32 @@ export const availabilityQuerySchema = z.object({
     .pipe(z.array(z.string()).min(1, "Seleziona almeno un servizio")),
 });
 
-export const adminLoginSchema = z.object({
-  password: z.string().min(1, "Inserisci la password"),
+export const adminLoginSchema = z
+  .object({
+    username: z.string().trim().optional(),
+    id: z.string().trim().optional(),
+    password: z.string().min(1, "Inserisci la password"),
+  })
+  .transform((data) => ({
+    username: (data.username || data.id || "").trim(),
+    password: data.password,
+  }))
+  .pipe(
+    z.object({
+      username: z.string().min(1, "Inserisci l'utente"),
+      password: z.string().min(1, "Inserisci la password"),
+    }),
+  );
+
+export const crmNotifySchema = z.object({
+  template: z.enum(["reminder", "promo", "followup"]),
+  to: z.string().trim().email("Email non valida").optional(),
+  firstName: z.string().trim().max(80).optional(),
+  appointmentId: z.string().uuid().optional(),
+  dateLabel: z.string().trim().max(80).optional(),
+  timeLabel: z.string().trim().max(40).optional(),
+  serviceNames: z.string().trim().max(200).optional(),
+  barberName: z.string().trim().max(80).optional(),
 });
 
 export const walkInSchema = z.object({

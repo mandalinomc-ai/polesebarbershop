@@ -1059,5 +1059,247 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .admin-modal label { color: var(--silk); font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; }
 .admin-modal h2 { margin: 0; font-size: 1.75rem; font-weight: 500; }
 
+/* —— Gestionale CRM (non mescolato al sito pubblico) —— */
+.crm-login-wrap {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem var(--pad-x);
+  background: var(--void);
+}
+.crm-login {
+  width: min(100%, 24rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  border: 1px solid rgba(201, 169, 98, 0.28);
+  background: var(--graphite);
+  padding: 2rem 1.5rem;
+}
+.crm-login h1 { margin: 0.2rem 0 0; font-size: 2rem; font-weight: 500; }
+.crm-login-sub { color: var(--silk); margin: 0 0 0.5rem; font-size: 0.9rem; }
+.crm-login label { color: var(--silk); font-size: 0.78rem; display: flex; flex-direction: column; gap: 0.35rem; }
+
+.crm-app {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 15.5rem 1fr;
+  background: var(--void);
+  color: var(--pearl);
+}
+.crm-sidebar {
+  border-right: 1px solid rgba(201, 169, 98, 0.18);
+  background: var(--graphite);
+  padding: 1.25rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.crm-brand { display: flex; gap: 0.7rem; align-items: center; }
+.crm-brand img { width: 2.6rem; height: auto; object-fit: contain; }
+.crm-brand strong { display: block; font-size: 1.05rem; font-weight: 500; }
+.crm-sidebar nav { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+.crm-sidebar nav button,
+.crm-logout,
+.crm-bottom button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: transparent;
+  border: 0;
+  color: var(--silk);
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  border-radius: 2px;
+}
+.crm-sidebar nav button.active,
+.crm-bottom button.active {
+  color: var(--gold);
+  background: rgba(201, 169, 98, 0.1);
+}
+.crm-logout { color: var(--silk); margin-top: auto; }
+.crm-main { padding: 1.25rem var(--pad-x) 5.5rem; min-width: 0; }
+.crm-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  align-items: flex-end;
+}
+.crm-top h1 { margin: 0.15rem 0 0; font-size: 1.85rem; font-weight: 500; }
+.crm-top-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.crm-top-actions .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
+.crm-warning {
+  border: 1px solid rgba(201, 169, 98, 0.35);
+  color: var(--gold);
+  padding: 0.7rem 0.9rem;
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+}
+.crm-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+.crm-kpis {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 900px) {
+  .crm-kpis { grid-template-columns: repeat(3, 1fr); }
+}
+.crm-kpi {
+  border: 1px solid rgba(201, 169, 98, 0.22);
+  background: var(--graphite);
+  padding: 1rem 1.1rem;
+}
+.crm-kpi span { color: var(--silk); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.crm-kpi strong {
+  display: block;
+  font-size: 1.65rem;
+  font-weight: 500;
+  color: var(--gold);
+  margin: 0.3rem 0 0.15rem;
+}
+.crm-kpi small { color: var(--silk); font-size: 0.75rem; }
+.crm-split {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 900px) { .crm-split { grid-template-columns: 1fr 1fr; } }
+.crm-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--graphite);
+  padding: 1.15rem 1.2rem;
+}
+.crm-card h2 { margin: 0 0 1rem; font-size: 1.45rem; font-weight: 500; }
+.crm-card h3 { margin: 1rem 0 0.5rem; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+.crm-card-head { display: flex; justify-content: space-between; gap: 0.75rem; align-items: flex-start; }
+.crm-card-head h2 { margin: 0; }
+.crm-card-head p { margin: 0.25rem 0 0; color: var(--silk); }
+.crm-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.crm-bars li > div:first-child { display: flex; justify-content: space-between; color: var(--silk); font-size: 0.88rem; margin-bottom: 0.25rem; }
+.crm-bars em { color: var(--pearl); font-style: normal; }
+.crm-bar { height: 6px; background: rgba(201, 169, 98, 0.15); }
+.crm-bar > span { display: block; height: 100%; background: var(--gold); }
+.crm-list { list-style: none; margin: 0; padding: 0; }
+.crm-list li { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.crm-list li:first-child { border-top: 0; }
+.crm-list button,
+.crm-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  padding: 0.7rem 0;
+  cursor: pointer;
+  text-align: left;
+}
+.crm-list strong { font-weight: 500; }
+.crm-list span { color: var(--silk); font-size: 0.85rem; }
+.crm-toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.crm-search { display: flex; align-items: center; gap: 0.45rem; flex: 1; min-width: 12rem; color: var(--silk); }
+.crm-search .input-lux { flex: 1; }
+.crm-table-wrap { overflow: auto; border: 1px solid rgba(255, 255, 255, 0.08); }
+.crm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.crm-table th {
+  text-align: left;
+  color: var(--gold);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid rgba(201, 169, 98, 0.25);
+  white-space: nowrap;
+}
+.crm-table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--silk);
+  vertical-align: top;
+}
+.crm-table tr.is-open td { background: rgba(201, 169, 98, 0.07); }
+.crm-link {
+  background: none;
+  border: 0;
+  color: var(--pearl);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+}
+.crm-icon-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--pearl);
+  padding: 0.35rem;
+  cursor: pointer;
+  display: inline-flex;
+}
+.crm-meta { color: var(--silk); margin: 0.35rem 0 0; }
+.crm-history { list-style: none; margin: 0; padding: 0; }
+.crm-history li {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 0.8fr 0.8fr auto;
+  gap: 0.4rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--silk);
+  font-size: 0.82rem;
+}
+.crm-history li.is-cancelled { opacity: 0.7; }
+.crm-history li.is-cancelled span:nth-child(4) { color: #e08a8a; }
+.crm-preview {
+  color: var(--silk);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--void);
+}
+.crm-hint { color: var(--silk); font-size: 0.78rem; margin: 0; line-height: 1.45; }
+.crm-ok { color: var(--gold); font-size: 0.85rem; }
+.crm-wa-bulk { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow: auto; }
+.crm-wa-bulk li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--silk);
+}
+.crm-wa-bulk a { color: var(--gold); }
+.crm-notify { width: min(100%, 32rem); }
+.crm-bottom {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--graphite);
+  border-top: 1px solid rgba(201, 169, 98, 0.2);
+  padding: 0.35rem 0.4rem calc(0.35rem + var(--safe-bottom));
+  z-index: 50;
+}
+.crm-bottom button { flex-direction: column; gap: 0.15rem; font-size: 0.65rem; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.4rem 0.2rem; }
+@media (max-width: 800px) {
+  .crm-app { grid-template-columns: 1fr; }
+  .crm-sidebar { display: none; }
+  .crm-bottom { display: flex; }
+  .crm-history li { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 801px) {
+  .crm-main { padding-bottom: 2.5rem; }
+}
+
 .font-sans { font-family: var(--font-inter), Inter, system-ui, sans-serif; }
 .font-serif { font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif; }
