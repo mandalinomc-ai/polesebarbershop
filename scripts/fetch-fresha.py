@@ -35,11 +35,10 @@ for i, base in enumerate(urls):
         print("ERR", base[:80], e)
 
 if downloaded:
-    (img_dir / "logo.jpg").write_bytes(downloaded[0].read_bytes())
     (img_dir / "brand-products.jpg").write_bytes(downloaded[0].read_bytes())
 
 manifest = {
-    "logo": "logo.jpg",
+    "logo": "logo.png",
     "brand": "brand-products.jpg",
     "gallery": [f"gallery/{p.name}" for p in downloaded],
 }

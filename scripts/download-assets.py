@@ -94,22 +94,9 @@ def main():
         except Exception as e:
             print("Skip", url[:80], e)
 
-    # Logo = prima immagine quadrata o profile pic (solitamente contiene 'profile' o piccola)
-    for item in manifest["sources"]:
-        u = item["url"].lower()
-        if "profile" in u or "150x150" in u or "s150x150" in u:
-            src = ROOT / "assets" / "images" / item["file"]
-            logo_png = IMG / "logo.png"
-            logo_png.write_bytes(src.read_bytes())
-            manifest["logo"] = "logo.png"
-            print("Logo impostato da profile pic")
-            break
-
-    if not manifest["logo"] and manifest["sources"]:
-        first = ROOT / "assets" / "images" / manifest["sources"][0]["file"]
-        (IMG / "logo.png").write_bytes(first.read_bytes())
+    # Official Felice Polese mark is exported from PDF — never overwrite logo.png.
+    if not manifest.get("logo"):
         manifest["logo"] = "logo.png"
-        print("Logo fallback prima immagine")
 
     manifest["gallery"] = [s["file"] for s in manifest["sources"][:6]]
     (IMG / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
