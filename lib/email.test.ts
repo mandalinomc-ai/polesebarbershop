@@ -124,6 +124,18 @@ describe("sendEmail", () => {
 });
 
 describe("booking email copy", () => {
+  const origKey = process.env.RESEND_API_KEY;
+  const origFrom = process.env.RESEND_FROM;
+
+  afterEach(() => {
+    if (origKey === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = origKey;
+    if (origFrom === undefined) delete process.env.RESEND_FROM;
+    else process.env.RESEND_FROM = origFrom;
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   it("uses the Italian customer confirmation with 1 ora notice and optional manage link", () => {
     const mail = customerConfirmEmail({
       firstName: "Mario",
