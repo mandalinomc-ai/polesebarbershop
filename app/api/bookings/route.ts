@@ -126,8 +126,10 @@ export async function POST(request: Request) {
     ics: { filename, content: icsContent },
   });
   if (!emails.customer.ok) warnings.push(emails.customer.error);
-  if (!emails.admin.ok && emails.admin.error !== emails.customer.error) {
-    warnings.push(`Email admin: ${emails.admin.error}`);
+  if (!emails.admin.ok) {
+    const adminError = emails.admin.error;
+    const customerError = emails.customer.ok ? "" : emails.customer.error;
+    if (adminError !== customerError) warnings.push(`Email admin: ${adminError}`);
   }
 
   return NextResponse.json({
