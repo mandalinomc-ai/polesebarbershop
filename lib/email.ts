@@ -90,6 +90,7 @@ export async function sendBookingEmails(opts: {
   ics: { filename: string; content: string };
 }) {
   const customer = await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics });
+  // Admin/owner: ADMIN_EMAIL → OWNER_EMAIL → felicepolese550@gmail.com
   const admin = await sendEmail({ to: getAdminEmail(), ...opts.owner, ics: opts.ics });
   return { customer, admin };
 }

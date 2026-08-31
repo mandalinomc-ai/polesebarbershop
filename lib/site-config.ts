@@ -81,10 +81,13 @@ export function getSiteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || SITE.siteUrl).replace(/\/$/, "");
 }
 
+/** Gmail del salone per avvisi prenotazioni (non l'account GitHub). */
+export const ADMIN_EMAIL_FALLBACK = "felicepolese550@gmail.com";
+
 export function getAdminEmail(): string {
   return (
     process.env.ADMIN_EMAIL ||
     process.env.OWNER_EMAIL ||
-    SITE.email
+    ADMIN_EMAIL_FALLBACK
   );
 }
