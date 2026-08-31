@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SITE, getWhatsAppUrl } from "@/lib/site-config";
+import { SITE, SALON_CONTACT, getWhatsAppUrl } from "@/lib/site-config";
 
 const LINKS = [
   { href: "/#about", label: "Chi siamo" },
   { href: "/#services", label: "Servizi" },
   { href: "/#gallery", label: "Galleria" },
-  { href: "/#consulenza", label: "Scrivici" },
+  { href: `/#${SALON_CONTACT.id}`, label: "Scrivici" },
   { href: "/#contact", label: "Contatti" },
 ];
 

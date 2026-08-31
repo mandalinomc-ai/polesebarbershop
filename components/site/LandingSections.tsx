@@ -182,7 +182,7 @@ export function LandingSections() {
               </a>
             </p>
           </div>
-          <aside id="consulenza" className="consult-card reveal reveal-d1">
+          <aside id={SALON_CONTACT.id} className="consult-card reveal reveal-d1">
             <p className="eyebrow">{SALON_CONTACT.eyebrow}</p>
             <h3 className="font-serif">{SALON_CONTACT.title}</h3>
             <p>{SALON_CONTACT.body}</p>

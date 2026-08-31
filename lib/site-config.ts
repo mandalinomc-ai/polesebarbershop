@@ -51,7 +51,7 @@ export const SALON_CONTACT_MESSAGE =
   "Ciao, vorrei parlare con il salone per un'informazione.";
 
 export const SALON_CONTACT = {
-  id: "consulenza",
+  id: "scrivici",
   title: "Parla con il salone",
   eyebrow: "Scrivici",
   body: "Puoi scriverci per info, orari, prezzi o un consiglio. Felice e Davide ti rispondono dal salone.",

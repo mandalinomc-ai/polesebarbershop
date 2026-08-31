@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingSchema } from "./validations";
+import { bookingSchema, walkInSchema } from "./validations";
 import { normalizeItalianPhone } from "./phone";
 
 describe("phone + booking validation", () => {
@@ -41,5 +41,17 @@ describe("phone + booking validation", () => {
       expect(result.data.email).toBe("mario@example.com");
       expect(result.data.phone).toBe("+393270156225");
     }
+  });
+
+  it("accepts HTML time inputs that include seconds for walk-in", () => {
+    const result = walkInSchema.safeParse({
+      serviceIds: ["taglio-standard"],
+      barberId: "felice",
+      date: "2026-09-01",
+      startTime: "09:30:00",
+      priceEuro: 15,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.startTime).toBe("09:30");
   });
 });

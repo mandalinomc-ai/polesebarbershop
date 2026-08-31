@@ -68,7 +68,11 @@ export const walkInSchema = z.object({
   serviceIds: z.array(z.string().min(1)).min(1, "Seleziona almeno un servizio"),
   barberId: z.string().min(1, "Seleziona un barbiere"),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data non valida"),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/, "Orario non valido"),
+  startTime: z
+    .string()
+    .trim()
+    .regex(/^\d{2}:\d{2}(:\d{2})?$/, "Orario non valido")
+    .transform((value) => value.slice(0, 5)),
   firstName: z.string().trim().max(80).optional().default("Walk-in"),
   lastName: z.string().trim().max(80).optional().default(""),
   phone: z.string().trim().max(20).optional().default(""),

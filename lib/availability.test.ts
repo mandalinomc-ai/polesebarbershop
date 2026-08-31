@@ -56,4 +56,25 @@ describe("getAvailableSlots", () => {
     });
     expect(anyone.map((s) => s.label)).not.toContain("11:00");
   });
+
+  it("keeps the chair free when a cancelled booking is not in the busy list", () => {
+    const busyStart = wallTimeToUtc(TUESDAY, "10:00");
+    const busyEnd = wallTimeToUtc(TUESDAY, "10:25");
+    const occupied = getAvailableSlots({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 25,
+      now: nowBeforeOpening,
+      appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
+    });
+    expect(occupied.map((s) => s.label)).not.toContain("10:00");
+    const afterCancel = getAvailableSlots({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 25,
+      now: nowBeforeOpening,
+      appointments: [],
+    });
+    expect(afterCancel.map((s) => s.label)).toContain("10:00");
+  });
 });

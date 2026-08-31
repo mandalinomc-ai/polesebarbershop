@@ -314,13 +314,18 @@ export function FreshaBookingFlow() {
               {w}
             </p>
           ))}
-          {success.manageUrl !== "#" ? (
+          {success.persisted && success.manageUrl !== "#" ? (
             <p>
               <a href={success.manageUrl}>Gestisci o disdici l&apos;appuntamento</a>
               {" — "}puoi annullare fino a {CANCEL_HOURS_BEFORE} ore prima; lo
               slot si libera e il promemoria di 30 minuti non parte.
             </p>
-          ) : null}
+          ) : (
+            <p className="booking-open-note">
+              Lo slot non è ancora in agenda: chiama il {SITE.phone} per
+              confermare o disdire.
+            </p>
+          )}
         </div>
       </div>
     );

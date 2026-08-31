@@ -40,6 +40,8 @@ describe("public copy vs official identity", () => {
       /dermatolog/i,
       /caduta capelli/i,
       /Consulenza Tricologica/,
+      /id=["']consulenza["']/,
+      /\/#consulenza/,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -55,6 +57,7 @@ describe("public copy vs official identity", () => {
 
   it("uses a generic salon contact message without specialist consult language", () => {
     expect(SALON_CONTACT.title).toBe("Parla con il salone");
+    expect(SALON_CONTACT.id).toBe("scrivici");
     expect(SALON_CONTACT.prefill).toBe(SALON_CONTACT_MESSAGE);
     expect(SALON_CONTACT_MESSAGE).toBe(
       "Ciao, vorrei parlare con il salone per un'informazione.",
