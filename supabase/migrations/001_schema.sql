@@ -76,10 +76,10 @@ insert into public.services (id, name, description, category, duration_min, pric
   ('acconciatura','Acconciatura','Solo styling / piega','capelli',15,500,null,false,30),
   ('barba-pro','Barba Pro','Panno caldo con vaporizzatore + oli con fragranze','barba',20,1500,null,false,40),
   ('barba-standard','Barba Standard','Rifinitura / modellatura classica','barba',15,500,null,false,50),
-  ('decolorazione-meches','Decolorazione Meches','Prezzo definito in salone.','colore',45,4000,10000,true,60),
-  ('decolorazione-cutanea','Decolorazione Cutanea','Prezzo definito in salone.','colore',45,5000,12000,true,70),
-  ('tintura-capelli','Tintura Capelli','Prezzo definito in salone.','colore',30,1000,3000,true,80),
-  ('tintura-barba','Tintura Barba','Prezzo definito in salone.','colore',20,500,1500,true,90)
+  ('decolorazione-meches','Decolorazione Meches','Meches / schiariture. Prezzo definito in salone.','colore',45,4000,10000,true,60),
+  ('decolorazione-cutanea','Decolorazione Cutanea','Decolorazione cutanea. Prezzo definito in salone.','colore',45,5000,12000,true,70),
+  ('tintura-capelli','Tintura Capelli','Tintura capelli. Prezzo definito in salone.','colore',30,1000,3000,true,80),
+  ('tintura-barba','Tintura Barba','Tintura barba. Prezzo definito in salone.','colore',20,500,1500,true,90)
 on conflict (id) do update set
   name = excluded.name, description = excluded.description, category = excluded.category,
   duration_min = excluded.duration_min, price_cents = excluded.price_cents,

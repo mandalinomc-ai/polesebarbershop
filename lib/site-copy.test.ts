@@ -1,7 +1,14 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SITE, SALON_CONTACT, SALON_CONTACT_MESSAGE, getWhatsAppUrl } from "./site-config";
+import {
+  SITE,
+  SALON_CONTACT,
+  SALON_CONTACT_MESSAGE,
+  ADMIN_EMAIL_FALLBACK,
+  getWhatsAppUrl,
+  getMailtoUrl,
+} from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
 const SOURCE_EXT = /\.(ts|tsx|js|jsx|html|txt|xml|css|json|sql|cmd)$/;
@@ -28,6 +35,13 @@ describe("public copy vs official identity", () => {
     expect(SITE.pricesIncludeVat).toMatch(/IVA inclusa/);
   });
 
+  it("uses Felice Polese Gmail as salon email, not the GitHub Gmail", () => {
+    expect(SITE.email).toBe("felicepolese550@gmail.com");
+    expect(ADMIN_EMAIL_FALLBACK).toBe("felicepolese550@gmail.com");
+    expect(getMailtoUrl()).toContain("mailto:felicepolese550@gmail.com");
+    expect(SITE.email).not.toBe("mandalinomc@gmail.com");
+  });
+
   it("has no leftover 351 number, Corso Dante 45, or old listino in source", () => {
     const files = walk(process.cwd());
     const banned = [
@@ -42,6 +56,7 @@ describe("public copy vs official identity", () => {
       /Consulenza Tricologica/,
       /id=["']consulenza["']/,
       /\/#consulenza/,
+      /mandalinomc@gmail\.com/,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -67,5 +82,13 @@ describe("public copy vs official identity", () => {
     expect(SALON_CONTACT.body + SALON_CONTACT.title + SALON_CONTACT_MESSAGE).not.toMatch(
       /tricolog|dermatolog|caduta/i,
     );
+  });
+
+  it("keeps ADMIN_PASSWORD out of tracked files", () => {
+    const gitignore = readFileSync(join(process.cwd(), ".gitignore"), "utf8");
+    expect(gitignore).toMatch(/^\.env\.local$/m);
+    const example = readFileSync(join(process.cwd(), ".env.example"), "utf8");
+    expect(example).toMatch(/^ADMIN_PASSWORD=$/m);
+    expect(example).not.toMatch(/ADMIN_PASSWORD=admin/);
   });
 });

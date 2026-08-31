@@ -8,6 +8,28 @@ describe("catalog", () => {
     expect(getBarber("davide")?.virtual).toBe(false);
     expect(getBarber("anyone")?.virtual).toBe(true);
   });
+  it("matches the official CAPELLI / BARBA / COLORE listino", () => {
+    expect(
+      SERVICES.map((s) => ({
+        id: s.id,
+        name: s.name,
+        category: s.category,
+        priceEuro: s.priceEuro,
+        priceMaxEuro: s.priceMaxEuro,
+        durationMin: s.durationMin,
+      })),
+    ).toEqual([
+      { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25 },
+      { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30 },
+      { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
+      { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20 },
+      { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
+      { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 45 },
+      { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 45 },
+      { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 30 },
+      { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, durationMin: 20 },
+    ]);
+  });
   it("shows da X € for variable-price services", () => {
     const meches = SERVICES.find((s) => s.id === "decolorazione-meches")!;
     expect(formatPrice(meches)).toBe("da 40 €");

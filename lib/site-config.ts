@@ -22,7 +22,7 @@ export const SITE = {
   phoneDisplay: "327 015 6225",
   phoneTel: "+393270156225",
   whatsapp: "393270156225",
-  email: "info@polesebarbershop.it",
+  email: "felicepolese550@gmail.com",
   instagram: "https://instagram.com/felicepolese_barber",
   instagramHandle: "@felicepolese_barber",
   fiscalCode: "PLSFLC04S21A783K",
