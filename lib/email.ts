@@ -8,12 +8,26 @@ export type EmailSendResult =
 export const RESEND_MISSING_IT =
   "Invio email non configurato. Scarica il file .ics oppure chiama il +39 327 015 6225.";
 
+const DEFAULT_FROM = "Polese Barbershop <beth.t@example.com>";
+
 function fromAddress() {
-  return process.env.RESEND_FROM || `${SITE.name} <prenotazioni@polesebarbershop.it>`;
+  const from = process.env.RESEND_FROM?.trim();
+  return from || DEFAULT_FROM;
 }
 
+/** True only when a real Resend key (`re_…`) is set. Placeholders do not count. */
 export function isResendConfigured() {
-  return Boolean(process.env.RESEND_API_KEY?.trim());
+  return Boolean(getResendApiKey());
+}
+
+function getResendApiKey(): string | null {
+  const key = process.env.RESEND_API_KEY?.trim() || "";
+  if (!key || !key.startsWith("re_")) return null;
+  return key;
+}
+
+function logEmailError(message: string, extra: Record<string, unknown>) {
+  console.error(`[email] ${message}`, extra);
 }
 
 export async function sendEmail(opts: {
@@ -23,29 +37,50 @@ export async function sendEmail(opts: {
   text?: string;
   ics?: { filename: string; content: string };
 }): Promise<EmailSendResult> {
-  if (!isResendConfigured()) return { ok: false, skipped: true, error: RESEND_MISSING_IT };
+  const key = getResendApiKey();
+  if (!key) {
+    console.warn("[email] RESEND_API_KEY assente: invio saltato", {
+      to: opts.to,
+      subject: opts.subject,
+    });
+    return { ok: false, skipped: true, error: RESEND_MISSING_IT };
+  }
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resend = new Resend(key);
+    const cancelled = Boolean(opts.ics && /METHOD:CANCEL/.test(opts.ics.content));
     const { data, error } = await resend.emails.send({
       from: fromAddress(),
       to: opts.to,
+      replyTo: getAdminEmail(),
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
       attachments: opts.ics
         ? [{
             filename: opts.ics.filename,
-            content: Buffer.from(opts.ics.content, "utf8"),
-            contentType: /METHOD:CANCEL/.test(opts.ics.content)
+            // Base64 string: JSON.stringify(Buffer) is not valid for the Resend API.
+            content: Buffer.from(opts.ics.content, "utf8").toString("base64"),
+            contentType: cancelled
               ? "text/calendar; charset=utf-8; method=CANCEL"
               : "text/calendar; charset=utf-8; method=PUBLISH",
           }]
         : undefined,
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      logEmailError("Resend ha rifiutato l'invio", {
+        to: opts.to,
+        subject: opts.subject,
+        name: error.name,
+        error: error.message,
+      });
+      return { ok: false, error: error.message };
+    }
+    console.info("[email] inviata", { to: opts.to, subject: opts.subject, id: data?.id });
     return { ok: true, id: data?.id };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Invio email fallito" };
+    const message = error instanceof Error ? error.message : "Invio email fallito";
+    logEmailError("eccezione durante l'invio", { to: opts.to, subject: opts.subject, error: message });
+    return { ok: false, error: message };
   }
 }
 
@@ -93,6 +128,16 @@ export function customerCancelEmail(opts: { firstName: string; service: string; 
   };
 }
 
+export function ownerCancelEmail(opts: {
+  firstName: string; lastName: string; email: string; service: string; date: string; time: string;
+}) {
+  return {
+    subject: `Prenotazione annullata — ${opts.firstName} ${opts.lastName}`,
+    text: `Disdetta: ${opts.firstName} ${opts.lastName} (${opts.email}) — ${opts.service} il ${opts.date} alle ${opts.time}. Lo slot è di nuovo libero.`,
+    html: wrap(`<p>Prenotazione <strong>annullata</strong></p><p>${opts.firstName} ${opts.lastName}<br/>${opts.email}<br/>${opts.service}<br/>${opts.date} alle ${opts.time}</p><p>Lo slot è di nuovo libero. In allegato il file .ics di disdetta.</p>`),
+  };
+}
+
 export function staffCrmEmail(opts: { firstName: string; subject: string; body: string }) {
   const name = escapeHtml(opts.firstName || "ciao");
   const body = escapeHtml(opts.body).replace(/\n/g, "<br/>");
@@ -111,6 +156,19 @@ export async function sendBookingEmails(opts: {
 }) {
   const customer = await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics });
   // Admin/owner: ADMIN_EMAIL → OWNER_EMAIL → felicepolese550@gmail.com
+  const admin = await sendEmail({ to: getAdminEmail(), ...opts.owner, ics: opts.ics });
+  return { customer, admin };
+}
+
+export async function sendCancelEmails(opts: {
+  customerEmail: string;
+  customer: ReturnType<typeof customerCancelEmail>;
+  owner: ReturnType<typeof ownerCancelEmail>;
+  ics: { filename: string; content: string };
+}) {
+  const customer = opts.customerEmail
+    ? await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics })
+    : { ok: false as const, skipped: true, error: "Cliente senza email." };
   const admin = await sendEmail({ to: getAdminEmail(), ...opts.owner, ics: opts.ics });
   return { customer, admin };
 }

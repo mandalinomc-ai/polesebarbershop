@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { formatItalianDate, formatWallDate, formatWallTime } from "@/lib/availability";
 import { namesFromSnapshot, publicAppointment, shouldAttachCalendarReminder } from "@/lib/appointments";
-import { customerCancelEmail, sendEmail } from "@/lib/email";
+import { customerCancelEmail, ownerCancelEmail, sendCancelEmails } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
 import { SITE, CANCEL_HOURS_BEFORE, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
@@ -104,18 +104,26 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
       url: manageUrl,
       cancelled: true,
     });
-    if (row.customer_email) {
-      await sendEmail({
-        to: row.customer_email,
-        ...customerCancelEmail({
-          firstName: row.customer_first_name,
-          service: names,
-          date: formatItalianDate(formatWallDate(start)),
-          time: formatWallTime(start),
-        }),
-        ics: { filename: icsFilename(formatWallDate(start), formatWallTime(start)), content: cancelIcs },
-      });
-    }
+    const dateLabel = formatItalianDate(formatWallDate(start));
+    const timeLabel = formatWallTime(start);
+    await sendCancelEmails({
+      customerEmail: row.customer_email || "",
+      customer: customerCancelEmail({
+        firstName: row.customer_first_name,
+        service: names,
+        date: dateLabel,
+        time: timeLabel,
+      }),
+      owner: ownerCancelEmail({
+        firstName: row.customer_first_name,
+        lastName: row.customer_last_name,
+        email: row.customer_email || "",
+        service: names,
+        date: dateLabel,
+        time: timeLabel,
+      }),
+      ics: { filename: icsFilename(formatWallDate(start), formatWallTime(start)), content: cancelIcs },
+    });
     return NextResponse.json({
       ok: true,
       slotFreed: true,

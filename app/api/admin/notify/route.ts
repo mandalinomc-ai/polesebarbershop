@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { buildNotifyCopy, RESEND_CRM_MISSING_IT } from "@/lib/crm-notify";
-import { sendEmail, staffCrmEmail } from "@/lib/email";
+import { isResendConfigured, sendEmail, staffCrmEmail } from "@/lib/email";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { crmNotifySchema, flattenZodError } from "@/lib/validations";
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!process.env.RESEND_API_KEY) {
+  if (!isResendConfigured()) {
     return NextResponse.json({ error: RESEND_CRM_MISSING_IT }, { status: 503 });
   }
 
