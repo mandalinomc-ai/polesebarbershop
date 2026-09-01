@@ -56,7 +56,7 @@ export function LandingSections() {
         </div>
       </section>
 
-      <section id="trattamenti" className="section-pad section-muted">
+      <section id="trattamenti" className="section-pad section-marble">
         <div className="eyebrow reveal">Trattamenti</div>
         <h2 className="section-title font-serif reveal reveal-d1">Listino</h2>
         <p className="section-lead reveal">
@@ -89,49 +89,7 @@ export function LandingSections() {
         </p>
       </section>
 
-      <section id="consulenza" className="section-pad section-white">
-        <div className="eyebrow reveal">Consulenza</div>
-        <h2 className="section-title font-serif reveal reveal-d1">
-          Consulenza Tricologica
-        </h2>
-        <div className="consult-grid reveal reveal-d1">
-          <div className="consult-copy">
-            <p className="prose">
-              Analisi personalizzata del cuoio capelluto e del capello: caduta, diradamento,
-              forfora, eccesso di sebo o sensibilità. Felice valuta abitudini, prodotti e
-              obiettivi estetici prima di ogni percorso colore o trattamento.
-            </p>
-            <p className="prose">
-              La consulenza in salone è il punto di partenza per un grooming consapevole —
-              senza diagnosi mediche, con protocolli mirati e prodotti Felice Polese.
-            </p>
-            <div className="consult-actions">
-              <a
-                className="btn btn-dark"
-                href={getWhatsAppUrl(
-                  "Ciao, vorrei prenotare una consulenza tricologica da Polese Barbershop.",
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Prenota consulenza
-              </a>
-              <a className="btn btn-outline" href="/#prenota">
-                Prenota online
-              </a>
-            </div>
-          </div>
-          <div className="consult-visual">
-            <FillCoverImage
-              src="/assets/images/gallery/fresha-03.jpg"
-              alt="Consulenza e cura del capello in salone"
-              sizes="(max-width: 900px) 100vw, 40vw"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section id="prodotti" className="section-pad section-muted">
+      <section id="prodotti" className="section-pad section-white">
         <div className="eyebrow reveal">Prodotti</div>
         <h2 className="section-title font-serif reveal reveal-d1">
           Linea Felice Polese
@@ -140,15 +98,20 @@ export function LandingSections() {
           Grooming essentials selezionati in salone. Ordina via WhatsApp — ritiro o
           consegna concordata con Felice e Davide.
         </p>
+        <div className="products-feature reveal">
+          <FillCoverImage
+            src="/assets/images/brand-products.jpg"
+            alt="Linea prodotti Felice Polese"
+            sizes="(max-width: 900px) 100vw, 48rem"
+            quality={95}
+          />
+        </div>
         <div className="products-grid">
           {PRODUCTS.map((p, i) => (
             <article
               key={p.id}
               className={`product-card reveal${i % 3 === 1 ? " reveal-d1" : i % 3 === 2 ? " reveal-d2" : ""}`}
             >
-              <div className="product-image">
-                <FillCoverImage src={p.image} alt={p.name} sizes="(max-width: 640px) 50vw, 25vw" />
-              </div>
               <h3>{p.name}</h3>
               <p>{p.description}</p>
               <span className="product-price">{p.priceLabel}</span>
@@ -165,7 +128,7 @@ export function LandingSections() {
         </div>
       </section>
 
-      <section id="galleria" className="section-pad section-white">
+      <section id="galleria" className="section-pad section-marble">
         <div className="eyebrow reveal">Galleria</div>
         <h2 className="section-title font-serif reveal reveal-d1">Il salone</h2>
         <div className="gallery-grid">

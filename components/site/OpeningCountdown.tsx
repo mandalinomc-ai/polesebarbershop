@@ -38,22 +38,6 @@ export function OpeningCountdown() {
 
   return (
     <div className="opening-countdown-block">
-      <div className="scissors-anim" aria-hidden="true">
-        <svg className="scissors-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle className="scissors-ring scissors-ring--left" cx="16" cy="48" r="8" stroke="currentColor" strokeWidth="2" />
-          <circle className="scissors-ring scissors-ring--right" cx="48" cy="48" r="8" stroke="currentColor" strokeWidth="2" />
-          <path
-            className="scissors-blade scissors-blade--left"
-            d="M16 40 L32 8 L36 12 L20 44 Z"
-            fill="currentColor"
-          />
-          <path
-            className="scissors-blade scissors-blade--right"
-            d="M48 40 L32 8 L28 12 L44 44 Z"
-            fill="currentColor"
-          />
-        </svg>
-      </div>
       <p className="opening-countdown-label">
         Apertura ufficiale · {formatItalianDate(SITE.openingDate)}
       </p>

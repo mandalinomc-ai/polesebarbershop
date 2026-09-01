@@ -51,7 +51,7 @@ export function Hero() {
           <p className="hero-text">
             {beforeOpening
               ? `Apriamo il ${formatItalianDate(SITE.openingDate)} in ${SITE.address}, ${SITE.city}. Il calendario è già aperto: scegli un giorno e prenota online.`
-              : `Felice e Davide — taglio, barba, colore e consulenza tricologica a ${SITE.address}, ${SITE.city}.`}
+              : `Felice e Davide — taglio, barba e colore a ${SITE.address}, ${SITE.city}.`}
           </p>
           <div className="hero-actions">
             <a href="/#prenota" className="btn btn-dark">

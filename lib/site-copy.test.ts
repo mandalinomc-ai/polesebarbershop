@@ -158,11 +158,12 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/Hero/);
   });
 
-  it("includes consulenza tricologica and prodotti sections in live layout", () => {
+  it("includes prodotti section without tricologia in live layout", () => {
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(landing).toMatch(/Consulenza Tricologica/);
-    expect(landing).toMatch(/id="consulenza"/);
+    expect(landing).not.toMatch(/Consulenza Tricologica/);
+    expect(landing).not.toMatch(/id="consulenza"/);
     expect(landing).toMatch(/id="prodotti"/);
+    expect(landing).toMatch(/brand-products\.jpg/);
     expect(landing).toMatch(/Barber Match 2023/);
     const widget = readFileSync(join(process.cwd(), "components/site/WhatsAppWidget.tsx"), "utf8");
     expect(widget).toMatch(/Prenota/);

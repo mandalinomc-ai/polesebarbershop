@@ -276,7 +276,7 @@ export function FreshaBookingFlow() {
             {success.ics ? (
               <button
                 type="button"
-                className="btn btn-gold"
+                className="btn btn-dark"
                 onClick={() => downloadIcs(success.icsFilename, success.ics)}
               >
                 Apple Calendar (.ics)
@@ -589,7 +589,7 @@ export function FreshaBookingFlow() {
         </div>
         <button
           type="button"
-          className="btn btn-gold"
+          className="btn btn-dark"
           disabled={!canContinue() || submitting}
           onClick={onPrimary}
         >

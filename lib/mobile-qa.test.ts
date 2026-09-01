@@ -58,17 +58,18 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("uses HD marble texture with Marcel white editorial canvas", () => {
+  it("uses HD marble texture on select sections with Marcel white editorial canvas", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const shell = readFileSync(join(process.cwd(), "components/site/SiteShell.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(layout).toMatch(/site-white-canvas/);
-    expect(layout).toMatch(/site-marble-canvas/);
+    expect(layout).not.toMatch(/site-marble-canvas/);
     expect(css).toMatch(/marble\.png/);
-    expect(css).toMatch(/background-size:\s*cover/);
-    expect(shell).toMatch(/site-marble-canvas/);
+    expect(css).toMatch(/\.section-marble/);
+    expect(shell).not.toMatch(/site-marble-canvas/);
     expect(hero).toMatch(/hero-editorial/);
+    expect(landing).toMatch(/section-marble/);
     expect(hero).not.toMatch(/VideoReelGrid/);
     expect(landing).not.toMatch(/VideoReelGrid/);
   });

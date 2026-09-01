@@ -30,7 +30,7 @@ export function FillCoverImage({
   alt,
   className,
   sizes,
-  quality = 82,
+  quality = 95,
   ...rest
 }: FillImageProps) {
   return (
