@@ -16,13 +16,13 @@ export const TAGLIO_VIDEOS: SiteVideo[] = [
   {
     id: "taglio-01",
     src: `${VIDEO_BASE}/taglio-01.mp4`,
-    alt: "Taglio capelli in salone — Felice Polese Barbershop",
+    alt: "Taglio capelli in salone — Felice Polese Barber Shop",
     label: "Taglio",
   },
   {
     id: "taglio-02",
     src: `${VIDEO_BASE}/taglio-02.mp4`,
-    alt: "Tecnica di taglio — Polese Barbershop Benevento",
+    alt: "Tecnica di taglio — Felice Polese Barber Shop Benevento",
     label: "Taglio",
   },
   {
@@ -37,19 +37,19 @@ export const COLORAZIONE_VIDEOS: SiteVideo[] = [
   {
     id: "colorazione-01",
     src: `${VIDEO_BASE}/colorazione-01.mp4`,
-    alt: "Colorazione capelli in salone — Polese Barbershop",
+    alt: "Colorazione capelli in salone — Felice Polese Barber Shop",
     label: "Colorazione",
   },
   {
     id: "colorazione-02",
     src: `${VIDEO_BASE}/colorazione-02.mp4`,
-    alt: "Applicazione colore — Felice Polese Barbershop",
+    alt: "Applicazione colore — Felice Polese Barber Shop",
     label: "Colorazione",
   },
   {
     id: "colorazione-03",
     src: `${VIDEO_BASE}/colorazione-03.mp4`,
-    alt: "Risultato colorazione — Polese Barbershop",
+    alt: "Risultato colorazione — Felice Polese Barber Shop",
     label: "Colorazione",
   },
 ];
@@ -58,14 +58,14 @@ export const COLORAZIONE_VIDEOS: SiteVideo[] = [
 export const SALONE_GENERALE_VIDEO: SiteVideo = {
   id: "salone-generale",
   src: `${VIDEO_BASE}/salone-generale.mp4`,
-  alt: "Tour del salone Polese Barbershop — Corso Dante, Benevento",
+  alt: "Tour del salone Felice Polese Barber Shop — Corso Dante, Benevento",
 };
 
 /** Felice at work — native HTML5 beside bio (public/assets/videos/felice-working.mp4). */
 export const FELICE_WORKING_VIDEO: SiteVideo = {
   id: "felice-working",
   src: `${VIDEO_HERO_BASE}/felice-working.mp4`,
-  alt: "Felice Polese al lavoro — Polese Barbershop Benevento",
+  alt: "Felice Polese al lavoro — Felice Polese Barber Shop Benevento",
 };
 
 /** All six service reels for the homepage video grid. */

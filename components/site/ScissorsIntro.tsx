@@ -39,7 +39,7 @@ export function ScissorsIntro() {
     <div
       className={`scissors-intro${phase === "cutting" ? " scissors-intro--cutting" : ""}`}
       role="dialog"
-      aria-label="Apertura Polese Barbershop"
+      aria-label="Apertura Felice Polese Barber Shop"
       tabIndex={0}
       onClick={() => finishIntro()}
       onKeyDown={(e) => {

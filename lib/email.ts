@@ -15,7 +15,7 @@ export const RESEND_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
 const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
-const DEFAULT_FROM = `Polese Barbershop <onboarding@${RESEND_TEST_DOMAIN}>`;
+const DEFAULT_FROM = `Felice Polese Barber Shop <onboarding@${RESEND_TEST_DOMAIN}>`;
 
 function fromAddress() {
   const from = process.env.RESEND_FROM?.trim() || "";
@@ -127,7 +127,7 @@ export function customerConfirmEmail(opts: {
 }) {
   const manage = opts.manageUrl?.trim() || "";
   const textLines = [
-    `Ciao ${opts.firstName}, la tua prenotazione da Polese Barbershop è confermata! 💈`,
+    `Ciao ${opts.firstName}, la tua prenotazione da ${SITE.name} è confermata! 💈`,
     "",
     `📅 Data e Ora: ${opts.date} alle ${opts.time}`,
     `✂️ Servizio: ${opts.service}`,
@@ -156,7 +156,7 @@ export function customerConfirmEmail(opts: {
     subject: `Prenotazione confermata — ${SITE.name}`,
     text,
     html: wrap(`
-      <p style="font-size:18px;line-height:1.55;">Ciao ${name}, la tua prenotazione da Polese Barbershop è confermata! 💈</p>
+      <p style="font-size:18px;line-height:1.55;">Ciao ${name}, la tua prenotazione da ${SITE.name} è confermata! 💈</p>
       <p style="margin:24px 0 8px;letter-spacing:0.18em;text-transform:uppercase;font-size:11px;color:#C9A962;">Dettagli</p>
       <p style="line-height:1.8;margin:0;">📅 Data e Ora: <strong>${date}</strong> alle <strong>${time}</strong><br/>
       ✂️ Servizio: <strong>${service}</strong><br/>

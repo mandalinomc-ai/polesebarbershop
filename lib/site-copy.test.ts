@@ -42,6 +42,14 @@ function walk(dir: string, acc: string[] = []): string[] {
 }
 
 describe("public copy vs official identity", () => {
+  it("uses Felice Polese Barber Shop as the official site name", () => {
+    expect(SITE.name).toBe("Felice Polese Barber Shop");
+    expect(SITE.legalName).toBe("Felice Polese Barber Shop");
+    expect(SITE.brand).toBe("FELICE POLESE");
+    expect(SITE.seo.description).toMatch(/Felice Polese Barber Shop/);
+    expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/Felice Polese Barber Shop/);
+  });
+
   it("uses the official phone, address, CF and P.IVA", () => {
     expect(SITE.phone).toBe("+39 351 252 3087");
     expect(SITE.address).toBe("Corso Dante 45");

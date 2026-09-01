@@ -2,7 +2,7 @@
   "name": "polesebarbershop",
   "version": "2.0.0",
   "private": true,
-  "description": "Polese Barbershop — sito pubblico e prenotazioni (Resend + .ics, senza Twilio/QStash)",
+  "description": "Felice Polese Barber Shop — sito pubblico e prenotazioni (Resend + .ics, senza Twilio/QStash)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

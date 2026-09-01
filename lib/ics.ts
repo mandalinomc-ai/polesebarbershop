@@ -74,7 +74,7 @@ export function buildIcs(input: IcsInput): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Polese Barbershop//Prenotazioni//IT",
+    `PRODID:-//${SITE.legalName}//Prenotazioni//IT`,
     "CALSCALE:GREGORIAN",
     `METHOD:${cancelled ? "CANCEL" : "PUBLISH"}`,
     `X-WR-TIMEZONE:${TIMEZONE}`,
@@ -97,7 +97,7 @@ export function buildIcs(input: IcsInput): string {
       "BEGIN:VALARM",
       "ACTION:DISPLAY",
       `TRIGGER:${ICS_REMINDER_TRIGGER}`,
-      "DESCRIPTION:Promemoria: appuntamento da Polese Barbershop tra 30 minuti",
+      `DESCRIPTION:Promemoria: appuntamento da ${SITE.name} tra 30 minuti`,
       "END:VALARM",
     );
   }

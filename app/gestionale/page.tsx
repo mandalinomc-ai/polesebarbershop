@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { GestionalePanel } from "@/components/gestionale/GestionalePanel";
+import { SITE } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "Gestionale — Polese Barbershop",
+  title: `Gestionale — ${SITE.name}`,
   robots: { index: false, follow: false },
 };
 

@@ -31,7 +31,7 @@ fi
 : "${RESEND_API_KEY:?Set RESEND_API_KEY}"
 : "${ADMIN_PASSWORD:?Set ADMIN_PASSWORD}"
 
-RESEND_FROM="${RESEND_FROM:-Polese Barbershop <onboarding@resend.dev>}"
+RESEND_FROM="${RESEND_FROM:-Felice Polese Barber Shop <onboarding@resend.dev>}"
 ADMIN_USER="${ADMIN_USER:-admin}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-felicepolese550@gmail.com}"
 OWNER_EMAIL="${OWNER_EMAIL:-felicepolese550@gmail.com}"

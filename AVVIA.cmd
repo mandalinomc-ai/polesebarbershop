@@ -1,8 +1,8 @@
 @echo off
-title Polese Barbershop
+title Felice Polese Barber Shop
 cd /d "%~dp0"
 echo.
-echo Avvio Polese Barbershop (Next.js)
+echo Avvio Felice Polese Barber Shop (Next.js)
 echo.
 where npm >nul 2>&1
 if errorlevel 1 (

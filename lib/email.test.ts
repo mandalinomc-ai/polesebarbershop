@@ -57,7 +57,7 @@ describe("sendEmail", () => {
 
   it("sends via Resend when a re_ key is present, with base64 ICS", async () => {
     process.env.RESEND_API_KEY = "re_test_fake_key";
-    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
+    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
     expect(isResendConfigured()).toBe(true);
 
     const fetchMock = vi.fn().mockResolvedValue({
@@ -69,7 +69,7 @@ describe("sendEmail", () => {
     const ics = "BEGIN:VCALENDAR\r\nMETHOD:PUBLISH\r\nEND:VCALENDAR\r\n";
     const result = await sendEmail({
       to: "felicepolese550@gmail.com",
-      subject: "Prenotazione confermata — Polese Barbershop",
+      subject: "Prenotazione confermata — Felice Polese Barber Shop",
       html: "<p>ciao</p>",
       text: "ciao",
       ics: { filename: "polese-barbershop-2026-09-01-0930.ics", content: ics },
@@ -158,7 +158,7 @@ describe("booking email copy", () => {
       manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
     });
     expect(mail.text).toContain(
-      "Ciao Mario, la tua prenotazione da Polese Barbershop è confermata! 💈",
+      "Ciao Mario, la tua prenotazione da Felice Polese Barber Shop è confermata! 💈",
     );
     expect(mail.text).toContain("📅 Data e Ora: martedì 1 settembre 2026 alle 09:30");
     expect(mail.text).toContain("✂️ Servizio: Taglio completo");
@@ -168,7 +168,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("Ti aspettiamo! 🔥");
     expect(mail.text).toContain("Gestisci o disdici: https://polesebarbershop.vercel.app/appuntamento/abc");
     expect(mail.text).not.toMatch(/24h|24 ore|3 ore/);
-    expect(mail.html).toContain("Polese Barbershop");
+    expect(mail.html).toContain("Felice Polese Barber Shop");
     expect(mail.html).toContain("Gestisci o disdici");
 
     const noLink = customerConfirmEmail({
@@ -233,7 +233,7 @@ describe("booking email copy", () => {
 
   it("still confirms the booking when the admin send is rejected", async () => {
     process.env.RESEND_API_KEY = "re_test_fake_key";
-    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
+    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
     process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
     process.env.NOTIFY_EMAIL = "notify@example.com";
     const fetchMock = vi.fn()
@@ -292,7 +292,7 @@ describe("booking email copy", () => {
 
   it("delivers owner alert to NOTIFY_EMAIL in Resend test mode", async () => {
     process.env.RESEND_API_KEY = "re_test_fake_key";
-    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
+    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
     process.env.NOTIFY_EMAIL = "notify@example.com";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({
@@ -352,7 +352,7 @@ describe("booking email copy", () => {
       priceLabel: "da 25 €",
     });
     expect(mail.text).toMatch(/^Ciao Mario,/);
-    expect(mail.text).toMatch(/Polese Barbershop è confermata/);
+    expect(mail.text).toMatch(/Felice Polese Barber Shop è confermata/);
     expect(mail.text).toMatch(/Corso Dante 45/);
     expect(mail.text).toMatch(/1 ora di anticipo/);
     expect(mail.text).toMatch(/Taglio completo/);

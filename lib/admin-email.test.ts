@@ -54,14 +54,14 @@ describe("owner notify routing", () => {
   });
 
   it("detects Resend test From", () => {
-    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
+    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
     expect(isResendTestFrom()).toBe(true);
     process.env.RESEND_FROM = "Polese <noreply@polesebarbershop.it>";
     expect(isResendTestFrom()).toBe(false);
   });
 
   it("routes test-mode owner alerts to NOTIFY_EMAIL only", () => {
-    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
+    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
     process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
     process.env.NOTIFY_EMAIL = "notify@example.com";
     expect(getNotifyEmail()).toBe("notify@example.com");

@@ -60,7 +60,7 @@ export function Hero() {
         <div className="hero-inner hero-inner--soon">
           <img
             src="/assets/images/logo.png"
-            alt="Felice Polese — logo ufficiale Polese Barbershop"
+            alt="Felice Polese — logo ufficiale Felice Polese Barber Shop"
             className="brand-logo brand-logo--hero"
             width={512}
             height={331}
@@ -109,7 +109,7 @@ export function Hero() {
       <div className="hero-inner hero-inner--live">
         <img
           src="/assets/images/logo.png"
-          alt="Felice Polese — logo ufficiale Polese Barbershop"
+          alt="Felice Polese — logo ufficiale Felice Polese Barber Shop"
           className="brand-logo brand-logo--hero"
           width={512}
           height={331}

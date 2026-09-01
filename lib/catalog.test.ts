@@ -9,7 +9,7 @@ describe("catalog", () => {
     expect(getBarber("anyone")?.virtual).toBe(true);
   });
 
-  it("matches the official listino categories for Polese Barbershop", () => {
+  it("matches the official listino categories for Felice Polese Barber Shop", () => {
     expect(
       SERVICES.map((s) => ({
         id: s.id,

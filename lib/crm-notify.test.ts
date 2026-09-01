@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { buildNotifyCopy, waMeDigits, waMeUrl } from "./crm-notify";
+import { SITE } from "./site-config";
 
 describe("free WhatsApp notify (wa.me, no Twilio)", () => {
   it("builds wa.me links with Italian prefill", () => {
     expect(waMeDigits("+39 333 111 2233")).toBe("393331112233");
-    const url = waMeUrl("3331112233", "Ciao Mario, ti aspettiamo da Polese Barbershop.");
+    const url = waMeUrl("3331112233", `Ciao Mario, ti aspettiamo da ${SITE.name}.`);
     expect(url).toMatch(/^https:\/\/wa\.me\/393331112233\?text=/);
     expect(url).toContain(encodeURIComponent("Ciao Mario"));
     expect(url).not.toMatch(/twilio/i);
@@ -25,7 +26,7 @@ describe("free WhatsApp notify (wa.me, no Twilio)", () => {
     });
     expect(reminder.subject).toMatch(/Promemoria/);
     expect(reminder.text).toMatch(/Ciao Mario/);
-    expect(reminder.text).toMatch(/Polese Barbershop/);
+    expect(reminder.text).toMatch(/Felice Polese Barber Shop/);
     expect(buildNotifyCopy("promo", { firstName: "Mario" }).text).toMatch(/taglio/);
     expect(buildNotifyCopy("followup", { firstName: "Mario" }).text).toMatch(/piacere/);
   });

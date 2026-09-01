@@ -6,8 +6,8 @@ export const IS_COMING_SOON =
 
 export const SITE = {
   brand: "FELICE POLESE",
-  name: "Polese Barbershop",
-  legalName: "Polese Barbershop",
+  name: "Felice Polese Barber Shop",
+  legalName: "Felice Polese Barber Shop",
   tagline: "L'Arte della Barberia Sartoriale",
   heroHeadline: "L'ARTE DELLA BARBERIA SARTORIALE",
   siteUrl:
@@ -41,9 +41,9 @@ export const SITE = {
   },
   seo: {
     keywords:
-      "barbiere Benevento, barbershop Benevento, Felice Polese, Davide, Corso Dante 45",
+      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Davide, Corso Dante 45",
     description:
-      "Polese Barbershop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante 45. Prenota online.",
+      "Felice Polese Barber Shop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante 45. Prenota online.",
   },
 } as const;
 
@@ -67,7 +67,7 @@ export const SALON_CONTACT_MESSAGE =
 
 /** Coming-soon WhatsApp CTA — notify me at opening. */
 export const NOTIFY_WHATSAPP_MESSAGE =
-  "Ciao, vorrei essere avvisato all'apertura di Polese Barbershop.";
+  "Ciao, vorrei essere avvisato all'apertura di Felice Polese Barber Shop.";
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
 export const HERO_CTA = "Prenota già ora";

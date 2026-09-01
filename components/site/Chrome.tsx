@@ -53,7 +53,7 @@ export function Header() {
         <a href="/#hero" className="header-logo">
           <img
             src="/assets/images/logo.png"
-            alt="Felice Polese — Polese Barbershop"
+            alt="Felice Polese — Felice Polese Barber Shop"
             className="brand-logo brand-logo--sm"
             width={512}
             height={331}

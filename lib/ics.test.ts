@@ -9,7 +9,7 @@ describe("ics", () => {
     uid: "test-uid@polesebarbershop.it",
     startsAt,
     endsAt,
-    summary: "Polese Barbershop — Taglio completo",
+    summary: "Felice Polese Barber Shop — Taglio completo",
     description: "Taglio completo con Felice",
     stamp: startsAt,
   };
@@ -63,7 +63,7 @@ describe("ics", () => {
     const url = googleCalendarUrl({
       startsAt,
       endsAt,
-      summary: "Polese Barbershop — Taglio completo",
+      summary: "Felice Polese Barber Shop — Taglio completo",
       description: "Promemoria",
     });
     expect(url).toContain("calendar.google.com");

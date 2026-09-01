@@ -196,7 +196,7 @@ export function GestionalePanel() {
       <main className="crm-login-wrap">
         <form className="crm-login" onSubmit={onLogin}>
           <p className="eyebrow">Gestionale</p>
-          <h1 className="font-serif">Polese Barbershop</h1>
+          <h1 className="font-serif">{SITE.name}</h1>
           <p className="crm-login-sub">Pannello interno · Felice e Davide</p>
           <label>
             Utente
