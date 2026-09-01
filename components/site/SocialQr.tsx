@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getSocialChannels, type SocialChannel } from "@/lib/site-config";
 
 type Variant = "contact" | "footer";
@@ -22,11 +23,12 @@ export function SocialQrGrid({ variant }: { variant: Variant }) {
             target={link.target}
             rel={link.rel}
           >
-            <img
+            <Image
               src={ch.qr}
               alt={`QR ${ch.label}: ${ch.qrPayload}`}
               width={160}
               height={160}
+              unoptimized
             />
             <span className="qr-label">{ch.label}</span>
             <span className="qr-handle">{ch.handle}</span>

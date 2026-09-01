@@ -14,7 +14,7 @@ const cormorant = Cormorant_Garamond({
 
 const title = `${SITE.name} — ${SITE.tagline} | ${SITE.city}`;
 const description = SITE.seo.description;
-const ogImage = `${SITE.siteUrl}/assets/images/hero-bg.jpg`;
+const ogImage = `${SITE.siteUrl}/assets/images/og-cover.png`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.siteUrl),

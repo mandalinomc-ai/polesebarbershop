@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { SITE, SALON_CONTACT, HERO_CTA, getWhatsAppUrl, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
 import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
+import { SiteLogo } from "@/components/site/SiteImage";
 
 const LINKS = [
   { href: "/#about", label: "Chi siamo" },
@@ -52,12 +53,11 @@ export function Header() {
         className={`site-header${scrolled ? " header-scrolled" : ""}${hidden && !open ? " header-hidden" : ""}`}
       >
         <a href="/#hero" className="header-logo">
-          <img
-            src="/assets/images/logo.png"
+          <SiteLogo
             alt="Felice Polese — Polese Barbershop"
             className="brand-logo brand-logo--sm"
-            width={1209}
-            height={823}
+            sizes="(max-width: 420px) 48px, 64px"
+            priority
           />
           <span>{SITE.name}</span>
         </a>

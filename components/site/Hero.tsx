@@ -8,20 +8,29 @@ import {
 } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 import { HeroCalendar } from "@/components/site/HeroCalendar";
+import { FillCoverImage, SiteLogo } from "@/components/site/SiteImage";
+import { HERO_BG } from "@/lib/site-images";
 
 export function Hero() {
   const beforeOpening = isBeforeOfficialOpening();
   return (
     <section id="hero" className="hero hero--story bg-noise">
-      <div className="hero-bg" />
+      <div className="hero-bg" aria-hidden="true">
+        <FillCoverImage
+          src={HERO_BG.src}
+          alt=""
+          sizes="100vw"
+          priority
+          className="hero-bg-photo"
+        />
+      </div>
       <div className="hero-glow" />
       <div className="hero-inner hero-inner--live">
-        <img
-          src="/assets/images/logo.png"
+        <SiteLogo
           alt="Felice Polese — logo ufficiale Polese Barbershop"
           className="brand-logo brand-logo--hero"
-          width={512}
-          height={331}
+          sizes="(max-width: 640px) 72vw, 280px"
+          priority
         />
         <p className="eyebrow">{SITE.brand}</p>
         <h1 className="hero-title font-serif">{SITE.name}</h1>
