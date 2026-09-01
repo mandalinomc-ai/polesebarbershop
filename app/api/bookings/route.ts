@@ -146,14 +146,20 @@ export async function POST(request: Request) {
     ics: { filename, content: icsContent },
   });
   if (!emails.customer.ok) warnings.push(emails.customer.error);
-  if (!emails.admin.ok) {
-    const adminError = emails.admin.error;
-    const customerError = emails.customer.ok ? "" : emails.customer.error;
-    if (adminError !== customerError) warnings.push(`Email admin: ${adminError}`);
+  for (const { to, result } of emails.owner.results) {
+    if (!result.ok && "error" in result) {
+      warnings.push(`Avviso salone (${to}): ${result.error}`);
+    }
   }
 
   return NextResponse.json({
-    ok: true, persisted, emailSent: Boolean(emails.customer.ok), appointmentId, manageToken, manageUrl,
+    ok: true,
+    persisted,
+    emailSent: Boolean(emails.customer.ok),
+    ownerNotified: Boolean(emails.owner.ok),
+    appointmentId,
+    manageToken,
+    manageUrl,
     barberId: slot.barberId, barberName, startsAt: slot.startIso, endsAt: slot.endIso,
     durationMinutes: totals.durationMin, totalPrice: totals.priceEuro, priceLabel: totals.priceLabel,
     serviceNames: totals.names, dateLabel, timeLabel, ics: icsContent, icsFilename: filename,

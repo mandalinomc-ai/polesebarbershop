@@ -1,5 +1,11 @@
 import { Resend } from "resend";
-import { CANCEL_NOTICE_IT, SITE, getAdminEmail } from "./site-config";
+import {
+  CANCEL_NOTICE_IT,
+  SITE,
+  getAdminEmail,
+  getOwnerNotifyEmails,
+  isResendTestFrom,
+} from "./site-config";
 
 export type EmailSendResult =
   | { ok: true; skipped?: boolean; id?: string }
@@ -250,6 +256,45 @@ export function staffCrmEmail(opts: { firstName: string; subject: string; body: 
   };
 }
 
+export type OwnerNotifyResult = {
+  results: { to: string; result: EmailSendResult }[];
+  ok: boolean;
+};
+
+async function sendOwnerEmails(opts: {
+  owner: { subject: string; html: string; text: string };
+  ics: { filename: string; content: string };
+}): Promise<OwnerNotifyResult> {
+  const targets = getOwnerNotifyEmails();
+  const results: { to: string; result: EmailSendResult }[] = [];
+  let anyOk = false;
+
+  for (const to of targets) {
+    try {
+      const result = await sendEmail({ to, ...opts.owner, ics: opts.ics });
+      results.push({ to, result });
+      if (result.ok) anyOk = true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invio email admin fallito";
+      logEmailError("avviso salone non inviato", { to, error: message });
+      results.push({ to, result: { ok: false, error: message } });
+    }
+  }
+
+  if (!anyOk && isResendTestFrom()) {
+    logEmailError(
+      "Resend in modalità test: imposta NOTIFY_EMAIL all'indirizzo dell'account Resend oppure verifica il dominio",
+      {
+        targets,
+        adminEmail: getAdminEmail(),
+        hint: "https://resend.com/domains — finché il dominio non è verificato, felicepolese550@gmail.com viene rifiutato",
+      },
+    );
+  }
+
+  return { results, ok: anyOk };
+}
+
 export async function sendBookingEmails(opts: {
   customerEmail: string;
   customer: ReturnType<typeof customerConfirmEmail>;
@@ -257,17 +302,9 @@ export async function sendBookingEmails(opts: {
   ics: { filename: string; content: string };
 }) {
   const customer = await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics });
-  // Always send to configured admin (ADMIN_EMAIL → OWNER_EMAIL → salon Gmail).
-  // Resend test-mode may only deliver to the Resend account owner; that must not fail the booking.
-  let admin: EmailSendResult;
-  try {
-    admin = await sendEmail({ to: getAdminEmail(), ...opts.owner, ics: opts.ics });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Invio email admin fallito";
-    logEmailError("admin non inviata, prenotazione confermata comunque", { error: message });
-    admin = { ok: false, error: message };
-  }
-  return { customer, admin };
+  const owner = await sendOwnerEmails({ owner: opts.owner, ics: opts.ics });
+  const admin = owner.results[0]?.result ?? { ok: false, error: "Nessun destinatario salone configurato." };
+  return { customer, admin, owner };
 }
 
 export async function sendCancelEmails(opts: {
@@ -279,6 +316,7 @@ export async function sendCancelEmails(opts: {
   const customer = opts.customerEmail
     ? await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics })
     : { ok: false as const, skipped: true, error: "Cliente senza email." };
-  const admin = await sendEmail({ to: getAdminEmail(), ...opts.owner, ics: opts.ics });
-  return { customer, admin };
+  const owner = await sendOwnerEmails({ owner: opts.owner, ics: opts.ics });
+  const admin = owner.results[0]?.result ?? { ok: false, error: "Nessun destinatario salone configurato." };
+  return { customer, admin, owner };
 }

@@ -5,6 +5,11 @@ Il sito https://polesebarbershop.vercel.app è già live con il codice aggiornat
 Mancano solo le variabili d'ambiente: senza di esse prenotazioni e email restano
 in modalità degradata (.ics sì, database e email no).
 
+OPZIONE RAPIDA — 1 CLICK (senza Settings)
+  https://vercel.com/claim-deployment?code=2f840c6f-bb86-46d0-986b-1bf7fdfeedf0
+  → Assegna al progetto «polesebarbershop». Deploy già testato con database attivo.
+  (Vedi VERCEL_FIX_1_CLICK.txt per dettagli.)
+
 PASSO 1 — Apri Vercel
   https://vercel.com → progetto polesebarbershop
   → Settings → Environment Variables → Production

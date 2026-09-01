@@ -1,0 +1,50 @@
+POLESE BARBERSHOP — FIX VERCEL (1 CLICK)
+=========================================
+
+STATO (1 settembre 2026)
+------------------------
+  ✓ Codice nuovo live su https://polesebarbershop.vercel.app
+  ✗ Prenotazioni NON salvate (mancano variabili d'ambiente su Vercel)
+  ✗ Email NON inviate (manca RESEND_API_KEY su Vercel)
+  ✗ https://felicepolesebarbershop.vercel.app → 404 (progetto Vercel abbandonato)
+
+VARIABILI OBBLIGATORIE SU VERCEL (Production)
+---------------------------------------------
+  RESEND_API_KEY=re_…
+  RESEND_FROM=Polese Barbershop <onboarding@resend.dev>
+  NOTIFY_EMAIL=<email account Resend>   ← riceve avvisi prenotazione finché il dominio non è verificato
+  ADMIN_EMAIL=felicepolese550@gmail.com
+  OWNER_EMAIL=felicepolese550@gmail.com
+  (+ SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_PASSWORD, NEXT_PUBLIC_SITE_URL)
+
+  Fino a verifica dominio su resend.com/domains, Resend consegna SOLO a NOTIFY_EMAIL
+  (l'email con cui è stato creato l'account Resend). felicepolese550@gmail.com viene rifiutato.
+
+DEPLOY FUNZIONANTE PRONTO (testato dall'agente)
+-----------------------------------------------
+  URL: https://temporary-prompt-quasar-rndxhgh.vercel.app
+  ✓ Database Supabase collegato
+  ✓ Prenotazione test salvata (persisted: true)
+  ✓ Email inviata
+  ⚠ Scade se non reclamato entro ~60 minuti dall'ultimo deploy anonimo
+
+AZIONE UNICA — 30 SECONDI (nessuna navigazione in Settings)
+-----------------------------------------------------------
+  1. Apri questo link (con l'account Vercel del salone):
+     https://vercel.com/claim-deployment?code=2f840c6f-bb86-46d0-986b-1bf7fdfeedf0
+
+  2. Assegna al progetto «polesebarbershop» (NON felicepolesebarbershop)
+
+  3. Fatto — polesebarbershop.vercel.app avrà prenotazioni funzionanti.
+
+ALTERNATIVA — TOKEN (l'agente fa tutto in automatico)
+-------------------------------------------------------
+  Invia una volta il VERCEL_TOKEN (https://vercel.com/account/tokens → Create)
+  e l'agente esegue:
+    VERCEL_TOKEN=xxx VERCEL_ORG_ID=xxx ./scripts/vercel-configure-production.sh
+
+  Così anche i futuri deploy da GitHub resteranno configurati.
+
+URL FINALE APERTURA 2 SETTEMBRE
+-------------------------------
+  https://polesebarbershop.vercel.app
