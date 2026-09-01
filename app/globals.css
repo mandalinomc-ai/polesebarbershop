@@ -28,10 +28,9 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
-  --bg-marble-image: image-set(
-    url("/assets/images/marble-texture.webp") type("image/webp"),
-    url("/assets/images/marble-texture.jpg") type("image/jpeg")
-  );
+  /* Plain url() — avoid image-set inside custom properties (ignored in some browsers). */
+  --bg-marble-image: url("/assets/images/marble-texture.webp");
+  --bg-marble-image-fallback: url("/assets/images/marble-texture.jpg");
   --bg-marble-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
@@ -50,8 +49,10 @@ body {
 }
 body.site-marble-canvas {
   background-color: var(--marble);
+  background-image: var(--bg-marble-image-fallback);
   background-image: var(--bg-marble-image);
   background-size: cover;
+  background-position: center;
   background-attachment: fixed;
 }
 @media (max-width: 899px) {
@@ -74,16 +75,22 @@ body.nav-open { overflow: hidden; }
 .bg-noise {
   background-color: var(--void);
   background-image:
+    var(--bg-marble-image-fallback),
+    var(--bg-marble-noise);
+  background-image:
     var(--bg-marble-image),
     var(--bg-marble-noise);
   background-size: cover, auto;
+  background-position: center, center;
   background-blend-mode: overlay, normal;
 }
 
 .bg-marble-light {
   background-color: var(--marble);
+  background-image: var(--bg-marble-image-fallback);
   background-image: var(--bg-marble-image);
   background-size: cover;
+  background-position: center;
   color: var(--ink);
 }
 
@@ -310,8 +317,12 @@ select.input-lux { appearance: none; cursor: pointer; }
   background-color: var(--marble);
   background-image:
     linear-gradient(180deg, rgba(11, 11, 11, 0.9) 0%, rgba(17, 17, 17, 0.94) 100%),
+    var(--bg-marble-image-fallback);
+  background-image:
+    linear-gradient(180deg, rgba(11, 11, 11, 0.9) 0%, rgba(17, 17, 17, 0.94) 100%),
     var(--bg-marble-image);
   background-size: cover;
+  background-position: center;
   color: var(--pearl);
 }
 
@@ -885,8 +896,10 @@ a.day-chip {
   color: #555;
   letter-spacing: 0.06em;
   background-color: var(--marble);
+  background-image: var(--bg-marble-image-fallback);
   background-image: var(--bg-marble-image);
   background-size: cover;
+  background-position: center;
 }
 .site-footer a { color: var(--ink); text-decoration: none; }
 .site-footer a:hover { opacity: 0.75; }
@@ -1354,8 +1367,10 @@ a.day-chip {
   justify-content: center;
   padding: 2rem var(--pad-x);
   background-color: var(--marble);
+  background-image: var(--bg-marble-image-fallback);
   background-image: var(--bg-marble-image);
   background-size: cover;
+  background-position: center;
 }
 .crm-login {
   width: min(100%, 24rem);
@@ -1388,8 +1403,10 @@ a.day-chip {
   display: grid;
   grid-template-columns: 15.5rem 1fr;
   background-color: var(--marble);
+  background-image: var(--bg-marble-image-fallback);
   background-image: var(--bg-marble-image);
   background-size: cover;
+  background-position: center;
   color: var(--pearl);
 }
 .crm-sidebar {

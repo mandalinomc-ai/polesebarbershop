@@ -65,6 +65,8 @@ describe("mobile QA (390px)", () => {
     expect(layout).toMatch(/site-marble-canvas/);
     expect(css).toMatch(/body\.site-marble-canvas/);
     expect(css).toMatch(/--bg-marble-image/);
+    expect(css).toMatch(/--bg-marble-image-fallback/);
+    expect(css).not.toMatch(/image-set\(/);
     expect(shell).toMatch(/site-shell--light/);
   });
 });
