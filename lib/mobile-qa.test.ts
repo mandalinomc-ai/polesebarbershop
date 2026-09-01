@@ -41,7 +41,7 @@ describe("mobile QA (390px)", () => {
   it("keeps July 3 hero and booking CTA usable at 390px", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/hero--soon/);
-    expect(hero).toMatch(/Prenota ora/);
+    expect(hero).toMatch(/getHeroHeadline/);
     expect(css).toMatch(/\.hero--soon/);
     expect(css).toMatch(/\.day-chip \{[\s\S]*?min-height:\s*44px/);
   });

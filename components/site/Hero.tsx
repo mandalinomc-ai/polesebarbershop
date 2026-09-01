@@ -6,6 +6,9 @@ import {
   IS_COMING_SOON,
   getMapsUrl,
   getWhatsAppUrl,
+  getHeroHeadline,
+  HERO_PRE_OPENING_EYEBROW,
+  isBeforeOfficialOpening,
 } from "@/lib/site-config";
 import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 
@@ -17,6 +20,13 @@ export function Hero() {
   const soon = IS_COMING_SOON;
   const [remain, setRemain] = useState({ d: "00", h: "00", m: "00", s: "00", done: false });
   const [feedback, setFeedback] = useState("");
+  const [beforeOpening, setBeforeOpening] = useState(true);
+
+  useEffect(() => {
+    setBeforeOpening(isBeforeOfficialOpening());
+    const id = setInterval(() => setBeforeOpening(isBeforeOfficialOpening()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!soon) return;
@@ -104,6 +114,8 @@ export function Hero() {
     );
   }
 
+  const ctaLabel = getHeroHeadline();
+
   return (
     <section id="hero" className="hero hero--soon bg-marble-light">
       <div className="hero-inner hero-inner--live">
@@ -114,16 +126,17 @@ export function Hero() {
           width={512}
           height={331}
         />
-        <p className="eyebrow">{SITE.brand}</p>
+        <p className="eyebrow hero-brand">{SITE.brand}</p>
         <h1 className="hero-title font-serif">{SITE.name}</h1>
-        <p className="hero-text">{SITE.tagline}</p>
-        <p className="hero-text">
-          Taglio sartoriale, rasatura tradizionale e cura della barba a Benevento.
-        </p>
-        <OpeningCountdown />
+        <p className="hero-text hero-tagline">{SITE.tagline}</p>
+        <p className="hero-text hero-city">{SITE.city} · Italy</p>
+        {beforeOpening ? (
+          <p className="hero-pre-opening">{HERO_PRE_OPENING_EYEBROW}</p>
+        ) : null}
+        {beforeOpening ? <OpeningCountdown /> : null}
         <div className="hero-actions">
           <a href="/#prenota" className="btn btn-gold btn-magnetic">
-            Prenota ora
+            {ctaLabel}
           </a>
           <a href="/#prenota" className="btn btn-outline btn-magnetic">
             Servizi

@@ -8,8 +8,8 @@ export const SITE = {
   brand: "FELICE POLESE",
   name: "Felice Polese Barber Shop",
   legalName: "Felice Polese Barber Shop",
-  tagline: "L'Arte della Barberia Sartoriale",
-  heroHeadline: "L'ARTE DELLA BARBERIA SARTORIALE",
+  tagline: "MODERN BARBERING & FADE STUDIO",
+  heroHeadline: "MODERN BARBERING & FADE STUDIO",
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL || "https://polesebarbershop.vercel.app",
   address: "Corso Dante 45",
@@ -70,10 +70,12 @@ export const NOTIFY_WHATSAPP_MESSAGE =
   "Ciao, vorrei essere avvisato all'apertura di Felice Polese Barber Shop.";
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
-export const HERO_CTA = "Prenota già ora";
+export const HERO_CTA = "Prenota il tuo appuntamento";
+export const HERO_PRE_OPENING_EYEBROW = "Prenotazioni già aperte";
 export const HERO_BEFORE_OPENING =
-  "Prenota già ora, prima dell'apertura ufficiale";
+  "Prenota il tuo appuntamento per l'apertura";
 export const BOOKING_DATE_PARAM = "data";
+export const BOOKING_SERVICE_PARAM = "servizio";
 export const BOOKING_DATE_STORAGE_KEY = "polese-booking-date";
 export const BOOKING_DATE_EVENT = "polese-booking-date";
 
@@ -86,13 +88,46 @@ export function wallDateRome(now: Date = new Date()): string {
   }).format(now);
 }
 
+/** Opening instant at 10:00 Europe/Rome on the official opening civil date. */
+export function openingTargetMs(): number {
+  return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
+}
+
 export function isBeforeOfficialOpening(now: Date = new Date()): boolean {
-  // Keep story copy through the opening civil date in Rome (not UTC midnight).
-  return wallDateRome(now) <= SITE.openingDate;
+  return now.getTime() < openingTargetMs();
 }
 
 export function getHeroHeadline(now: Date = new Date()): string {
-  return isBeforeOfficialOpening(now) ? HERO_BEFORE_OPENING : "Prenota il tuo posto";
+  return isBeforeOfficialOpening(now) ? HERO_BEFORE_OPENING : HERO_CTA;
+}
+
+/** Countdown label — e.g. "APERTURA 7 SETTEMBRE". */
+export function formatOpeningCountdownLabel(): string {
+  const parts = SITE.openingDate.split("-").map(Number);
+  const y = parts[0]!;
+  const m = parts[1]!;
+  const d = parts[2]!;
+  const utcNoon = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  const month = new Intl.DateTimeFormat("it-IT", {
+    month: "long",
+    timeZone: "UTC",
+  })
+    .format(utcNoon)
+    .toUpperCase();
+  return `APERTURA ${d} ${month}`;
+}
+
+export function serviceBookingHref(serviceId: string): string {
+  return `/?${BOOKING_SERVICE_PARAM}=${encodeURIComponent(serviceId)}#prenota`;
+}
+
+export function readBookingServiceFromLocation(): string | null {
+  if (typeof window === "undefined") return null;
+  const query = new URLSearchParams(window.location.search).get(
+    BOOKING_SERVICE_PARAM,
+  );
+  if (query && /^[a-z0-9-]+$/.test(query)) return query;
+  return null;
 }
 
 export type BookingConfirmCopy = {

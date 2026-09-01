@@ -6,7 +6,7 @@ type ScissorsIconProps = {
 const PIVOT_X = 50;
 const PIVOT_Y = 70;
 
-/** Full barber scissors — both blades and tips visible, 3D metal via SVG gradients. */
+/** Full barber scissors — silver/metal blades, both tips visible, no gold. */
 export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconProps) {
   const rootClass = [
     "scissors-icon",
@@ -31,19 +31,19 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
     >
       <defs>
         <linearGradient id={gradId} x1="20" y1="8" x2="80" y2="104" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#F4E4BC" />
-          <stop offset="35%" stopColor="#C9A962" />
-          <stop offset="68%" stopColor="#8A7344" />
-          <stop offset="100%" stopColor="#5C4D2E" />
+          <stop offset="0%" stopColor="#ECECEC" />
+          <stop offset="30%" stopColor="#B8B8B8" />
+          <stop offset="65%" stopColor="#8A8A8A" />
+          <stop offset="100%" stopColor="#3A3A3A" />
         </linearGradient>
         <linearGradient id={shineId} x1="50" y1="6" x2="50" y2="98" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
-          <stop offset="42%" stopColor="#FFFFFF" stopOpacity="0.08" />
-          <stop offset="100%" stopColor="#000000" stopOpacity="0.22" />
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.65" />
+          <stop offset="42%" stopColor="#FFFFFF" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.28" />
         </linearGradient>
         <filter id={shadowId} x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#0B0B0B" floodOpacity="0.35" />
-          <feDropShadow dx="0" dy="1" stdDeviation="0.5" floodColor="#F4E4BC" floodOpacity="0.25" />
+          <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#0B0B0B" floodOpacity="0.4" />
+          <feDropShadow dx="0" dy="1" stdDeviation="0.5" floodColor="#FFFFFF" floodOpacity="0.2" />
         </filter>
       </defs>
 
@@ -92,7 +92,7 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
         />
 
         <circle cx={PIVOT_X} cy={PIVOT_Y} r="3.2" fill={`url(#${gradId})`} />
-        <circle cx={PIVOT_X} cy={PIVOT_Y} r="1.4" fill="#F4E4BC" opacity="0.9" />
+        <circle cx={PIVOT_X} cy={PIVOT_Y} r="1.4" fill="#E8E8E8" opacity="0.9" />
       </g>
     </svg>
   );

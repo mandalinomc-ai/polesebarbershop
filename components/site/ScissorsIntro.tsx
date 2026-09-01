@@ -2,46 +2,62 @@
 
 import { useEffect, useState } from "react";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
-import { OpeningCountdown } from "@/components/site/OpeningCountdown";
+import { SITE } from "@/lib/site-config";
 
 const INTRO_KEY = "polese-scissors-intro-seen";
+const TENSION_MS = 500;
+const SCISSORS_MS = 1200;
+const CUT_MS = 700;
+const REVEAL_MS = 1000;
 
-/** Full-screen intro: countdown + SVG scissors, split reveal on click or when countdown ends. */
+type Phase = "hidden" | "dark" | "tension" | "scissors" | "cutting" | "reveal";
+
+/** Brief full-screen intro: dark → tension → scissors → cut → brand reveal. */
 export function ScissorsIntro() {
-  const [phase, setPhase] = useState<"hidden" | "playing" | "cutting">("hidden");
+  const [phase, setPhase] = useState<Phase>("hidden");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (sessionStorage.getItem(INTRO_KEY) === "1") return;
 
-    setPhase("playing");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) {
+      sessionStorage.setItem(INTRO_KEY, "1");
+      return;
+    }
+
+    setPhase("dark");
     document.body.classList.add("scissors-intro-active");
+
+    const timers = [
+      window.setTimeout(() => setPhase("tension"), TENSION_MS),
+      window.setTimeout(() => setPhase("scissors"), TENSION_MS + 300),
+      window.setTimeout(() => setPhase("cutting"), TENSION_MS + SCISSORS_MS),
+      window.setTimeout(() => setPhase("reveal"), TENSION_MS + SCISSORS_MS + CUT_MS),
+      window.setTimeout(() => finishIntro(), TENSION_MS + SCISSORS_MS + CUT_MS + REVEAL_MS),
+    ];
+
+    return () => {
+      timers.forEach(clearTimeout);
+      document.body.classList.remove("scissors-intro-active");
+    };
   }, []);
 
   function finishIntro() {
-    if (phase === "hidden" || phase === "cutting") return;
-    setPhase("cutting");
     sessionStorage.setItem(INTRO_KEY, "1");
-    window.setTimeout(() => {
-      setPhase("hidden");
-      document.body.classList.remove("scissors-intro-active");
-    }, 900);
+    setPhase("hidden");
+    document.body.classList.remove("scissors-intro-active");
   }
-
-  useEffect(() => {
-    if (phase !== "playing") return;
-    return () => document.body.classList.remove("scissors-intro-active");
-  }, [phase]);
 
   if (phase === "hidden") return null;
 
   return (
     <div
-      className={`scissors-intro${phase === "cutting" ? " scissors-intro--cutting" : ""}`}
+      className={`scissors-intro scissors-intro--${phase}`}
       role="dialog"
-      aria-label="Apertura Felice Polese Barber Shop"
+      aria-label="Felice Polese Barber Shop"
       tabIndex={0}
-      onClick={() => finishIntro()}
+      onClick={() => phase !== "dark" && finishIntro()}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") finishIntro();
       }}
@@ -49,11 +65,21 @@ export function ScissorsIntro() {
       <div className="scissors-intro-split scissors-intro-split--left" />
       <div className="scissors-intro-split scissors-intro-split--right" />
       <div className="scissors-intro-content">
-        <div className="scissors-intro-stage">
-          <ScissorsIcon variant="intro" />
-        </div>
-        <OpeningCountdown variant="intro" onComplete={finishIntro} />
-        <p className="scissors-intro-hint">Clicca per entrare</p>
+        {phase === "reveal" ? (
+          <div className="scissors-intro-brand">
+            <p className="scissors-intro-brand-name">{SITE.brand}</p>
+            <p className="scissors-intro-brand-tag">{SITE.tagline}</p>
+            <p className="scissors-intro-brand-city">{SITE.city} · Italy</p>
+          </div>
+        ) : null}
+        {phase === "scissors" || phase === "cutting" ? (
+          <div className="scissors-intro-stage">
+            <ScissorsIcon variant="intro" />
+          </div>
+        ) : null}
+        {phase === "tension" ? (
+          <div className="scissors-intro-tension" aria-hidden="true" />
+        ) : null}
       </div>
     </div>
   );

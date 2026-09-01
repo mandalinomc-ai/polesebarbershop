@@ -50,6 +50,17 @@ describe("public copy vs official identity", () => {
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/Felice Polese Barber Shop/);
   });
 
+  it("uses MODERN BARBERING tagline and premium listino with PRENOTA links", () => {
+    const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
+    expect(listino).toMatch(/listino-card/);
+    expect(listino).toMatch(/serviceBookingHref/);
+    expect(listino).toMatch(/Prenota/);
+    const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
+    expect(intro).not.toMatch(/OpeningCountdown/);
+    expect(intro).toMatch(/scissors-intro-brand/);
+    expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
+  });
+
   it("uses the official phone, address, CF and P.IVA", () => {
     expect(SITE.phone).toBe("+39 351 252 3087");
     expect(SITE.address).toBe("Corso Dante 45");
@@ -215,23 +226,25 @@ describe("public copy vs official identity", () => {
     expect(hero).not.toMatch(/ScissorsIntro/);
   });
 
-  it("shows live hero with Prenota ora before opening date copy", () => {
-    expect(HERO_CTA).toBe("Prenota già ora");
-    expect(HERO_BEFORE_OPENING).toBe("Prenota già ora, prima dell'apertura ufficiale");
+  it("shows live hero with booking CTA before and after opening", () => {
+    expect(HERO_CTA).toBe("Prenota il tuo appuntamento");
+    expect(HERO_BEFORE_OPENING).toBe("Prenota il tuo appuntamento per l'apertura");
     expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
-    expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe("Prenota il tuo posto");
+    expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe(HERO_CTA);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/Prenota ora/);
+    expect(hero).toMatch(/getHeroHeadline/);
+    expect(hero).toMatch(/HERO_PRE_OPENING_EYEBROW/);
     expect(hero).toMatch(/Raggiungimi ora su Google Maps/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/marble\.png/);
+    expect(css).toMatch(/marble-texture/);
     expect(css).toMatch(/bg-marble-light/);
     expect(css).toMatch(/scissors-intro/);
-    expect(css).not.toMatch(/marble-texture/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
     expect(scissors).toMatch(/viewBox="0 0 100 110"/);
+    expect(scissors).not.toMatch(/#C9A962|#F4E4BC/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
   });
 
