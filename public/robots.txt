@@ -4,4 +4,4 @@ Disallow: /gestionale
 Disallow: /admin
 Disallow: /api/admin
 
-Sitemap: https://felicepolesebarbershop.vercel.app/sitemap.xml
+Sitemap: https://polesebarbershop.vercel.app/sitemap.xml

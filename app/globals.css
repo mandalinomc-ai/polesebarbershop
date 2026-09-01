@@ -822,7 +822,7 @@ body.scissors-intro-active { overflow: hidden; }
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
+  cursor: pointer;
   overflow: visible;
 }
 .scissors-intro-content {
