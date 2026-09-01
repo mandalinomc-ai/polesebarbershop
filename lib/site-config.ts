@@ -56,9 +56,20 @@ export const HERO_CALENDAR_DAYS = 14;
 export const BOOKING_HORIZON_DAYS = 365;
 export const MIN_NOTICE_MINUTES = 15;
 export const REMINDER_LEAD_MINUTES = 30;
-export const CANCEL_HOURS_BEFORE = 1;
-/** Italian copy: "1 ora" (not "1 ore" / not 24h). */
-export const CANCEL_NOTICE_IT = "1 ora";
+/** Minimum lead time before appointment start to allow online cancellation (Europe/Rome wall time via UTC instants). */
+export const CANCEL_MINUTES_BEFORE = 30;
+/** Italian copy for cancellation notice. */
+export const CANCEL_NOTICE_IT = "30 minuti";
+
+/** True when the appointment can still be cancelled online (≥ CANCEL_MINUTES_BEFORE before start). */
+export function canCancelAppointment(
+  startsAt: Date | string,
+  now: Date = new Date(),
+): boolean {
+  const minutesLeft =
+    (new Date(startsAt).getTime() - now.getTime()) / 60_000;
+  return minutesLeft >= CANCEL_MINUTES_BEFORE;
+}
 export const MAPS_DESTINATION = "Corso Dante 45, 82100 Benevento";
 
 /** Generic salon contact — info, hours, prices or a quick tip. */

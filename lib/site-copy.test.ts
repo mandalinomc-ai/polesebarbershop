@@ -17,7 +17,7 @@ import {
   getPrenotaUrl,
   getMapsUrl,
   MAPS_DESTINATION,
-  CANCEL_HOURS_BEFORE,
+  CANCEL_MINUTES_BEFORE,
   CANCEL_NOTICE_IT,
   BOOKING_UI_DAYS,
   HERO_CALENDAR_DAYS,
@@ -294,12 +294,12 @@ describe("public copy vs official identity", () => {
   });
 
   it("stacks a Maps FAB Raggiungimi ora to Corso Dante 45", () => {
-    expect(CANCEL_HOURS_BEFORE).toBe(1);
+    expect(CANCEL_MINUTES_BEFORE).toBe(30);
     expect(MAPS_DESTINATION).toBe("Corso Dante 45, 82100 Benevento");
     expect(getMapsUrl()).toContain("maps.google.com");
     expect(getMapsUrl()).toContain("destination=");
     expect(getMapsUrl()).toContain(encodeURIComponent("Corso Dante 45"));
-    expect(CANCEL_NOTICE_IT).toBe("1 ora");
+    expect(CANCEL_NOTICE_IT).toBe("30 minuti");
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/id="maps-fab"/);
     expect(chrome).toMatch(/aria-label="Raggiungimi ora su Google Maps"/);

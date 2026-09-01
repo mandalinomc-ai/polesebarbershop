@@ -148,7 +148,7 @@ describe("booking email copy", () => {
     vi.restoreAllMocks();
   });
 
-  it("uses the Italian customer confirmation with 1 ora notice and optional manage link", () => {
+  it("uses the Italian customer confirmation with 30 minuti notice and optional manage link", () => {
     const mail = customerConfirmEmail({
       firstName: "Mario",
       service: "Taglio completo",
@@ -211,7 +211,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("Gestisci: https://polesebarbershop.vercel.app/appuntamento/abc");
   });
 
-  it("mentions 1 ora on cancel emails", () => {
+  it("mentions 30 minuti on cancel emails", () => {
     const customer = customerCancelEmail({
       firstName: "Mario",
       service: "Taglio completo",
@@ -340,7 +340,7 @@ describe("booking email copy", () => {
 });
 
 describe("booking email copy", () => {
-  it("opens the customer confirm with Ciao {nome} and 1 ora di anticipo", async () => {
+  it("opens the customer confirm with Ciao {nome} and 30 minuti di anticipo", async () => {
     const { customerConfirmEmail } = await import("./email");
     const mail = customerConfirmEmail({
       firstName: "Mario",
@@ -354,11 +354,11 @@ describe("booking email copy", () => {
     expect(mail.text).toMatch(/^Ciao Mario,/);
     expect(mail.text).toMatch(/Felice Polese Barber Shop è confermata/);
     expect(mail.text).toMatch(/Corso Dante 45/);
-    expect(mail.text).toMatch(/1 ora di anticipo/);
+    expect(mail.text).toMatch(/30 minuti di anticipo/);
     expect(mail.text).toMatch(/Taglio completo/);
     expect(mail.text).toMatch(/Felice/);
     expect(mail.html).toMatch(/Ciao Mario/);
-    expect(mail.html).toMatch(/1 ora/);
+    expect(mail.html).toMatch(/30 minuti/);
     expect(mail.html).toMatch(/Gestisci o disdici/);
   });
 
