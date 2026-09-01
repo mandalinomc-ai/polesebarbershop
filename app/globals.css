@@ -625,14 +625,6 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
     0 12px 36px rgba(8, 14, 26, 0.45),
     inset 0 1px 0 rgba(201, 169, 98, 0.12);
   overflow: hidden;
-  transition: border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
-}
-.video-reel-box:hover {
-  border-color: rgba(201, 169, 98, 0.65);
-  transform: translateY(-4px);
-  box-shadow:
-    0 18px 44px rgba(8, 14, 26, 0.55),
-    inset 0 1px 0 rgba(201, 169, 98, 0.2);
 }
 .video-reel-media {
   position: relative;
@@ -647,6 +639,8 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   object-fit: cover;
   display: block;
   background: var(--navy-deep);
+  transform: none;
+  animation: none;
 }
 .video-reel-media::after {
   content: "";
@@ -748,28 +742,35 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   height: auto;
   color: var(--gold);
   overflow: visible;
+  display: block;
 }
 .scissors-icon--countdown {
   width: clamp(2.5rem, 8vw, 3.25rem);
 }
 .scissors-icon--intro {
-  width: clamp(5rem, 22vw, 9rem);
+  width: clamp(6.5rem, 34vw, 11rem);
 }
 .scissors-blade--left,
-.scissors-blade--right {
-  transform-origin: 32px 28px;
+.scissors-blade--right,
+.scissors-blade-shine--left,
+.scissors-blade-shine--right {
+  transform-origin: 50px 70px;
   transform-box: fill-box;
 }
-.scissors-icon--countdown .scissors-blade--left {
+.scissors-icon--countdown .scissors-blade--left,
+.scissors-icon--countdown .scissors-blade-shine--left {
   animation: blade-left-snip 2.4s ease-in-out infinite;
 }
-.scissors-icon--countdown .scissors-blade--right {
+.scissors-icon--countdown .scissors-blade--right,
+.scissors-icon--countdown .scissors-blade-shine--right {
   animation: blade-right-snip 2.4s ease-in-out infinite;
 }
-.scissors-icon--intro .scissors-blade--left {
+.scissors-icon--intro .scissors-blade--left,
+.scissors-icon--intro .scissors-blade-shine--left {
   animation: blade-left-open 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-.scissors-icon--intro .scissors-blade--right {
+.scissors-icon--intro .scissors-blade--right,
+.scissors-icon--intro .scissors-blade-shine--right {
   animation: blade-right-open 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes blade-left-snip {
@@ -805,6 +806,7 @@ body.scissors-intro-active { overflow: hidden; }
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  overflow: visible;
 }
 .scissors-intro-content {
   position: relative;
@@ -812,13 +814,17 @@ body.scissors-intro-active { overflow: hidden; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: clamp(1.5rem, 6vw, 2.5rem);
+  overflow: visible;
 }
 .scissors-intro-stage {
   display: flex;
   justify-content: center;
+  align-items: center;
   transform-style: preserve-3d;
-  perspective: 800px;
+  perspective: 900px;
+  overflow: visible;
+  padding: 1rem 0;
   animation: scissors-intro-pop 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 .scissors-intro-split {
@@ -843,7 +849,7 @@ body.scissors-intro-active { overflow: hidden; }
   transition: opacity 0.3s ease;
 }
 @keyframes scissors-intro-pop {
-  0% { transform: scale(0.72) rotateX(18deg); opacity: 0.2; }
+  0% { transform: scale(0.88) rotateX(12deg); opacity: 0.35; }
   100% { transform: scale(1) rotateX(0deg); opacity: 1; }
 }
 

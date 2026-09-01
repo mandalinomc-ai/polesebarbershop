@@ -3,7 +3,10 @@ type ScissorsIconProps = {
   variant?: "countdown" | "intro";
 };
 
-/** Animated barber scissors — blades open/close via CSS keyed off variant class. */
+const PIVOT_X = 50;
+const PIVOT_Y = 70;
+
+/** Full barber scissors — both blades and tips visible, 3D metal via SVG gradients. */
 export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconProps) {
   const rootClass = [
     "scissors-icon",
@@ -13,40 +16,84 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
     .filter(Boolean)
     .join(" ");
 
+  const gradId = variant === "intro" ? "scissors-metal-intro" : "scissors-metal-countdown";
+  const shineId = variant === "intro" ? "scissors-shine-intro" : "scissors-shine-countdown";
+  const shadowId = variant === "intro" ? "scissors-shadow-intro" : "scissors-shadow-countdown";
+
   return (
     <svg
       className={rootClass}
-      viewBox="-2 -2 68 68"
+      viewBox="0 0 100 110"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
+      style={{ overflow: "visible" }}
     >
-      <circle
-        className="scissors-ring scissors-ring--left"
-        cx="16"
-        cy="48"
-        r="8"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <circle
-        className="scissors-ring scissors-ring--right"
-        cx="48"
-        cy="48"
-        r="8"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        className="scissors-blade scissors-blade--left"
-        d="M16 40 L32 8 L36 12 L20 44 Z"
-        fill="currentColor"
-      />
-      <path
-        className="scissors-blade scissors-blade--right"
-        d="M48 40 L32 8 L28 12 L44 44 Z"
-        fill="currentColor"
-      />
+      <defs>
+        <linearGradient id={gradId} x1="20" y1="8" x2="80" y2="104" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F4E4BC" />
+          <stop offset="35%" stopColor="#C9A962" />
+          <stop offset="68%" stopColor="#8A7344" />
+          <stop offset="100%" stopColor="#5C4D2E" />
+        </linearGradient>
+        <linearGradient id={shineId} x1="50" y1="6" x2="50" y2="98" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <stop offset="42%" stopColor="#FFFFFF" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.22" />
+        </linearGradient>
+        <filter id={shadowId} x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#0B0B0B" floodOpacity="0.35" />
+          <feDropShadow dx="0" dy="1" stdDeviation="0.5" floodColor="#F4E4BC" floodOpacity="0.25" />
+        </filter>
+      </defs>
+
+      <g filter={`url(#${shadowId})`}>
+        <circle
+          className="scissors-ring scissors-ring--left"
+          cx="28"
+          cy="94"
+          r="9"
+          stroke={`url(#${gradId})`}
+          strokeWidth="2.4"
+          fill="none"
+        />
+        <circle
+          className="scissors-ring scissors-ring--right"
+          cx="72"
+          cy="94"
+          r="9"
+          stroke={`url(#${gradId})`}
+          strokeWidth="2.4"
+          fill="none"
+        />
+
+        <path
+          className="scissors-blade scissors-blade--left"
+          d="M28 86 L40 18 L44 20 L32 90 Z"
+          fill={`url(#${gradId})`}
+        />
+        <path
+          className="scissors-blade scissors-blade--right"
+          d="M72 86 L60 18 L56 20 L68 90 Z"
+          fill={`url(#${gradId})`}
+        />
+
+        <path
+          className="scissors-blade-shine scissors-blade-shine--left"
+          d="M30 82 L39 24 L41 25 L33 86 Z"
+          fill={`url(#${shineId})`}
+          opacity="0.85"
+        />
+        <path
+          className="scissors-blade-shine scissors-blade-shine--right"
+          d="M70 82 L61 24 L59 25 L67 86 Z"
+          fill={`url(#${shineId})`}
+          opacity="0.85"
+        />
+
+        <circle cx={PIVOT_X} cy={PIVOT_Y} r="3.2" fill={`url(#${gradId})`} />
+        <circle cx={PIVOT_X} cy={PIVOT_Y} r="1.4" fill="#F4E4BC" opacity="0.9" />
+      </g>
     </svg>
   );
 }
