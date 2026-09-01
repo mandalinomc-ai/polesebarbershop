@@ -207,10 +207,43 @@ export function getSiteUrl(): string {
 /** Gmail del salone per avvisi prenotazioni (non l'account GitHub). */
 export const ADMIN_EMAIL_FALLBACK = "felicepolese550@gmail.com";
 
+const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
+
 export function getAdminEmail(): string {
   return (
     process.env.ADMIN_EMAIL ||
     process.env.OWNER_EMAIL ||
     ADMIN_EMAIL_FALLBACK
   );
+}
+
+/** Inbox che riceve davvero le email con From di test Resend (account owner). */
+export function getNotifyEmail(): string | null {
+  const email = process.env.NOTIFY_EMAIL?.trim();
+  return email || null;
+}
+
+/** True when RESEND_FROM uses onboarding@resend.dev (piano gratuito, dominio non verificato). */
+export function isResendTestFrom(): boolean {
+  const from = process.env.RESEND_FROM?.trim() || "";
+  const domain = from.match(/@([^>\s]+)/)?.[1]?.toLowerCase() || "";
+  return !from || domain === RESEND_TEST_DOMAIN;
+}
+
+/**
+ * Destinatari avvisi prenotazione al salone.
+ * In test mode Resend consegna solo a NOTIFY_EMAIL; con dominio verificato va ad ADMIN_EMAIL.
+ */
+export function getOwnerNotifyEmails(): string[] {
+  const admin = getAdminEmail().trim().toLowerCase();
+  const notify = getNotifyEmail()?.toLowerCase() || "";
+
+  if (isResendTestFrom()) {
+    if (notify) return [notify];
+    return [admin];
+  }
+
+  const emails = new Set<string>([admin]);
+  if (notify && notify !== admin) emails.add(notify);
+  return [...emails];
 }

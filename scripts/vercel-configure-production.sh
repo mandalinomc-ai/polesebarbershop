@@ -15,7 +15,7 @@ if [[ -f .env.local ]]; then
   while IFS='=' read -r key value; do
     [[ "$key" =~ ^#|^$ ]] && continue
     case "$key" in
-      SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|ADMIN_PASSWORD|ADMIN_EMAIL|OWNER_EMAIL|ADMIN_USER|NEXT_PUBLIC_SUPABASE_URL)
+      SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|ADMIN_PASSWORD|ADMIN_EMAIL|OWNER_EMAIL|NOTIFY_EMAIL|ADMIN_USER|NEXT_PUBLIC_SUPABASE_URL)
         export "$key=$value"
         ;;
       RESEND_FROM)
@@ -35,6 +35,7 @@ RESEND_FROM="${RESEND_FROM:-Polese Barbershop <onboarding@resend.dev>}"
 ADMIN_USER="${ADMIN_USER:-admin}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-felicepolese550@gmail.com}"
 OWNER_EMAIL="${OWNER_EMAIL:-felicepolese550@gmail.com}"
+NOTIFY_EMAIL="${NOTIFY_EMAIL:-}"
 NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-$SUPABASE_URL}"
 
 API="https://api.vercel.com"
@@ -61,6 +62,9 @@ upsert_env ADMIN_USER "$ADMIN_USER" plain
 upsert_env ADMIN_PASSWORD "$ADMIN_PASSWORD"
 upsert_env ADMIN_EMAIL "$ADMIN_EMAIL" plain
 upsert_env OWNER_EMAIL "$OWNER_EMAIL" plain
+if [[ -n "$NOTIFY_EMAIL" ]]; then
+  upsert_env NOTIFY_EMAIL "$NOTIFY_EMAIL" plain
+fi
 
 echo "→ Triggering production redeploy…"
 export VERCEL_ORG_ID VERCEL_PROJECT_ID

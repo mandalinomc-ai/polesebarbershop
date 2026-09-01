@@ -14,12 +14,18 @@ import { CANCEL_NOTICE_IT } from "./site-config";
 describe("sendEmail", () => {
   const origKey = process.env.RESEND_API_KEY;
   const origFrom = process.env.RESEND_FROM;
+  const origNotify = process.env.NOTIFY_EMAIL;
+  const origAdmin = process.env.ADMIN_EMAIL;
 
   afterEach(() => {
     if (origKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = origKey;
     if (origFrom === undefined) delete process.env.RESEND_FROM;
     else process.env.RESEND_FROM = origFrom;
+    if (origNotify === undefined) delete process.env.NOTIFY_EMAIL;
+    else process.env.NOTIFY_EMAIL = origNotify;
+    if (origAdmin === undefined) delete process.env.ADMIN_EMAIL;
+    else process.env.ADMIN_EMAIL = origAdmin;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -126,12 +132,18 @@ describe("sendEmail", () => {
 describe("booking email copy", () => {
   const origKey = process.env.RESEND_API_KEY;
   const origFrom = process.env.RESEND_FROM;
+  const origNotify = process.env.NOTIFY_EMAIL;
+  const origAdmin = process.env.ADMIN_EMAIL;
 
   afterEach(() => {
     if (origKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = origKey;
     if (origFrom === undefined) delete process.env.RESEND_FROM;
     else process.env.RESEND_FROM = origFrom;
+    if (origNotify === undefined) delete process.env.NOTIFY_EMAIL;
+    else process.env.NOTIFY_EMAIL = origNotify;
+    if (origAdmin === undefined) delete process.env.ADMIN_EMAIL;
+    else process.env.ADMIN_EMAIL = origAdmin;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -221,6 +233,9 @@ describe("booking email copy", () => {
 
   it("still confirms the booking when the admin send is rejected", async () => {
     process.env.RESEND_API_KEY = "re_test_fake_key";
+    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
+    process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
+    process.env.NOTIFY_EMAIL = "notify@example.com";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -267,8 +282,60 @@ describe("booking email copy", () => {
     });
 
     expect(result.customer.ok).toBe(true);
+    expect(result.owner.ok).toBe(false);
     expect(result.admin.ok).toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    const ownerCall = fetchMock.mock.calls[1] as [string, RequestInit];
+    const ownerBody = JSON.parse(String(ownerCall[1].body)) as { to: string };
+    expect(ownerBody.to).toBe("notify@example.com");
+  });
+
+  it("delivers owner alert to NOTIFY_EMAIL in Resend test mode", async () => {
+    process.env.RESEND_API_KEY = "re_test_fake_key";
+    process.env.RESEND_FROM = "Polese Barbershop <onboarding@resend.dev>";
+    process.env.NOTIFY_EMAIL = "notify@example.com";
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: "cust_ok" }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: "owner_ok" }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "info").mockImplementation(() => {});
+
+    const result = await sendBookingEmails({
+      customerEmail: "client@example.com",
+      customer: customerConfirmEmail({
+        firstName: "Mario",
+        service: "Taglio completo",
+        barber: "Felice",
+        date: "martedì 1 settembre 2026",
+        time: "09:30",
+      }),
+      owner: ownerNewBookingEmail({
+        firstName: "Mario",
+        lastName: "Rossi",
+        phone: "+393331112233",
+        email: "client@example.com",
+        service: "Taglio completo",
+        durationMin: 25,
+        barber: "Felice",
+        date: "martedì 1 settembre 2026",
+        time: "09:30",
+        priceLabel: "50 €",
+      }),
+      ics: { filename: "x.ics", content: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n" },
+    });
+
+    expect(result.owner.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const ownerBody = JSON.parse(String((fetchMock.mock.calls[1] as [string, RequestInit])[1].body)) as {
+      to: string;
+    };
+    expect(ownerBody.to).toBe("notify@example.com");
   });
 });
 
