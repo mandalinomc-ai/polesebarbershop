@@ -16,7 +16,7 @@ export type ServiceCategory = "capelli" | "barba" | "colore";
 export const SERVICE_CATEGORY_LABEL: Record<ServiceCategory, string> = {
   capelli: "Capelli",
   barba: "Barba",
-  colore: "Colore & Trattamenti",
+  colore: "Colore",
 };
 
 export type Service = {
@@ -31,15 +31,15 @@ export type Service = {
 };
 
 export const SERVICES: Service[] = [
-  { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, isVariablePrice: false, durationMin: 25, description: "Shampoo specifico + Black Mask" },
-  { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 30, description: "Taglio classico" },
-  { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Solo styling / piega" },
-  { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 20, description: "Panno caldo con vaporizzatore + oli con fragranze" },
-  { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Rifinitura / modellatura classica" },
-  { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, isVariablePrice: true, durationMin: 45, description: "Meches / schiariture. Prezzo definito in salone." },
-  { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, isVariablePrice: true, durationMin: 45, description: "Decolorazione cutanea. Prezzo definito in salone." },
-  { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, isVariablePrice: true, durationMin: 30, description: "Tintura capelli. Prezzo definito in salone." },
-  { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, isVariablePrice: true, durationMin: 20, description: "Tintura barba. Prezzo definito in salone." },
+  { id: "taglio-pro", name: "Taglio completo", category: "capelli", priceEuro: 50, priceMaxEuro: null, isVariablePrice: false, durationMin: 25, description: "Taglio con shampoo e maschera" },
+  { id: "taglio-standard", name: "Taglio classico", category: "capelli", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 30, description: "Taglio capelli" },
+  { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Piega e styling" },
+  { id: "barba-pro", name: "Barba completa", category: "barba", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 20, description: "Barba con panno caldo" },
+  { id: "barba-standard", name: "Rifinitura barba", category: "barba", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Rifinitura e modellatura" },
+  { id: "decolorazione-meches", name: "Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, isVariablePrice: true, durationMin: 45, description: "Colpi di sole e schiariture. Prezzo in salone." },
+  { id: "decolorazione-cutanea", name: "Decolorazione", category: "colore", priceEuro: 50, priceMaxEuro: 120, isVariablePrice: true, durationMin: 45, description: "Decolorazione completa. Prezzo in salone." },
+  { id: "tintura-capelli", name: "Tintura capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, isVariablePrice: true, durationMin: 30, description: "Colore capelli. Prezzo in salone." },
+  { id: "tintura-barba", name: "Tintura barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, isVariablePrice: true, durationMin: 20, description: "Colore barba. Prezzo in salone." },
 ];
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = ["capelli", "barba", "colore"];

@@ -139,7 +139,7 @@ describe("booking email copy", () => {
   it("uses the Italian customer confirmation with 1 ora notice and optional manage link", () => {
     const mail = customerConfirmEmail({
       firstName: "Mario",
-      service: "Taglio Pro",
+      service: "Taglio completo",
       barber: "Felice",
       date: "martedì 1 settembre 2026",
       time: "09:30",
@@ -149,7 +149,7 @@ describe("booking email copy", () => {
       "Ciao Mario, la tua prenotazione da Polese Barbershop è confermata! 💈",
     );
     expect(mail.text).toContain("📅 Data e Ora: martedì 1 settembre 2026 alle 09:30");
-    expect(mail.text).toContain("✂️ Servizio: Taglio Pro");
+    expect(mail.text).toContain("✂️ Servizio: Taglio completo");
     expect(mail.text).toContain("👤 Barber: Felice");
     expect(mail.text).toContain("📍 Dove siamo: Corso Dante Alighieri 44");
     expect(mail.text).toContain(`almeno ${CANCEL_NOTICE_IT} di anticipo`);
@@ -161,7 +161,7 @@ describe("booking email copy", () => {
 
     const noLink = customerConfirmEmail({
       firstName: "Mario",
-      service: "Taglio Pro",
+      service: "Taglio completo",
       barber: "Felice",
       date: "martedì 1 settembre 2026",
       time: "09:30",
@@ -175,7 +175,7 @@ describe("booking email copy", () => {
       lastName: "Rossi",
       phone: "+393331112233",
       email: "mario@example.com",
-      service: "Taglio Pro + Barba Pro",
+      service: "Taglio completo + Barba completa",
       durationMin: 45,
       barber: "Felice",
       date: "martedì 1 settembre 2026",
@@ -189,7 +189,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("Cognome: Rossi");
     expect(mail.text).toContain("Telefono: +393331112233");
     expect(mail.text).toContain("Email: mario@example.com");
-    expect(mail.text).toContain("Servizio/i: Taglio Pro + Barba Pro");
+    expect(mail.text).toContain("Servizio/i: Taglio completo + Barba completa");
     expect(mail.text).toContain("Durata: 45 min");
     expect(mail.text).toContain("Prezzo: 65 €");
     expect(mail.text).toContain("Barbiere: Felice");
@@ -202,7 +202,7 @@ describe("booking email copy", () => {
   it("mentions 1 ora on cancel emails", () => {
     const customer = customerCancelEmail({
       firstName: "Mario",
-      service: "Taglio Pro",
+      service: "Taglio completo",
       date: "martedì 1 settembre 2026",
       time: "09:30",
     });
@@ -212,7 +212,7 @@ describe("booking email copy", () => {
       firstName: "Mario",
       lastName: "Rossi",
       email: "mario@example.com",
-      service: "Taglio Pro",
+      service: "Taglio completo",
       date: "martedì 1 settembre 2026",
       time: "09:30",
     });
@@ -244,7 +244,7 @@ describe("booking email copy", () => {
       customerEmail: "mario@example.com",
       customer: customerConfirmEmail({
         firstName: "Mario",
-        service: "Taglio Pro",
+        service: "Taglio completo",
         barber: "Felice",
         date: "martedì 1 settembre 2026",
         time: "09:30",
@@ -255,7 +255,7 @@ describe("booking email copy", () => {
         lastName: "Rossi",
         phone: "+393331112233",
         email: "mario@example.com",
-        service: "Taglio Pro",
+        service: "Taglio completo",
         durationMin: 25,
         barber: "Felice",
         date: "martedì 1 settembre 2026",
@@ -277,7 +277,7 @@ describe("booking email copy", () => {
     const { customerConfirmEmail } = await import("./email");
     const mail = customerConfirmEmail({
       firstName: "Mario",
-      service: "Taglio Pro",
+      service: "Taglio completo",
       barber: "Felice",
       date: "martedì 1 settembre 2026",
       time: "09:30",
@@ -288,7 +288,7 @@ describe("booking email copy", () => {
     expect(mail.text).toMatch(/Polese Barbershop è confermata/);
     expect(mail.text).toMatch(/Corso Dante Alighieri 44/);
     expect(mail.text).toMatch(/1 ora di anticipo/);
-    expect(mail.text).toMatch(/Taglio Pro/);
+    expect(mail.text).toMatch(/Taglio completo/);
     expect(mail.text).toMatch(/Felice/);
     expect(mail.html).toMatch(/Ciao Mario/);
     expect(mail.html).toMatch(/1 ora/);
@@ -302,7 +302,7 @@ describe("booking email copy", () => {
       lastName: "Rossi",
       phone: "+393331112233",
       email: "mario@example.com",
-      service: "Taglio Pro",
+      service: "Taglio completo",
       durationMin: 45,
       barber: "Felice",
       date: "martedì 1 settembre 2026",
@@ -317,7 +317,7 @@ describe("booking email copy", () => {
       "Rossi",
       "+393331112233",
       "mario@example.com",
-      "Taglio Pro",
+      "Taglio completo",
       "45 min",
       "Felice",
       "da 25 €",
