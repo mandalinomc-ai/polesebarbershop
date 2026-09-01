@@ -23,6 +23,9 @@ env:
 
 jobs:
   deploy:
+    # Vercel GitHub integration already deploys main; this job is optional
+    # and only runs when repository secrets are configured.
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
