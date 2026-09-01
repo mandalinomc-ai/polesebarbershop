@@ -21,7 +21,7 @@ describe("mobile QA (390px)", () => {
   it("keeps Prenota sticky on mobile and does not hide the header", () => {
     expect(css).toMatch(/\.site-header\.header-hidden \{ transform: none; \}/);
     expect(chrome).toMatch(/max-width: 899px/);
-    expect(chrome).toMatch(/PRENOTA ORA/);
+    expect(chrome).toMatch(/Prenota/);
     expect(chrome).toMatch(/nav-toggle/);
     expect(chrome).toMatch(/Chiudi menu/);
   });
@@ -38,16 +38,12 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.crm-mobile-logout \{ display: inline-flex; \}/);
   });
 
-  it("keeps the editorial hero CTA and date scroller usable at 390px", () => {
+  it("keeps July 3 hero and booking CTA usable at 390px", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    const calendar = readFileSync(join(process.cwd(), "components/site/HeroCalendar.tsx"), "utf8");
-    expect(hero).toMatch(/hero-editorial/);
-    expect(hero).toMatch(/OpeningCountdown/);
-    expect(hero).toMatch(/HERO_CTA/);
-    expect(css).toMatch(/\.hero-editorial/);
+    expect(hero).toMatch(/hero--soon/);
+    expect(hero).toMatch(/Prenota ora/);
+    expect(css).toMatch(/\.hero--soon/);
     expect(css).toMatch(/\.day-chip \{[\s\S]*?min-height:\s*44px/);
-    expect(calendar).toMatch(/hero-day-scroller/);
-    expect(calendar).toMatch(/prenota/);
   });
 
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
@@ -58,42 +54,18 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("uses HD marble texture on select sections with Marcel white editorial canvas", () => {
+  it("uses dark marble theme with gallery photos (July 3 layout)", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
-    const shell = readFileSync(join(process.cwd(), "components/site/SiteShell.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(layout).toMatch(/site-white-canvas/);
-    expect(layout).not.toMatch(/site-marble-canvas/);
+    expect(layout).not.toMatch(/site-white-canvas/);
     expect(css).toMatch(/marble\.png/);
-    expect(css).toMatch(/\.section-marble/);
-    expect(shell).not.toMatch(/site-marble-canvas/);
-    expect(hero).toMatch(/hero-editorial/);
-    expect(landing).toMatch(/section-marble/);
-    expect(hero).not.toMatch(/VideoReelGrid/);
-    expect(landing).not.toMatch(/VideoReelGrid/);
-    expect(landing).not.toMatch(/gallery-grid/);
-    expect(landing).not.toMatch(/GALLERY_IMAGES/);
-    expect(landing).not.toMatch(/brand-products\.jpg/);
-  });
-
-  it("uses real video paths in hero asymmetric grid (no reel section)", () => {
-    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    const videos = readFileSync(join(process.cwd(), "lib/site-videos.ts"), "utf8");
-    expect(hero).toMatch(/HERO_VIDEOS/);
-    expect(hero).toMatch(/site-videos/);
-    expect(videos).toMatch(/taglio-01\.mp4/);
-    expect(videos).toMatch(/\/assets\/video/);
-    expect(hero).toMatch(/autoPlay/);
-    expect(hero).toMatch(/muted/);
-    expect(hero).toMatch(/loop/);
-    expect(hero).toMatch(/playsInline/);
-    expect(landing).not.toMatch(/VideoReelGrid/);
-    expect(landing).not.toMatch(/video-reel/);
-    expect(landing).toMatch(/gallery-video-grid/);
-    expect(landing).toMatch(/GALLERY_VIDEOS/);
-    expect(css).toMatch(/\.hero-media-cell video[\s\S]*object-fit:\s*cover/);
-    expect(css).toMatch(/\.gallery-video video[\s\S]*object-fit:\s*cover/);
+    expect(css).toMatch(/bg-marble-light/);
+    expect(hero).toMatch(/bg-noise/);
+    expect(landing).toMatch(/gallery-grid/);
+    expect(landing).toMatch(/fresha-01\.jpg/);
+    expect(landing).not.toMatch(/gallery-video-grid/);
+    expect(landing).not.toMatch(/GALLERY_VIDEOS/);
+    expect(hero).not.toMatch(/HERO_VIDEOS/);
   });
 });

@@ -45,8 +45,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#FFFFFF",
-  colorScheme: "light",
+  themeColor: "#0B0B0B",
+  colorScheme: "dark light",
   viewportFit: "cover",
 };
 
@@ -113,7 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
         />
       </head>
-      <body className="site-white-canvas">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

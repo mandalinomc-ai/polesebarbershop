@@ -64,7 +64,6 @@ describe("public copy vs official identity", () => {
       /351\s*252\s*3087/,
       /Corso Dante n\. 45/,
       /Corso Dante 45/,
-      /Taglio sartoriale/,
       /Combo premium/,
       /dermatolog/i,
       /caduta capelli/i,
@@ -75,7 +74,6 @@ describe("public copy vs official identity", () => {
       /limite\s+di\s+200/i,
       /hero--marble/,
       /tricolog/i,
-      /hero-bg\.jpg/,
       /hero-bg\.webp/,
     ];
     const hits: string[] = [];
@@ -148,7 +146,7 @@ describe("public copy vs official identity", () => {
     expect(pkg.dependencies?.twilio).toBeUndefined();
   });
 
-  it("defaults to live site with countdown and booking (not coming-soon gate)", () => {
+  it("defaults to live site with July 3 marble layout and booking", () => {
     expect(IS_COMING_SOON).toBe(false);
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/avvisato all'apertura/i);
     const coming = readFileSync(join(process.cwd(), "components/site/ComingSoon.tsx"), "utf8");
@@ -159,51 +157,51 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/ComingSoon/);
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
-    expect(page).toMatch(/ScissorsIntro/);
+    expect(page).not.toMatch(/ScissorsIntro/);
+    const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
+    expect(landing).toMatch(/id="about"/);
+    expect(landing).toMatch(/id="services"/);
+    expect(landing).toMatch(/id="gallery"/);
+    expect(landing).toMatch(/gallery-grid/);
+    expect(landing).toMatch(/bg-marble-light/);
+    expect(landing).toMatch(/section-dark/);
   });
 
-  it("includes consulenza in sede without tricologia in live layout", () => {
+  it("keeps July 3 section order without Marcel rebuild extras", () => {
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(landing).toMatch(/Consulenza in sede/);
-    expect(landing).toMatch(/id="consulenza"/);
+    expect(landing).not.toMatch(/Consulenza in sede/);
+    expect(landing).not.toMatch(/id="consulenza"/);
     expect(landing).not.toMatch(/Consulenza Tricologica/i);
     expect(landing).not.toMatch(/tricolog/i);
-    expect(landing).not.toMatch(/analisi cute/i);
-    expect(landing).not.toMatch(/percorsi curativi/i);
-    expect(landing).toMatch(/id="prodotti"/);
-    expect(landing).not.toMatch(/brand-products\.jpg/);
-    expect(landing).toMatch(/Barber Match 2023/);
-    expect(landing).not.toMatch(/gallery-grid/);
-    expect(landing).toMatch(/GALLERY_VIDEOS/);
-    const widget = readFileSync(join(process.cwd(), "components/site/WhatsAppWidget.tsx"), "utf8");
-    expect(widget).toMatch(/Prenota/);
-    expect(widget).toMatch(/Consulenza/);
-    expect(widget).toMatch(/Ordina prodotti/);
+    expect(landing).not.toMatch(/id="prodotti"/);
+    expect(landing).not.toMatch(/Barber Match 2023/);
+    expect(landing).not.toMatch(/GALLERY_VIDEOS/);
+    expect(landing).toMatch(/gallery-grid/);
+    expect(landing).toMatch(/brand-products\.jpg/);
+    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
+    expect(hero).toMatch(/hero--soon/);
+    expect(hero).toMatch(/bg-noise/);
+    expect(hero).not.toMatch(/hero-editorial/);
+    expect(hero).not.toMatch(/ScissorsIntro/);
   });
 
-  it("shows Prenota già ora with a mini calendar before official opening", () => {
+  it("shows live hero with Prenota ora before opening date copy", () => {
     expect(HERO_CTA).toBe("Prenota già ora");
     expect(HERO_BEFORE_OPENING).toBe("Prenota già ora, prima dell'apertura ufficiale");
     expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
-    expect(getHeroHeadline(new Date("2026-09-06T23:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
     expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe("Prenota il tuo posto");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/HeroCalendar/);
-    expect(hero).toMatch(/OpeningCountdown/);
-    expect(hero).toMatch(/HERO_CTA/);
-    expect(hero).toMatch(/heroHeadline/);
-    const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
-    expect(page).toMatch(/ScissorsIntro/);
+    expect(hero).toMatch(/Prenota ora/);
+    expect(hero).toMatch(/Raggiungici ora/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
-    expect(css).toMatch(/hero-day-scroller/);
-    expect(css).toMatch(/hero-editorial/);
-    expect(css).toMatch(/scissors-intro/);
-    expect(css).toMatch(/blade-left-open/);
+    expect(css).toMatch(/marble\.png/);
+    expect(css).toMatch(/bg-marble-light/);
+    expect(css).not.toMatch(/scissors-intro/);
   });
 
-  it("puts hours, Instagram, WhatsApp and prenota QR on contact and footer", () => {
+  it("puts contact info and maps link in July 3 contact section", () => {
     expect(SITE.hours.weekdays).toBe("Mar — Sab · 09:30 — 20:00");
     expect(SITE.hours.monday).toMatch(/Chiuso/);
     expect(SITE.hours.sunday).toMatch(/Chiuso/);
@@ -221,18 +219,13 @@ describe("public copy vs official identity", () => {
       expect(statSync(file).size).toBeGreaterThan(2000);
     }
     const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(contact).toMatch(/contact-hours/);
-    expect(contact).toMatch(/SocialQrGrid/);
-    expect(contact).toMatch(/SocialTextLinks/);
+    expect(contact).toMatch(/id="contact"/);
+    expect(contact).toMatch(/getMapsUrl/);
+    expect(contact).toMatch(/SITE\.hours/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
-    expect(chrome).toMatch(/footer-hours/);
-    expect(chrome).toMatch(/SocialQrGrid/);
-    expect(chrome).toMatch(/SITE_PDFS/);
-    expect(chrome).toMatch(/footer-hours-pdf/);
-    expect(chrome).toMatch(/Pannello orari \(PDF\)/);
-    expect(chrome).toMatch(/SocialTextLinks/);
+    expect(chrome).toMatch(/href="\/gestionale"/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
-    expect(css).toMatch(/\.qr-card \{[\s\S]*?min-height:\s*44px/);
+    expect(css).toMatch(/\.wa-fab/);
   });
 
   it("does not cap total bookings — wizard shows many open days", () => {

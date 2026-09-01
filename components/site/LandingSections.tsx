@@ -1,65 +1,80 @@
-import { SITE, getWhatsAppUrl, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
-import { formatItalianDate } from "@/lib/availability";
-import { GALLERY_VIDEOS } from "@/lib/site-videos";
-import { SiteLogo } from "@/components/site/SiteImage";
-import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
+import { SITE, getMapsUrl } from "@/lib/site-config";
 import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
   SERVICES,
   formatPriceRange,
 } from "@/lib/catalog";
-import { PRODUCTS, productOrderMessage } from "@/lib/products";
 import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
+
+const GALLERY = [
+  {
+    src: "/assets/images/gallery/fresha-01.jpg",
+    alt: "Interno salone Polese Barbershop — marmo e postazioni",
+    tall: false,
+  },
+  {
+    src: "/assets/images/hero-bg.jpg",
+    alt: "Salone Felice Polese Benevento",
+    tall: true,
+  },
+  {
+    src: "/assets/images/gallery/fresha-02.jpg",
+    alt: "Postazione barbiere Polese",
+    tall: false,
+  },
+  {
+    src: "/assets/images/brand-products.jpg",
+    alt: "Linea prodotti Felice Polese",
+    tall: false,
+  },
+  {
+    src: "/assets/images/gallery/fresha-00.jpg",
+    alt: "Prodotti grooming Felice Polese",
+    tall: false,
+  },
+];
+
 export function LandingSections() {
   return (
     <>
-      <section id="chi-sono" className="section-pad section-white">
-        <div className="eyebrow reveal">Chi sono</div>
-        <h2 className="section-title font-serif reveal reveal-d1">Felice Polese</h2>
+      <section id="about" className="section-pad bg-marble-light">
+        <div className="eyebrow reveal">Il brand</div>
+        <h2 className="section-title font-serif reveal reveal-d1">
+          Tradizione &amp; precisione
+        </h2>
         <div className="about-grid">
-          <div className="about-visual reveal about-visual--badge-only">
-            <span className="badge-match">Barber Match 2023</span>
+          <div className="about-visual reveal">
+            <img
+              src="/assets/images/logo.png"
+              alt="Logo Felice Polese"
+              className="brand-logo brand-logo--about"
+              width={512}
+              height={331}
+            />
           </div>
           <div className="reveal reveal-d2">
             <p className="prose">
-              <strong>Felice Polese</strong> interpreta la barberia come arte sartoriale:
-              ogni taglio, ogni barba e ogni colore nasce da ascolto, tecnica e cura del
-              dettaglio.
+              <strong>{SITE.brand}</strong> interpreta la barberia come rituale di cura e
+              stile. Taglio uomo, barba e rasatura con precisione artigianale.
             </p>
             <p className="prose">
-              Finalista al <strong>Barber Match 2023</strong>, Felice unisce precisione
-              italiana e visione contemporanea. In salone lavorano due poltrone
-              indipendenti — <strong>Felice</strong> e <strong>Davide</strong> — in uno
-              spazio luminoso e minimal in {SITE.address}, {SITE.city}.
+              Il nuovo salone in {SITE.address}, {SITE.city} — ambiente dark, elegante e
+              riservato.
             </p>
-            <p className="prose">
-              Apriamo ufficialmente il{" "}
-              <strong>{formatItalianDate(SITE.openingDate)}</strong>. Il calendario è già
-              aperto: prenota online e scegli il tuo barbiere.
-            </p>
-            <SiteLogo
-              alt="Logo Felice Polese"
-              className="brand-logo brand-logo--about"
-              sizes="180px"
-            />
           </div>
         </div>
       </section>
 
-      <section id="trattamenti" className="section-pad section-marble">
-        <div className="eyebrow reveal">Trattamenti</div>
-        <h2 className="section-title font-serif reveal reveal-d1">Listino</h2>
-        <p className="section-lead reveal">
-          Taglio, barba e colore con prezzi trasparenti. I servizi a prezzo variabile
-          vengono confermati in salone.
-        </p>
+      <section id="services" className="section-pad section-dark">
+        <div className="eyebrow reveal">Servizi</div>
+        <h2 className="section-title font-serif reveal reveal-d1">Menu grooming</h2>
         {SERVICE_CATEGORIES.map((cat) => (
           <div key={cat}>
-            <p className="cat-label reveal" style={{ marginTop: "2rem" }}>
+            <p className="fresha-cat reveal" style={{ marginTop: "2rem" }}>
               {SERVICE_CATEGORY_LABEL[cat]}
             </p>
             <div className="services-grid">
@@ -83,101 +98,43 @@ export function LandingSections() {
         </p>
       </section>
 
-      <section id="consulenza" className="section-pad section-white">
-        <div className="eyebrow reveal">Consulenza</div>
-        <h2 className="section-title font-serif reveal reveal-d1">Consulenza in sede</h2>
-        <div className="consult-copy reveal reveal-d1">
-          <p className="section-lead">
-            Vieni in salone per una consulenza fisica con Felice o Davide: ascoltiamo le tue
-            esigenze, valutiamo taglio, barba o colore e ti proponiamo il percorso più adatto.
-          </p>
-          <div className="consult-actions">
-            <a className="btn btn-dark" href="/#prenota">
-              Prenota consulenza
-            </a>
-            <a
-              className="btn btn-outline"
-              href={getWhatsAppUrl(
-                "Ciao, vorrei prenotare una consulenza in sede da Polese Barbershop.",
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              WhatsApp
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section id="prodotti" className="section-pad section-white">
-        <div className="eyebrow reveal">Prodotti</div>
-        <h2 className="section-title font-serif reveal reveal-d1">
-          Linea Felice Polese
-        </h2>
-        <p className="section-lead reveal">
-          Grooming essentials selezionati in salone. Ordina via WhatsApp — ritiro o
-          consegna concordata con Felice e Davide.
-        </p>
-        <div className="products-grid">
-          {PRODUCTS.map((p, i) => (
-            <article
-              key={p.id}
-              className={`product-card reveal${i % 3 === 1 ? " reveal-d1" : i % 3 === 2 ? " reveal-d2" : ""}`}
-            >
-              <h3>{p.name}</h3>
-              <p>{p.description}</p>
-              <span className="product-price">{p.priceLabel}</span>
-              <a
-                className="btn btn-outline product-order"
-                href={getWhatsAppUrl(productOrderMessage(p.name))}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ordina su WhatsApp
-              </a>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="galleria" className="section-pad section-marble">
-        <div className="eyebrow reveal">Galleria</div>
+      <section id="gallery" className="section-pad bg-marble-light">
+        <div className="eyebrow reveal">Atmosfera</div>
         <h2 className="section-title font-serif reveal reveal-d1">Il salone</h2>
-        <p className="section-lead reveal">
-          Taglio e colorazione in movimento — riprese reali dal salone.
-        </p>
-        <div className="gallery-video-grid">
-          {GALLERY_VIDEOS.map((video, i) => (
+        <div className="gallery-grid">
+          {GALLERY.map((item) => (
             <figure
-              key={video.id}
-              className={`gallery-video reveal${i === 1 ? " reveal-d1" : i === 2 ? " reveal-d2" : ""}`}
+              key={item.src}
+              className={`gallery-item reveal${item.tall ? " gallery-tall" : ""}`}
             >
-              <video
-                src={video.src}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                aria-label={video.alt}
+              <img
+                src={item.src}
+                alt={item.alt}
+                width={1400}
+                height={900}
+                loading="lazy"
               />
             </figure>
           ))}
         </div>
       </section>
 
-      <section id="prenota" className="section-pad section-muted">
-        <div className="eyebrow reveal">Prenota</div>
-        <h2 className="section-title font-serif reveal reveal-d1">Prenota il tuo posto</h2>
+      <section id="prenota" className="section-pad section-dark">
+        <div className="eyebrow reveal">Prenotazione</div>
+        <h2 className="section-title font-serif reveal reveal-d1">
+          Prenota il tuo posto
+        </h2>
         <div className="booking-layout reveal">
           <BookingSectionNote />
           <FreshaBookingFlow />
         </div>
       </section>
 
-      <section id="contatti" className="section-pad section-white">
+      <section id="contact" className="section-pad bg-marble-light">
         <div className="eyebrow reveal">Contatti</div>
-        <h2 className="section-title font-serif reveal reveal-d1">Vieni a trovarci</h2>
+        <h2 className="section-title font-serif reveal reveal-d1">
+          Prenota o scrivici
+        </h2>
         <div className="contact-grid">
           <div className="contact-info reveal">
             <p>
@@ -186,13 +143,13 @@ export function LandingSections() {
               {SITE.addressFull}
             </p>
             <p>
-              <strong>Telefono</strong>
+              <strong>Telefono / WhatsApp</strong>
               <br />
               <a href={`tel:${SITE.phoneTel}`} className="contact-link">
-                {SITE.phone}
+                {SITE.phoneDisplay}
               </a>
             </p>
-            <p className="contact-hours">
+            <p>
               <strong>Orari</strong>
               <br />
               {SITE.hours.weekdays}
@@ -202,27 +159,24 @@ export function LandingSections() {
               {SITE.hours.sunday}
             </p>
             <p>
-              <strong>Email</strong>
-              <br />
-              <a href={getMailtoUrl()} className="contact-link">
-                {SITE.email}
+              <a
+                href={SITE.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="contact-link"
+              >
+                {SITE.instagramHandle}
               </a>
-            </p>
-            <SocialTextLinks />
-            <p>
+              {" · "}
               <a
                 href={getMapsUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="contact-link"
               >
-                Raggiungici ora
+                Maps
               </a>
             </p>
-          </div>
-          <div className="contact-qr reveal reveal-d1">
-            <p className="qr-intro">Instagram, WhatsApp o prenota online</p>
-            <SocialQrGrid variant="contact" />
           </div>
         </div>
       </section>

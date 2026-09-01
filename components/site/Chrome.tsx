@@ -1,26 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  SITE,
-  HERO_CTA,
-  SALON_CONTACT_MESSAGE,
-  getWhatsAppUrl,
-  getMapsUrl,
-  getMailtoUrl,
-} from "@/lib/site-config";
-import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
-import { SiteLogo } from "@/components/site/SiteImage";
-import { SITE_PDFS } from "@/lib/site-pdf";
+import { SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-config";
 
 const LINKS = [
-  { href: "/#chi-sono", label: "Chi sono" },
-  { href: "/#trattamenti", label: "Trattamenti" },
-  { href: "/#consulenza", label: "Consulenza" },
-  { href: "/#prodotti", label: "Prodotti" },
-  { href: "/#galleria", label: "Galleria" },
-  { href: "/#prenota", label: "Prenota" },
-  { href: "/#contatti", label: "Contatti" },
+  { href: "/#about", label: "Chi siamo" },
+  { href: "/#services", label: "Servizi" },
+  { href: "/#gallery", label: "Galleria" },
+  { href: "/#contact", label: "Contatti" },
 ];
 
 export function Header() {
@@ -63,11 +50,12 @@ export function Header() {
         className={`site-header${scrolled ? " header-scrolled" : ""}${hidden && !open ? " header-hidden" : ""}`}
       >
         <a href="/#hero" className="header-logo">
-          <SiteLogo
+          <img
+            src="/assets/images/logo.png"
             alt="Felice Polese — Polese Barbershop"
             className="brand-logo brand-logo--sm"
-            sizes="(max-width: 420px) 48px, 64px"
-            priority
+            width={512}
+            height={331}
           />
           <span>{SITE.name}</span>
         </a>
@@ -80,8 +68,8 @@ export function Header() {
             ))}
           </ul>
         </nav>
-        <a href="/#prenota" className="btn btn-dark header-cta">
-          PRENOTA ORA
+        <a href="/#prenota" className="btn btn-gold btn-magnetic header-cta header-cta--live">
+          Prenota
         </a>
         <button
           id="nav-toggle"
@@ -119,8 +107,8 @@ export function Header() {
             </li>
           ))}
           <li>
-            <a href="/#prenota" className="nav-panel-cta" onClick={() => setOpen(false)}>
-              {HERO_CTA}
+            <a href="/#prenota" onClick={() => setOpen(false)}>
+              Prenota
             </a>
           </li>
         </ul>
@@ -177,78 +165,19 @@ export function FloatingActions() {
 export const SiteFabs = FloatingActions;
 
 export function Footer() {
-  const mapsEmbed = `https://maps.google.com/maps?q=${encodeURIComponent("Corso Dante Alighieri 44, 82100 Benevento")}&output=embed`;
-
   return (
-    <footer className="site-footer legal-footer">
-      <div className="footer-main">
-        <div className="footer-identity">
-          <p>
-            {SITE.name} | {SITE.addressFull}
-          </p>
-          <p>
-            Tel. <a href={`tel:${SITE.phoneTel}`}>{SITE.phone}</a>
-          </p>
-          <p>
-            Email <a href={getMailtoUrl()}>{SITE.email}</a>
-          </p>
-          <p className="footer-hours">
-            <strong>Orari</strong>
-            <br />
-            {SITE.hours.weekdays}
-            <br />
-            {SITE.hours.monday} · {SITE.hours.sunday}
-            <br />
-            <a href={SITE_PDFS.hoursPanel} target="_blank" rel="noopener noreferrer" className="contact-link">
-              Pannello orari (PDF)
-            </a>
-          </p>
-          <p>
-            <a href={SITE_PDFS.logo} target="_blank" rel="noopener noreferrer" className="contact-link">
-              Logo Felice Polese (PDF)
-            </a>
-          </p>
-          <p>
-            C.F.: {SITE.fiscalCode} | P.IVA: {SITE.vatNumber}
-          </p>
-          <p>{SITE.pricesIncludeVat}</p>
-          <SocialTextLinks />
-        </div>
-        <div className="footer-map-wrap">
-          <iframe
-            title="Mappa Polese Barbershop — Corso Dante Alighieri 44"
-            src={mapsEmbed}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="footer-map"
-          />
-          <a href={getMapsUrl()} target="_blank" rel="noopener noreferrer" className="map-link">
-            Apri in Google Maps
-          </a>
-        </div>
-        <SocialQrGrid variant="footer" />
-        <div className="footer-pdf-panel">
-          <p className="qr-intro">Pannello orari ufficiale</p>
-          <object
-            data={SITE_PDFS.hoursPanel}
-            type="application/pdf"
-            className="footer-hours-pdf"
-            aria-label="Pannello orari Polese Barbershop"
-          >
-            <a href={SITE_PDFS.hoursPanel} target="_blank" rel="noopener noreferrer" className="contact-link">
-              Apri pannello orari (PDF)
-            </a>
-          </object>
-        </div>
-      </div>
-      <div className="footer-links">
+    <footer className="site-footer">
+      <span>
+        © {SITE.name} · {SITE.brand}
+      </span>
+      <span>{SITE.addressFull}</span>
+      <span>
         <a href="/privacy-policy">Privacy</a>
+        {" · "}
         <a href="/terms">Termini</a>
+        {" · "}
         <a href="/gestionale">Gestionale</a>
-        <a href={SITE.instagram} target="_blank" rel="noopener noreferrer">
-          {SITE.instagramHandle}
-        </a>
-      </div>
+      </span>
     </footer>
   );
 }
@@ -276,7 +205,31 @@ export function ClientEffects() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (window.matchMedia("(hover: none)").matches) return;
+    const buttons = Array.from(document.querySelectorAll<HTMLElement>(".btn-magnetic"));
+    const move = (e: MouseEvent) => {
+      const btn = e.currentTarget as HTMLElement;
+      const rect = btn.getBoundingClientRect();
+      btn.style.setProperty("--mx", `${(e.clientX - rect.left - rect.width / 2) * 0.15}px`);
+      btn.style.setProperty("--my", `${(e.clientY - rect.top - rect.height / 2) * 0.15}px`);
+    };
+    const leave = (e: MouseEvent) => {
+      const btn = e.currentTarget as HTMLElement;
+      btn.style.setProperty("--mx", "0px");
+      btn.style.setProperty("--my", "0px");
+    };
+    buttons.forEach((btn) => {
+      btn.addEventListener("mousemove", move);
+      btn.addEventListener("mouseleave", leave);
+    });
+    return () => {
+      buttons.forEach((btn) => {
+        btn.removeEventListener("mousemove", move);
+        btn.removeEventListener("mouseleave", leave);
+      });
+    };
+  }, []);
+
   return null;
 }
-
-export { WhatsAppWidget } from "@/components/site/WhatsAppWidget";
