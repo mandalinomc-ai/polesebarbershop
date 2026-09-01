@@ -177,7 +177,7 @@ describe("public copy vs official identity", () => {
     expect(landing).toMatch(/GALLERY_VIDEOS/);
     const widget = readFileSync(join(process.cwd(), "components/site/WhatsAppWidget.tsx"), "utf8");
     expect(widget).toMatch(/Prenota/);
-    expect(widget).toMatch(/Info & orari/);
+    expect(widget).toMatch(/Consulenza/);
     expect(widget).toMatch(/Ordina prodotti/);
   });
 

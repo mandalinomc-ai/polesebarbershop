@@ -96,6 +96,7 @@ export function getHeroHeadline(now: Date = new Date()): string {
 
 export type BookingConfirmCopy = {
   firstName?: string;
+  phone?: string;
   service: string;
   dateLabel: string;
   timeLabel: string;
@@ -103,9 +104,9 @@ export type BookingConfirmCopy = {
 };
 
 export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
-  const who = opts.firstName?.trim() ? ` sono ${opts.firstName.trim()} e` : "";
-  const barber = opts.barberName ? ` con ${opts.barberName}` : "";
-  return `Ciao,${who} ho prenotato ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}${barber} da ${SITE.name}.`;
+  const name = opts.firstName?.trim() || "—";
+  const tel = opts.phone?.trim() || "—";
+  return `Ciao Felice, ho prenotato su ${SITE.name}: ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}. Nome: ${name} - Tel: ${tel}`;
 }
 
 export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {

@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  SALON_CONTACT_MESSAGE,
-  getWhatsAppUrl,
-} from "@/lib/site-config";
+import { getWhatsAppUrl } from "@/lib/site-config";
 import { productOrderMessage, PRODUCTS } from "@/lib/products";
 
 const QUICK_ACTIONS = [
@@ -14,9 +11,10 @@ const QUICK_ACTIONS = [
     message: "Ciao, vorrei prenotare un appuntamento da Polese Barbershop.",
   },
   {
-    id: "info",
-    label: "Info & orari",
-    message: SALON_CONTACT_MESSAGE,
+    id: "consulenza",
+    label: "Consulenza",
+    message:
+      "Ciao, vorrei prenotare una consulenza in sede da Polese Barbershop.",
   },
   {
     id: "prodotti",

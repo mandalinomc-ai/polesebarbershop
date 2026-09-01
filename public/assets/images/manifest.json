@@ -1,9 +1,3 @@
 {
-  "logo": "logo.png",
-  "brand": "brand-products.jpg",
-  "gallery": [
-    "gallery/fresha-01.jpg",
-    "gallery/fresha-02.jpg",
-    "gallery/fresha-03.jpg"
-  ]
+  "logo": "logo.png"
 }

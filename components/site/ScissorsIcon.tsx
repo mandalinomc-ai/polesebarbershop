@@ -14,7 +14,13 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
     .join(" ");
 
   return (
-    <svg className={rootClass} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      className={rootClass}
+      viewBox="-2 -2 68 68"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <circle
         className="scissors-ring scissors-ring--left"
         cx="16"

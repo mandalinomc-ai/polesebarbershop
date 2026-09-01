@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SITE } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
@@ -13,8 +13,17 @@ function openingTargetMs(): number {
   return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
 }
 
-export function OpeningCountdown() {
+type OpeningCountdownProps = {
+  variant?: "default" | "intro";
+  onComplete?: () => void;
+};
+
+export function OpeningCountdown({
+  variant = "default",
+  onComplete,
+}: OpeningCountdownProps) {
   const [remain, setRemain] = useState({ d: "00", h: "00", m: "00", s: "00", done: false });
+  const completedRef = useRef(false);
 
   useEffect(() => {
     const target = openingTargetMs();
@@ -37,13 +46,26 @@ export function OpeningCountdown() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (remain.done && onComplete && !completedRef.current) {
+      completedRef.current = true;
+      onComplete();
+    }
+  }, [remain.done, onComplete]);
+
+  const showScissors = variant === "default";
+
   return (
-    <div className="opening-countdown-block">
-      <div className="scissors-anim" aria-hidden="true">
-        <ScissorsIcon variant="countdown" />
-      </div>
+    <div className={`opening-countdown-block${variant === "intro" ? " opening-countdown-block--intro" : ""}`}>
+      {showScissors ? (
+        <div className="scissors-anim" aria-hidden="true">
+          <ScissorsIcon variant="countdown" />
+        </div>
+      ) : null}
       <p className="opening-countdown-label">
-        Apertura ufficiale · {formatItalianDate(SITE.openingDate)}
+        {variant === "intro"
+          ? `Apertura · ${formatItalianDate(SITE.openingDate)}`
+          : `Apertura ufficiale · ${formatItalianDate(SITE.openingDate)}`}
       </p>
       <div id="countdown" className="countdown" aria-live="polite">
         <div className="countdown-item">

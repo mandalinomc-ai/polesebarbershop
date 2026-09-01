@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 import { SITE, getMapsUrl, IS_COMING_SOON } from "@/lib/site-config";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-inter",
   display: "swap",
 });
 const cormorant = Cormorant_Garamond({
@@ -104,7 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="it"
-      className={`scroll-smooth ${jakarta.variable} ${cormorant.variable} ${modeClass}`}
+      className={`scroll-smooth ${inter.variable} ${cormorant.variable} ${modeClass}`}
     >
       <head>
         <script
