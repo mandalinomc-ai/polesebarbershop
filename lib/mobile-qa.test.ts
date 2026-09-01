@@ -54,18 +54,20 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("uses dark marble theme with gallery photos (July 3 layout)", () => {
+  it("uses dark marble theme with real salon videos and gallery photos", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(layout).not.toMatch(/site-white-canvas/);
     expect(css).toMatch(/marble\.png/);
     expect(css).toMatch(/bg-marble-light/);
+    expect(css).toMatch(/video-reel-grid/);
+    expect(css).not.toMatch(/marble-texture/);
     expect(hero).toMatch(/bg-noise/);
     expect(landing).toMatch(/gallery-grid/);
     expect(landing).toMatch(/fresha-01\.jpg/);
-    expect(landing).not.toMatch(/gallery-video-grid/);
-    expect(landing).not.toMatch(/GALLERY_VIDEOS/);
+    expect(landing).toMatch(/VideoReelGrid/);
+    expect(landing).toMatch(/SALONE_GENERALE_VIDEO/);
     expect(hero).not.toMatch(/HERO_VIDEOS/);
   });
 });

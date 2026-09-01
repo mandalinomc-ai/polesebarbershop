@@ -75,6 +75,9 @@ describe("public copy vs official identity", () => {
       /hero--marble/,
       /tricolog/i,
       /hero-bg\.webp/,
+      /Menu grooming/i,
+      /grooming premium/i,
+      /marble-texture/,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -157,10 +160,14 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/ComingSoon/);
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
-    expect(page).not.toMatch(/ScissorsIntro/);
+    expect(page).toMatch(/ScissorsIntro/);
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(landing).toMatch(/id="about"/);
-    expect(landing).toMatch(/id="services"/);
+    expect(landing).not.toMatch(/id="services"/);
+    expect(landing).toMatch(/id="prenota"/);
+    expect(landing).toMatch(/I nostri servizi/);
+    expect(landing).toMatch(/FreshaBookingFlow/);
+    expect(landing).not.toMatch(/services-grid/);
     expect(landing).toMatch(/id="gallery"/);
     expect(landing).toMatch(/gallery-grid/);
     expect(landing).toMatch(/bg-marble-light/);
@@ -175,7 +182,9 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/tricolog/i);
     expect(landing).not.toMatch(/id="prodotti"/);
     expect(landing).not.toMatch(/Barber Match 2023/);
-    expect(landing).not.toMatch(/GALLERY_VIDEOS/);
+    expect(landing).toMatch(/VideoReelGrid/);
+    expect(landing).toMatch(/SALONE_GENERALE_VIDEO/);
+    expect(landing).toMatch(/about-video/);
     expect(landing).toMatch(/gallery-grid/);
     expect(landing).toMatch(/brand-products\.jpg/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
@@ -198,7 +207,8 @@ describe("public copy vs official identity", () => {
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/marble\.png/);
     expect(css).toMatch(/bg-marble-light/);
-    expect(css).not.toMatch(/scissors-intro/);
+    expect(css).toMatch(/scissors-intro/);
+    expect(css).not.toMatch(/marble-texture/);
   });
 
   it("puts contact info and maps link in July 3 contact section", () => {
