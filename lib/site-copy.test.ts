@@ -21,6 +21,8 @@ import {
   CANCEL_NOTICE_IT,
   BOOKING_UI_DAYS,
   HERO_CALENDAR_DAYS,
+  IS_COMING_SOON,
+  NOTIFY_WHATSAPP_MESSAGE,
 } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out", ".vercel"]);
@@ -64,17 +66,15 @@ describe("public copy vs official identity", () => {
       /Corso Dante 45/,
       /Taglio sartoriale/,
       /Combo premium/,
-      /tricolog/i,
       /dermatolog/i,
       /caduta capelli/i,
-      /Consulenza Tricologica/,
       /Parla con il salone/i,
       /parlare con il salone/i,
-      /id=["']consulenza["']/,
-      /\/#consulenza/,
       /mandalinomc@gmail\.com/,
       /200\s+prenotazioni/i,
       /limite\s+di\s+200/i,
+      /hero--marble/,
+      /site-marble-canvas/,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -146,6 +146,30 @@ describe("public copy vs official identity", () => {
     expect(pkg.dependencies?.twilio).toBeUndefined();
   });
 
+  it("defaults to coming-soon mode with Avvisami WhatsApp", () => {
+    expect(IS_COMING_SOON).toBe(true);
+    expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/avvisato all'apertura/i);
+    const coming = readFileSync(join(process.cwd(), "components/site/ComingSoon.tsx"), "utf8");
+    expect(coming).toMatch(/brand-logo--pulse/);
+    expect(coming).toMatch(/OpeningCountdown/);
+    expect(coming).toMatch(/Avvisami su WhatsApp/);
+    const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
+    expect(page).toMatch(/IS_COMING_SOON/);
+    expect(page).toMatch(/ComingSoon/);
+  });
+
+  it("includes consulenza tricologica and prodotti sections in live layout", () => {
+    const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
+    expect(landing).toMatch(/Consulenza Tricologica/);
+    expect(landing).toMatch(/id="consulenza"/);
+    expect(landing).toMatch(/id="prodotti"/);
+    expect(landing).toMatch(/Barber Match 2023/);
+    const widget = readFileSync(join(process.cwd(), "components/site/WhatsAppWidget.tsx"), "utf8");
+    expect(widget).toMatch(/Prenota/);
+    expect(widget).toMatch(/Info & orari/);
+    expect(widget).toMatch(/Ordina prodotti/);
+  });
+
   it("shows Prenota già ora with a mini calendar before official opening", () => {
     expect(HERO_CTA).toBe("Prenota già ora");
     expect(HERO_BEFORE_OPENING).toBe("Prenota già ora, prima dell'apertura ufficiale");
@@ -155,14 +179,13 @@ describe("public copy vs official identity", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/HeroCalendar/);
     expect(hero).toMatch(/OpeningCountdown/);
-    expect(hero).toMatch(/hero-cta-primary/);
-    expect(hero).toMatch(/getHeroHeadline/);
+    expect(hero).toMatch(/HERO_CTA/);
+    expect(hero).toMatch(/heroHeadline/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
-    expect(layout).toMatch(/mode-live/);
+    expect(layout).toMatch(/mode-coming-soon|mode-live/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
-    expect(css).not.toMatch(/mode-coming-soon \.hero-inner--live \{ display: none/);
     expect(css).toMatch(/hero-day-scroller/);
-    expect(css).toMatch(/hero--story/);
+    expect(css).toMatch(/hero-editorial/);
   });
 
   it("puts hours, Instagram, WhatsApp and prenota QR on contact and footer", () => {

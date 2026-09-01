@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <SiteShell lightHeader>
+    <SiteShell>
       <Header />
       <main id="main-content" className="legal-page">
         <p className="eyebrow">GDPR UE 2016/679</p>

@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 
 export default function PrenotaPage() {
   return (
-    <SiteShell lightHeader>
+    <SiteShell>
       <Header />
-      <main id="main-content" className="manage-page manage-page--marble">
+      <main id="main-content" className="manage-page">
         <p className="eyebrow">Prenotazione</p>
         <h1 className="section-title font-serif">{SITE.name}</h1>
         <div className="booking-layout">

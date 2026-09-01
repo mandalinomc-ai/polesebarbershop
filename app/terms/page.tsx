@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <SiteShell lightHeader>
+    <SiteShell>
       <Header />
       <main id="main-content" className="legal-page">
         <p className="eyebrow">Condizioni di prenotazione</p>

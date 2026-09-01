@@ -21,7 +21,7 @@ describe("mobile QA (390px)", () => {
   it("keeps Prenota sticky on mobile and does not hide the header", () => {
     expect(css).toMatch(/\.site-header\.header-hidden \{ transform: none; \}/);
     expect(chrome).toMatch(/max-width: 899px/);
-    expect(chrome).toMatch(/header-cta header-cta--live/);
+    expect(chrome).toMatch(/PRENOTA ORA/);
     expect(chrome).toMatch(/nav-toggle/);
     expect(chrome).toMatch(/Chiudi menu/);
   });
@@ -38,18 +38,16 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.crm-mobile-logout \{ display: inline-flex; \}/);
   });
 
-  it("keeps the story hero CTA and date scroller usable at 390px", () => {
+  it("keeps the editorial hero CTA and date scroller usable at 390px", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const calendar = readFileSync(join(process.cwd(), "components/site/HeroCalendar.tsx"), "utf8");
-    expect(hero).toMatch(/hero--story/);
+    expect(hero).toMatch(/hero-editorial/);
     expect(hero).toMatch(/OpeningCountdown/);
-    expect(hero).toMatch(/hero-cta-primary/);
-    expect(css).toMatch(/\.hero\.hero--story/);
-    expect(css).toMatch(/hero-cta-primary/);
+    expect(hero).toMatch(/HERO_CTA/);
+    expect(css).toMatch(/\.hero-editorial/);
     expect(css).toMatch(/\.day-chip \{[\s\S]*?min-height:\s*44px/);
     expect(calendar).toMatch(/hero-day-scroller/);
     expect(calendar).toMatch(/prenota/);
-    expect(chrome).toMatch(/HERO_CTA/);
   });
 
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
@@ -57,22 +55,19 @@ describe("mobile QA (390px)", () => {
     expect(chrome).toMatch(/aria-label="Raggiungici ora"/);
     expect(chrome.indexOf("<MapsFab />")).toBeLessThan(chrome.indexOf("<WhatsAppFab />"));
     expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
-    expect(css).toMatch(/\.wa-fab,\s*\n\.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
+    expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("keeps marble texture as the site-wide canvas", () => {
+  it("uses white editorial canvas instead of marble texture", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const shell = readFileSync(join(process.cwd(), "components/site/SiteShell.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(layout).toMatch(/site-marble-canvas/);
-    expect(css).toMatch(/body\.site-marble-canvas/);
-    expect(css).toMatch(/--bg-marble-image/);
-    expect(css).toMatch(/--bg-marble-image-fallback/);
-    expect(css).toMatch(/marble\.png/);
-    expect(css).not.toMatch(/image-set\(/);
-    expect(shell).toMatch(/site-shell--light/);
-    expect(hero).toMatch(/hero--marble/);
-    expect(hero).not.toMatch(/HERO_BG|hero-bg\.jpg/);
+    expect(layout).toMatch(/site-white-canvas/);
+    expect(css).toMatch(/background:\s*var\(--white\)/);
+    expect(css).not.toMatch(/marble\.png/);
+    expect(shell).not.toMatch(/site-marble/);
+    expect(hero).toMatch(/hero-editorial/);
+    expect(hero).not.toMatch(/hero--marble/);
   });
 
   it("renders Instagram-style vertical video reel boxes on the homepage", () => {

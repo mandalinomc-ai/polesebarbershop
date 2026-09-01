@@ -16,9 +16,9 @@ export default async function AppointmentPage({
 }) {
   const { token } = await params;
   return (
-    <SiteShell lightHeader>
+    <SiteShell>
       <Header />
-      <main id="main-content" className="manage-page manage-page--marble">
+      <main id="main-content" className="manage-page">
         <ManageAppointment token={token} />
       </main>
       <Footer />

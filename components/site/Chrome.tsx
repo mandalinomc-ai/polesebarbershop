@@ -1,17 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SITE, SALON_CONTACT, HERO_CTA, getWhatsAppUrl, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
+import {
+  SITE,
+  HERO_CTA,
+  SALON_CONTACT_MESSAGE,
+  getWhatsAppUrl,
+  getMapsUrl,
+  getMailtoUrl,
+} from "@/lib/site-config";
 import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
 import { SiteLogo } from "@/components/site/SiteImage";
 
 const LINKS = [
-  { href: "/#about", label: "Chi siamo" },
-  { href: "/#services", label: "Servizi" },
-  { href: "/#reels", label: "Reels" },
-  { href: "/#gallery", label: "Galleria" },
-  { href: `/#${SALON_CONTACT.id}`, label: "Scrivici" },
-  { href: "/#contact", label: "Contatti" },
+  { href: "/#chi-sono", label: "Chi sono" },
+  { href: "/#trattamenti", label: "Trattamenti" },
+  { href: "/#consulenza", label: "Consulenza" },
+  { href: "/#prodotti", label: "Prodotti" },
+  { href: "/#galleria", label: "Galleria" },
+  { href: "/#contatti", label: "Contatti" },
 ];
 
 export function Header() {
@@ -71,8 +78,8 @@ export function Header() {
             ))}
           </ul>
         </nav>
-        <a href="/#prenota" className="btn btn-gold btn-magnetic header-cta header-cta--live">
-          {HERO_CTA}
+        <a href="/#prenota" className="btn btn-dark btn-magnetic header-cta">
+          PRENOTA ORA
         </a>
         <button
           id="nav-toggle"
@@ -156,7 +163,6 @@ export function MapsFab() {
   );
 }
 
-/** Maps above WhatsApp; stacked, safe-area, does not cover the WA button. */
 export function FloatingActions() {
   return (
     <nav className="fab-stack" aria-label="Azioni rapide">
@@ -169,6 +175,8 @@ export function FloatingActions() {
 export const SiteFabs = FloatingActions;
 
 export function Footer() {
+  const mapsEmbed = `https://maps.google.com/maps?q=${encodeURIComponent("Corso Dante Alighieri 44, 82100 Benevento")}&output=embed`;
+
   return (
     <footer className="site-footer legal-footer">
       <div className="footer-main">
@@ -180,8 +188,7 @@ export function Footer() {
             Tel. <a href={`tel:${SITE.phoneTel}`}>{SITE.phone}</a>
           </p>
           <p>
-            Email{" "}
-            <a href={getMailtoUrl()}>{SITE.email}</a>
+            Email <a href={getMailtoUrl()}>{SITE.email}</a>
           </p>
           <p className="footer-hours">
             <strong>Orari</strong>
@@ -195,6 +202,18 @@ export function Footer() {
           </p>
           <p>{SITE.pricesIncludeVat}</p>
           <SocialTextLinks />
+        </div>
+        <div className="footer-map-wrap">
+          <iframe
+            title="Mappa Polese Barbershop — Corso Dante Alighieri 44"
+            src={mapsEmbed}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="footer-map"
+          />
+          <a href={getMapsUrl()} target="_blank" rel="noopener noreferrer" className="map-link">
+            Apri in Google Maps
+          </a>
         </div>
         <SocialQrGrid variant="footer" />
       </div>
@@ -239,8 +258,8 @@ export function ClientEffects() {
     const move = (e: MouseEvent) => {
       const btn = e.currentTarget as HTMLElement;
       const rect = btn.getBoundingClientRect();
-      btn.style.setProperty("--mx", `${(e.clientX - rect.left - rect.width / 2) * 0.15}px`);
-      btn.style.setProperty("--my", `${(e.clientY - rect.top - rect.height / 2) * 0.15}px`);
+      btn.style.setProperty("--mx", `${(e.clientX - rect.left - rect.width / 2) * 0.12}px`);
+      btn.style.setProperty("--my", `${(e.clientY - rect.top - rect.height / 2) * 0.12}px`);
     };
     const leave = (e: MouseEvent) => {
       const btn = e.currentTarget as HTMLElement;
@@ -261,3 +280,5 @@ export function ClientEffects() {
 
   return null;
 }
+
+export { WhatsAppWidget } from "@/components/site/WhatsAppWidget";

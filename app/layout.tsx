@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
-import { SITE, getMapsUrl } from "@/lib/site-config";
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { SITE, getMapsUrl, IS_COMING_SOON } from "@/lib/site-config";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
@@ -41,7 +45,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#F4F2EF",
+  themeColor: "#FFFFFF",
   colorScheme: "light",
   viewportFit: "cover",
 };
@@ -95,8 +99,13 @@ function jsonLd() {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const modeClass = IS_COMING_SOON ? "mode-coming-soon" : "mode-live";
+
   return (
-    <html lang="it" className={`scroll-smooth ${inter.variable} ${cormorant.variable} is-live`}>
+    <html
+      lang="it"
+      className={`scroll-smooth ${jakarta.variable} ${cormorant.variable} ${modeClass}`}
+    >
       <head>
         <script
           id="schema-json"
@@ -104,7 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
         />
       </head>
-      <body className="mode-live site-marble-canvas">{children}</body>
+      <body className="site-white-canvas">{children}</body>
     </html>
   );
 }

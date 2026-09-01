@@ -1,12 +1,17 @@
 export const TIMEZONE = "Europe/Rome";
 
+/** When true, homepage shows coming-soon (logo pulse, countdown, Avvisami). Set NEXT_PUBLIC_IS_COMING_SOON=false for live site. */
+export const IS_COMING_SOON =
+  process.env.NEXT_PUBLIC_IS_COMING_SOON !== "false";
+
 export const SITE = {
   brand: "FELICE POLESE",
   name: "Polese Barbershop",
   legalName: "Polese Barbershop",
-  tagline: "L'Arte della Barberia d'Élite",
+  tagline: "L'Arte della Barberia Sartoriale",
+  heroHeadline: "L'ARTE DELLA BARBERIA SARTORIALE",
   siteUrl:
-    process.env.NEXT_PUBLIC_SITE_URL || "https://felicepolesebarbershop.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL || "https://polesebarbershop.vercel.app",
   address: "Corso Dante Alighieri, 44",
   addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
   streetAddress: "Corso Dante Alighieri, 44",
@@ -58,6 +63,10 @@ export const MAPS_DESTINATION = "Corso Dante Alighieri 44, 82100 Benevento";
 /** Generic salon contact — info, hours, prices or a quick tip. */
 export const SALON_CONTACT_MESSAGE =
   "Ciao, vorrei un'informazione su orari, prezzi o servizi.";
+
+/** Coming-soon WhatsApp CTA — notify me at opening. */
+export const NOTIFY_WHATSAPP_MESSAGE =
+  "Ciao, vorrei essere avvisato all'apertura di Polese Barbershop.";
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
 export const HERO_CTA = "Prenota già ora";
