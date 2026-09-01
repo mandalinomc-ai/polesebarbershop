@@ -6,7 +6,7 @@ export const SITE = {
   legalName: "Polese Barbershop",
   tagline: "L'Arte della Barberia d'Élite",
   siteUrl:
-    process.env.NEXT_PUBLIC_SITE_URL || "https://polesebarbershop.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL || "https://felicepolesebarbershop.vercel.app",
   address: "Corso Dante Alighieri, 44",
   addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
   streetAddress: "Corso Dante Alighieri, 44",
