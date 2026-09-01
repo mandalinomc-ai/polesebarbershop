@@ -1,4 +1,12 @@
 /** Canonical paths and intrinsic dimensions for static assets in /public. */
+export const MARBLE_TEXTURE = {
+  src: "/assets/images/marble.png",
+  fallbackJpg: "/assets/images/marble-texture.jpg",
+  fallbackWebp: "/assets/images/marble-texture.webp",
+  width: 588,
+  height: 588,
+} as const;
+
 export const SITE_LOGO = {
   src: "/assets/images/logo.png",
   width: 1209,
