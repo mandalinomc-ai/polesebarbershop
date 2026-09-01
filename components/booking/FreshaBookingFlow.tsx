@@ -24,6 +24,7 @@ import {
   getBookingConfirmWhatsAppUrl,
   getWhatsAppUrl,
   readBookingDateFromLocation,
+  readBookingServiceFromLocation,
 } from "@/lib/site-config";
 import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
@@ -116,6 +117,14 @@ export function FreshaBookingFlow() {
     window.addEventListener(BOOKING_DATE_EVENT, onPick);
     return () => window.removeEventListener(BOOKING_DATE_EVENT, onPick);
   }, [days]);
+
+  useEffect(() => {
+    const serviceId = readBookingServiceFromLocation();
+    if (!serviceId) return;
+    if (SERVICES.some((s) => s.id === serviceId)) {
+      setSelectedIds([serviceId]);
+    }
+  }, []);
 
   const localSlots = useCallback((): ApiSlot[] => {
     if (!date || totals.durationMin <= 0) return [];
