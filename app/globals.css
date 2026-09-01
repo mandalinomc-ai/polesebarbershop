@@ -44,8 +44,13 @@ html {
 body {
   margin: 0;
   font-family: var(--font-inter), Inter, system-ui, sans-serif;
-  background: var(--void);
-  color: var(--pearl);
+  background-color: var(--marble);
+  background-image: var(--bg-marble-image-fallback);
+  background-image: var(--bg-marble-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--ink);
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
@@ -319,16 +324,40 @@ select.input-lux { appearance: none; cursor: pointer; }
 
 .section-dark {
   background-color: var(--marble);
-  background-image:
-    linear-gradient(180deg, rgba(13, 21, 40, 0.78) 0%, rgba(8, 14, 26, 0.86) 100%),
-    var(--bg-marble-image-fallback);
-  background-image:
-    linear-gradient(180deg, rgba(13, 21, 40, 0.78) 0%, rgba(8, 14, 26, 0.86) 100%),
-    var(--bg-marble-image);
+  background-image: var(--bg-marble-image-fallback);
+  background-image: var(--bg-marble-image);
   background-size: cover;
   background-position: center;
-  color: var(--pearl);
+  color: var(--ink);
 }
+.bg-marble-light .service-card,
+.section-dark .service-card {
+  border: 1px solid rgba(13, 21, 40, 0.14);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 28px rgba(13, 21, 40, 0.06);
+}
+.bg-marble-light .service-card h3,
+.section-dark .service-card h3 {
+  color: var(--navy);
+}
+.bg-marble-light .service-card p,
+.section-dark .service-card p {
+  color: #444;
+}
+.bg-marble-light .service-card:hover,
+.section-dark .service-card:hover {
+  border-color: rgba(201, 169, 98, 0.55);
+  transform: translateY(-4px);
+}
+.bg-marble-light .service-price,
+.section-dark .service-price {
+  color: var(--navy-deep);
+}
+.section-dark .eyebrow { color: var(--smoke); }
+.section-dark .section-title { color: var(--ink); }
+.section-dark .section-lead { color: #555; }
+.section-dark .booking-open-note { color: #555; }
+.section-dark .contact-link { color: var(--navy); }
 
 .soon-notice {
   padding: 1.5rem;
@@ -546,15 +575,27 @@ select.input-lux { appearance: none; cursor: pointer; }
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
   transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s ease;
-  border-bottom: 1px solid rgba(201, 169, 98, 0.12);
-  background: rgba(13, 21, 40, 0.72);
+  border-bottom: 1px solid rgba(201, 169, 98, 0.28);
+  background: rgba(244, 242, 239, 0.72);
   backdrop-filter: blur(14px);
-  color: var(--pearl);
+  color: var(--ink);
 }
 .site-header.header-scrolled {
-  background: rgba(13, 21, 40, 0.94);
+  background: rgba(244, 242, 239, 0.94);
   backdrop-filter: blur(16px);
-  border-color: rgba(201, 169, 98, 0.22);
+  border-color: rgba(201, 169, 98, 0.38);
+}
+.site-header .nav-desktop a {
+  color: var(--smoke);
+}
+.site-header .nav-desktop a:hover { color: var(--ink); }
+.site-header .nav-toggle {
+  color: var(--ink);
+  border-color: rgba(10, 10, 10, 0.14);
+}
+.site-header .header-logo { color: var(--ink); }
+.site-header .brand-logo {
+  filter: invert(1) drop-shadow(0 4px 16px rgba(0, 0, 0, 0.12));
 }
 .site-shell--light .site-header {
   color: var(--ink);
@@ -697,26 +738,45 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   pointer-events: none;
   background: linear-gradient(
     165deg,
-    rgba(13, 21, 40, 0.42) 0%,
-    rgba(8, 14, 26, 0.68) 55%,
-    rgba(8, 14, 26, 0.82) 100%
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(13, 21, 40, 0.06) 55%,
+    rgba(13, 21, 40, 0.14) 100%
   );
 }
 .hero--marble .hero-glow {
-  background: radial-gradient(ellipse at 50% 20%, rgba(201, 169, 98, 0.12), transparent 62%);
+  background: radial-gradient(ellipse at 50% 20%, rgba(201, 169, 98, 0.14), transparent 62%);
 }
-.hero--marble .hero-kicker { color: var(--gold); }
-.hero--marble .eyebrow { color: rgba(255, 255, 255, 0.72); }
-.hero--marble .hero-title { color: var(--pearl); }
-.hero--marble .hero-text { color: var(--silk); }
+.hero--marble .hero-kicker { color: var(--gold-dark); }
+.hero--marble .eyebrow { color: var(--smoke); }
+.hero--marble .hero-title { color: var(--navy); }
+.hero--marble .hero-text { color: #444; }
+.hero--marble .hero-calendar-label { color: var(--smoke); }
 .hero--marble .btn-outline {
-  color: var(--pearl);
-  border-color: rgba(255, 255, 255, 0.32);
+  color: var(--navy);
+  border-color: rgba(13, 21, 40, 0.28);
 }
 .hero--marble .btn-outline:hover {
   border-color: var(--gold);
-  color: var(--gold);
+  color: var(--gold-dark);
 }
+.hero--marble .opening-countdown-label { color: var(--gold-dark); }
+.hero--marble .countdown-value { color: var(--navy); }
+.hero--marble .countdown-label { color: var(--smoke); }
+.hero--marble .countdown-item {
+  border-color: rgba(13, 21, 40, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+}
+.hero--marble .day-chip {
+  color: var(--navy);
+  border-color: rgba(13, 21, 40, 0.15);
+}
+.hero--marble .day-chip .dow { color: var(--smoke); }
+.hero--marble .day-chip.selected {
+  border-color: var(--gold);
+  background: rgba(201, 169, 98, 0.14);
+}
+.hero--marble .scissors-icon,
+.hero--marble .opening-countdown-label { color: var(--gold-dark); }
 .hero-title {
   font-size: clamp(2.5rem, 8vw, 4.5rem);
   font-weight: 500;
@@ -860,31 +920,44 @@ a.day-chip {
   line-height: 1.7;
 }
 .bg-marble-light .section-lead { color: #555; }
+.video-reel-section-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 500;
+  color: var(--navy);
+}
 .video-reel-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.85rem;
-  margin-top: 2rem;
+  gap: 0;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(13, 21, 40, 0.22);
+  background: rgba(13, 21, 40, 0.88);
 }
 @media (min-width: 768px) {
-  .video-reel-grid { grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .video-reel-grid { grid-template-columns: repeat(4, 1fr); }
 }
 .video-reel-box {
   position: relative;
-  border: 1px solid rgba(201, 169, 98, 0.35);
-  background: linear-gradient(165deg, rgba(13, 21, 40, 0.92), rgba(8, 14, 26, 0.98));
-  box-shadow:
-    0 12px 36px rgba(8, 14, 26, 0.45),
-    inset 0 1px 0 rgba(201, 169, 98, 0.12);
+  border: none;
+  border-right: 1px solid rgba(13, 21, 40, 0.45);
+  background: transparent;
+  box-shadow: none;
   overflow: hidden;
-  transition: border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+  transition: transform 0.35s ease;
+}
+.video-reel-box:nth-child(2n) { border-right: 1px solid rgba(13, 21, 40, 0.45); }
+@media (min-width: 768px) {
+  .video-reel-box:nth-child(2n) { border-right: 1px solid rgba(13, 21, 40, 0.45); }
+  .video-reel-box:last-child { border-right: none; }
+}
+@media (max-width: 767px) {
+  .video-reel-box:nth-child(2n) { border-right: none; }
+  .video-reel-box:nth-child(odd) { border-right: 1px solid rgba(13, 21, 40, 0.45); }
+  .video-reel-box:nth-child(n+3) { border-top: 1px solid rgba(13, 21, 40, 0.45); }
 }
 .video-reel-box:hover {
-  border-color: rgba(201, 169, 98, 0.65);
-  transform: translateY(-4px);
-  box-shadow:
-    0 18px 44px rgba(8, 14, 26, 0.55),
-    inset 0 1px 0 rgba(201, 169, 98, 0.2);
+  transform: translateY(-2px);
 }
 .video-reel-media {
   position: relative;
@@ -908,17 +981,17 @@ a.day-chip {
 }
 .video-reel-label {
   position: absolute;
-  left: 0.65rem;
-  bottom: 0.65rem;
-  z-index: 1;
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
+  left: 0.55rem;
+  bottom: 0.55rem;
+  z-index: 2;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--pearl);
-  padding: 0.35rem 0.55rem;
-  border: 1px solid rgba(201, 169, 98, 0.45);
-  background: rgba(8, 14, 26, 0.72);
-  backdrop-filter: blur(6px);
+  padding: 0.38rem 0.6rem;
+  border: 1px solid var(--gold);
+  background: #000;
 }
 .video-reel-cta {
   margin-top: 1.75rem;
@@ -1021,6 +1094,16 @@ a.day-chip {
 .consult-card .btn-outline {
   color: var(--ink);
   border-color: rgba(10, 10, 10, 0.28);
+}
+.bg-marble-light .video-reel-cta .btn-outline,
+.section-dark .video-reel-cta .btn-outline {
+  color: var(--navy);
+  border-color: rgba(13, 21, 40, 0.28);
+}
+.bg-marble-light .video-reel-cta .btn-outline:hover,
+.section-dark .video-reel-cta .btn-outline:hover {
+  border-color: var(--gold);
+  color: var(--gold-dark);
 }
 .consult-card .btn-outline:hover {
   border-color: var(--ink);

@@ -5,7 +5,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 
 export default function HomePage() {
   return (
-    <SiteShell>
+    <SiteShell lightHeader>
       <Header />
       <main id="main-content">
         <Hero />

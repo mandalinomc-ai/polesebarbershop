@@ -3,23 +3,8 @@ import { VIDEO_REELS } from "@/lib/site-videos";
 
 export function VideoReelGrid() {
   return (
-    <section id="reels" className="section-pad section-dark">
-      <div className="eyebrow reveal">Instagram</div>
-      <h2 className="section-title font-serif reveal reveal-d1">
-        Il nostro lavoro
-      </h2>
-      <p className="section-lead reveal reveal-d2">
-        Clip verticali dal salone — stile reel, come sul profilo{" "}
-        <a
-          href={SITE.instagram}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="contact-link"
-        >
-          {SITE.instagramHandle}
-        </a>
-        .
-      </p>
+    <section id="reels" className="section-pad bg-marble-light">
+      <h2 className="video-reel-section-title font-serif reveal">Il salone in quattro reel</h2>
       <div className="video-reel-grid">
         {VIDEO_REELS.map((reel, i) => (
           <article
@@ -50,7 +35,7 @@ export function VideoReelGrid() {
           rel="noopener noreferrer"
           className="btn btn-outline btn-magnetic"
         >
-          Seguici su Instagram
+          Seguici su Instagram — {SITE.instagramHandle}
         </a>
       </p>
     </section>
