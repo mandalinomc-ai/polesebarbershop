@@ -30,7 +30,7 @@ function payload(overrides: Record<string, unknown> = {}) {
   return {
     serviceIds: ["taglio-pro"],
     barberId: "felice",
-    date: "2026-09-05",
+    date: "2026-09-08",
     startTime: "09:30",
     firstName: "Mario",
     lastName: "Rossi",

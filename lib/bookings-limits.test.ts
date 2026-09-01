@@ -15,7 +15,7 @@ describe("booking capacity policy", () => {
 
   it("generates per-day time slots from shop hours, not a fixed booking quota", () => {
     const slots = getAvailableSlots({
-      date: "2026-09-02",
+      date: "2026-09-08",
       barberId: "felice",
       durationMinutes: 25,
     });

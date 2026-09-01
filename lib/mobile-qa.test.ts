@@ -62,11 +62,14 @@ describe("mobile QA (390px)", () => {
   it("keeps marble texture as the site-wide canvas", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const shell = readFileSync(join(process.cwd(), "components/site/SiteShell.tsx"), "utf8");
+    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(layout).toMatch(/site-marble-canvas/);
     expect(css).toMatch(/body\.site-marble-canvas/);
     expect(css).toMatch(/--bg-marble-image/);
     expect(css).toMatch(/--bg-marble-image-fallback/);
     expect(css).not.toMatch(/image-set\(/);
     expect(shell).toMatch(/site-shell--light/);
+    expect(hero).toMatch(/hero--marble/);
+    expect(hero).not.toMatch(/HERO_BG|hero-bg\.jpg/);
   });
 });

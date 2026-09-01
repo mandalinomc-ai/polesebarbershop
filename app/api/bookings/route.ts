@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
   const totals = totalsForServices(services);
   if (body.date < getFirstBookableDate()) {
-    return NextResponse.json({ error: "Le prenotazioni aprono dal 1 settembre 2026." }, { status: 400 });
+    return NextResponse.json({ error: `Le prenotazioni aprono dal ${formatItalianDate(SITE.openingDate)}.` }, { status: 400 });
   }
 
   const startsAt = wallTimeToUtc(body.date, body.startTime);

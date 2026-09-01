@@ -5,12 +5,6 @@ export const SITE_LOGO = {
   height: 823,
 } as const;
 
-export const HERO_BG = {
-  src: "/assets/images/hero-bg.jpg",
-  width: 1280,
-  height: 720,
-} as const;
-
 export type GalleryImage = {
   src: string;
   alt: string;
@@ -19,12 +13,19 @@ export type GalleryImage = {
   height: number;
 };
 
-/** Each entry must use a distinct file — no hero-bg repeat, no duplicate product shots. */
+/** Four distinct salon shots — no hero-bg repeat, no duplicate product shots. */
 export const GALLERY_IMAGES: GalleryImage[] = [
   {
     src: "/assets/images/gallery/fresha-01.jpg",
     alt: "Interno salone Polese Barbershop — marmo e postazioni",
     tall: true,
+    width: 1280,
+    height: 720,
+  },
+  {
+    src: "/assets/images/gallery/fresha-02.jpg",
+    alt: "Postazione barbiere Polese",
+    tall: false,
     width: 1280,
     height: 720,
   },
@@ -36,24 +37,10 @@ export const GALLERY_IMAGES: GalleryImage[] = [
     height: 515,
   },
   {
-    src: "/assets/images/gallery/fresha-02.jpg",
-    alt: "Postazione barbiere Polese",
-    tall: false,
-    width: 1280,
-    height: 720,
-  },
-  {
     src: "/assets/images/brand-products.jpg",
     alt: "Linea prodotti Felice Polese",
     tall: false,
     width: 1280,
     height: 720,
-  },
-  {
-    src: "/assets/images/logo.jpg",
-    alt: "Felice Polese — identità del brand",
-    tall: false,
-    width: 1209,
-    height: 823,
   },
 ];

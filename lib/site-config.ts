@@ -17,7 +17,7 @@ export const SITE = {
   region: "Campania",
   latitude: 41.1298,
   longitude: 14.7825,
-  openingDate: "2026-09-01",
+  openingDate: "2026-09-07",
   phone: "+39 327 015 6225",
   phoneDisplay: "327 015 6225",
   phoneTel: "+393270156225",

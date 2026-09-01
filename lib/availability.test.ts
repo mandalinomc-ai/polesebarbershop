@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { BARBERS } from "./catalog";
 import { getAvailableSlots, getFirstBookableDate, weekdayOfDate, wallTimeToUtc, isClosedDay, mondayOfWeek, listOpenDayChips } from "./availability";
 
-const TUESDAY = "2026-09-01";
+const TUESDAY = "2026-09-08";
 const MONDAY = "2026-08-31";
 const SUNDAY = "2026-09-06";
 const nowBeforeOpening = wallTimeToUtc("2026-08-31", "09:00");
 
 describe("timezone helpers", () => {
   it("maps Europe/Rome wall time to UTC (CEST = UTC+2)", () => {
-    expect(wallTimeToUtc(TUESDAY, "09:30").toISOString()).toBe("2026-09-01T07:30:00.000Z");
+    expect(wallTimeToUtc(TUESDAY, "09:30").toISOString()).toBe("2026-09-08T07:30:00.000Z");
   });
   it("knows closed days", () => {
     expect(weekdayOfDate(MONDAY)).toBe(1);
@@ -19,13 +19,13 @@ describe("timezone helpers", () => {
     expect(mondayOfWeek("2026-09-02")).toBe("2026-08-31");
     expect(mondayOfWeek("2026-09-06")).toBe("2026-08-31");
   });
-  it("first bookable date is max(today, opening 2026-09-01)", () => {
-    expect(getFirstBookableDate(wallTimeToUtc("2026-08-31", "18:00"))).toBe("2026-09-01");
-    expect(getFirstBookableDate(wallTimeToUtc("2026-09-03", "08:00"))).toBe("2026-09-03");
+  it("first bookable date is max(today, opening 2026-09-07)", () => {
+    expect(getFirstBookableDate(wallTimeToUtc("2026-08-31", "18:00"))).toBe("2026-09-07");
+    expect(getFirstBookableDate(wallTimeToUtc("2026-09-08", "08:00"))).toBe("2026-09-08");
   });
-  it("lists open day chips from the first bookable Tuesday", () => {
+  it("lists open day chips from the first open day after opening (skips Monday 7/9)", () => {
     const chips = listOpenDayChips(3, wallTimeToUtc("2026-08-31", "18:00"));
-    expect(chips.map((c) => c.date)).toEqual(["2026-09-01", "2026-09-02", "2026-09-03"]);
+    expect(chips.map((c) => c.date)).toEqual(["2026-09-08", "2026-09-09", "2026-09-10"]);
     expect(chips[0]?.dow.toLowerCase()).toMatch(/mar/);
   });
 });

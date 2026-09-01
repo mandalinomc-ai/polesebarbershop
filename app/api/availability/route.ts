@@ -11,6 +11,8 @@ import {
   totalsForServices,
 } from "@/lib/catalog";
 import { loadDayAppointments } from "@/lib/appointments";
+import { formatItalianDate } from "@/lib/availability";
+import { SITE } from "@/lib/site-config";
 import { availabilityQuerySchema, flattenZodError } from "@/lib/validations";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -76,7 +78,7 @@ export async function GET(request: Request) {
       slots: [],
       firstBookableDate: first,
       shopOpen: false,
-      warning: "Le prenotazioni aprono dal 1 settembre 2026.",
+      warning: `Le prenotazioni aprono dal ${formatItalianDate(SITE.openingDate)}.`,
     });
   }
 

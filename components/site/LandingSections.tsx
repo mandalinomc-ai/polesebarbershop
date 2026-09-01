@@ -1,4 +1,5 @@
 import { SITE, SALON_CONTACT, getMapsUrl, getWhatsAppUrl, getMailtoUrl } from "@/lib/site-config";
+import { formatItalianDate } from "@/lib/availability";
 import { GALLERY_IMAGES } from "@/lib/site-images";
 import { FillCoverImage, SiteLogo } from "@/components/site/SiteImage";
 import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
@@ -17,9 +18,9 @@ export function LandingSections() {
   return (
     <>
       <section id="about" className="section-pad bg-marble-light">
-        <div className="eyebrow reveal">Il brand</div>
+        <div className="eyebrow reveal">Chi siamo</div>
         <h2 className="section-title font-serif reveal reveal-d1">
-          Tradizione &amp; precisione
+          Felice Polese &amp; il salone
         </h2>
         <div className="about-grid">
           <div className="about-visual reveal">
@@ -31,13 +32,19 @@ export function LandingSections() {
           </div>
           <div className="reveal reveal-d2">
             <p className="prose">
-              <strong>{SITE.brand}</strong> interpreta la barberia come rituale
-              di cura e stile. Due poltrone indipendenti: <strong>Felice</strong>{" "}
-              e <strong>Davide</strong>.
+              <strong>Felice Polese</strong> interpreta la barberia come rituale di
+              cura e stile: taglio, barba e colore con la precisione di chi ha fatto
+              della grooming d&apos;élite la propria firma.
             </p>
             <p className="prose">
-              Il salone in {SITE.address}, {SITE.city} — ambiente dark, elegante
-              e riservato.
+              In salone lavorano due poltrone indipendenti — <strong>Felice</strong> e{" "}
+              <strong>Davide</strong> — in un ambiente dark luxury con finiture in
+              marmo, oro e navy, in {SITE.address}, {SITE.city}.
+            </p>
+            <p className="prose">
+              Apriamo ufficialmente il{" "}
+              <strong>{formatItalianDate(SITE.openingDate)}</strong>.
+              Il calendario è già aperto: prenota online e scegli il tuo barbiere.
             </p>
           </div>
         </div>

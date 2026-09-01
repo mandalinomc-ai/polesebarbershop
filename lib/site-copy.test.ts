@@ -43,6 +43,7 @@ describe("public copy vs official identity", () => {
   it("uses the official phone, address, CF and P.IVA", () => {
     expect(SITE.phone).toBe("+39 327 015 6225");
     expect(SITE.address).toBe("Corso Dante Alighieri, 44");
+    expect(SITE.openingDate).toBe("2026-09-07");
     expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
     expect(SITE.vatNumber).toBe("01894030624");
     expect(SITE.pricesIncludeVat).toMatch(/IVA inclusa/);
@@ -147,8 +148,8 @@ describe("public copy vs official identity", () => {
     expect(HERO_CTA).toBe("Prenota già ora");
     expect(HERO_BEFORE_OPENING).toBe("Prenota già ora, prima dell'apertura ufficiale");
     expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
-    expect(getHeroHeadline(new Date("2026-09-01T01:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
-    expect(getHeroHeadline(new Date("2026-09-02T10:00:00+02:00"))).toBe("Prenota il tuo posto");
+    expect(getHeroHeadline(new Date("2026-09-06T23:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
+    expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe("Prenota il tuo posto");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/HeroCalendar/);
     expect(hero).toMatch(/hero-cta-primary/);

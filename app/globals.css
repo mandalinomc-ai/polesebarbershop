@@ -13,6 +13,8 @@
 
 :root {
   --void: #0B0B0B;
+  --navy: #0D1528;
+  --navy-deep: #080E1A;
   --graphite: #111111;
   --anthracite: #1A1A1A;
   --smoke: #3A3A3A;
@@ -316,10 +318,10 @@ select.input-lux { appearance: none; cursor: pointer; }
 .section-dark {
   background-color: var(--marble);
   background-image:
-    linear-gradient(180deg, rgba(11, 11, 11, 0.9) 0%, rgba(17, 17, 17, 0.94) 100%),
+    linear-gradient(180deg, rgba(13, 21, 40, 0.92) 0%, rgba(8, 14, 26, 0.96) 100%),
     var(--bg-marble-image-fallback);
   background-image:
-    linear-gradient(180deg, rgba(11, 11, 11, 0.9) 0%, rgba(17, 17, 17, 0.94) 100%),
+    linear-gradient(180deg, rgba(13, 21, 40, 0.92) 0%, rgba(8, 14, 26, 0.96) 100%),
     var(--bg-marble-image);
   background-size: cover;
   background-position: center;
@@ -612,7 +614,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   .nav-toggle, .nav-panel, .nav-backdrop { display: none; }
 }
 
-/* Hero */
+/* Hero — marble canvas + navy overlay (no full-bleed salon photo) */
 .hero {
   min-height: 100dvh;
   display: flex;
@@ -622,10 +624,18 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   position: relative;
   overflow: hidden;
 }
+.hero--marble {
+  background-color: var(--marble);
+  background-image: var(--bg-marble-image-fallback), var(--bg-marble-noise);
+  background-image: var(--bg-marble-image), var(--bg-marble-noise);
+  background-size: cover, auto;
+  background-position: center, center;
+}
 .hero-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
+  pointer-events: none;
 }
 .hero-bg::after {
   content: "";
@@ -633,15 +643,27 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   inset: 0;
   z-index: 1;
   background: linear-gradient(
-    180deg,
-    rgba(11, 11, 11, 0.5) 0%,
-    rgba(11, 11, 11, 0.9) 65%,
-    var(--void) 100%
+    165deg,
+    rgba(13, 21, 40, 0.55) 0%,
+    rgba(8, 14, 26, 0.82) 55%,
+    rgba(8, 14, 26, 0.94) 100%
   );
   pointer-events: none;
 }
-.hero-bg-photo {
-  z-index: 0;
+.hero--marble .hero-glow {
+  background: radial-gradient(ellipse at 50% 20%, rgba(201, 169, 98, 0.12), transparent 62%);
+}
+.hero--marble .hero-kicker { color: var(--gold); }
+.hero--marble .eyebrow { color: rgba(255, 255, 255, 0.72); }
+.hero--marble .hero-title { color: var(--pearl); }
+.hero--marble .hero-text { color: var(--silk); }
+.hero--marble .btn-outline {
+  color: var(--pearl);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+.hero--marble .btn-outline:hover {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 .hero-title {
   font-size: clamp(2.5rem, 8vw, 4.5rem);

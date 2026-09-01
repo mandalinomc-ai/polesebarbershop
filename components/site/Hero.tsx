@@ -8,22 +8,13 @@ import {
 } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 import { HeroCalendar } from "@/components/site/HeroCalendar";
-import { FillCoverImage, SiteLogo } from "@/components/site/SiteImage";
-import { HERO_BG } from "@/lib/site-images";
+import { SiteLogo } from "@/components/site/SiteImage";
 
 export function Hero() {
   const beforeOpening = isBeforeOfficialOpening();
   return (
-    <section id="hero" className="hero hero--story bg-noise">
-      <div className="hero-bg" aria-hidden="true">
-        <FillCoverImage
-          src={HERO_BG.src}
-          alt=""
-          sizes="100vw"
-          priority
-          className="hero-bg-photo"
-        />
-      </div>
+    <section id="hero" className="hero hero--story hero--marble">
+      <div className="hero-bg" aria-hidden="true" />
       <div className="hero-glow" />
       <div className="hero-inner hero-inner--live">
         <SiteLogo
