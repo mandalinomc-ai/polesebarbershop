@@ -7,24 +7,6 @@ import { ServiceListino } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
 import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 
-const GALLERY = [
-  {
-    src: "/assets/images/gallery/fresha-00.jpg",
-    alt: "Prodotti cura capelli Felice Polese",
-    tall: false,
-  },
-  {
-    src: "/assets/images/gallery/fresha-01.jpg",
-    alt: "Interno salone Polese Barbershop — marmo e postazioni",
-    tall: true,
-  },
-  {
-    src: "/assets/images/gallery/fresha-02.jpg",
-    alt: "Postazione barbiere Polese",
-    tall: false,
-  },
-];
-
 export function LandingSections() {
   return (
     <>
@@ -75,27 +57,6 @@ export function LandingSections() {
       </section>
 
       <VideoReelGrid />
-
-      <section id="gallery" className="section-pad bg-marble-light">
-        <div className="eyebrow reveal">Atmosfera</div>
-        <h2 className="section-title font-serif reveal reveal-d1">Il salone</h2>
-        <div className="gallery-grid">
-          {GALLERY.map((item) => (
-            <figure
-              key={item.src}
-              className={`gallery-item reveal${item.tall ? " gallery-tall" : ""}`}
-            >
-              <img
-                src={item.src}
-                alt={item.alt}
-                width={1400}
-                height={900}
-                loading="lazy"
-              />
-            </figure>
-          ))}
-        </div>
-      </section>
 
       <section id="prenota" className="section-pad bg-marble-light">
         <div className="eyebrow reveal">Servizi &amp; prenotazione</div>

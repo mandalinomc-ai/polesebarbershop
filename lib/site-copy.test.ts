@@ -167,8 +167,9 @@ describe("public copy vs official identity", () => {
     expect(landing).toMatch(/I nostri servizi/);
     expect(landing).toMatch(/FreshaBookingFlow/);
     expect(landing).not.toMatch(/services-grid/);
-    expect(landing).toMatch(/id="gallery"/);
-    expect(landing).toMatch(/gallery-grid/);
+    expect(landing).toMatch(/VideoReelGrid/);
+    expect(landing).not.toMatch(/gallery-grid/);
+    expect(landing).not.toMatch(/fresha-/);
     expect(landing).toMatch(/bg-marble-light/);
     expect(landing).not.toMatch(/section-dark/);
   });
@@ -183,7 +184,8 @@ describe("public copy vs official identity", () => {
     expect(landing).toMatch(/VideoReelGrid/);
     expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
     expect(landing).toMatch(/about-video/);
-    expect(landing).toMatch(/gallery-grid/);
+    expect(landing).not.toMatch(/gallery-grid/);
+    expect(landing).not.toMatch(/fresha-/);
     expect(landing).toMatch(/ServiceListino/);
     expect(landing).not.toMatch(/hero-bg\.jpg/);
     expect(landing).not.toMatch(/brand-products\.jpg/);
@@ -191,6 +193,7 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/appointment-sidebar/);
     expect(wizard).toMatch(/Il tuo appuntamento/);
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
+    expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
     expect(reel).not.toMatch(/<img/);
     expect(reel).not.toMatch(/reveal/);
@@ -246,6 +249,8 @@ describe("public copy vs official identity", () => {
     expect(contact).toMatch(/Raggiungimi ora su Google Maps/);
     expect(contact).toMatch(/SITE\.hours/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
+    expect(chrome).toMatch(/SITE_PDFS\.logo/);
+    expect(chrome).toMatch(/SITE_PDFS\.hoursPanel/);
     expect(chrome).toMatch(/href="\/gestionale"/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.wa-fab/);

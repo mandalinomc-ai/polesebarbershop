@@ -64,8 +64,8 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/video-reel-grid/);
     expect(css).toMatch(/backface-visibility:\s*hidden/);
     expect(hero).toMatch(/bg-marble-light/);
-    expect(landing).toMatch(/gallery-grid/);
-    expect(landing).toMatch(/fresha-01\.jpg/);
+    expect(landing).not.toMatch(/gallery-grid/);
+    expect(landing).not.toMatch(/fresha-/);
     expect(landing).toMatch(/VideoReelGrid/);
     expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
     expect(hero).not.toMatch(/HERO_VIDEOS/);
