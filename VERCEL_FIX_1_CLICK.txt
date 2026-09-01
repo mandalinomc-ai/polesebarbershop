@@ -1,12 +1,23 @@
 POLESE BARBERSHOP — FIX VERCEL (1 CLICK)
 =========================================
 
-STATO (1 settembre 2026)
-------------------------
-  ✓ Codice nuovo live su https://polesebarbershop.vercel.app
-  ✗ Prenotazioni NON salvate (mancano variabili d'ambiente su Vercel)
-  ✗ Email NON inviate (manca RESEND_API_KEY su Vercel)
-  ✗ https://felicepolesebarbershop.vercel.app → 404 (progetto Vercel abbandonato)
+STATO (1 settembre 2026 — reset completo)
+-----------------------------------------
+  ✓ Codice aggiornato su https://polesebarbershop.vercel.app (UI, listino, marmo)
+  ✗ Prenotazioni su polesebarbershop.vercel.app NON salvate (mancano env su Vercel)
+  ✗ Email su polesebarbershop.vercel.app NON inviate (manca RESEND_API_KEY su Vercel)
+  ✗ https://felicepolesebarbershop.vercel.app → 404 (progetto Vercel abbandonato — NON usare)
+
+  PROBLEMA: il repo GitHub mandalinomc-ai/polesebarbershop era collegato a un deploy
+  temporaneo Vercel senza variabili d'ambiente. Il sito si vedeva ma prenotazioni/email no.
+
+DEPLOY FUNZIONANTE PRONTO (testato dall'agente — booking + email OK)
+-------------------------------------------------------------------
+  URL: https://temporary-prompt-quasar-rndxhgh.vercel.app
+  ✓ Database Supabase collegato
+  ✓ Prenotazione test salvata (persisted: true)
+  ✓ Email inviata a NOTIFY_EMAIL (account Resend, modalità test)
+  ⚠ Scade se non reclamato entro ~60 minuti dall'ultimo deploy anonimo
 
 VARIABILI OBBLIGATORIE SU VERCEL (Production)
 ---------------------------------------------
@@ -19,14 +30,6 @@ VARIABILI OBBLIGATORIE SU VERCEL (Production)
 
   Fino a verifica dominio su resend.com/domains, Resend consegna SOLO a NOTIFY_EMAIL
   (l'email con cui è stato creato l'account Resend). felicepolese550@gmail.com viene rifiutato.
-
-DEPLOY FUNZIONANTE PRONTO (testato dall'agente)
------------------------------------------------
-  URL: https://temporary-prompt-quasar-rndxhgh.vercel.app
-  ✓ Database Supabase collegato
-  ✓ Prenotazione test salvata (persisted: true)
-  ✓ Email inviata
-  ⚠ Scade se non reclamato entro ~60 minuti dall'ultimo deploy anonimo
 
 AZIONE UNICA — 30 SECONDI (nessuna navigazione in Settings)
 -----------------------------------------------------------

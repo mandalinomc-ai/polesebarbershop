@@ -19,20 +19,21 @@ export type GalleryImage = {
   height: number;
 };
 
+/** Each entry must use a distinct file — no hero-bg repeat, no duplicate product shots. */
 export const GALLERY_IMAGES: GalleryImage[] = [
   {
     src: "/assets/images/gallery/fresha-01.jpg",
     alt: "Interno salone Polese Barbershop — marmo e postazioni",
-    tall: false,
+    tall: true,
     width: 1280,
     height: 720,
   },
   {
-    src: HERO_BG.src,
-    alt: "Salone Felice Polese Benevento",
-    tall: true,
-    width: HERO_BG.width,
-    height: HERO_BG.height,
+    src: "/assets/images/gallery/fresha-03.jpg",
+    alt: "Dettaglio ambiente e finiture del salone",
+    tall: false,
+    width: 916,
+    height: 515,
   },
   {
     src: "/assets/images/gallery/fresha-02.jpg",
@@ -49,10 +50,10 @@ export const GALLERY_IMAGES: GalleryImage[] = [
     height: 720,
   },
   {
-    src: "/assets/images/gallery/fresha-00.jpg",
-    alt: "Prodotti per capelli e barba Felice Polese",
+    src: "/assets/images/logo.jpg",
+    alt: "Felice Polese — identità del brand",
     tall: false,
-    width: 1280,
-    height: 720,
+    width: 1209,
+    height: 823,
   },
 ];
