@@ -3,12 +3,8 @@ import { VIDEO_REELS } from "@/lib/site-videos";
 
 export function VideoReelGrid() {
   return (
-    <section id="reels" className="section-pad section-white">
-      <div className="eyebrow reveal">Social</div>
-      <h2 className="section-title font-serif reveal reveal-d1">Reel &amp; storie</h2>
-      <p className="section-lead reveal">
-        Dal salone al feed — taglio, atmosfera e prodotti Felice Polese.
-      </p>
+    <section id="reels" className="section-pad section-muted">
+      <h2 className="video-reel-section-title font-serif reveal">Il salone in quattro reel</h2>
       <div className="video-reel-grid">
         {VIDEO_REELS.map((reel, i) => (
           <article
