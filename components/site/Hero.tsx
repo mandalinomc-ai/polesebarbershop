@@ -132,13 +132,13 @@ export function Hero() {
         <h1 className="hero-title font-serif">{SITE.name}</h1>
         <p className="hero-text">{SITE.tagline}</p>
         <p className="hero-text">
-          Taglio sartoriale, rasatura tradizionale e grooming premium a Benevento.
+          Taglio sartoriale, rasatura tradizionale e cura della barba a Benevento.
         </p>
         <div className="hero-actions">
           <a href="/#prenota" className="btn btn-gold btn-magnetic">
             Prenota ora
           </a>
-          <a href="/#services" className="btn btn-outline btn-magnetic">
+          <a href="/#prenota" className="btn btn-outline btn-magnetic">
             Servizi
           </a>
           <a

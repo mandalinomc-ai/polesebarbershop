@@ -1,11 +1,5 @@
 import { SITE, getMapsUrl } from "@/lib/site-config";
 import {
-  SERVICE_CATEGORIES,
-  SERVICE_CATEGORY_LABEL,
-  SERVICES,
-  formatPriceRange,
-} from "@/lib/catalog";
-import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
@@ -33,7 +27,7 @@ const GALLERY = [
   },
   {
     src: "/assets/images/gallery/fresha-00.jpg",
-    alt: "Prodotti grooming Felice Polese",
+    alt: "Prodotti cura capelli Felice Polese",
     tall: false,
   },
 ];
@@ -69,35 +63,6 @@ export function LandingSections() {
         </div>
       </section>
 
-      <section id="services" className="section-pad section-dark">
-        <div className="eyebrow reveal">Servizi</div>
-        <h2 className="section-title font-serif reveal reveal-d1">Menu grooming</h2>
-        {SERVICE_CATEGORIES.map((cat) => (
-          <div key={cat}>
-            <p className="fresha-cat reveal" style={{ marginTop: "2rem" }}>
-              {SERVICE_CATEGORY_LABEL[cat]}
-            </p>
-            <div className="services-grid">
-              {SERVICES.filter((s) => s.category === cat).map((s, i) => (
-                <article
-                  key={s.id}
-                  className={`service-card reveal${i % 3 === 1 ? " reveal-d1" : i % 3 === 2 ? " reveal-d2" : ""}`}
-                >
-                  <h3>{s.name}</h3>
-                  <p>{s.description}</p>
-                  <span className="service-price">
-                    {formatPriceRange(s)} · {s.durationMin} min
-                  </span>
-                </article>
-              ))}
-            </div>
-          </div>
-        ))}
-        <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>
-          {SITE.pricesIncludeVat}
-        </p>
-      </section>
-
       <section id="gallery" className="section-pad bg-marble-light">
         <div className="eyebrow reveal">Atmosfera</div>
         <h2 className="section-title font-serif reveal reveal-d1">Il salone</h2>
@@ -120,14 +85,15 @@ export function LandingSections() {
       </section>
 
       <section id="prenota" className="section-pad section-dark">
-        <div className="eyebrow reveal">Prenotazione</div>
-        <h2 className="section-title font-serif reveal reveal-d1">
-          Prenota il tuo posto
-        </h2>
+        <div className="eyebrow reveal">Servizi &amp; prenotazione</div>
+        <h2 className="section-title font-serif reveal reveal-d1">I nostri servizi</h2>
         <div className="booking-layout reveal">
           <BookingSectionNote />
           <FreshaBookingFlow />
         </div>
+        <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>
+          {SITE.pricesIncludeVat}
+        </p>
       </section>
 
       <section id="contact" className="section-pad bg-marble-light">

@@ -1,4 +1,4 @@
-/** Felice Polese grooming line — order via WhatsApp in salone. */
+/** Felice Polese linea cura capelli — ordine via WhatsApp in salone. */
 export type Product = {
   id: string;
   name: string;

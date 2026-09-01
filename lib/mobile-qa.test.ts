@@ -61,6 +61,7 @@ describe("mobile QA (390px)", () => {
     expect(layout).not.toMatch(/site-white-canvas/);
     expect(css).toMatch(/marble\.png/);
     expect(css).toMatch(/bg-marble-light/);
+    expect(css).not.toMatch(/marble-texture/);
     expect(hero).toMatch(/bg-noise/);
     expect(landing).toMatch(/gallery-grid/);
     expect(landing).toMatch(/fresha-01\.jpg/);

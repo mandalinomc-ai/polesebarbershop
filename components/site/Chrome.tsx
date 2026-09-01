@@ -5,7 +5,7 @@ import { SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-config";
 
 const LINKS = [
   { href: "/#about", label: "Chi siamo" },
-  { href: "/#services", label: "Servizi" },
+  { href: "/#prenota", label: "Servizi" },
   { href: "/#gallery", label: "Galleria" },
   { href: "/#contact", label: "Contatti" },
 ];
