@@ -46,7 +46,7 @@ export function LandingSections() {
       <section id="services" className="section-pad section-dark">
         <div className="eyebrow reveal">Listino</div>
         <h2 className="section-title font-serif reveal reveal-d1">
-          Menu grooming
+          I nostri servizi
         </h2>
         {SERVICE_CATEGORIES.map((cat) => (
           <div key={cat}>

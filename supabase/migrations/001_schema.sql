@@ -71,15 +71,15 @@ insert into public.barbers (id, name, title, sort_order) values
 on conflict (id) do update set name = excluded.name, title = excluded.title, active = true;
 
 insert into public.services (id, name, description, category, duration_min, price_cents, price_max_cents, is_variable_price, sort_order) values
-  ('taglio-pro','Taglio Pro','Shampoo specifico + Black Mask','capelli',25,5000,null,false,10),
-  ('taglio-standard','Taglio Standard','Taglio classico','capelli',30,1500,null,false,20),
-  ('acconciatura','Acconciatura','Solo styling / piega','capelli',15,500,null,false,30),
-  ('barba-pro','Barba Pro','Panno caldo con vaporizzatore + oli con fragranze','barba',20,1500,null,false,40),
-  ('barba-standard','Barba Standard','Rifinitura / modellatura classica','barba',15,500,null,false,50),
-  ('decolorazione-meches','Decolorazione Meches','Meches / schiariture. Prezzo definito in salone.','colore',45,4000,10000,true,60),
-  ('decolorazione-cutanea','Decolorazione Cutanea','Decolorazione cutanea. Prezzo definito in salone.','colore',45,5000,12000,true,70),
-  ('tintura-capelli','Tintura Capelli','Tintura capelli. Prezzo definito in salone.','colore',30,1000,3000,true,80),
-  ('tintura-barba','Tintura Barba','Tintura barba. Prezzo definito in salone.','colore',20,500,1500,true,90)
+  ('taglio-pro','Taglio completo','Taglio con shampoo e maschera','capelli',25,5000,null,false,10),
+  ('taglio-standard','Taglio classico','Taglio capelli','capelli',30,1500,null,false,20),
+  ('acconciatura','Acconciatura','Piega e styling','capelli',15,500,null,false,30),
+  ('barba-pro','Barba completa','Barba con panno caldo','barba',20,1500,null,false,40),
+  ('barba-standard','Rifinitura barba','Rifinitura e modellatura','barba',15,500,null,false,50),
+  ('decolorazione-meches','Meches','Colpi di sole e schiariture. Prezzo in salone.','colore',45,4000,10000,true,60),
+  ('decolorazione-cutanea','Decolorazione','Decolorazione completa. Prezzo in salone.','colore',45,5000,12000,true,70),
+  ('tintura-capelli','Tintura capelli','Colore capelli. Prezzo in salone.','colore',30,1000,3000,true,80),
+  ('tintura-barba','Tintura barba','Colore barba. Prezzo in salone.','colore',20,500,1500,true,90)
 on conflict (id) do update set
   name = excluded.name, description = excluded.description, category = excluded.category,
   duration_min = excluded.duration_min, price_cents = excluded.price_cents,

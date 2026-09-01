@@ -50,7 +50,7 @@ export const GALLERY_IMAGES: GalleryImage[] = [
   },
   {
     src: "/assets/images/gallery/fresha-00.jpg",
-    alt: "Prodotti grooming Felice Polese",
+    alt: "Prodotti per capelli e barba Felice Polese",
     tall: false,
     width: 1280,
     height: 720,

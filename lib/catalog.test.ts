@@ -19,15 +19,15 @@ describe("catalog", () => {
         durationMin: s.durationMin,
       })),
     ).toEqual([
-      { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25 },
-      { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30 },
+      { id: "taglio-pro", name: "Taglio completo", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25 },
+      { id: "taglio-standard", name: "Taglio classico", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30 },
       { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
-      { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20 },
-      { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
-      { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 45 },
-      { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 45 },
-      { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 30 },
-      { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, durationMin: 20 },
+      { id: "barba-pro", name: "Barba completa", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20 },
+      { id: "barba-standard", name: "Rifinitura barba", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
+      { id: "decolorazione-meches", name: "Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 45 },
+      { id: "decolorazione-cutanea", name: "Decolorazione", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 45 },
+      { id: "tintura-capelli", name: "Tintura capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 30 },
+      { id: "tintura-barba", name: "Tintura barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, durationMin: 20 },
     ]);
   });
   it("shows da X € for variable-price services", () => {
@@ -35,7 +35,7 @@ describe("catalog", () => {
     expect(formatPrice(meches)).toBe("da 40 €");
     expect(formatPriceRange(meches)).toBe("da 40 € a 100 €");
   });
-  it("shows a fixed euro amount for Taglio Pro", () => {
+  it("shows a fixed euro amount for Taglio completo", () => {
     const pro = SERVICES.find((s) => s.id === "taglio-pro")!;
     expect(pro.priceEuro).toBe(50);
     expect(pro.durationMin).toBe(25);

@@ -20,7 +20,7 @@ describe("free WhatsApp notify (wa.me, no Twilio)", () => {
       firstName: "Mario",
       dateLabel: "martedì 1 settembre 2026",
       timeLabel: "09:30",
-      serviceNames: "Taglio Standard",
+      serviceNames: "Taglio classico",
       barberName: "Felice",
     });
     expect(reminder.subject).toMatch(/Promemoria/);

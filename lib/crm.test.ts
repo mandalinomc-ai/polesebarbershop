@@ -6,7 +6,7 @@ function appt(overrides: Partial<CrmAppointment> & Pick<CrmAppointment, "id" | "
     barberId: "felice",
     barberName: "Felice",
     serviceIds: ["taglio-standard"],
-    serviceNames: "Taglio Standard",
+    serviceNames: "Taglio classico",
     firstName: "Mario",
     lastName: "Rossi",
     phone: "+393331112233",
@@ -30,7 +30,7 @@ describe("CRM stats aggregation", () => {
       status: "cancelled",
       priceCents: 5000,
       serviceIds: ["taglio-pro"],
-      serviceNames: "Taglio Pro",
+      serviceNames: "Taglio completo",
       dateLabel: "2026-09-02",
     }),
     appt({
@@ -45,7 +45,7 @@ describe("CRM stats aggregation", () => {
       barberId: "davide",
       barberName: "Davide",
       serviceIds: ["barba-standard"],
-      serviceNames: "Barba Standard",
+      serviceNames: "Rifinitura barba",
       isWalkIn: true,
       dateLabel: "2026-09-02",
     }),
@@ -59,7 +59,7 @@ describe("CRM stats aggregation", () => {
     expect(mario!.cancelledCount).toBe(1);
     expect(mario!.spendCents).toBe(1500);
     expect(mario!.history.some((h) => h.cancelled)).toBe(true);
-    expect(mario!.services.map((s) => s.name).sort()).toEqual(["Taglio Pro", "Taglio Standard"]);
+    expect(mario!.services.map((s) => s.name).sort()).toEqual(["Taglio classico", "Taglio completo"]);
     expect(mario!.lastVisitStatus).toBe("cancelled");
   });
 

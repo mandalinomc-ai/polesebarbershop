@@ -19,6 +19,8 @@ import {
   MAPS_DESTINATION,
   CANCEL_HOURS_BEFORE,
   CANCEL_NOTICE_IT,
+  BOOKING_UI_DAYS,
+  HERO_CALENDAR_DAYS,
 } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
@@ -118,7 +120,7 @@ describe("public copy vs official identity", () => {
     expect(getWhatsAppUrl()).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
     const confirm = getBookingConfirmWhatsAppUrl({
       firstName: "Mario",
-      service: "Taglio Standard",
+      service: "Taglio classico",
       dateLabel: "martedì 1 settembre 2026",
       timeLabel: "09:30",
       barberName: "Felice",
