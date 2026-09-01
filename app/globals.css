@@ -320,10 +320,10 @@ select.input-lux { appearance: none; cursor: pointer; }
 .section-dark {
   background-color: var(--marble);
   background-image:
-    linear-gradient(180deg, rgba(13, 21, 40, 0.92) 0%, rgba(8, 14, 26, 0.96) 100%),
+    linear-gradient(180deg, rgba(13, 21, 40, 0.78) 0%, rgba(8, 14, 26, 0.86) 100%),
     var(--bg-marble-image-fallback);
   background-image:
-    linear-gradient(180deg, rgba(13, 21, 40, 0.92) 0%, rgba(8, 14, 26, 0.96) 100%),
+    linear-gradient(180deg, rgba(13, 21, 40, 0.78) 0%, rgba(8, 14, 26, 0.86) 100%),
     var(--bg-marble-image);
   background-size: cover;
   background-position: center;
@@ -546,12 +546,15 @@ select.input-lux { appearance: none; cursor: pointer; }
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
   transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s ease;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid rgba(201, 169, 98, 0.12);
+  background: rgba(13, 21, 40, 0.72);
+  backdrop-filter: blur(14px);
+  color: var(--pearl);
 }
 .site-header.header-scrolled {
-  background: rgba(10, 10, 10, 0.88);
+  background: rgba(13, 21, 40, 0.94);
   backdrop-filter: blur(16px);
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(201, 169, 98, 0.22);
 }
 .site-shell--light .site-header {
   color: var(--ink);
@@ -694,9 +697,9 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   pointer-events: none;
   background: linear-gradient(
     165deg,
-    rgba(13, 21, 40, 0.55) 0%,
-    rgba(8, 14, 26, 0.82) 55%,
-    rgba(8, 14, 26, 0.94) 100%
+    rgba(13, 21, 40, 0.42) 0%,
+    rgba(8, 14, 26, 0.68) 55%,
+    rgba(8, 14, 26, 0.82) 100%
   );
 }
 .hero--marble .hero-glow {

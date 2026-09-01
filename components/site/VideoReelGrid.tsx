@@ -35,7 +35,7 @@ export function VideoReelGrid() {
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload="auto"
                 aria-label={reel.alt}
               />
               <span className="video-reel-label">{reel.label}</span>

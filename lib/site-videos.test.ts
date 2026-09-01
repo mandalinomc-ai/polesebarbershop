@@ -10,14 +10,14 @@ describe("site-videos reels", () => {
     expect(new Set(ids).size).toBe(4);
 
     for (const reel of VIDEO_REELS) {
-      expect(reel.src).toMatch(/^\/assets\/videos\/reel-\d{2}\.mp4$/);
+      expect(reel.src).toMatch(/^\/video\/reel-\d{2}\.mp4$/);
       expect(reel.poster).toMatch(/^\/assets\/images\//);
       expect(reel.alt.length).toBeGreaterThan(5);
       expect(reel.label.length).toBeGreaterThan(2);
     }
   });
 
-  it("ships reel mp4 files in public/assets/videos", () => {
+  it("ships reel mp4 files in public/video", () => {
     for (const reel of VIDEO_REELS) {
       const disk = join(process.cwd(), "public", reel.src.replace(/^\//, ""));
       expect(existsSync(disk), reel.src).toBe(true);
