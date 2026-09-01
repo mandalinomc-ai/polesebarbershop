@@ -1,0 +1,64 @@
+APERTURA 2 SETTEMBRE 2026 — POLESE BARBERSHOP
+=============================================
+
+URL FINALE CONSIGLIATO
+----------------------
+  https://polesebarbershop.vercel.app
+
+  Codice aggiornato (PR #4–#7): marmo, «I nostri servizi», immagini, prenotazioni illimitate.
+  Manca solo la configurazione delle variabili d'ambiente su Vercel (2 minuti).
+
+URL felicepolesebarbershop.vercel.app
+-------------------------------------
+  Attualmente: DEPLOYMENT_NOT_FOUND (progetto Vercel senza deploy attivo).
+  Non è un alias di polesebarbershop — serve creare/rinominare un progetto Vercel
+  oppure aggiungere il dominio in Settings → Domains.
+
+  Alternativa rapida (deploy già funzionante con tutte le env):
+  1. Apri https://vercel.com/claim-deployment?code=e49405f1-b2c6-49cf-8495-c0e5d76a0403
+  2. Accedi con l'account Vercel (mandalinomc@gmail.com)
+  3. Assegna al progetto «felicepolesebarbershop» o «polesebarbershop»
+  4. Imposta NEXT_PUBLIC_SITE_URL al dominio scelto
+
+CHECKLIST FUNZIONALITÀ (testate)
+---------------------------------
+  ✓ Sito live — marmo, «I nostri servizi», wizard prenotazione
+  ✓ Database Supabase — schema + migration 003 applicati
+  ✓ Prenotazioni — persisted: true (con env configurate)
+  ✓ Gestionale — /gestionale login admin / admin
+  ✓ Availability API — senza avviso «database non configurato» (con env)
+  ⚠ Email — Resend in modalità test: invia solo a mandalinomc@gmail.com
+    finché non verifichi un dominio su resend.com/domains
+
+AZIONE OBBLIGATORIA (2 MINUTI) — VARIABILI VERCEL
+-------------------------------------------------
+  Vercel → progetto polesebarbershop → Settings → Environment Variables → Production
+
+  Incolla da .env.local:
+    NEXT_PUBLIC_SITE_URL      = https://polesebarbershop.vercel.app
+    SUPABASE_URL              = https://dbbncprluqjrofjemfbg.supabase.co
+    SUPABASE_SERVICE_ROLE_KEY = (sb_secret_…)
+    RESEND_API_KEY            = (re_…)
+    RESEND_FROM               = Polese Barbershop <onboarding@resend.dev>
+    ADMIN_USER                = admin
+    ADMIN_PASSWORD            = admin
+    ADMIN_EMAIL               = felicepolese550@gmail.com
+    OWNER_EMAIL               = felicepolese550@gmail.com
+
+  Poi: Deployments → ultimo → ⋮ → Redeploy
+
+  Oppure automatico (con token Vercel):
+    VERCEL_TOKEN=xxx ./scripts/vercel-configure-production.sh
+
+VERIFICA POST-CONFIGURAZIONE
+----------------------------
+  curl "https://polesebarbershop.vercel.app/api/availability?date=2026-09-02&barberId=anyone&serviceIds=taglio-standard"
+  → nessun warning «database non configurato»
+
+  Prenota test su /#prenota → risposta JSON con "persisted": true
+
+EMAIL PRODUZIONE (opzionale prima dell'apertura)
+------------------------------------------------
+  Resend → Domains → verifica polesebarbershop.it (o altro dominio)
+  RESEND_FROM = Polese Barbershop <prenota@tuodominio.it>
+  Senza dominio verificato le email al cliente restano limitate all'account Resend.
