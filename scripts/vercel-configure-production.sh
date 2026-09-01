@@ -53,6 +53,7 @@ upsert_env() {
 
 echo "→ Setting env vars on $VERCEL_PROJECT_ID (Production)…"
 upsert_env NEXT_PUBLIC_SITE_URL "$SITE_URL" plain
+upsert_env NEXT_PUBLIC_IS_COMING_SOON "false" plain
 upsert_env NEXT_PUBLIC_SUPABASE_URL "$NEXT_PUBLIC_SUPABASE_URL" plain
 upsert_env SUPABASE_URL "$SUPABASE_URL"
 upsert_env SUPABASE_SERVICE_ROLE_KEY "$SUPABASE_SERVICE_ROLE_KEY"
