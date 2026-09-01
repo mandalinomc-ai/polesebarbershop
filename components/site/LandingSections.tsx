@@ -139,7 +139,7 @@ export function LandingSections() {
                 rel="noopener noreferrer"
                 className="contact-link"
               >
-                Maps
+                Raggiungimi qui
               </a>
             </p>
           </div>

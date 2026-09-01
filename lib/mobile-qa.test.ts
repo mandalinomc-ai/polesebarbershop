@@ -48,7 +48,7 @@ describe("mobile QA (390px)", () => {
 
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
     expect(chrome).toMatch(/fab-stack/);
-    expect(chrome).toMatch(/aria-label="Raggiungici ora"/);
+    expect(chrome).toMatch(/aria-label="Raggiungimi qui"/);
     expect(chrome.indexOf("<MapsFab />")).toBeLessThan(chrome.indexOf("<WhatsAppFab />"));
     expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
