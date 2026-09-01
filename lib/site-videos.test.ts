@@ -4,16 +4,20 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_SITE_VIDEOS,
   COLORAZIONE_VIDEOS,
+  FELICE_WORKING_FILENAME,
+  FELICE_WORKING_VIDEO,
   GALLERY_VIDEOS,
   HERO_VIDEOS,
   REQUIRED_VIDEO_FILES,
   SALONE_GENERALE_VIDEO,
   TAGLIO_VIDEOS,
   VIDEO_BASE,
+  VIDEO_HERO_BASE,
   VIDEO_REELS,
 } from "./site-videos";
 
 const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
+const HERO_VIDEO_DIR = join(process.cwd(), "public", "assets", "videos");
 
 describe("site-videos", () => {
   it("defines six service reels plus general salon video under /assets/video/", () => {
@@ -53,5 +57,11 @@ describe("site-videos", () => {
       "colorazione-02",
       "colorazione-03",
     ]);
+  });
+
+  it("wires felice-working.mp4 from public/assets/videos/", () => {
+    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_HERO_BASE}/${FELICE_WORKING_FILENAME}`);
+    const diskPath = join(HERO_VIDEO_DIR, FELICE_WORKING_FILENAME);
+    expect(existsSync(diskPath), `missing ${diskPath}`).toBe(true);
   });
 });
