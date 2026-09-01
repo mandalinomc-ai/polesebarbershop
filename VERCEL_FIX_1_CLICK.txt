@@ -9,7 +9,7 @@ STATO (1 settembre 2026)
 
 DEPLOY FUNZIONANTE PRONTO (testato dall'agente)
 -----------------------------------------------
-  URL: https://temporary-fast-indigo-e6p0quw.vercel.app
+  URL: https://temporary-prompt-quasar-rndxhgh.vercel.app
   ✓ Database Supabase collegato
   ✓ Prenotazione test salvata (persisted: true)
   ✓ Email inviata
@@ -18,7 +18,7 @@ DEPLOY FUNZIONANTE PRONTO (testato dall'agente)
 AZIONE UNICA — 30 SECONDI (nessuna navigazione in Settings)
 -----------------------------------------------------------
   1. Apri questo link (con account mandalinomc@gmail.com):
-     https://vercel.com/claim-deployment?code=55d2bc0f-4aa5-4acf-bdbb-f1c6bef2b18f
+     https://vercel.com/claim-deployment?code=2f840c6f-bb86-46d0-986b-1bf7fdfeedf0
 
   2. Assegna al progetto «polesebarbershop» (NON felicepolesebarbershop)
 

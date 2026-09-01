@@ -6,7 +6,7 @@ Mancano solo le variabili d'ambiente: senza di esse prenotazioni e email restano
 in modalità degradata (.ics sì, database e email no).
 
 OPZIONE RAPIDA — 1 CLICK (senza Settings)
-  https://vercel.com/claim-deployment?code=55d2bc0f-4aa5-4acf-bdbb-f1c6bef2b18f
+  https://vercel.com/claim-deployment?code=2f840c6f-bb86-46d0-986b-1bf7fdfeedf0
   → Assegna al progetto «polesebarbershop». Deploy già testato con database attivo.
   (Vedi VERCEL_FIX_1_CLICK.txt per dettagli.)
 
