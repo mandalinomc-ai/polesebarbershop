@@ -146,7 +146,7 @@ describe("booking email copy", () => {
       manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
     });
     expect(mail.text).toContain(
-      "Ciao Mario, la tua prenotazione da Barbershop Polese è confermata! 💈",
+      "Ciao Mario, la tua prenotazione da Polese Barbershop è confermata! 💈",
     );
     expect(mail.text).toContain("📅 Data e Ora: martedì 1 settembre 2026 alle 09:30");
     expect(mail.text).toContain("✂️ Servizio: Taglio Pro");
@@ -156,7 +156,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("Ti aspettiamo! 🔥");
     expect(mail.text).toContain("Gestisci o disdici: https://polesebarbershop.vercel.app/appuntamento/abc");
     expect(mail.text).not.toMatch(/24h|24 ore|3 ore/);
-    expect(mail.html).toContain("Barbershop Polese");
+    expect(mail.html).toContain("Polese Barbershop");
     expect(mail.html).toContain("Gestisci o disdici");
 
     const noLink = customerConfirmEmail({
@@ -285,7 +285,7 @@ describe("booking email copy", () => {
       priceLabel: "da 25 €",
     });
     expect(mail.text).toMatch(/^Ciao Mario,/);
-    expect(mail.text).toMatch(/Barbershop Polese è confermata/);
+    expect(mail.text).toMatch(/Polese Barbershop è confermata/);
     expect(mail.text).toMatch(/Corso Dante Alighieri 44/);
     expect(mail.text).toMatch(/1 ora di anticipo/);
     expect(mail.text).toMatch(/Taglio Pro/);
