@@ -14,7 +14,6 @@ export function Hero() {
   const beforeOpening = isBeforeOfficialOpening();
   return (
     <section id="hero" className="hero hero--story hero--marble">
-      <div className="hero-bg" aria-hidden="true" />
       <div className="hero-glow" />
       <div className="hero-inner hero-inner--live">
         <SiteLogo
