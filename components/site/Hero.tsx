@@ -7,6 +7,7 @@ import {
   getMapsUrl,
   getWhatsAppUrl,
 } from "@/lib/site-config";
+import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 
 function pad(n: number) {
   return String(Math.max(0, n)).padStart(2, "0");
@@ -55,9 +56,7 @@ export function Hero() {
 
   if (soon) {
     return (
-      <section id="hero" className="hero hero--soon bg-noise">
-        <div className="hero-bg" />
-        <div className="hero-glow" />
+      <section id="hero" className="hero hero--soon bg-marble-light">
         <div className="hero-inner hero-inner--soon">
           <img
             src="/assets/images/logo.png"
@@ -76,28 +75,10 @@ export function Hero() {
             <span className="eyebrow">Nuova sede</span>
             <strong>{SITE.addressFull}</strong>
             <a className="map-link" href={getMapsUrl()} target="_blank" rel="noopener noreferrer">
-              Google Maps →
+              📍 Raggiungimi ora su Google Maps
             </a>
           </div>
-          <div id="countdown" className="countdown" aria-live="polite">
-            <div className="countdown-item">
-              <span className="countdown-value">{remain.d}</span>
-              <span className="countdown-label">Giorni</span>
-            </div>
-            <div className="countdown-item">
-              <span className="countdown-value">{remain.h}</span>
-              <span className="countdown-label">Ore</span>
-            </div>
-            <div className="countdown-item">
-              <span className="countdown-value">{remain.m}</span>
-              <span className="countdown-label">Min</span>
-            </div>
-            <div className="countdown-item">
-              <span className="countdown-value">{remain.s}</span>
-              <span className="countdown-label">Sec</span>
-            </div>
-            {remain.done ? <p className="countdown-done">Apertura imminente.</p> : null}
-          </div>
+          <OpeningCountdown />
           <form id="notify-form" className="notify-form" onSubmit={onNotify} noValidate>
             <p className="eyebrow" id="hero-notify">
               Resta aggiornato su WhatsApp
@@ -124,16 +105,22 @@ export function Hero() {
   }
 
   return (
-    <section id="hero" className="hero hero--soon bg-noise">
-      <div className="hero-bg" />
-      <div className="hero-glow" />
+    <section id="hero" className="hero hero--soon bg-marble-light">
       <div className="hero-inner hero-inner--live">
+        <img
+          src="/assets/images/logo.png"
+          alt="Felice Polese — logo ufficiale Polese Barbershop"
+          className="brand-logo brand-logo--hero"
+          width={512}
+          height={331}
+        />
         <p className="eyebrow">{SITE.brand}</p>
         <h1 className="hero-title font-serif">{SITE.name}</h1>
         <p className="hero-text">{SITE.tagline}</p>
         <p className="hero-text">
           Taglio sartoriale, rasatura tradizionale e cura della barba a Benevento.
         </p>
+        <OpeningCountdown />
         <div className="hero-actions">
           <a href="/#prenota" className="btn btn-gold btn-magnetic">
             Prenota ora
@@ -147,7 +134,7 @@ export function Hero() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Raggiungimi qui
+            📍 Raggiungimi ora su Google Maps
           </a>
         </div>
       </div>

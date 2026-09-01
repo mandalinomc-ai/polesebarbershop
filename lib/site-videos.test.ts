@@ -20,7 +20,7 @@ describe("site-videos", () => {
     expect(TAGLIO_VIDEOS).toHaveLength(3);
     expect(COLORAZIONE_VIDEOS).toHaveLength(3);
     expect(VIDEO_REELS).toHaveLength(6);
-    expect(ALL_SITE_VIDEOS).toHaveLength(7);
+    expect(ALL_SITE_VIDEOS).toHaveLength(8);
 
     for (const video of VIDEO_REELS) {
       expect(video.src).toMatch(/^\/assets\/video\/(taglio|colorazione)-\d{2}\.mp4$/);

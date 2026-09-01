@@ -48,13 +48,13 @@ describe("mobile QA (390px)", () => {
 
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
     expect(chrome).toMatch(/fab-stack/);
-    expect(chrome).toMatch(/aria-label="Raggiungimi qui"/);
+    expect(chrome).toMatch(/aria-label="Raggiungimi ora su Google Maps"/);
     expect(chrome.indexOf("<MapsFab />")).toBeLessThan(chrome.indexOf("<WhatsAppFab />"));
     expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("uses dark marble theme with real salon videos and gallery photos", () => {
+  it("uses white marble theme with stable media and Felice bio video", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
@@ -62,12 +62,12 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/marble\.png/);
     expect(css).toMatch(/bg-marble-light/);
     expect(css).toMatch(/video-reel-grid/);
-    expect(css).not.toMatch(/marble-texture/);
-    expect(hero).toMatch(/bg-noise/);
+    expect(css).toMatch(/backface-visibility:\s*hidden/);
+    expect(hero).toMatch(/bg-marble-light/);
     expect(landing).toMatch(/gallery-grid/);
     expect(landing).toMatch(/fresha-01\.jpg/);
     expect(landing).toMatch(/VideoReelGrid/);
-    expect(landing).toMatch(/SALONE_GENERALE_VIDEO/);
+    expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
     expect(hero).not.toMatch(/HERO_VIDEOS/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");

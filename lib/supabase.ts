@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { SITE } from "./site-config";
 
 export type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed" | "walk_in";
 
@@ -54,4 +55,4 @@ export function getSupabaseAdmin(): SupabaseClient | null {
 }
 
 export const SUPABASE_MISSING_IT =
-  "Database non configurato. La prenotazione non è stata salvata. Chiama il salone al +39 327 015 6225.";
+  `Database non configurato. La prenotazione non è stata salvata. Chiama il salone al ${SITE.phone}.`;

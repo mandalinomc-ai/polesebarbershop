@@ -22,6 +22,7 @@ import {
   CANCEL_NOTICE_IT,
   SITE,
   getBookingConfirmWhatsAppUrl,
+  getWhatsAppUrl,
   readBookingDateFromLocation,
 } from "@/lib/site-config";
 import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
@@ -340,7 +341,8 @@ export function FreshaBookingFlow() {
   }
 
   return (
-    <div className="fresha-booking" id="booking-wizard">
+    <div className="fresha-layout">
+      <div className="fresha-booking" id="booking-wizard">
       <div className="fresha-booking-head">
         <button
           type="button"
@@ -505,7 +507,7 @@ export function FreshaBookingFlow() {
                   className="input-lux"
                   type="tel"
                   inputMode="tel"
-                  placeholder="327 015 6225"
+                  placeholder="351 252 3087"
                   autoComplete="tel-national"
                   enterKeyHint="done"
                   value={phone}
@@ -600,6 +602,61 @@ export function FreshaBookingFlow() {
             : "Continua"}
         </button>
       </div>
+    </div>
+
+      <aside className="appointment-sidebar" aria-label="Il tuo appuntamento">
+        <h3 className="appointment-sidebar-title font-serif">Il tuo appuntamento</h3>
+        {selectedIds.length === 0 ? (
+          <p className="appointment-sidebar-empty">
+            Seleziona i servizi nel wizard per vedere il riepilogo.
+          </p>
+        ) : (
+          <ul className="appointment-sidebar-list">
+            {selectedServices.map((s) => (
+              <li key={s.id}>
+                <strong>{s.name}</strong>
+                <span>{s.durationMin} min · {formatPriceRange(s)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="appointment-sidebar-totals">
+          <span>
+            {totals.durationMin ? `${totals.durationMin} min` : "—"}
+            {selectedIds.length
+              ? ` · ${selectedIds.length} servizio${selectedIds.length === 1 ? "" : "i"}`
+              : ""}
+          </span>
+          <strong>{selectedIds.length ? totals.priceLabel : "—"}</strong>
+        </div>
+        {step >= 3 && slot ? (
+          <p className="appointment-sidebar-when">
+            {formatItalianDate(date)} · {slot.label}
+            {barber ? ` · ${barber.name}` : ""}
+          </p>
+        ) : null}
+        <a
+          className="btn btn-gold appointment-sidebar-wa"
+          href={
+            selectedIds.length
+              ? getBookingConfirmWhatsAppUrl({
+                  firstName: firstName.trim() || undefined,
+                  phone: phone.trim() || undefined,
+                  service: totals.names,
+                  dateLabel: slot ? formatItalianDate(date) : "—",
+                  timeLabel: slot?.label || "—",
+                  barberName: barber?.name,
+                })
+              : getWhatsAppUrl(
+                  `Ciao, vorrei prenotare un appuntamento da ${SITE.name}.`,
+                )
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          WhatsApp
+        </a>
+      </aside>
     </div>
   );
 }

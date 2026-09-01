@@ -12,7 +12,7 @@ export type EmailSendResult =
   | { ok: false; skipped?: boolean; error: string };
 
 export const RESEND_MISSING_IT =
-  "Invio email non configurato. Scarica il file .ics oppure chiama il +39 327 015 6225.";
+  `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
 const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
 const DEFAULT_FROM = `Polese Barbershop <onboarding@${RESEND_TEST_DOMAIN}>`;
@@ -114,7 +114,7 @@ function wrap(inner: string) {
   </div></body></html>`;
 }
 
-const CUSTOMER_CONFIRM_ADDRESS = "Corso Dante Alighieri 44";
+const CUSTOMER_CONFIRM_ADDRESS = SITE.streetAddress;
 
 export function customerConfirmEmail(opts: {
   firstName: string;

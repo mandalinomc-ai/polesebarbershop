@@ -3,34 +3,24 @@ import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
-import { SalonVideo } from "@/components/site/SalonVideo";
+import { ServiceListino } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
-import { SALONE_GENERALE_VIDEO } from "@/lib/site-videos";
+import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 
 const GALLERY = [
   {
-    src: "/assets/images/gallery/fresha-01.jpg",
-    alt: "Interno salone Polese Barbershop — marmo e postazioni",
+    src: "/assets/images/gallery/fresha-00.jpg",
+    alt: "Prodotti cura capelli Felice Polese",
     tall: false,
   },
   {
-    src: "/assets/images/hero-bg.jpg",
-    alt: "Salone Felice Polese Benevento",
+    src: "/assets/images/gallery/fresha-01.jpg",
+    alt: "Interno salone Polese Barbershop — marmo e postazioni",
     tall: true,
   },
   {
     src: "/assets/images/gallery/fresha-02.jpg",
     alt: "Postazione barbiere Polese",
-    tall: false,
-  },
-  {
-    src: "/assets/images/brand-products.jpg",
-    alt: "Linea prodotti Felice Polese",
-    tall: false,
-  },
-  {
-    src: "/assets/images/gallery/fresha-00.jpg",
-    alt: "Prodotti cura capelli Felice Polese",
     tall: false,
   },
 ];
@@ -39,23 +29,47 @@ export function LandingSections() {
   return (
     <>
       <section id="about" className="section-pad bg-marble-light">
-        <div className="eyebrow reveal">Il brand</div>
+        <div className="eyebrow reveal">Felice Polese</div>
         <h2 className="section-title font-serif reveal reveal-d1">
           Tradizione &amp; precisione
         </h2>
         <div className="about-grid">
           <div className="about-copy reveal">
             <p className="prose">
-              <strong>{SITE.brand}</strong> interpreta la barberia come rituale di cura e
-              stile. Taglio uomo, barba e rasatura con precisione artigianale.
+              Da <strong>Santa Maria degli Angeli</strong> al nuovo salone in{" "}
+              <strong>Corso Dante 45</strong>, {SITE.city}: Felice Polese porta la
+              barberia sartoriale in uno spazio luminoso e riservato.
             </p>
             <p className="prose">
-              Il nuovo salone in {SITE.address}, {SITE.city} — ambiente dark, elegante e
-              riservato.
+              <span className="badge-match">Barber Match 2023 · Giovane Talento</span>
+            </p>
+            <p className="prose">
+              Taglio uomo, barba e rasatura con precisione artigianale. In salone
+              lavorano <strong>Felice</strong> e <strong>Davide</strong> su due
+              poltrone indipendenti.
+            </p>
+            <p className="prose">
+              <a
+                className="map-link"
+                href={getMapsUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                📍 Raggiungimi ora su Google Maps
+              </a>
             </p>
           </div>
           <div className="about-video">
-            <SalonVideo video={SALONE_GENERALE_VIDEO} className="about-video-player" />
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="felice-video-hero"
+              aria-label={FELICE_WORKING_VIDEO.alt}
+            >
+              <source src={FELICE_WORKING_VIDEO.src} type="video/mp4" />
+            </video>
           </div>
         </div>
       </section>
@@ -83,12 +97,15 @@ export function LandingSections() {
         </div>
       </section>
 
-      <section id="prenota" className="section-pad section-dark">
+      <section id="prenota" className="section-pad bg-marble-light">
         <div className="eyebrow reveal">Servizi &amp; prenotazione</div>
         <h2 className="section-title font-serif reveal reveal-d1">I nostri servizi</h2>
-        <div className="booking-layout reveal">
-          <BookingSectionNote />
-          <FreshaBookingFlow />
+        <div className="booking-layout-grid reveal">
+          <ServiceListino />
+          <div className="booking-flow-wrap">
+            <BookingSectionNote />
+            <FreshaBookingFlow />
+          </div>
         </div>
         <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>
           {SITE.pricesIncludeVat}
@@ -139,7 +156,7 @@ export function LandingSections() {
                 rel="noopener noreferrer"
                 className="contact-link"
               >
-                Raggiungimi qui
+                📍 Raggiungimi ora su Google Maps
               </a>
             </p>
           </div>

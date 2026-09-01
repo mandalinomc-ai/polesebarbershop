@@ -12,9 +12,10 @@ export const SITE = {
   heroHeadline: "L'ARTE DELLA BARBERIA SARTORIALE",
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL || "https://polesebarbershop.vercel.app",
-  address: "Corso Dante Alighieri, 44",
-  addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
-  streetAddress: "Corso Dante Alighieri, 44",
+  address: "Corso Dante 45",
+  addressFull: "Corso Dante 45 – 82100 Benevento (BN)",
+  streetAddress: "Corso Dante 45",
+  previousAddress: "ex Via Ungaretti 6",
   city: "Benevento",
   province: "BN",
   postalCode: "82100",
@@ -23,10 +24,10 @@ export const SITE = {
   latitude: 41.1298,
   longitude: 14.7825,
   openingDate: "2026-09-07",
-  phone: "+39 327 015 6225",
-  phoneDisplay: "327 015 6225",
-  phoneTel: "+393270156225",
-  whatsapp: "393270156225",
+  phone: "+39 351 252 3087",
+  phoneDisplay: "351 252 3087",
+  phoneTel: "+393512523087",
+  whatsapp: "393512523087",
   email: "felicepolese550@gmail.com",
   instagram: "https://instagram.com/felicepolese_barber",
   instagramHandle: "@felicepolese_barber",
@@ -40,9 +41,9 @@ export const SITE = {
   },
   seo: {
     keywords:
-      "barbiere Benevento, barbershop Benevento, Felice Polese, Davide, Corso Dante Alighieri 44",
+      "barbiere Benevento, barbershop Benevento, Felice Polese, Davide, Corso Dante 45",
     description:
-      "Polese Barbershop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante Alighieri 44. Prenota online.",
+      "Polese Barbershop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante 45. Prenota online.",
   },
 } as const;
 
@@ -58,7 +59,7 @@ export const REMINDER_LEAD_MINUTES = 30;
 export const CANCEL_HOURS_BEFORE = 1;
 /** Italian copy: "1 ora" (not "1 ore" / not 24h). */
 export const CANCEL_NOTICE_IT = "1 ora";
-export const MAPS_DESTINATION = "Corso Dante Alighieri 44, 82100 Benevento";
+export const MAPS_DESTINATION = "Corso Dante 45, 82100 Benevento";
 
 /** Generic salon contact — info, hours, prices or a quick tip. */
 export const SALON_CONTACT_MESSAGE =

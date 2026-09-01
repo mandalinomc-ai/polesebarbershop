@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
+import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 
 const INTRO_KEY = "polese-scissors-intro-seen";
 
-/** Full-screen intro: SVG scissors open, then vertical split reveals the site. */
+/** Full-screen intro: countdown + SVG scissors, split reveal on click or when countdown ends. */
 export function ScissorsIntro() {
   const [phase, setPhase] = useState<"hidden" | "playing" | "cutting">("hidden");
 
@@ -15,27 +16,35 @@ export function ScissorsIntro() {
 
     setPhase("playing");
     document.body.classList.add("scissors-intro-active");
+  }, []);
 
-    const cutTimer = window.setTimeout(() => setPhase("cutting"), 1500);
-    const hideTimer = window.setTimeout(() => {
-      sessionStorage.setItem(INTRO_KEY, "1");
+  function finishIntro() {
+    if (phase === "hidden" || phase === "cutting") return;
+    setPhase("cutting");
+    sessionStorage.setItem(INTRO_KEY, "1");
+    window.setTimeout(() => {
       setPhase("hidden");
       document.body.classList.remove("scissors-intro-active");
-    }, 2400);
+    }, 900);
+  }
 
-    return () => {
-      window.clearTimeout(cutTimer);
-      window.clearTimeout(hideTimer);
-      document.body.classList.remove("scissors-intro-active");
-    };
-  }, []);
+  useEffect(() => {
+    if (phase !== "playing") return;
+    return () => document.body.classList.remove("scissors-intro-active");
+  }, [phase]);
 
   if (phase === "hidden") return null;
 
   return (
     <div
       className={`scissors-intro${phase === "cutting" ? " scissors-intro--cutting" : ""}`}
-      aria-hidden="true"
+      role="dialog"
+      aria-label="Apertura Polese Barbershop"
+      tabIndex={0}
+      onClick={() => finishIntro()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") finishIntro();
+      }}
     >
       <div className="scissors-intro-split scissors-intro-split--left" />
       <div className="scissors-intro-split scissors-intro-split--right" />
@@ -43,6 +52,8 @@ export function ScissorsIntro() {
         <div className="scissors-intro-stage">
           <ScissorsIcon variant="intro" />
         </div>
+        <OpeningCountdown variant="intro" onComplete={finishIntro} />
+        <p className="scissors-intro-hint">Clicca per entrare</p>
       </div>
     </div>
   );

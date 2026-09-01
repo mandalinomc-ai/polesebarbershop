@@ -108,8 +108,8 @@ export async function POST(request: Request) {
           /schema cache|Could not find the table|does not exist/i.test(error.message || "");
         warnings.push(
           schemaMissing
-            ? "Database collegato ma manca lo schema: esegui supabase/migrations/001_schema.sql nel SQL Editor. Conferma e file .ics restano validi. Chiama il +39 327 015 6225."
-            : "Impossibile salvare nel database. Conferma e file .ics restano validi. Chiama il +39 327 015 6225.",
+            ? `Database collegato ma manca lo schema: esegui supabase/migrations/001_schema.sql nel SQL Editor. Conferma e file .ics restano validi. Chiama il ${SITE.phone}.`
+            : `Impossibile salvare nel database. Conferma e file .ics restano validi. Chiama il ${SITE.phone}.`,
         );
       } else {
         row = data as AppointmentRow;

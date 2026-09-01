@@ -11,12 +11,14 @@ export const SHOP_HOURS: Record<number, DayHours> = {
   6: { open: "09:30", close: "20:00" },
 };
 
-export type ServiceCategory = "taglio_barba" | "tecnici" | "consulenza";
+export type ServiceCategory = "taglio" | "barba" | "combo" | "tecnici" | "consulenza";
 
 export const SERVICE_CATEGORY_LABEL: Record<ServiceCategory, string> = {
-  taglio_barba: "Taglio & Barba",
+  taglio: "Taglio Normale / Sartoriale",
+  barba: "Barba",
+  combo: "Combo",
   tecnici: "Trattamenti Tecnici",
-  consulenza: "Consulenza",
+  consulenza: "Consulenza Tricologica",
 };
 
 export type Service = {
@@ -31,19 +33,125 @@ export type Service = {
 };
 
 export const SERVICES: Service[] = [
-  { id: "taglio-pro", name: "Taglio completo", category: "taglio_barba", priceEuro: 50, priceMaxEuro: null, isVariablePrice: false, durationMin: 25, description: "Taglio con shampoo e maschera" },
-  { id: "taglio-standard", name: "Taglio classico", category: "taglio_barba", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 30, description: "Taglio capelli" },
-  { id: "acconciatura", name: "Acconciatura", category: "taglio_barba", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Piega e styling" },
-  { id: "barba-pro", name: "Barba completa", category: "taglio_barba", priceEuro: 15, priceMaxEuro: null, isVariablePrice: false, durationMin: 20, description: "Barba con panno caldo" },
-  { id: "barba-standard", name: "Rifinitura barba", category: "taglio_barba", priceEuro: 5, priceMaxEuro: null, isVariablePrice: false, durationMin: 15, description: "Rifinitura e modellatura" },
-  { id: "decolorazione-meches", name: "Meches", category: "tecnici", priceEuro: 40, priceMaxEuro: 100, isVariablePrice: true, durationMin: 45, description: "Colpi di sole e schiariture. Prezzo in salone." },
-  { id: "decolorazione-cutanea", name: "Decolorazione", category: "tecnici", priceEuro: 50, priceMaxEuro: 120, isVariablePrice: true, durationMin: 45, description: "Decolorazione completa. Prezzo in salone." },
-  { id: "tintura-capelli", name: "Tintura capelli", category: "tecnici", priceEuro: 10, priceMaxEuro: 30, isVariablePrice: true, durationMin: 30, description: "Colore capelli. Prezzo in salone." },
-  { id: "tintura-barba", name: "Tintura barba", category: "tecnici", priceEuro: 5, priceMaxEuro: 15, isVariablePrice: true, durationMin: 20, description: "Colore barba. Prezzo in salone." },
-  { id: "consulenza-sede", name: "Consulenza in sede", category: "consulenza", priceEuro: 0, priceMaxEuro: null, isVariablePrice: false, durationMin: 30, description: "Valutazione taglio, barba o colore in salone." },
+  {
+    id: "taglio-standard",
+    name: "Taglio Normale",
+    category: "taglio",
+    priceEuro: 15,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 30,
+    description: "Taglio capelli classico",
+  },
+  {
+    id: "taglio-pro",
+    name: "Taglio Sartoriale",
+    category: "taglio",
+    priceEuro: 50,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 25,
+    description: "Taglio con shampoo e maschera",
+  },
+  {
+    id: "barba-pro",
+    name: "Barba",
+    category: "barba",
+    priceEuro: 15,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 20,
+    description: "Barba con panno caldo",
+  },
+  {
+    id: "barba-standard",
+    name: "Rifinitura barba",
+    category: "barba",
+    priceEuro: 5,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 15,
+    description: "Rifinitura e modellatura",
+  },
+  {
+    id: "combo-classico",
+    name: "Combo Taglio + Barba",
+    category: "combo",
+    priceEuro: 30,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 45,
+    description: "Taglio normale e barba completa",
+  },
+  {
+    id: "combo-sartoriale",
+    name: "Combo Sartoriale + Barba",
+    category: "combo",
+    priceEuro: 60,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 40,
+    description: "Taglio sartoriale e barba completa",
+  },
+  {
+    id: "decolorazione-meches",
+    name: "Meches",
+    category: "tecnici",
+    priceEuro: 40,
+    priceMaxEuro: 100,
+    isVariablePrice: true,
+    durationMin: 45,
+    description: "Colpi di sole e schiariture. Prezzo in salone.",
+  },
+  {
+    id: "decolorazione-cutanea",
+    name: "Decolorazione",
+    category: "tecnici",
+    priceEuro: 50,
+    priceMaxEuro: 120,
+    isVariablePrice: true,
+    durationMin: 45,
+    description: "Decolorazione completa. Prezzo in salone.",
+  },
+  {
+    id: "tintura-capelli",
+    name: "Tintura capelli",
+    category: "tecnici",
+    priceEuro: 10,
+    priceMaxEuro: 30,
+    isVariablePrice: true,
+    durationMin: 30,
+    description: "Colore capelli. Prezzo in salone.",
+  },
+  {
+    id: "tintura-barba",
+    name: "Tintura barba",
+    category: "tecnici",
+    priceEuro: 5,
+    priceMaxEuro: 15,
+    isVariablePrice: true,
+    durationMin: 20,
+    description: "Colore barba. Prezzo in salone.",
+  },
+  {
+    id: "consulenza-sede",
+    name: "Consulenza Tricologica",
+    category: "consulenza",
+    priceEuro: 0,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 30,
+    description: "Valutazione capelli e cuoio capelluto in salone.",
+  },
 ];
 
-export const SERVICE_CATEGORIES: ServiceCategory[] = ["taglio_barba", "tecnici", "consulenza"];
+export const SERVICE_CATEGORIES: ServiceCategory[] = [
+  "taglio",
+  "barba",
+  "combo",
+  "tecnici",
+  "consulenza",
+];
 
 export type Barber = {
   id: string;

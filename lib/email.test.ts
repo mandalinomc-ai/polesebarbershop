@@ -163,7 +163,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("📅 Data e Ora: martedì 1 settembre 2026 alle 09:30");
     expect(mail.text).toContain("✂️ Servizio: Taglio completo");
     expect(mail.text).toContain("👤 Barber: Felice");
-    expect(mail.text).toContain("📍 Dove siamo: Corso Dante Alighieri 44");
+    expect(mail.text).toContain("📍 Dove siamo: Corso Dante 45");
     expect(mail.text).toContain(`almeno ${CANCEL_NOTICE_IT} di anticipo`);
     expect(mail.text).toContain("Ti aspettiamo! 🔥");
     expect(mail.text).toContain("Gestisci o disdici: https://polesebarbershop.vercel.app/appuntamento/abc");
@@ -353,7 +353,7 @@ describe("booking email copy", () => {
     });
     expect(mail.text).toMatch(/^Ciao Mario,/);
     expect(mail.text).toMatch(/Polese Barbershop è confermata/);
-    expect(mail.text).toMatch(/Corso Dante Alighieri 44/);
+    expect(mail.text).toMatch(/Corso Dante 45/);
     expect(mail.text).toMatch(/1 ora di anticipo/);
     expect(mail.text).toMatch(/Taglio completo/);
     expect(mail.text).toMatch(/Felice/);
