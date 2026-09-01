@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 : "${VERCEL_TOKEN:?Set VERCEL_TOKEN from https://vercel.com/account/tokens}"
 : "${VERCEL_ORG_ID:?Set VERCEL_ORG_ID (vercel whoami → id, or Project Settings → General)}"
 VERCEL_PROJECT_ID="${VERCEL_PROJECT_ID:-prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf}"
-SITE_URL="${1:-https://polesebarbershop.vercel.app}"
+SITE_URL="${1:-https://felicepolesebarbershop.vercel.app}"
 
 if [[ -f .env.local ]]; then
   set -a
