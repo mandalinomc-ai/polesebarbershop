@@ -1,6 +1,6 @@
 # DECISIONS — Felice Polese infrastructure
 
-**Updated:** 2026-09-01
+**Updated:** 2026-09-01 (final deploy attempt — commit `559fb41`)
 
 ## D1 — Canonical Vercel project: `polesebarbershop` (NEW)
 
@@ -31,7 +31,7 @@ npx vercel alias set <polesebarbershop-deploy-url> felicepolesebarbershop.vercel
 
 | Path | Works? | Notes |
 |------|--------|-------|
-| **Cloud agent `vercel login`** | Blocked | OAuth device flow needs a human to visit `vercel.com/oauth/device` and approve. Cloud agent timed out waiting. |
+| **Cloud agent `vercel login`** | Blocked | `npx vercel whoami` → Logged out (2026-09-01). OAuth device flow needs a human to visit `vercel.com/oauth/device` and approve. |
 | **Cloud `VERCEL_TOKEN` env** | Not available | No token injected in cloud VM. |
 | **GitHub Actions secrets** | Not configured | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` all empty → CI deploy fails. |
 | **User local PC** | **Preferred** | User runs `vercel login` interactively, then `link`, `deploy`, `alias`. |

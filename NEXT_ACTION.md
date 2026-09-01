@@ -1,11 +1,11 @@
 # NEXT ACTION
 
-**Updated:** 2026-09-01  
-**Blocker:** Cloud Vercel CLI is logged out; device OAuth was not completed by a human.
+**Updated:** 2026-09-01 (final deploy attempt — commit `559fb41`)  
+**Blocker:** **BLOCCO: Vercel CLI non autenticata nell'ambiente dell'agente.**
 
-## Single next step
+`npx vercel whoami` → **Logged out**. Deploy and alias were **not** executed.
 
-**On your local PC** (in the repo clone), run these 4 commands to deploy and reassign the legacy domain:
+## Manual action required (local PC)
 
 ```bash
 cd /path/to/polesebarbershop
@@ -20,11 +20,12 @@ Replace `<deploy-url-from-previous-command>` with the production URL printed by 
 ## Verify after alias
 
 ```bash
-curl -s https://felicepolesebarbershop.vercel.app | grep -o 'Felice Polese Barber Shop' | head -1
-curl -s https://polesebarbershop.vercel.app | grep -o 'Felice Polese Barber Shop' | head -1
+curl -s https://felicepolesebarbershop.vercel.app | grep -E 'Felice Polese Barber Shop|Modern Barbering|Polese Barbershop'
 ```
 
-Both should return `Felice Polese Barber Shop`.
+**READY** only when output includes `Felice Polese Barber Shop` (not `Polese Barbershop`).
+
+Current state (2026-09-01): `felicepolesebarbershop.vercel.app` still shows **Polese Barbershop** (stale). `polesebarbershop.vercel.app` shows **Felice Polese Barber Shop** (correct).
 
 ## Optional: fix GitHub auto-deploy
 
@@ -40,4 +41,4 @@ Then re-run the failed workflow or push a no-op commit to `main`.
 
 ## Alternative (cloud)
 
-If you prefer to auth in cloud: visit the device URL when `npx vercel login` prints it, approve, then re-run the agent. Device URL from last attempt (expired): `https://vercel.com/oauth/device?user_code=HGGF-GJCF` — run `npx vercel login` again for a fresh code.
+Re-run the agent after completing `npx vercel login` in this environment (device OAuth at `https://vercel.com/oauth/device`), or inject `VERCEL_TOKEN` into the cloud environment.
