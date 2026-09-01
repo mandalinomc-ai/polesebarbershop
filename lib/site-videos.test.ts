@@ -15,7 +15,7 @@ describe("site-videos", () => {
 
     for (const video of ALL_SITE_VIDEOS) {
       expect(video.src).toMatch(/^\/assets\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
-      expect(video.poster).toMatch(/^\/assets\/images\//);
+      expect((video as { poster?: string }).poster).toBeUndefined();
       expect(video.alt.length).toBeGreaterThan(5);
     }
   });

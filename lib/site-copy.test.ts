@@ -74,6 +74,9 @@ describe("public copy vs official identity", () => {
       /200\s+prenotazioni/i,
       /limite\s+di\s+200/i,
       /hero--marble/,
+      /tricolog/i,
+      /hero-bg\.jpg/,
+      /hero-bg\.webp/,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -156,15 +159,22 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/ComingSoon/);
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
+    expect(page).toMatch(/ScissorsIntro/);
   });
 
-  it("includes prodotti section without tricologia in live layout", () => {
+  it("includes consulenza in sede without tricologia in live layout", () => {
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(landing).not.toMatch(/Consulenza Tricologica/);
-    expect(landing).not.toMatch(/id="consulenza"/);
+    expect(landing).toMatch(/Consulenza in sede/);
+    expect(landing).toMatch(/id="consulenza"/);
+    expect(landing).not.toMatch(/Consulenza Tricologica/i);
+    expect(landing).not.toMatch(/tricolog/i);
+    expect(landing).not.toMatch(/analisi cute/i);
+    expect(landing).not.toMatch(/percorsi curativi/i);
     expect(landing).toMatch(/id="prodotti"/);
-    expect(landing).toMatch(/brand-products\.jpg/);
+    expect(landing).not.toMatch(/brand-products\.jpg/);
     expect(landing).toMatch(/Barber Match 2023/);
+    expect(landing).not.toMatch(/gallery-grid/);
+    expect(landing).toMatch(/GALLERY_VIDEOS/);
     const widget = readFileSync(join(process.cwd(), "components/site/WhatsAppWidget.tsx"), "utf8");
     expect(widget).toMatch(/Prenota/);
     expect(widget).toMatch(/Info & orari/);
@@ -182,11 +192,15 @@ describe("public copy vs official identity", () => {
     expect(hero).toMatch(/OpeningCountdown/);
     expect(hero).toMatch(/HERO_CTA/);
     expect(hero).toMatch(/heroHeadline/);
+    const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
+    expect(page).toMatch(/ScissorsIntro/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/hero-day-scroller/);
     expect(css).toMatch(/hero-editorial/);
+    expect(css).toMatch(/scissors-intro/);
+    expect(css).toMatch(/blade-left-open/);
   });
 
   it("puts hours, Instagram, WhatsApp and prenota QR on contact and footer", () => {

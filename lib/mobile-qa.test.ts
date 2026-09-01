@@ -72,6 +72,9 @@ describe("mobile QA (390px)", () => {
     expect(landing).toMatch(/section-marble/);
     expect(hero).not.toMatch(/VideoReelGrid/);
     expect(landing).not.toMatch(/VideoReelGrid/);
+    expect(landing).not.toMatch(/gallery-grid/);
+    expect(landing).not.toMatch(/GALLERY_IMAGES/);
+    expect(landing).not.toMatch(/brand-products\.jpg/);
   });
 
   it("uses real video paths in hero asymmetric grid (no reel section)", () => {

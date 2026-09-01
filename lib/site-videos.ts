@@ -1,7 +1,6 @@
 export type SiteVideo = {
   id: string;
   src: string;
-  poster: string;
   alt: string;
 };
 
@@ -12,19 +11,16 @@ export const TAGLIO_VIDEOS: SiteVideo[] = [
   {
     id: "taglio-01",
     src: `${VIDEO_BASE}/taglio-01.mp4`,
-    poster: "/assets/images/gallery/fresha-02.jpg",
     alt: "Taglio capelli in salone — Felice Polese Barbershop",
   },
   {
     id: "taglio-02",
     src: `${VIDEO_BASE}/taglio-02.mp4`,
-    poster: "/assets/images/gallery/fresha-01.jpg",
     alt: "Tecnica di taglio — Polese Barbershop Benevento",
   },
   {
     id: "taglio-03",
     src: `${VIDEO_BASE}/taglio-03.mp4`,
-    poster: "/assets/images/gallery/fresha-03.jpg",
     alt: "Dettaglio taglio e finitura — Felice Polese",
   },
 ];
@@ -33,19 +29,16 @@ export const COLORAZIONE_VIDEOS: SiteVideo[] = [
   {
     id: "colorazione-01",
     src: `${VIDEO_BASE}/colorazione-01.mp4`,
-    poster: "/assets/images/gallery/fresha-03.jpg",
     alt: "Colorazione capelli in salone — Polese Barbershop",
   },
   {
     id: "colorazione-02",
     src: `${VIDEO_BASE}/colorazione-02.mp4`,
-    poster: "/assets/images/gallery/fresha-02.jpg",
     alt: "Applicazione colore — Felice Polese Barbershop",
   },
   {
     id: "colorazione-03",
     src: `${VIDEO_BASE}/colorazione-03.mp4`,
-    poster: "/assets/images/gallery/fresha-01.jpg",
     alt: "Risultato colorazione — Polese Barbershop",
   },
 ];

@@ -24,7 +24,6 @@ function HeroVideoCell({
     <div className={`hero-media-cell${className ? ` ${className}` : ""}`}>
       <video
         src={video.src}
-        poster={video.poster}
         autoPlay
         muted
         loop

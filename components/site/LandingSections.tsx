@@ -1,8 +1,7 @@
 import { SITE, getWhatsAppUrl, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
-import { GALLERY_IMAGES } from "@/lib/site-images";
 import { GALLERY_VIDEOS } from "@/lib/site-videos";
-import { FillCoverImage, SiteLogo } from "@/components/site/SiteImage";
+import { SiteLogo } from "@/components/site/SiteImage";
 import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
 import {
   SERVICE_CATEGORIES,
@@ -22,12 +21,7 @@ export function LandingSections() {
         <div className="eyebrow reveal">Chi sono</div>
         <h2 className="section-title font-serif reveal reveal-d1">Felice Polese</h2>
         <div className="about-grid">
-          <div className="about-visual reveal">
-            <FillCoverImage
-              src="/assets/images/gallery/fresha-02.jpg"
-              alt="Felice Polese al lavoro in salone"
-              sizes="(max-width: 900px) 100vw, 45vw"
-            />
+          <div className="about-visual reveal about-visual--badge-only">
             <span className="badge-match">Barber Match 2023</span>
           </div>
           <div className="reveal reveal-d2">
@@ -89,6 +83,32 @@ export function LandingSections() {
         </p>
       </section>
 
+      <section id="consulenza" className="section-pad section-white">
+        <div className="eyebrow reveal">Consulenza</div>
+        <h2 className="section-title font-serif reveal reveal-d1">Consulenza in sede</h2>
+        <div className="consult-copy reveal reveal-d1">
+          <p className="section-lead">
+            Vieni in salone per una consulenza fisica con Felice o Davide: ascoltiamo le tue
+            esigenze, valutiamo taglio, barba o colore e ti proponiamo il percorso più adatto.
+          </p>
+          <div className="consult-actions">
+            <a className="btn btn-dark" href="/#prenota">
+              Prenota consulenza
+            </a>
+            <a
+              className="btn btn-outline"
+              href={getWhatsAppUrl(
+                "Ciao, vorrei prenotare una consulenza in sede da Polese Barbershop.",
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section id="prodotti" className="section-pad section-white">
         <div className="eyebrow reveal">Prodotti</div>
         <h2 className="section-title font-serif reveal reveal-d1">
@@ -98,14 +118,6 @@ export function LandingSections() {
           Grooming essentials selezionati in salone. Ordina via WhatsApp — ritiro o
           consegna concordata con Felice e Davide.
         </p>
-        <div className="products-feature reveal">
-          <FillCoverImage
-            src="/assets/images/brand-products.jpg"
-            alt="Linea prodotti Felice Polese"
-            sizes="(max-width: 900px) 100vw, 48rem"
-            quality={95}
-          />
-        </div>
         <div className="products-grid">
           {PRODUCTS.map((p, i) => (
             <article
@@ -131,21 +143,9 @@ export function LandingSections() {
       <section id="galleria" className="section-pad section-marble">
         <div className="eyebrow reveal">Galleria</div>
         <h2 className="section-title font-serif reveal reveal-d1">Il salone</h2>
-        <div className="gallery-grid">
-          {GALLERY_IMAGES.map((item) => (
-            <figure
-              key={item.src}
-              className={`gallery-item reveal${item.tall ? " gallery-tall" : ""}`}
-            >
-              <FillCoverImage
-                src={item.src}
-                alt={item.alt}
-                sizes="(max-width: 768px) 50vw, 25vw"
-                className="gallery-photo"
-              />
-            </figure>
-          ))}
-        </div>
+        <p className="section-lead reveal">
+          Taglio e colorazione in movimento — riprese reali dal salone.
+        </p>
         <div className="gallery-video-grid">
           {GALLERY_VIDEOS.map((video, i) => (
             <figure
@@ -154,7 +154,6 @@ export function LandingSections() {
             >
               <video
                 src={video.src}
-                poster={video.poster}
                 autoPlay
                 muted
                 loop

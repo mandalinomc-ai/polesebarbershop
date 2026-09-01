@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { SITE } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
+import { ScissorsIcon } from "@/components/site/ScissorsIcon";
 
 function pad(n: number) {
   return String(Math.max(0, n)).padStart(2, "0");
@@ -38,6 +39,9 @@ export function OpeningCountdown() {
 
   return (
     <div className="opening-countdown-block">
+      <div className="scissors-anim" aria-hidden="true">
+        <ScissorsIcon variant="countdown" />
+      </div>
       <p className="opening-countdown-label">
         Apertura ufficiale · {formatItalianDate(SITE.openingDate)}
       </p>

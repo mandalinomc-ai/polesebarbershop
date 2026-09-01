@@ -16,6 +16,7 @@ import { SITE_PDFS } from "@/lib/site-pdf";
 const LINKS = [
   { href: "/#chi-sono", label: "Chi sono" },
   { href: "/#trattamenti", label: "Trattamenti" },
+  { href: "/#consulenza", label: "Consulenza" },
   { href: "/#prodotti", label: "Prodotti" },
   { href: "/#galleria", label: "Galleria" },
   { href: "/#prenota", label: "Prenota" },
