@@ -104,7 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
         />
       </head>
-      <body className="mode-live">{children}</body>
+      <body className="mode-live site-marble-canvas">{children}</body>
     </html>
   );
 }

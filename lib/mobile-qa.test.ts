@@ -58,4 +58,13 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
     expect(css).toMatch(/\.wa-fab,\s*\n\.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
+
+  it("keeps marble texture as the site-wide canvas", () => {
+    const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
+    const shell = readFileSync(join(process.cwd(), "components/site/SiteShell.tsx"), "utf8");
+    expect(layout).toMatch(/site-marble-canvas/);
+    expect(css).toMatch(/body\.site-marble-canvas/);
+    expect(css).toMatch(/--bg-marble-image/);
+    expect(shell).toMatch(/site-shell--light/);
+  });
 });
