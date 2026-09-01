@@ -205,7 +205,7 @@ describe("public copy vs official identity", () => {
     expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe("Prenota il tuo posto");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/Prenota ora/);
-    expect(hero).toMatch(/Raggiungimi qui/);
+    expect(hero).toMatch(/Raggiungici ora/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
@@ -256,7 +256,7 @@ describe("public copy vs official identity", () => {
     expect(crm).not.toMatch(/\.limit\(4000\)/);
   });
 
-  it("stacks a Maps FAB Raggiungimi qui to Corso Dante Alighieri 44", () => {
+  it("stacks a Maps FAB Raggiungici ora to Corso Dante Alighieri 44", () => {
     expect(CANCEL_HOURS_BEFORE).toBe(1);
     expect(MAPS_DESTINATION).toBe("Corso Dante Alighieri 44, 82100 Benevento");
     expect(getMapsUrl()).toContain("maps.google.com");
@@ -265,8 +265,8 @@ describe("public copy vs official identity", () => {
     expect(CANCEL_NOTICE_IT).toBe("1 ora");
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/id="maps-fab"/);
-    expect(chrome).toMatch(/aria-label="Raggiungimi qui"/);
-    expect(chrome).toMatch(/Raggiungimi qui — Corso Dante Alighieri, 44/);
+    expect(chrome).toMatch(/aria-label="Raggiungici ora"/);
+    expect(chrome).toMatch(/Raggiungici ora — Corso Dante Alighieri, 44/);
     expect(chrome).toMatch(/fab-stack/);
     expect(chrome).toMatch(/<MapsFab \/>/);
     expect(chrome).toMatch(/<WhatsAppFab \/>/);
@@ -277,7 +277,7 @@ describe("public copy vs official identity", () => {
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.maps-fab \{/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/Raggiungimi qui/);
+    expect(hero).toMatch(/Raggiungici ora/);
     const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8");
     expect(terms).toMatch(/CANCEL_NOTICE_IT/);
     expect(terms).not.toMatch(/24h|24 ore/);
