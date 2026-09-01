@@ -3,8 +3,9 @@ import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
+import { SalonVideo } from "@/components/site/SalonVideo";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
-import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
+import { SALONE_GENERALE_VIDEO } from "@/lib/site-videos";
 
 const GALLERY = [
   {
@@ -54,16 +55,7 @@ export function LandingSections() {
             </p>
           </div>
           <div className="about-video">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="felice-video-hero"
-              aria-label={FELICE_WORKING_VIDEO.alt}
-            >
-              <source src={FELICE_WORKING_VIDEO.src} type="video/mp4" />
-            </video>
+            <SalonVideo video={SALONE_GENERALE_VIDEO} className="about-video-player" />
           </div>
         </div>
       </section>

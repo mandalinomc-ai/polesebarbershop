@@ -4,27 +4,23 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_SITE_VIDEOS,
   COLORAZIONE_VIDEOS,
-  FELICE_WORKING_FILENAME,
-  FELICE_WORKING_VIDEO,
   GALLERY_VIDEOS,
   HERO_VIDEOS,
   REQUIRED_VIDEO_FILES,
   SALONE_GENERALE_VIDEO,
   TAGLIO_VIDEOS,
   VIDEO_BASE,
-  VIDEO_HERO_BASE,
   VIDEO_REELS,
 } from "./site-videos";
 
 const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
-const VIDEO_HERO_DIR = join(process.cwd(), "public", "assets", "videos");
 
 describe("site-videos", () => {
   it("defines six service reels plus general salon video under /assets/video/", () => {
     expect(TAGLIO_VIDEOS).toHaveLength(3);
     expect(COLORAZIONE_VIDEOS).toHaveLength(3);
     expect(VIDEO_REELS).toHaveLength(6);
-    expect(ALL_SITE_VIDEOS).toHaveLength(8);
+    expect(ALL_SITE_VIDEOS).toHaveLength(7);
 
     for (const video of VIDEO_REELS) {
       expect(video.src).toMatch(/^\/assets\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
@@ -32,12 +28,6 @@ describe("site-videos", () => {
     }
 
     expect(SALONE_GENERALE_VIDEO.src).toBe(`${VIDEO_BASE}/salone-generale.mp4`);
-    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_HERO_BASE}/felice-working.mp4`);
-  });
-
-  it("has felice-working.mp4 committed in public/assets/videos/", () => {
-    const diskPath = join(VIDEO_HERO_DIR, FELICE_WORKING_FILENAME);
-    expect(existsSync(diskPath), `missing ${diskPath}`).toBe(true);
   });
 
   it("has all required mp4 files committed on disk in public/assets/video/", () => {

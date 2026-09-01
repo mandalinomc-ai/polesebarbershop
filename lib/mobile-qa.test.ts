@@ -48,7 +48,7 @@ describe("mobile QA (390px)", () => {
 
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
     expect(chrome).toMatch(/fab-stack/);
-    expect(chrome).toMatch(/aria-label="Raggiungimi qui"/);
+    expect(chrome).toMatch(/aria-label="Raggiungici ora"/);
     expect(chrome.indexOf("<MapsFab />")).toBeLessThan(chrome.indexOf("<WhatsAppFab />"));
     expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
@@ -67,7 +67,7 @@ describe("mobile QA (390px)", () => {
     expect(landing).toMatch(/gallery-grid/);
     expect(landing).toMatch(/fresha-01\.jpg/);
     expect(landing).toMatch(/VideoReelGrid/);
-    expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
+    expect(landing).toMatch(/SALONE_GENERALE_VIDEO/);
     expect(hero).not.toMatch(/HERO_VIDEOS/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
