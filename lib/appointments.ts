@@ -1,6 +1,7 @@
 import { formatItalianDate, formatWallDate, formatWallTime, wallTimeToUtc } from "@/lib/availability";
 import { getBarber, type Service } from "@/lib/catalog";
 import { getSupabaseAdmin, type AppointmentRow } from "@/lib/supabase";
+import { fetchAllPages } from "@/lib/supabase-query";
 
 export type DayBusy = { barberId: string; startsAt: string; endsAt: string };
 const BLOCKING = ["pending", "confirmed", "walk_in", "completed"] as const;
@@ -14,18 +15,31 @@ export function shouldAttachCalendarReminder(status: string): boolean {
   return occupiesSlot(status) && status !== "cancelled";
 }
 
+type DayRow = {
+  barber_id: string;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+};
+
 export async function loadDayAppointments(date: string): Promise<DayBusy[]> {
   const db = getSupabaseAdmin();
   if (!db) return [];
-  const { data, error } = await db
-    .from("appointments")
-    .select("barber_id, starts_at, ends_at, status")
-    .gte("starts_at", wallTimeToUtc(date, "00:00").toISOString())
-    .lte("starts_at", wallTimeToUtc(date, "23:59").toISOString());
+  const dayStart = wallTimeToUtc(date, "00:00").toISOString();
+  const dayEnd = wallTimeToUtc(date, "23:59").toISOString();
+  const { data, error } = await fetchAllPages<DayRow>(async (from, to) =>
+    db
+      .from("appointments")
+      .select("barber_id, starts_at, ends_at, status")
+      .gte("starts_at", dayStart)
+      .lte("starts_at", dayEnd)
+      .order("starts_at", { ascending: true })
+      .range(from, to),
+  );
   if (error) return [];
-  return (data || [])
-    .filter((row: { status: string }) => occupiesSlot(row.status))
-    .map((row: { barber_id: string; starts_at: string; ends_at: string }) => ({
+  return data
+    .filter((row) => occupiesSlot(row.status))
+    .map((row) => ({
       barberId: row.barber_id,
       startsAt: row.starts_at,
       endsAt: row.ends_at,

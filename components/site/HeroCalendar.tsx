@@ -6,11 +6,12 @@ import {
   BOOKING_DATE_EVENT,
   BOOKING_DATE_PARAM,
   BOOKING_DATE_STORAGE_KEY,
+  HERO_CALENDAR_DAYS,
   bookingWizardHref,
 } from "@/lib/site-config";
 
 export function HeroCalendar() {
-  const days = useMemo(() => listOpenDayChips(12), []);
+  const days = useMemo(() => listOpenDayChips(HERO_CALENDAR_DAYS), []);
 
   function pick(iso: string) {
     try {
