@@ -70,6 +70,8 @@ describe("public copy vs official identity", () => {
       /id=["']consulenza["']/,
       /\/#consulenza/,
       /mandalinomc@gmail\.com/,
+      /200\s+prenotazioni/i,
+      /limite\s+di\s+200/i,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -186,6 +188,17 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/SocialTextLinks/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.qr-card \{[\s\S]*?min-height:\s*44px/);
+  });
+
+  it("does not cap total bookings — wizard shows many open days", () => {
+    expect(BOOKING_UI_DAYS).toBeGreaterThan(16);
+    expect(HERO_CALENDAR_DAYS).toBeGreaterThanOrEqual(12);
+    const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
+    expect(wizard).toMatch(/BOOKING_UI_DAYS/);
+    expect(wizard).toMatch(/alcun limite al numero totale/i);
+    const crm = readFileSync(join(process.cwd(), "app/api/admin/crm/route.ts"), "utf8");
+    expect(crm).toMatch(/fetchAllPages/);
+    expect(crm).not.toMatch(/\.limit\(4000\)/);
   });
 
   it("stacks a Maps FAB Raggiungici ora to Corso Dante Alighieri 44", () => {

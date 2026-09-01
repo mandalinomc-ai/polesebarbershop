@@ -18,6 +18,7 @@ import {
 } from "@/lib/availability";
 import {
   BOOKING_DATE_EVENT,
+  BOOKING_UI_DAYS,
   CANCEL_NOTICE_IT,
   SITE,
   getBookingConfirmWhatsAppUrl,
@@ -63,7 +64,7 @@ export function FreshaBookingFlow() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [barberId, setBarberId] = useState("anyone");
   const firstBookable = useMemo(() => getFirstBookableDate(), []);
-  const days = useMemo(() => listOpenDayChips(16), []);
+  const days = useMemo(() => listOpenDayChips(BOOKING_UI_DAYS), []);
   const [date, setDate] = useState(days[0]?.date || firstBookable);
   const [slots, setSlots] = useState<ApiSlot[]>([]);
   const [slotsState, setSlotsState] = useState<
@@ -609,6 +610,8 @@ export function BookingSectionNote() {
       Prenota già ora, prima dell&apos;apertura ufficiale. Cinque passi online.
       Orari {SITE.hours.weekdays}. Primo giorno disponibile:{" "}
       {formatItalianDate(getFirstBookableDate())}. Barbieri: Felice e Davide.
+      {" "}Non c&apos;è alcun limite al numero totale di prenotazioni: ogni
+      orario libero resta prenotabile finché la poltrona è disponibile.
     </p>
   );
 }

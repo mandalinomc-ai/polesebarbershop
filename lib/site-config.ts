@@ -42,6 +42,12 @@ export const SITE = {
 } as const;
 
 export const SLOT_STEP_MINUTES = 5;
+/** Open days shown in the booking wizard day scroller (no cap on total bookings). */
+export const BOOKING_UI_DAYS = 42;
+/** Open days in the hero mini-calendar. */
+export const HERO_CALENDAR_DAYS = 14;
+/** Max open days the calendar can list when generating bookable dates. */
+export const BOOKING_HORIZON_DAYS = 365;
 export const MIN_NOTICE_MINUTES = 15;
 export const REMINDER_LEAD_MINUTES = 30;
 export const CANCEL_HOURS_BEFORE = 1;

@@ -7,6 +7,7 @@ import {
   type DayHours,
 } from "./catalog";
 import {
+  BOOKING_HORIZON_DAYS,
   MIN_NOTICE_MINUTES,
   SLOT_STEP_MINUTES,
   SITE,
@@ -209,10 +210,12 @@ export function listBookableDates(
   count: number,
   now: Date = new Date(),
 ): string[] {
+  const capped = Math.min(Math.max(count, 1), BOOKING_HORIZON_DAYS);
   const dates: string[] = [];
   let cursor = getFirstBookableDate(now);
+  const guardMax = Math.max(capped * 3 + 14, 60);
   let guard = 0;
-  while (dates.length < count && guard < 120) {
+  while (dates.length < capped && guard < guardMax) {
     if (!isClosedDay(cursor)) dates.push(cursor);
     cursor = addDays(cursor, 1);
     guard += 1;

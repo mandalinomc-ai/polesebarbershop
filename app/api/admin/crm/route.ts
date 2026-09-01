@@ -3,6 +3,7 @@ import { isAdminRequest } from "@/lib/admin-auth";
 import { formatWallDate } from "@/lib/availability";
 import { aggregateClients, aggregateStats, toCrmAppointment } from "@/lib/crm";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
+import { fetchAllPages } from "@/lib/supabase-query";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,11 +28,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ date, clients: [], stats, warning: EMPTY_DB_IT });
   }
 
-  const { data, error } = await db
-    .from("appointments")
-    .select("*")
-    .order("starts_at", { ascending: false })
-    .limit(4000);
+  const { data, error } = await fetchAllPages<AppointmentRow>(async (from, to) =>
+    db
+      .from("appointments")
+      .select("*")
+      .order("starts_at", { ascending: false })
+      .range(from, to),
+  );
 
   if (error) {
     const stats = aggregateStats([], { date });
