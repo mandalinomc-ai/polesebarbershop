@@ -276,7 +276,7 @@ export function FreshaBookingFlow() {
             {success.ics ? (
               <button
                 type="button"
-                className="btn btn-gold btn-magnetic"
+                className="btn btn-gold"
                 onClick={() => downloadIcs(success.icsFilename, success.ics)}
               >
                 Apple Calendar (.ics)
@@ -284,7 +284,7 @@ export function FreshaBookingFlow() {
             ) : null}
             {success.googleCalendarUrl ? (
               <a
-                className="btn btn-outline btn-magnetic"
+                className="btn btn-outline"
                 href={success.googleCalendarUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -293,12 +293,12 @@ export function FreshaBookingFlow() {
               </a>
             ) : null}
             {success.ics ? (
-              <a className="btn btn-outline btn-magnetic" href={icsDataUri(success.ics)} download={success.icsFilename}>
+              <a className="btn btn-outline" href={icsDataUri(success.ics)} download={success.icsFilename}>
                 Scarica .ics
               </a>
             ) : null}
             <a
-              className="btn btn-outline btn-magnetic"
+              className="btn btn-outline"
               href={getBookingConfirmWhatsAppUrl({
                 firstName,
                 service: totals.names,
@@ -589,7 +589,7 @@ export function FreshaBookingFlow() {
         </div>
         <button
           type="button"
-          className="btn btn-gold btn-magnetic"
+          className="btn btn-gold"
           disabled={!canContinue() || submitting}
           onClick={onPrimary}
         >

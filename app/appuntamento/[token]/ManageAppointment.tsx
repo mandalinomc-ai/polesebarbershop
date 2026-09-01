@@ -129,11 +129,11 @@ export function ManageAppointment({ token }: { token: string }) {
             termine chiama il {SITE.phone}.
           </p>
           <div className="success-actions" style={{ justifyContent: "stretch" }}>
-            <a className="btn btn-outline btn-magnetic" href={icsHref}>
+            <a className="btn btn-outline" href={icsHref}>
               Scarica .ics (promemoria 30 min)
             </a>
             <a
-              className="btn btn-outline btn-magnetic"
+              className="btn btn-outline"
               href={getBookingConfirmWhatsAppUrl({
                 firstName: data.firstName,
                 service: data.serviceNames,
@@ -164,11 +164,11 @@ export function ManageAppointment({ token }: { token: string }) {
             l&apos;evento dal calendario.
           </p>
           {data.ics ? (
-            <a className="btn btn-outline btn-magnetic" href={icsDataUri(data.ics)} download>
+            <a className="btn btn-outline" href={icsDataUri(data.ics)} download>
               Rimuovi dal calendario
             </a>
           ) : (
-            <a className="btn btn-outline btn-magnetic" href={icsHref}>
+            <a className="btn btn-outline" href={icsHref}>
               Rimuovi dal calendario
             </a>
           )}

@@ -11,6 +11,7 @@ import {
 } from "@/lib/site-config";
 import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
 import { SiteLogo } from "@/components/site/SiteImage";
+import { SITE_PDFS } from "@/lib/site-pdf";
 
 const LINKS = [
   { href: "/#chi-sono", label: "Chi sono" },
@@ -78,7 +79,7 @@ export function Header() {
             ))}
           </ul>
         </nav>
-        <a href="/#prenota" className="btn btn-dark btn-magnetic header-cta">
+        <a href="/#prenota" className="btn btn-dark header-cta">
           PRENOTA ORA
         </a>
         <button
@@ -196,6 +197,15 @@ export function Footer() {
             {SITE.hours.weekdays}
             <br />
             {SITE.hours.monday} · {SITE.hours.sunday}
+            <br />
+            <a href={SITE_PDFS.hoursPanel} target="_blank" rel="noopener noreferrer" className="contact-link">
+              Pannello orari (PDF)
+            </a>
+          </p>
+          <p>
+            <a href={SITE_PDFS.logo} target="_blank" rel="noopener noreferrer" className="contact-link">
+              Logo Felice Polese (PDF)
+            </a>
           </p>
           <p>
             C.F.: {SITE.fiscalCode} | P.IVA: {SITE.vatNumber}
@@ -216,6 +226,19 @@ export function Footer() {
           </a>
         </div>
         <SocialQrGrid variant="footer" />
+        <div className="footer-pdf-panel">
+          <p className="qr-intro">Pannello orari ufficiale</p>
+          <object
+            data={SITE_PDFS.hoursPanel}
+            type="application/pdf"
+            className="footer-hours-pdf"
+            aria-label="Pannello orari Polese Barbershop"
+          >
+            <a href={SITE_PDFS.hoursPanel} target="_blank" rel="noopener noreferrer" className="contact-link">
+              Apri pannello orari (PDF)
+            </a>
+          </object>
+        </div>
       </div>
       <div className="footer-links">
         <a href="/privacy-policy">Privacy</a>
@@ -250,32 +273,6 @@ export function ClientEffects() {
     );
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (window.matchMedia("(hover: none)").matches) return;
-    const buttons = Array.from(document.querySelectorAll<HTMLElement>(".btn-magnetic"));
-    const move = (e: MouseEvent) => {
-      const btn = e.currentTarget as HTMLElement;
-      const rect = btn.getBoundingClientRect();
-      btn.style.setProperty("--mx", `${(e.clientX - rect.left - rect.width / 2) * 0.12}px`);
-      btn.style.setProperty("--my", `${(e.clientY - rect.top - rect.height / 2) * 0.12}px`);
-    };
-    const leave = (e: MouseEvent) => {
-      const btn = e.currentTarget as HTMLElement;
-      btn.style.setProperty("--mx", "0px");
-      btn.style.setProperty("--my", "0px");
-    };
-    buttons.forEach((btn) => {
-      btn.addEventListener("mousemove", move);
-      btn.addEventListener("mouseleave", leave);
-    });
-    return () => {
-      buttons.forEach((btn) => {
-        btn.removeEventListener("mousemove", move);
-        btn.removeEventListener("mouseleave", leave);
-      });
-    };
   }, []);
 
   return null;

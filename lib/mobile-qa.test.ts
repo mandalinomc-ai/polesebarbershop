@@ -58,28 +58,38 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("uses white editorial canvas instead of marble texture", () => {
+  it("uses HD marble texture with Marcel white editorial canvas", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const shell = readFileSync(join(process.cwd(), "components/site/SiteShell.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
+    const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(layout).toMatch(/site-white-canvas/);
-    expect(css).toMatch(/background:\s*var\(--white\)/);
-    expect(css).not.toMatch(/marble\.png/);
-    expect(shell).not.toMatch(/site-marble/);
+    expect(layout).toMatch(/site-marble-canvas/);
+    expect(css).toMatch(/marble\.png/);
+    expect(css).toMatch(/background-size:\s*cover/);
+    expect(shell).toMatch(/site-marble-canvas/);
     expect(hero).toMatch(/hero-editorial/);
-    expect(hero).not.toMatch(/hero--marble/);
+    expect(hero).not.toMatch(/VideoReelGrid/);
+    expect(landing).not.toMatch(/VideoReelGrid/);
   });
 
-  it("renders Instagram-style vertical video reel boxes on the homepage", () => {
+  it("uses real video paths in hero asymmetric grid (no reel section)", () => {
+    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    const reels = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
-    expect(landing).toMatch(/VideoReelGrid/);
-    expect(reels).toMatch(/video-reel-grid/);
-    expect(reels).toMatch(/autoPlay/);
-    expect(reels).toMatch(/muted/);
-    expect(reels).toMatch(/loop/);
-    expect(reels).toMatch(/playsInline/);
-    expect(css).toMatch(/\.video-reel-player[\s\S]*object-fit:\s*cover/);
-    expect(css).toMatch(/aspect-ratio:\s*9\s*\/\s*16/);
+    const videos = readFileSync(join(process.cwd(), "lib/site-videos.ts"), "utf8");
+    expect(hero).toMatch(/HERO_VIDEOS/);
+    expect(hero).toMatch(/site-videos/);
+    expect(videos).toMatch(/taglio-01\.mp4/);
+    expect(videos).toMatch(/\/assets\/video/);
+    expect(hero).toMatch(/autoPlay/);
+    expect(hero).toMatch(/muted/);
+    expect(hero).toMatch(/loop/);
+    expect(hero).toMatch(/playsInline/);
+    expect(landing).not.toMatch(/VideoReelGrid/);
+    expect(landing).not.toMatch(/video-reel/);
+    expect(landing).toMatch(/gallery-video-grid/);
+    expect(landing).toMatch(/GALLERY_VIDEOS/);
+    expect(css).toMatch(/\.hero-media-cell video[\s\S]*object-fit:\s*cover/);
+    expect(css).toMatch(/\.gallery-video video[\s\S]*object-fit:\s*cover/);
   });
 });

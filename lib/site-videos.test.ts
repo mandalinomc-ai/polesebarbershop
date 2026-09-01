@@ -1,28 +1,43 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { VIDEO_REELS } from "./site-videos";
+import {
+  ALL_SITE_VIDEOS,
+  COLORAZIONE_VIDEOS,
+  GALLERY_VIDEOS,
+  HERO_VIDEOS,
+  TAGLIO_VIDEOS,
+} from "./site-videos";
 
-describe("site-videos reels", () => {
-  it("defines four vertical salon reels with mp4 sources and posters", () => {
-    expect(VIDEO_REELS).toHaveLength(4);
-    const ids = VIDEO_REELS.map((r) => r.id);
-    expect(new Set(ids).size).toBe(4);
+describe("site-videos", () => {
+  it("defines six real salon videos under public/assets/video/", () => {
+    expect(TAGLIO_VIDEOS).toHaveLength(3);
+    expect(COLORAZIONE_VIDEOS).toHaveLength(3);
+    expect(ALL_SITE_VIDEOS).toHaveLength(6);
 
-    for (const reel of VIDEO_REELS) {
-      expect(reel.src).toMatch(/^\/video\/reel-\d{2}\.mp4$/);
-      expect(reel.poster).toMatch(/^\/assets\/images\//);
-      expect(reel.alt.length).toBeGreaterThan(5);
-      expect(reel.label.length).toBeGreaterThan(2);
+    for (const video of ALL_SITE_VIDEOS) {
+      expect(video.src).toMatch(/^\/assets\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
+      expect(video.poster).toMatch(/^\/assets\/images\//);
+      expect(video.alt.length).toBeGreaterThan(5);
     }
   });
 
-  it("ships reel mp4 files in public/video", () => {
-    for (const reel of VIDEO_REELS) {
-      const disk = join(process.cwd(), "public", reel.src.replace(/^\//, ""));
-      expect(existsSync(disk), reel.src).toBe(true);
-      const size = readFileSync(disk).length;
-      expect(size).toBeGreaterThan(100_000);
+  it("uses taglio + colorazione in the hero asymmetric grid (no reel labels)", () => {
+    expect(HERO_VIDEOS).toHaveLength(3);
+    expect(HERO_VIDEOS.map((v) => v.id)).toEqual([
+      "taglio-01",
+      "taglio-02",
+      "colorazione-01",
+    ]);
+    for (const video of HERO_VIDEOS) {
+      expect((video as { label?: string }).label).toBeUndefined();
     }
+  });
+
+  it("shows remaining footage in gallery grid (no invented labels)", () => {
+    expect(GALLERY_VIDEOS).toHaveLength(3);
+    expect(GALLERY_VIDEOS.map((v) => v.id)).toEqual([
+      "taglio-03",
+      "colorazione-02",
+      "colorazione-03",
+    ]);
   });
 });

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   SITE,
   HERO_CTA,
@@ -12,12 +11,34 @@ import {
 import { formatItalianDate } from "@/lib/availability";
 import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 import { HeroCalendar } from "@/components/site/HeroCalendar";
-import { FillCoverImage } from "@/components/site/SiteImage";
-import { VIDEO_REELS } from "@/lib/site-videos";
+import { HERO_VIDEOS } from "@/lib/site-videos";
+
+function HeroVideoCell({
+  video,
+  className,
+}: {
+  video: (typeof HERO_VIDEOS)[number];
+  className?: string;
+}) {
+  return (
+    <div className={`hero-media-cell${className ? ` ${className}` : ""}`}>
+      <video
+        src={video.src}
+        poster={video.poster}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-label={video.alt}
+      />
+    </div>
+  );
+}
 
 export function Hero() {
   const beforeOpening = isBeforeOfficialOpening();
-  const heroVideo = VIDEO_REELS[0];
+  const [primary, secondaryTop, secondaryBottom] = HERO_VIDEOS;
 
   return (
     <section id="hero" className="hero hero-editorial">
@@ -33,12 +54,12 @@ export function Hero() {
               : `Felice e Davide — taglio, barba, colore e consulenza tricologica a ${SITE.address}, ${SITE.city}.`}
           </p>
           <div className="hero-actions">
-            <a href="/#prenota" className="btn btn-dark btn-magnetic">
+            <a href="/#prenota" className="btn btn-dark">
               {HERO_CTA}
             </a>
             <a
               href={getWhatsAppUrl()}
-              className="btn btn-outline btn-magnetic"
+              className="btn btn-outline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -46,7 +67,7 @@ export function Hero() {
             </a>
             <a
               href={getMapsUrl()}
-              className="btn btn-outline btn-magnetic"
+              className="btn btn-outline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -56,25 +77,13 @@ export function Hero() {
           <HeroCalendar />
         </div>
         <div className="hero-media reveal reveal-d1">
-          <div className="hero-media-video">
-            <video
-              src={heroVideo.src}
-              poster={heroVideo.poster}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              aria-label={heroVideo.alt}
-            />
-          </div>
-          <div className="hero-media-photo">
-            <FillCoverImage
-              src="/assets/images/gallery/fresha-01.jpg"
-              alt="Interno Polese Barbershop"
-              sizes="(max-width: 900px) 100vw, 45vw"
-            />
-          </div>
+          {primary ? <HeroVideoCell video={primary} className="hero-media-cell--primary" /> : null}
+          {secondaryTop ? (
+            <HeroVideoCell video={secondaryTop} className="hero-media-cell--secondary" />
+          ) : null}
+          {secondaryBottom ? (
+            <HeroVideoCell video={secondaryBottom} className="hero-media-cell--secondary" />
+          ) : null}
         </div>
       </div>
     </section>

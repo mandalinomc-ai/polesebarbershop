@@ -113,7 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
         />
       </head>
-      <body className="site-white-canvas">{children}</body>
+      <body className="site-white-canvas site-marble-canvas">{children}</body>
     </html>
   );
 }

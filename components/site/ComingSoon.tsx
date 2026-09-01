@@ -13,7 +13,7 @@ export function ComingSoon() {
       <div className="coming-soon-inner">
         <SiteLogo
           alt="Felice Polese — Polese Barbershop"
-          className="brand-logo brand-logo--pulse brand-logo--hero"
+          className="brand-logo brand-logo--hero"
           sizes="(max-width: 640px) 60vw, 240px"
           priority
         />
@@ -28,7 +28,7 @@ export function ComingSoon() {
         </div>
         <OpeningCountdown />
         <a
-          className="btn btn-dark btn-magnetic"
+          className="btn btn-dark"
           href={notifyUrl}
           target="_blank"
           rel="noopener noreferrer"

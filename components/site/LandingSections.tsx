@@ -1,6 +1,7 @@
 import { SITE, getWhatsAppUrl, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 import { GALLERY_IMAGES } from "@/lib/site-images";
+import { GALLERY_VIDEOS } from "@/lib/site-videos";
 import { FillCoverImage, SiteLogo } from "@/components/site/SiteImage";
 import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
 import {
@@ -14,8 +15,6 @@ import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
-import { VideoReelGrid } from "@/components/site/VideoReelGrid";
-
 export function LandingSections() {
   return (
     <>
@@ -108,7 +107,7 @@ export function LandingSections() {
             </p>
             <div className="consult-actions">
               <a
-                className="btn btn-dark btn-magnetic"
+                className="btn btn-dark"
                 href={getWhatsAppUrl(
                   "Ciao, vorrei prenotare una consulenza tricologica da Polese Barbershop.",
                 )}
@@ -117,7 +116,7 @@ export function LandingSections() {
               >
                 Prenota consulenza
               </a>
-              <a className="btn btn-outline btn-magnetic" href="/#prenota">
+              <a className="btn btn-outline" href="/#prenota">
                 Prenota online
               </a>
             </div>
@@ -154,7 +153,7 @@ export function LandingSections() {
               <p>{p.description}</p>
               <span className="product-price">{p.priceLabel}</span>
               <a
-                className="btn btn-outline btn-magnetic product-order"
+                className="btn btn-outline product-order"
                 href={getWhatsAppUrl(productOrderMessage(p.name))}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -165,8 +164,6 @@ export function LandingSections() {
           ))}
         </div>
       </section>
-
-      <VideoReelGrid />
 
       <section id="galleria" className="section-pad section-white">
         <div className="eyebrow reveal">Galleria</div>
@@ -182,6 +179,25 @@ export function LandingSections() {
                 alt={item.alt}
                 sizes="(max-width: 768px) 50vw, 25vw"
                 className="gallery-photo"
+              />
+            </figure>
+          ))}
+        </div>
+        <div className="gallery-video-grid">
+          {GALLERY_VIDEOS.map((video, i) => (
+            <figure
+              key={video.id}
+              className={`gallery-video reveal${i === 1 ? " reveal-d1" : i === 2 ? " reveal-d2" : ""}`}
+            >
+              <video
+                src={video.src}
+                poster={video.poster}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                aria-label={video.alt}
               />
             </figure>
           ))}

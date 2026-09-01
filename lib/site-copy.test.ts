@@ -74,7 +74,6 @@ describe("public copy vs official identity", () => {
       /200\s+prenotazioni/i,
       /limite\s+di\s+200/i,
       /hero--marble/,
-      /site-marble-canvas/,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -150,7 +149,6 @@ describe("public copy vs official identity", () => {
     expect(IS_COMING_SOON).toBe(false);
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/avvisato all'apertura/i);
     const coming = readFileSync(join(process.cwd(), "components/site/ComingSoon.tsx"), "utf8");
-    expect(coming).toMatch(/brand-logo--pulse/);
     expect(coming).toMatch(/OpeningCountdown/);
     expect(coming).toMatch(/Avvisami su WhatsApp/);
     const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
@@ -214,6 +212,9 @@ describe("public copy vs official identity", () => {
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/footer-hours/);
     expect(chrome).toMatch(/SocialQrGrid/);
+    expect(chrome).toMatch(/SITE_PDFS/);
+    expect(chrome).toMatch(/footer-hours-pdf/);
+    expect(chrome).toMatch(/Pannello orari \(PDF\)/);
     expect(chrome).toMatch(/SocialTextLinks/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.qr-card \{[\s\S]*?min-height:\s*44px/);
