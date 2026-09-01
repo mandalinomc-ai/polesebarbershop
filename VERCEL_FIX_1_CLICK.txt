@@ -1,0 +1,37 @@
+POLESE BARBERSHOP — FIX VERCEL (1 CLICK)
+=========================================
+
+STATO (1 settembre 2026)
+------------------------
+  ✓ Codice nuovo live su https://polesebarbershop.vercel.app
+  ✗ Prenotazioni NON salvate (mancano variabili d'ambiente su Vercel)
+  ✗ https://felicepolesebarbershop.vercel.app → 404 (progetto Vercel abbandonato)
+
+DEPLOY FUNZIONANTE PRONTO (testato dall'agente)
+-----------------------------------------------
+  URL: https://temporary-fast-indigo-e6p0quw.vercel.app
+  ✓ Database Supabase collegato
+  ✓ Prenotazione test salvata (persisted: true)
+  ✓ Email inviata
+  ⚠ Scade se non reclamato entro ~60 minuti dall'ultimo deploy anonimo
+
+AZIONE UNICA — 30 SECONDI (nessuna navigazione in Settings)
+-----------------------------------------------------------
+  1. Apri questo link (con account mandalinomc@gmail.com):
+     https://vercel.com/claim-deployment?code=55d2bc0f-4aa5-4acf-bdbb-f1c6bef2b18f
+
+  2. Assegna al progetto «polesebarbershop» (NON felicepolesebarbershop)
+
+  3. Fatto — polesebarbershop.vercel.app avrà prenotazioni funzionanti.
+
+ALTERNATIVA — TOKEN (l'agente fa tutto in automatico)
+-------------------------------------------------------
+  Invia una volta il VERCEL_TOKEN (https://vercel.com/account/tokens → Create)
+  e l'agente esegue:
+    VERCEL_TOKEN=xxx VERCEL_ORG_ID=xxx ./scripts/vercel-configure-production.sh
+
+  Così anche i futuri deploy da GitHub resteranno configurati.
+
+URL FINALE APERTURA 2 SETTEMBRE
+-------------------------------
+  https://polesebarbershop.vercel.app
