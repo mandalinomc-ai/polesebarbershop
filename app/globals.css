@@ -450,6 +450,59 @@ select.input-lux { appearance: none; cursor: pointer; }
   text-transform: uppercase;
 }
 
+.opening-countdown-block {
+  width: 100%;
+  max-width: 36rem;
+  margin: 0 auto 1.25rem;
+  text-align: center;
+}
+.opening-countdown-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 1rem;
+}
+.scissors-anim {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+.scissors-icon {
+  width: clamp(2.5rem, 8vw, 3.25rem);
+  height: auto;
+  color: var(--gold);
+  transform-origin: 32px 28px;
+  animation: scissors-snip 2.4s ease-in-out infinite;
+}
+.scissors-blade--left {
+  transform-origin: 32px 28px;
+  animation: blade-left 2.4s ease-in-out infinite;
+}
+.scissors-blade--right {
+  transform-origin: 32px 28px;
+  animation: blade-right 2.4s ease-in-out infinite;
+}
+@keyframes scissors-snip {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-6deg); }
+  40% { transform: rotate(4deg); }
+  60% { transform: rotate(-3deg); }
+  80% { transform: rotate(0deg); }
+}
+@keyframes blade-left {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-14deg); }
+  50% { transform: rotate(8deg); }
+  75% { transform: rotate(-6deg); }
+}
+@keyframes blade-right {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(14deg); }
+  50% { transform: rotate(-8deg); }
+  75% { transform: rotate(6deg); }
+}
+
 .notify-form {
   width: min(100%, 28rem);
   display: flex;

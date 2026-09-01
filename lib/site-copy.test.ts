@@ -23,7 +23,7 @@ import {
   HERO_CALENDAR_DAYS,
 } from "./site-config";
 
-const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out"]);
+const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out", ".vercel"]);
 const SOURCE_EXT = /\.(ts|tsx|js|jsx|html|txt|xml|css|json|sql|cmd)$/;
 
 function walk(dir: string, acc: string[] = []): string[] {
@@ -68,6 +68,8 @@ describe("public copy vs official identity", () => {
       /dermatolog/i,
       /caduta capelli/i,
       /Consulenza Tricologica/,
+      /Parla con il salone/i,
+      /parlare con il salone/i,
       /id=["']consulenza["']/,
       /\/#consulenza/,
       /mandalinomc@gmail\.com/,
@@ -87,16 +89,16 @@ describe("public copy vs official identity", () => {
   });
 
   it("uses a generic salon contact message without specialist consult language", () => {
-    expect(SALON_CONTACT.title).toBe("Parla con il salone");
+    expect(SALON_CONTACT.title).toBe("Scrivici");
     expect(SALON_CONTACT.id).toBe("scrivici");
     expect(SALON_CONTACT.prefill).toBe(SALON_CONTACT_MESSAGE);
     expect(SALON_CONTACT_MESSAGE).toBe(
-      "Ciao, vorrei parlare con il salone per un'informazione.",
+      "Ciao, vorrei un'informazione su orari, prezzi o servizi.",
     );
-    expect(SALON_CONTACT.body).toMatch(/info, orari, prezzi o un consiglio/i);
+    expect(SALON_CONTACT.body).toMatch(/info, orari, prezzi/i);
     expect(getWhatsAppUrl()).toContain(encodeURIComponent(SALON_CONTACT_MESSAGE));
     expect(SALON_CONTACT.body + SALON_CONTACT.title + SALON_CONTACT_MESSAGE).not.toMatch(
-      /tricolog|dermatolog|caduta/i,
+      /tricolog|dermatolog|caduta|parla con il salone/i,
     );
   });
 
@@ -152,6 +154,7 @@ describe("public copy vs official identity", () => {
     expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe("Prenota il tuo posto");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/HeroCalendar/);
+    expect(hero).toMatch(/OpeningCountdown/);
     expect(hero).toMatch(/hero-cta-primary/);
     expect(hero).toMatch(/getHeroHeadline/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");

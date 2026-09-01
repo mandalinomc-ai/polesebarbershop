@@ -42,6 +42,7 @@ describe("mobile QA (390px)", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const calendar = readFileSync(join(process.cwd(), "components/site/HeroCalendar.tsx"), "utf8");
     expect(hero).toMatch(/hero--story/);
+    expect(hero).toMatch(/OpeningCountdown/);
     expect(hero).toMatch(/hero-cta-primary/);
     expect(css).toMatch(/\.hero\.hero--story/);
     expect(css).toMatch(/hero-cta-primary/);

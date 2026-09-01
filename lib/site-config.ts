@@ -57,7 +57,7 @@ export const MAPS_DESTINATION = "Corso Dante Alighieri 44, 82100 Benevento";
 
 /** Generic salon contact — info, hours, prices or a quick tip. */
 export const SALON_CONTACT_MESSAGE =
-  "Ciao, vorrei parlare con il salone per un'informazione.";
+  "Ciao, vorrei un'informazione su orari, prezzi o servizi.";
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
 export const HERO_CTA = "Prenota già ora";
@@ -123,9 +123,9 @@ export function readBookingDateFromLocation(): string | null {
 
 export const SALON_CONTACT = {
   id: "scrivici",
-  title: "Parla con il salone",
-  eyebrow: "Scrivici",
-  body: "Puoi scriverci per info, orari, prezzi o un consiglio. Felice e Davide ti rispondono dal salone.",
+  title: "Scrivici",
+  eyebrow: "Contatti",
+  body: "Info, orari, prezzi o un consiglio — Felice e Davide rispondono dal salone su WhatsApp o email.",
   cta: "WhatsApp",
   prefill: SALON_CONTACT_MESSAGE,
 } as const;

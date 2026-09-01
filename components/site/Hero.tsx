@@ -8,6 +8,7 @@ import {
 } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 import { HeroCalendar } from "@/components/site/HeroCalendar";
+import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 import { SiteLogo } from "@/components/site/SiteImage";
 
 export function Hero() {
@@ -24,6 +25,7 @@ export function Hero() {
         />
         <p className="eyebrow">{SITE.brand}</p>
         <h1 className="hero-title font-serif">{SITE.name}</h1>
+        {beforeOpening ? <OpeningCountdown /> : null}
         <p className="hero-kicker">{getHeroHeadline()}</p>
         <p className="hero-text">
           {beforeOpening
