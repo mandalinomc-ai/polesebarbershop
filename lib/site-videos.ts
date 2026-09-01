@@ -8,6 +8,9 @@ export type SiteVideo = {
 /** Canonical public path — never change without updating committed files in public/assets/video/. */
 export const VIDEO_BASE = "/assets/video";
 
+/** Felice bio / hero clip — public/assets/videos/ (separate from reel folder). */
+export const VIDEO_HERO_BASE = "/assets/videos";
+
 /** Real salon footage — user-provided mp4 in public/assets/video/. */
 export const TAGLIO_VIDEOS: SiteVideo[] = [
   {
@@ -51,11 +54,18 @@ export const COLORAZIONE_VIDEOS: SiteVideo[] = [
   },
 ];
 
-/** General salon walkthrough — Felice about section. */
+/** General salon walkthrough — legacy path under /assets/video/. */
 export const SALONE_GENERALE_VIDEO: SiteVideo = {
   id: "salone-generale",
   src: `${VIDEO_BASE}/salone-generale.mp4`,
   alt: "Tour del salone Polese Barbershop — Corso Dante Alighieri, Benevento",
+};
+
+/** Felice at work — native HTML5 beside bio (public/assets/videos/felice-working.mp4). */
+export const FELICE_WORKING_VIDEO: SiteVideo = {
+  id: "felice-working",
+  src: `${VIDEO_HERO_BASE}/felice-working.mp4`,
+  alt: "Felice Polese al lavoro — Polese Barbershop Benevento",
 };
 
 /** All six service reels for the homepage video grid. */
@@ -76,6 +86,7 @@ export const GALLERY_VIDEOS: SiteVideo[] = [
 ];
 
 export const ALL_SITE_VIDEOS: SiteVideo[] = [
+  FELICE_WORKING_VIDEO,
   SALONE_GENERALE_VIDEO,
   ...VIDEO_REELS,
 ];
@@ -90,3 +101,6 @@ export const REQUIRED_VIDEO_FILES = [
   "colorazione-02.mp4",
   "colorazione-03.mp4",
 ] as const;
+
+/** Felice bio clip — public/assets/videos/felice-working.mp4 */
+export const FELICE_WORKING_FILENAME = "felice-working.mp4" as const;

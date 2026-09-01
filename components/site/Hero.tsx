@@ -147,7 +147,7 @@ export function Hero() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Raggiungici ora
+            Raggiungimi qui
           </a>
         </div>
       </div>

@@ -600,11 +600,14 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   overflow: hidden;
   position: relative;
 }
+.felice-video-hero,
 .about-video-player {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  transform: none;
+  animation: none;
 }
 
 /* Video reel grid — real salon mp4 in boxes */
@@ -685,9 +688,10 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.6s ease;
+  transform: none;
+  transition: none;
 }
-.gallery-item:hover img { transform: scale(1.05); }
+.gallery-item:hover img { transform: none; }
 .gallery-item::after {
   content: "";
   position: absolute;
@@ -696,9 +700,6 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   pointer-events: none;
 }
 .gallery-tall { grid-row: span 2; aspect-ratio: auto; }
-.gallery-fallback {
-  background: linear-gradient(135deg, #252018, #121212);
-}
 @media (min-width: 768px) {
   .gallery-grid .gallery-tall { grid-row: span 2; }
 }
