@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Header, Footer, ClientEffects } from "@/components/site/Chrome";
+import { SiteShell } from "@/components/site/SiteShell";
 import { SITE, CANCEL_NOTICE_IT } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <>
+    <SiteShell lightHeader>
       <Header />
       <main id="main-content" className="legal-page">
         <p className="eyebrow">Condizioni di prenotazione</p>
@@ -51,6 +52,6 @@ export default function TermsPage() {
       </main>
       <Footer />
       <ClientEffects />
-    </>
+    </SiteShell>
   );
 }

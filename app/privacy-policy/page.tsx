@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Header, Footer, ClientEffects } from "@/components/site/Chrome";
+import { SiteShell } from "@/components/site/SiteShell";
 import { SITE } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <>
+    <SiteShell lightHeader>
       <Header />
       <main id="main-content" className="legal-page">
         <p className="eyebrow">GDPR UE 2016/679</p>
@@ -59,6 +60,6 @@ export default function PrivacyPage() {
       </main>
       <Footer />
       <ClientEffects />
-    </>
+    </SiteShell>
   );
 }
