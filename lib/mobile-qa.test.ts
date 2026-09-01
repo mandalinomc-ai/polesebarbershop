@@ -72,4 +72,17 @@ describe("mobile QA (390px)", () => {
     expect(hero).toMatch(/hero--marble/);
     expect(hero).not.toMatch(/HERO_BG|hero-bg\.jpg/);
   });
+
+  it("renders Instagram-style vertical video reel boxes on the homepage", () => {
+    const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
+    const reels = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
+    expect(landing).toMatch(/VideoReelGrid/);
+    expect(reels).toMatch(/video-reel-grid/);
+    expect(reels).toMatch(/autoPlay/);
+    expect(reels).toMatch(/muted/);
+    expect(reels).toMatch(/loop/);
+    expect(reels).toMatch(/playsInline/);
+    expect(css).toMatch(/\.video-reel-player[\s\S]*object-fit:\s*cover/);
+    expect(css).toMatch(/aspect-ratio:\s*9\s*\/\s*16/);
+  });
 });

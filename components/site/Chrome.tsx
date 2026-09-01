@@ -8,6 +8,7 @@ import { SiteLogo } from "@/components/site/SiteImage";
 const LINKS = [
   { href: "/#about", label: "Chi siamo" },
   { href: "/#services", label: "Servizi" },
+  { href: "/#reels", label: "Reels" },
   { href: "/#gallery", label: "Galleria" },
   { href: `/#${SALON_CONTACT.id}`, label: "Scrivici" },
   { href: "/#contact", label: "Contatti" },

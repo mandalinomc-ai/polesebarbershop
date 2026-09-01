@@ -13,6 +13,7 @@ import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
+import { VideoReelGrid } from "@/components/site/VideoReelGrid";
 
 export function LandingSections() {
   return (
@@ -81,6 +82,8 @@ export function LandingSections() {
           in salone.
         </p>
       </section>
+
+      <VideoReelGrid />
 
       <section id="gallery" className="section-pad bg-marble-light">
         <div className="eyebrow reveal">Atmosfera</div>
