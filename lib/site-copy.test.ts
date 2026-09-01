@@ -58,6 +58,9 @@ describe("public copy vs official identity", () => {
     const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
     expect(intro).not.toMatch(/OpeningCountdown/);
     expect(intro).toMatch(/scissors-intro-brand/);
+    expect(intro).toMatch(/Clicca per entrare/);
+    expect(intro).toMatch(/finishIntro\(\)/);
+    expect(intro).not.toMatch(/phase !== "dark"/);
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
   });
 
@@ -242,6 +245,8 @@ describe("public copy vs official identity", () => {
     expect(css).toMatch(/marble-texture/);
     expect(css).toMatch(/bg-marble-light/);
     expect(css).toMatch(/scissors-intro/);
+    expect(css).toMatch(/bg-marble-light \.countdown-value/);
+    expect(css).not.toMatch(/scissors-intro-split[\s\S]*marble\.png/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
     expect(scissors).toMatch(/viewBox="0 0 100 110"/);
     expect(scissors).not.toMatch(/#C9A962|#F4E4BC/);

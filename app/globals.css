@@ -398,6 +398,9 @@ select.input-lux { appearance: none; cursor: pointer; }
   line-height: 1;
   color: var(--pearl);
 }
+.bg-marble-light .countdown-value {
+  color: var(--ink);
+}
 .countdown-label {
   display: block;
   margin-top: 0.35rem;
@@ -405,6 +408,29 @@ select.input-lux { appearance: none; cursor: pointer; }
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--silk);
+}
+.bg-marble-light .countdown-label {
+  color: var(--smoke);
+}
+.bg-marble-light .countdown-item {
+  border-color: rgba(10, 10, 10, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+}
+.opening-countdown-block {
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto 1.5rem;
+  text-align: center;
+}
+.opening-countdown-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--silk);
+  margin: 0 0 1rem;
+}
+.bg-marble-light .opening-countdown-label {
+  color: var(--smoke);
 }
 .countdown-done {
   width: 100%;
@@ -855,16 +881,13 @@ body.scissors-intro-active { overflow: hidden; }
   top: 0;
   bottom: 0;
   width: 50%;
-  background-color: var(--marble);
-  background-image: url("/assets/images/marble.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: var(--void);
+  background-image: none;
   z-index: 1;
   transition: transform 0.85s cubic-bezier(0.65, 0, 0.35, 1);
 }
-.scissors-intro-split--left { left: 0; background-position: left center; }
-.scissors-intro-split--right { right: 0; background-position: right center; }
+.scissors-intro-split--left { left: 0; }
+.scissors-intro-split--right { right: 0; }
 .scissors-intro--cutting .scissors-intro-split--left { transform: translateX(-100%); }
 .scissors-intro--cutting .scissors-intro-split--right { transform: translateX(100%); }
 .scissors-intro--cutting .scissors-intro-content {
@@ -1294,36 +1317,41 @@ body.scissors-intro-active { overflow: hidden; }
   font-size: clamp(1.75rem, 6vw, 2.5rem);
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--pearl);
   margin: 0 0 0.5rem;
 }
 .scissors-intro-brand-tag {
   font-size: clamp(0.7rem, 2.2vw, 0.82rem);
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--smoke);
+  color: var(--silk);
   margin: 0 0 0.35rem;
 }
 .scissors-intro-brand-city {
   font-size: 0.72rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--smoke);
+  color: var(--silk);
   margin: 0;
 }
+.scissors-intro-skip {
+  margin-top: 1.75rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--silk);
+  animation: scissors-skip-pulse 1.8s ease-in-out infinite;
+}
+@keyframes scissors-skip-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
 .scissors-intro--dark,
-.scissors-intro--tension {
-  background: var(--void);
-}
-.scissors-intro--dark .scissors-intro-split,
-.scissors-intro--tension .scissors-intro-split {
-  background-color: var(--void);
-  background-image: none;
-}
+.scissors-intro--tension,
 .scissors-intro--scissors,
 .scissors-intro--cutting,
 .scissors-intro--reveal {
-  background: var(--marble);
+  background: var(--void);
 }
 @media (prefers-reduced-motion: reduce) {
   .scissors-intro { display: none !important; }

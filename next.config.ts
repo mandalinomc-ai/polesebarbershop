@@ -46,6 +46,15 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       {
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
+      {
         source: "/assets/:path*",
         headers: [
           {

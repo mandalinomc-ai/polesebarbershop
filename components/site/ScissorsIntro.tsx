@@ -57,7 +57,7 @@ export function ScissorsIntro() {
       role="dialog"
       aria-label="Felice Polese Barber Shop"
       tabIndex={0}
-      onClick={() => phase !== "dark" && finishIntro()}
+      onClick={() => finishIntro()}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") finishIntro();
       }}
@@ -73,9 +73,15 @@ export function ScissorsIntro() {
           </div>
         ) : null}
         {phase === "scissors" || phase === "cutting" ? (
-          <div className="scissors-intro-stage">
-            <ScissorsIcon variant="intro" />
-          </div>
+          <>
+            <div className="scissors-intro-stage">
+              <ScissorsIcon variant="intro" />
+            </div>
+            <p className="scissors-intro-skip">Clicca per entrare</p>
+          </>
+        ) : null}
+        {phase === "reveal" ? (
+          <p className="scissors-intro-skip">Clicca per entrare</p>
         ) : null}
         {phase === "tension" ? (
           <div className="scissors-intro-tension" aria-hidden="true" />
