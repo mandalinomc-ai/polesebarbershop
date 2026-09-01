@@ -8,7 +8,9 @@ type SiteShellProps = {
 
 export function SiteShell({ children, lightHeader = false }: SiteShellProps) {
   return (
-    <div className={`site-shell${lightHeader ? " site-shell--light" : ""}`}>
+    <div
+      className={`site-shell site-marble-canvas${lightHeader ? " site-shell--light" : ""}`}
+    >
       {children}
     </div>
   );
