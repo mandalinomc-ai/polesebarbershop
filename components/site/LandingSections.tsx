@@ -1,4 +1,6 @@
 import { SITE, SALON_CONTACT, getMapsUrl, getWhatsAppUrl, getMailtoUrl } from "@/lib/site-config";
+import { GALLERY_IMAGES } from "@/lib/site-images";
+import { FillCoverImage, SiteLogo } from "@/components/site/SiteImage";
 import { SocialQrGrid, SocialTextLinks } from "@/components/site/SocialQr";
 import {
   SERVICE_CATEGORIES,
@@ -11,34 +13,6 @@ import {
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
 
-const GALLERY = [
-  {
-    src: "/assets/images/gallery/fresha-01.jpg",
-    alt: "Interno salone Polese Barbershop — marmo e postazioni",
-    tall: false,
-  },
-  {
-    src: "/assets/images/hero-bg.jpg",
-    alt: "Salone Felice Polese Benevento",
-    tall: true,
-  },
-  {
-    src: "/assets/images/gallery/fresha-02.jpg",
-    alt: "Postazione barbiere Polese",
-    tall: false,
-  },
-  {
-    src: "/assets/images/brand-products.jpg",
-    alt: "Linea prodotti Felice Polese",
-    tall: false,
-  },
-  {
-    src: "/assets/images/gallery/fresha-00.jpg",
-    alt: "Prodotti grooming Felice Polese",
-    tall: false,
-  },
-];
-
 export function LandingSections() {
   return (
     <>
@@ -49,12 +23,10 @@ export function LandingSections() {
         </h2>
         <div className="about-grid">
           <div className="about-visual reveal">
-            <img
-              src="/assets/images/logo.png"
+            <SiteLogo
               alt="Logo Felice Polese"
               className="brand-logo brand-logo--about"
-              width={512}
-              height={331}
+              sizes="(max-width: 900px) 70vw, 240px"
             />
           </div>
           <div className="reveal reveal-d2">
@@ -107,17 +79,16 @@ export function LandingSections() {
         <div className="eyebrow reveal">Atmosfera</div>
         <h2 className="section-title font-serif reveal reveal-d1">Il salone</h2>
         <div className="gallery-grid">
-          {GALLERY.map((item) => (
+          {GALLERY_IMAGES.map((item) => (
             <figure
               key={item.src}
               className={`gallery-item reveal${item.tall ? " gallery-tall" : ""}`}
             >
-              <img
+              <FillCoverImage
                 src={item.src}
                 alt={item.alt}
-                width={1400}
-                height={900}
-                loading="lazy"
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="gallery-photo"
               />
             </figure>
           ))}

@@ -16,6 +16,7 @@ import {
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
 import { formatItalianDate, getFirstBookableDate } from "@/lib/availability";
 import { SITE } from "@/lib/site-config";
+import { SiteLogo } from "@/components/site/SiteImage";
 import { formatEuroCents, type ClientRecord, type CrmStats } from "@/lib/crm";
 import {
   NOTIFY_TEMPLATE_LABEL,
@@ -234,7 +235,7 @@ export function GestionalePanel() {
     <div className="crm-app">
       <aside className="crm-sidebar" aria-label="Gestionale">
         <div className="crm-brand">
-          <img src="/assets/images/logo.png" alt="" width={48} height={32} />
+          <SiteLogo alt="" className="crm-brand-logo" sizes="48px" />
           <div>
             <p className="eyebrow">Gestionale</p>
             <strong className="font-serif">{SITE.name}</strong>

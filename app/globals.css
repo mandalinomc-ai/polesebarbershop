@@ -57,7 +57,10 @@ body.nav-open { overflow: hidden; }
 .bg-noise {
   background-color: var(--void);
   background-image:
-    url("/assets/images/marble-texture.jpg"),
+    image-set(
+      url("/assets/images/marble-texture.webp") type("image/webp"),
+      url("/assets/images/marble-texture.jpg") type("image/jpeg")
+    ),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
   background-size: cover, auto;
   background-blend-mode: overlay, normal;
@@ -65,7 +68,10 @@ body.nav-open { overflow: hidden; }
 
 .bg-marble-light {
   background-color: var(--marble);
-  background-image: url("/assets/images/marble-texture.jpg");
+  background-image: image-set(
+    url("/assets/images/marble-texture.webp") type("image/webp"),
+    url("/assets/images/marble-texture.jpg") type("image/jpeg")
+  );
   background-size: cover;
   color: var(--ink);
 }
@@ -566,9 +572,23 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .hero-bg {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(11, 11, 11, 0.5) 0%, rgba(11, 11, 11, 0.9) 65%, var(--void) 100%),
-    url("/assets/images/hero-bg.jpg") center / cover no-repeat;
+  z-index: 0;
+}
+.hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 11, 11, 0.5) 0%,
+    rgba(11, 11, 11, 0.9) 65%,
+    var(--void) 100%
+  );
+  pointer-events: none;
+}
+.hero-bg-photo {
+  z-index: 0;
 }
 .hero-title {
   font-size: clamp(2.5rem, 8vw, 4.5rem);
@@ -677,14 +697,18 @@ a.day-chip {
   overflow: hidden;
   margin: 0;
 }
-.gallery-item img {
+.gallery-item img,
+.gallery-item .gallery-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   transition: transform 0.6s ease;
 }
-.gallery-item:hover img { transform: scale(1.05); }
+.gallery-item:hover img,
+.gallery-item:hover .gallery-photo {
+  transform: scale(1.05);
+}
 .gallery-item::after {
   content: "";
   position: absolute;
@@ -1281,7 +1305,12 @@ a.day-chip {
   gap: 1.25rem;
 }
 .crm-brand { display: flex; gap: 0.7rem; align-items: center; }
-.crm-brand img { width: 2.6rem; height: auto; object-fit: contain; }
+.crm-brand img,
+.crm-brand .crm-brand-logo {
+  width: 2.6rem;
+  height: auto;
+  object-fit: contain;
+}
 .crm-brand strong { display: block; font-size: 1.05rem; font-weight: 500; }
 .crm-sidebar nav { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
 .crm-sidebar nav button,
