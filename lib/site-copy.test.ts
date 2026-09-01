@@ -146,8 +146,8 @@ describe("public copy vs official identity", () => {
     expect(pkg.dependencies?.twilio).toBeUndefined();
   });
 
-  it("defaults to coming-soon mode with Avvisami WhatsApp", () => {
-    expect(IS_COMING_SOON).toBe(true);
+  it("defaults to live site with countdown and booking (not coming-soon gate)", () => {
+    expect(IS_COMING_SOON).toBe(false);
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/avvisato all'apertura/i);
     const coming = readFileSync(join(process.cwd(), "components/site/ComingSoon.tsx"), "utf8");
     expect(coming).toMatch(/brand-logo--pulse/);
@@ -156,6 +156,8 @@ describe("public copy vs official identity", () => {
     const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
     expect(page).toMatch(/IS_COMING_SOON/);
     expect(page).toMatch(/ComingSoon/);
+    expect(page).toMatch(/LandingSections/);
+    expect(page).toMatch(/Hero/);
   });
 
   it("includes consulenza tricologica and prodotti sections in live layout", () => {

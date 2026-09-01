@@ -17,5 +17,9 @@ while IFS='=' read -r key value; do
   ENV_ARGS+=(-b "${key}=${value}")
 done < .env.local
 
+# Full live site: countdown in hero + booking — never deploy behind coming-soon gate.
+ENV_ARGS+=(-e "NEXT_PUBLIC_IS_COMING_SOON=false")
+ENV_ARGS+=(-b "NEXT_PUBLIC_IS_COMING_SOON=false")
+
 echo "→ Deploying with $((${#ENV_ARGS[@]} / 2)) env vars from .env.local…"
 npx vercel deploy --temporary --prod --yes "${ENV_ARGS[@]}"

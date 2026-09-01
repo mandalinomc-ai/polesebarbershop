@@ -1,8 +1,8 @@
 export const TIMEZONE = "Europe/Rome";
 
-/** When true, homepage shows coming-soon (logo pulse, countdown, Avvisami). Set NEXT_PUBLIC_IS_COMING_SOON=false for live site. */
+/** When true, homepage shows coming-soon gate only. Default false — full live site with countdown + booking. */
 export const IS_COMING_SOON =
-  process.env.NEXT_PUBLIC_IS_COMING_SOON !== "false";
+  process.env.NEXT_PUBLIC_IS_COMING_SOON === "true";
 
 export const SITE = {
   brand: "FELICE POLESE",
