@@ -3,6 +3,9 @@ import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
+import { SalonVideo } from "@/components/site/SalonVideo";
+import { VideoReelGrid } from "@/components/site/VideoReelGrid";
+import { SALONE_GENERALE_VIDEO } from "@/lib/site-videos";
 
 const GALLERY = [
   {
@@ -41,16 +44,7 @@ export function LandingSections() {
           Tradizione &amp; precisione
         </h2>
         <div className="about-grid">
-          <div className="about-visual reveal">
-            <img
-              src="/assets/images/logo.png"
-              alt="Logo Felice Polese"
-              className="brand-logo brand-logo--about"
-              width={512}
-              height={331}
-            />
-          </div>
-          <div className="reveal reveal-d2">
+          <div className="about-copy reveal">
             <p className="prose">
               <strong>{SITE.brand}</strong> interpreta la barberia come rituale di cura e
               stile. Taglio uomo, barba e rasatura con precisione artigianale.
@@ -60,8 +54,13 @@ export function LandingSections() {
               riservato.
             </p>
           </div>
+          <div className="about-video reveal reveal-d2">
+            <SalonVideo video={SALONE_GENERALE_VIDEO} className="about-video-player" />
+          </div>
         </div>
       </section>
+
+      <VideoReelGrid />
 
       <section id="gallery" className="section-pad bg-marble-light">
         <div className="eyebrow reveal">Atmosfera</div>

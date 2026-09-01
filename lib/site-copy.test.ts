@@ -182,7 +182,9 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/tricolog/i);
     expect(landing).not.toMatch(/id="prodotti"/);
     expect(landing).not.toMatch(/Barber Match 2023/);
-    expect(landing).not.toMatch(/GALLERY_VIDEOS/);
+    expect(landing).toMatch(/VideoReelGrid/);
+    expect(landing).toMatch(/SALONE_GENERALE_VIDEO/);
+    expect(landing).toMatch(/about-video/);
     expect(landing).toMatch(/gallery-grid/);
     expect(landing).toMatch(/brand-products\.jpg/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
