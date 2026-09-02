@@ -560,3 +560,61 @@ export function findSlot(slots: Slot[], startsAt: Date): Slot | undefined {
   const ms = startsAt.getTime();
   return slots.find((s) => s.start.getTime() === ms);
 }
+
+export const WEEKDAY_LABELS_IT = ["lun", "mar", "mer", "gio", "ven", "sab", "dom"] as const;
+
+export function monthKey(date: string): string {
+  return date.slice(0, 7);
+}
+
+export function startOfMonth(date: string): string {
+  const { y, m } = parseDateParts(date);
+  return `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-01`;
+}
+
+export function addMonths(date: string, months: number): string {
+  const { y, m } = parseDateParts(date);
+  const next = new Date(Date.UTC(y, m - 1 + months, 1, 12, 0, 0));
+  return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, "0")}-01`;
+}
+
+export function formatItalianMonth(date: string): string {
+  const { y, m } = parseDateParts(date);
+  const utcNoon = new Date(Date.UTC(y, m - 1, 1, 12, 0, 0));
+  return new Intl.DateTimeFormat("it-IT", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(utcNoon);
+}
+
+export type CalendarDay = {
+  date: string;
+  inMonth: boolean;
+  closed: boolean;
+};
+
+/** Monday-first month grid for the mobile booking calendar. */
+export function monthCalendarWeeks(monthDate: string): (CalendarDay | null)[][] {
+  const { y, m } = parseDateParts(monthDate);
+  const first = startOfMonth(monthDate);
+  const firstDow = weekdayOfDate(first);
+  const mondayPad = firstDow === 0 ? 6 : firstDow - 1;
+  const daysInMonth = new Date(Date.UTC(y, m, 0, 12, 0, 0)).getUTCDate();
+  const cells: (CalendarDay | null)[] = [];
+  for (let i = 0; i < mondayPad; i += 1) cells.push(null);
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    cells.push({
+      date,
+      inMonth: true,
+      closed: isClosedDay(date),
+    });
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (CalendarDay | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+  return weeks;
+}

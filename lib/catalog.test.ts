@@ -1,15 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { SERVICES, formatPrice, formatPriceRange, totalsForServices, resolveServices, getBarber, BARBERS } from "./catalog";
+import {
+  SERVICES,
+  SERVICE_CATEGORIES,
+  UNOFFICIAL_SERVICE_IDS,
+  formatPrice,
+  formatPriceRange,
+  formatDuration,
+  totalsForServices,
+  resolveServices,
+  getBarber,
+  BARBERS,
+  isBookableServiceId,
+} from "./catalog";
 
 describe("catalog", () => {
-  it("contains Felice and Davide as distinct chairs plus anyone", () => {
+  it("contains Felice and Davide as distinct chairs plus Qualsiasi disponibilità", () => {
     expect(BARBERS.map((b) => b.id).sort()).toEqual(["anyone", "davide", "felice"].sort());
     expect(getBarber("felice")?.virtual).toBe(false);
     expect(getBarber("davide")?.virtual).toBe(false);
     expect(getBarber("anyone")?.virtual).toBe(true);
+    expect(getBarber("anyone")?.name).toBe("Qualsiasi disponibilità");
   });
 
-  it("matches the official listino categories for Felice Polese Barber Shop", () => {
+  it("lists exactly the 9 official listino services and no extras", () => {
+    expect(SERVICE_CATEGORIES).toEqual(["capelli", "barba", "colore"]);
+    expect(SERVICES).toHaveLength(9);
     expect(
       SERVICES.map((s) => ({
         id: s.id,
@@ -18,69 +33,50 @@ describe("catalog", () => {
         priceEuro: s.priceEuro,
         priceMaxEuro: s.priceMaxEuro,
         durationMin: s.durationMin,
+        durationKnown: s.durationKnown,
       })),
     ).toEqual([
-      { id: "taglio-standard", name: "Taglio Normale", category: "taglio", priceEuro: 15, priceMaxEuro: null, durationMin: 30 },
-      { id: "taglio-pro", name: "Taglio Sartoriale", category: "taglio", priceEuro: 50, priceMaxEuro: null, durationMin: 25 },
-      { id: "razor-taper", name: "Razor Taper", category: "sfumature", priceEuro: 20, priceMaxEuro: null, durationMin: 30 },
-      { id: "skin-fade", name: "Skin Fade", category: "sfumature", priceEuro: 25, priceMaxEuro: null, durationMin: 35 },
-      { id: "barba-pro", name: "Barba", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20 },
-      { id: "barba-standard", name: "Rifinitura barba", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
-      { id: "combo-classico", name: "Combo Taglio + Barba", category: "combo", priceEuro: 30, priceMaxEuro: null, durationMin: 45 },
-      { id: "combo-sartoriale", name: "Combo Sartoriale + Barba", category: "combo", priceEuro: 60, priceMaxEuro: null, durationMin: 40 },
-      { id: "decolorazione-meches", name: "Meches", category: "tecnici", priceEuro: 40, priceMaxEuro: 100, durationMin: 45 },
-      { id: "decolorazione-cutanea", name: "Decolorazione", category: "tecnici", priceEuro: 50, priceMaxEuro: 120, durationMin: 45 },
-      { id: "tintura-capelli", name: "Tintura capelli", category: "tecnici", priceEuro: 10, priceMaxEuro: 30, durationMin: 30 },
-      { id: "tintura-barba", name: "Tintura barba", category: "tecnici", priceEuro: 5, priceMaxEuro: 15, durationMin: 20 },
-      { id: "consulenza-sede", name: "Consulenza Tricologica", category: "consulenza", priceEuro: 0, priceMaxEuro: null, durationMin: 30 },
+      { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25, durationKnown: true },
+      { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30, durationKnown: true },
+      { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
+      { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20, durationKnown: true },
+      { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
+      { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 45, durationKnown: false },
+      { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 45, durationKnown: false },
+      { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 30, durationKnown: false },
+      { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, durationMin: 20, durationKnown: false },
     ]);
   });
 
-  it("shows da X € for variable-price services", () => {
+  it("does not treat Razor Taper, Skin Fade, combo or consulenza as bookable services", () => {
+    for (const id of UNOFFICIAL_SERVICE_IDS) {
+      expect(isBookableServiceId(id)).toBe(false);
+      expect(SERVICES.some((s) => s.id === id)).toBe(false);
+    }
+    expect(resolveServices(["razor-taper"])).toBeNull();
+    expect(resolveServices(["skin-fade"])).toBeNull();
+    expect(SERVICES.some((s) => /razor taper|skin fade|combo|consulenza|sartoriale|sfumatur/i.test(s.name))).toBe(false);
+    expect(SERVICES.some((s) => s.category === ("sfumature" as never))).toBe(false);
+  });
+
+  it("shows official ranges as 40–100 € and fixed prices as 50 €", () => {
     const meches = SERVICES.find((s) => s.id === "decolorazione-meches")!;
-    expect(formatPrice(meches)).toBe("da 40 €");
-    expect(formatPriceRange(meches)).toBe("da 40 € a 100 €");
-  });
-
-  it("shows a fixed euro amount for Taglio Sartoriale", () => {
+    expect(formatPrice(meches)).toBe("40–100 €");
+    expect(formatPriceRange(meches)).toBe("40–100 €");
     const pro = SERVICES.find((s) => s.id === "taglio-pro")!;
-    expect(pro.priceEuro).toBe(50);
-    expect(pro.durationMin).toBe(25);
     expect(formatPrice(pro)).toBe("50 €");
+    expect(formatDuration(pro)).toBe("25 min");
+    expect(formatDuration(SERVICES.find((s) => s.id === "acconciatura")!)).toBe("durata n/d");
+    expect(formatDuration(SERVICES.find((s) => s.id === "barba-standard")!)).toBe("durata n/d");
   });
 
-  it("includes Taglio Sartoriale and Combo services", () => {
-    expect(SERVICES.some((s) => /sartoriale/i.test(s.name))).toBe(true);
-    expect(SERVICES.some((s) => s.category === "combo")).toBe(true);
-  });
-
-  it("lists Razor Taper and Skin Fade sfumature in the listino", () => {
-    const razor = SERVICES.find((s) => s.id === "razor-taper")!;
-    const fade = SERVICES.find((s) => s.id === "skin-fade")!;
-    expect(razor.name).toBe("Razor Taper");
-    expect(razor.category).toBe("sfumature");
-    expect(razor.priceEuro).toBe(20);
-    expect(formatPrice(razor)).toBe("20 €");
-    expect(fade.name).toBe("Skin Fade");
-    expect(fade.category).toBe("sfumature");
-    expect(fade.priceEuro).toBe(25);
-    expect(formatPrice(fade)).toBe("25 €");
-  });
-
-  it("lists Consulenza Tricologica as Gratuita", () => {
-    const consult = SERVICES.find((s) => s.id === "consulenza-sede")!;
-    expect(consult.name).toBe("Consulenza Tricologica");
-    expect(consult.priceEuro).toBe(0);
-    expect(formatPrice(consult)).toBe("Gratuita");
-    expect(formatPriceRange(consult)).toBe("Gratuita");
-  });
-
-  it("sums duration and uses a da–a range when any service is variable", () => {
+  it("sums duration buffers and uses an en-dash range when any service is variable", () => {
     const totals = totalsForServices(resolveServices(["taglio-pro", "decolorazione-meches"])!);
     expect(totals.durationMin).toBe(70);
     expect(totals.priceEuro).toBe(90);
     expect(totals.priceMaxEuro).toBe(150);
     expect(totals.isVariable).toBe(true);
-    expect(totals.priceLabel).toBe("da 90 € a 150 €");
+    expect(totals.priceLabel).toBe("90–150 €");
+    expect(totals.durationLabel).toBe("durata n/d");
   });
 });

@@ -5,11 +5,9 @@ import { HERO_SLOT_CTA, SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-conf
 import { SITE_PDFS } from "@/lib/site-pdf";
 
 const LINKS = [
-  { href: "/#gallery", label: "Studio" },
-  { href: "/#prenota", label: "Menu" },
-  { href: "/#prenota", label: "Consulenza" },
-  { href: "/#gallery", label: "Lab" },
-  { href: "/#listino", label: "Fade" },
+  { href: "/#gallery", label: "Tecniche" },
+  { href: "/#listino", label: "Listino" },
+  { href: "/#prenota", label: "Prenota" },
   { href: "/#contact", label: "Orari" },
   { href: "/#contact", label: "Contatti" },
 ];

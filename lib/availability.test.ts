@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BARBERS } from "./catalog";
-import { getAvailableSlots, getFirstBookableDate, getOccupancyGrid, getScheduleSlots, summarizeSchedule, weekdayOfDate, wallTimeToUtc, isClosedDay, mondayOfWeek, listOpenDayChips } from "./availability";
+import { getAvailableSlots, getFirstBookableDate, getOccupancyGrid, getScheduleSlots, summarizeSchedule, weekdayOfDate, wallTimeToUtc, isClosedDay, mondayOfWeek, listOpenDayChips, monthCalendarWeeks, addMonths, formatItalianMonth } from "./availability";
 
 const TUESDAY = "2026-09-08";
 const MONDAY = "2026-08-31";
@@ -62,6 +62,43 @@ describe("getAvailableSlots", () => {
       ],
     });
     expect(anyone.map((s) => s.label)).not.toContain("11:00");
+  });
+
+  it("a 30 min booking at 10:00 blocks 10:15 on the same barber, not the other chair", () => {
+    const busyStart = wallTimeToUtc(TUESDAY, "10:00");
+    const busyEnd = wallTimeToUtc(TUESDAY, "10:30");
+    const appointments = [{ barberId: "felice" as const, startsAt: busyStart, endsAt: busyEnd }];
+    const felice = getScheduleSlots({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 30,
+      now: nowBeforeOpening,
+      appointments,
+    });
+    expect(felice.find((s) => s.label === "10:00")).toMatchObject({ booked: true, available: false });
+    expect(felice.find((s) => s.label === "10:15")).toMatchObject({ booked: true, available: false });
+    expect(felice.find((s) => s.label === "10:30")).toMatchObject({ booked: false, available: true });
+    const davide = getScheduleSlots({
+      date: TUESDAY,
+      barberId: "davide",
+      durationMinutes: 30,
+      now: nowBeforeOpening,
+      appointments,
+    });
+    expect(davide.find((s) => s.label === "10:00")).toMatchObject({ booked: false, available: true });
+    expect(davide.find((s) => s.label === "10:15")).toMatchObject({ booked: false, available: true });
+    const anyone = getScheduleSlots({
+      date: TUESDAY,
+      barberId: "anyone",
+      durationMinutes: 30,
+      now: nowBeforeOpening,
+      appointments,
+    });
+    expect(anyone.find((s) => s.label === "10:00")).toMatchObject({
+      available: true,
+      booked: false,
+      barberId: "davide",
+    });
   });
 
   it("keeps the chair free when a cancelled booking is not in the busy list", () => {
@@ -175,5 +212,20 @@ describe("getOccupancyGrid", () => {
     expect(ten?.cells.find((c) => c.barberId === "davide")?.occupied).toBe(false);
     expect(tenThirty?.cells.find((c) => c.barberId === "felice")?.occupied).toBe(false);
     expect(getOccupancyGrid({ date: MONDAY })).toEqual([]);
+  });
+});
+
+describe("month calendar", () => {
+  it("builds a Monday-first September 2026 grid with closed Sunday/Monday", () => {
+    const weeks = monthCalendarWeeks("2026-09-08");
+    expect(weeks[0]?.filter(Boolean)[0]?.date).toBe("2026-09-01");
+    expect(weeks.flat().find((d) => d?.date === "2026-09-08")).toMatchObject({
+      closed: false,
+    });
+    expect(weeks.flat().find((d) => d?.date === "2026-09-07")).toMatchObject({
+      closed: true,
+    });
+    expect(addMonths("2026-09-01", 1)).toBe("2026-10-01");
+    expect(formatItalianMonth("2026-09-08")).toMatch(/settembre/i);
   });
 });

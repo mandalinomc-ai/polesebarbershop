@@ -60,6 +60,11 @@ describe("POST /api/bookings", () => {
     expect(json.error).toMatch(/consenso/i);
   });
 
+  it("rejects Razor Taper and Skin Fade as bookable leftover services", async () => {
+    expect((await postBooking(payload({ serviceIds: ["razor-taper"] }))).status).toBe(400);
+    expect((await postBooking(payload({ serviceIds: ["skin-fade"] }))).status).toBe(400);
+  });
+
   it("rejects unknown leftover services such as Taglio sartoriale", async () => {
     const res = await postBooking(payload({ serviceIds: ["taglio-sartoriale"] }));
     expect(res.status).toBe(400);

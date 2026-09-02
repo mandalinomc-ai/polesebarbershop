@@ -30,7 +30,7 @@ export function LandingSections() {
             </p>
             <p className="prose">
               In salone lavorano <strong>Felice</strong> e <strong>Davide</strong>{" "}
-              su due poltrone indipendenti: taglio, sfumature, barba e colore.
+              su due poltrone indipendenti: taglio, barba e colore.
             </p>
             <p className="prose">
               <a

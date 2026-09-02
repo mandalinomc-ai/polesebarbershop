@@ -30,8 +30,9 @@ describe("mobile QA (390px)", () => {
     expect(wizard).toMatch(/setSlots\(Array\.isArray\(json\.slots\) \? json\.slots : \[\]\)/);
     expect(wizard).not.toMatch(/incoming\.length \? incoming : localSlots\(\)/);
     expect(wizard).toMatch(/aria-disabled=\{taken\}/);
-    expect(wizard).toMatch(/Prenotato/);
+    expect(wizard).toMatch(/non disponibile/);
     expect(css).toMatch(/\.slot-btn\.booked/);
+    expect(css).toMatch(/\.cal-day \{[\s\S]*?min-height:\s*44px/);
   });
 
   it("keeps /gestionale usable on a phone (bottom nav + logout + walk-in taps)", () => {

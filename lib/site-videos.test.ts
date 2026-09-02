@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_SITE_VIDEOS,
   COLORAZIONE_VIDEOS,
+  CUTTING_TECHNIQUE_VIDEOS,
+  SALON_WORK_VIDEOS,
   FELICE_WORKING_FILENAME,
   FELICE_WORKING_VIDEO,
   GALLERY_VIDEOS,
@@ -63,6 +65,26 @@ describe("site-videos", () => {
     expect(GALLERY_VIDEOS).toHaveLength(3);
     expect(GALLERY_VIDEOS.map((v) => v.id)).toEqual([
       "taglio-03",
+      "colorazione-02",
+      "colorazione-03",
+    ]);
+  });
+
+  it("keeps Razor Taper and Skin Fade as technique videos, not priced services", () => {
+    expect(CUTTING_TECHNIQUE_VIDEOS).toHaveLength(2);
+    expect(CUTTING_TECHNIQUE_VIDEOS.map((v) => v.id)).toEqual([
+      "razor-taper-technique",
+      "skin-fade-technique",
+    ]);
+    expect(CUTTING_TECHNIQUE_VIDEOS[0]?.label).toBe("Razor Taper — Tecnica di sfumatura");
+    expect(CUTTING_TECHNIQUE_VIDEOS[1]?.label).toBe("Skin Fade — Tecnica di sfumatura a pelle");
+    for (const video of CUTTING_TECHNIQUE_VIDEOS) {
+      expect(video.src).toMatch(/^\/video\/taglio-\d{2}\.mp4$/);
+      expect(video.label).not.toMatch(/€/);
+    }
+    expect(SALON_WORK_VIDEOS.map((v) => v.id)).toEqual([
+      "taglio-03",
+      "colorazione-01",
       "colorazione-02",
       "colorazione-03",
     ]);

@@ -68,6 +68,31 @@ export const FELICE_WORKING_VIDEO: SiteVideo = {
   alt: "Felice Polese al lavoro — Felice Polese Barber Shop Benevento",
 };
 
+/**
+ * Cutting techniques shown as video content — not listino, not bookable.
+ * Filenames map to existing taglio clips; there are no rasatura-*.mp4 files on disk.
+ */
+export const CUTTING_TECHNIQUE_VIDEOS: SiteVideo[] = [
+  {
+    id: "razor-taper-technique",
+    src: `${VIDEO_BASE}/taglio-01.mp4`,
+    alt: "Razor Taper — tecnica di sfumatura in salone",
+    label: "Razor Taper — Tecnica di sfumatura",
+  },
+  {
+    id: "skin-fade-technique",
+    src: `${VIDEO_BASE}/taglio-02.mp4`,
+    alt: "Skin Fade — tecnica di sfumatura a pelle in salone",
+    label: "Skin Fade — Tecnica di sfumatura a pelle",
+  },
+];
+
+/** Remaining salon footage (informational, no prices, no Prenota). */
+export const SALON_WORK_VIDEOS: SiteVideo[] = [
+  TAGLIO_VIDEOS[2]!,
+  ...COLORAZIONE_VIDEOS,
+];
+
 /** All six service reels for the homepage video grid. */
 export const VIDEO_REELS: SiteVideo[] = [...TAGLIO_VIDEOS, ...COLORAZIONE_VIDEOS];
 

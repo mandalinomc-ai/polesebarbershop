@@ -977,7 +977,6 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .success-box { text-align: center; padding: 1.25rem 0.5rem; }
 .success-box a { color: var(--ink); text-decoration: underline; }
 .success-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; justify-content: center; margin: 1.25rem 0; }
-.booking-layout { max-width: 640px; margin-top: 1.5rem; }
 .gdpr-row { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.82rem; color: var(--muted); line-height: 1.5; cursor: pointer; min-height: 44px; }
 .gdpr-row a { color: var(--ink); }
 .gdpr-row input { margin-top: 0.2rem; accent-color: var(--ink); width: 20px; height: 20px; flex-shrink: 0; }
@@ -1193,6 +1192,9 @@ img { max-width: 100%; }
   height: 100%;
   object-fit: cover;
   display: block;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .video-reel-grid {
   display: grid;
@@ -1202,6 +1204,7 @@ img { max-width: 100%; }
 }
 @media (min-width: 768px) {
   .video-reel-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .technique-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 36rem; }
 }
 .video-reel-box {
   position: relative;
@@ -1243,6 +1246,29 @@ img { max-width: 100%; }
   border: 1px solid rgba(255, 255, 255, 0.4);
   background: rgba(10, 10, 10, 0.55);
 }
+.technique-lead {
+  max-width: 36rem;
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+.technique-grid {
+  grid-template-columns: 1fr 1fr;
+  max-width: 36rem;
+}
+.technique-card { background: var(--white); }
+.technique-caption {
+  margin: 0;
+  padding: 0.7rem 0.8rem 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.technique-cta-wrap {
+  margin: 1.25rem 0 0;
+}
+.salon-work-grid {
+  margin-top: 2rem;
+}
 .booking-layout { max-width: 640px; margin-top: 1.5rem; }
 .booking-layout-grid {
   display: grid;
@@ -1272,67 +1298,106 @@ img { max-width: 100%; }
   color: var(--muted);
   margin: 1rem 0 0.5rem;
 }
-.listino-cards {
+.listino-rows {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
-.listino-card {
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.9);
+.listino-row {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
-.listino-card-head {
+.listino-row:hover .listino-row-name,
+.listino-row:hover .listino-row-price {
+  text-decoration: underline;
+}
+.listino-row-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: baseline;
   gap: 0.75rem;
-  margin-bottom: 0.35rem;
 }
-.listino-card-name {
+.listino-row-name {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ink);
   margin: 0;
   line-height: 1.3;
 }
-.listino-card-price {
-  font-size: 0.9rem;
-  font-weight: 500;
+.listino-row-price {
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--ink);
   white-space: nowrap;
 }
-.listino-card-desc {
-  font-size: 0.85rem;
+.listino-row-desc {
+  font-size: 0.82rem;
   color: var(--muted);
-  line-height: 1.55;
-  margin: 0 0 0.65rem;
+  line-height: 1.45;
+  margin: 0.15rem 0 0;
 }
-.listino-card-foot {
+.listino-row-duration {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+.booking-calendar { margin-top: 0.25rem; }
+.booking-calendar-nav {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
 }
-.listino-card-duration {
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
+.booking-calendar-month {
+  margin: 0;
+  font-size: 0.95rem;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+.booking-calendar-weekdays,
+.booking-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+.booking-calendar-weekdays span {
+  text-align: center;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+  padding: 0.2rem 0;
 }
-.btn-listino-prenota {
-  padding: 0.55rem 1.1rem;
-  min-height: 36px;
-  font-size: 0.65rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  background: var(--ink);
-  color: var(--white);
-  border: 1px solid var(--ink);
-  text-decoration: none;
+.cal-day {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  font: inherit;
+  cursor: pointer;
+}
+.cal-day.pad,
+.cal-day:disabled,
+.cal-day.muted {
+  background: transparent;
+  border-color: transparent;
+  color: var(--smoke);
+  cursor: default;
+}
+.cal-day.selected {
+  border-color: var(--ink);
+  background: var(--surface);
+  font-weight: 600;
+}
+.cal-day.full:not(.selected) {
+  background: #eceae6;
 }
 .fresha-layout {
   display: grid;

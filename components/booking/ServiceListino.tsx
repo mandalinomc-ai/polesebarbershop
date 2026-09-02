@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
   SERVICES,
+  formatDuration,
   formatPriceRange,
 } from "@/lib/catalog";
 import { BOOKING_SERVICE_EVENT, serviceBookingHref } from "@/lib/site-config";
@@ -20,7 +20,7 @@ function prenotaFromListino(serviceId: string) {
   document.getElementById("prenota")?.scrollIntoView({ behavior: "smooth" });
 }
 
-/** Premium listino — real prices from catalog.ts, PRENOTA opens booking with service preselected. */
+/** Compact official listino — tap a row to open booking with that service on step 2. */
 export function ServiceListino() {
   return (
     <div className="booking-listino" id="listino">
@@ -28,31 +28,26 @@ export function ServiceListino() {
       {SERVICE_CATEGORIES.map((cat) => (
         <div key={cat} className="booking-listino-group">
           <p className="booking-listino-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
-          <ul className="listino-cards">
+          <ul className="listino-rows">
             {SERVICES.filter((s) => s.category === cat).map((s) => (
               <li key={s.id}>
-                <article className="listino-card">
-                  <div className="listino-card-head">
-                    <h4 className="listino-card-name">{s.name}</h4>
-                    <span className="listino-card-price">{formatPriceRange(s)}</span>
+                <a
+                  href={serviceBookingHref(s.id)}
+                  className="listino-row"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    prenotaFromListino(s.id);
+                  }}
+                >
+                  <div className="listino-row-head">
+                    <h4 className="listino-row-name">{s.name}</h4>
+                    <span className="listino-row-price">{formatPriceRange(s)}</span>
                   </div>
                   {s.description ? (
-                    <p className="listino-card-desc">{s.description}</p>
+                    <p className="listino-row-desc">{s.description}</p>
                   ) : null}
-                  <div className="listino-card-foot">
-                    <span className="listino-card-duration">{s.durationMin} min</span>
-                    <Link
-                      href={serviceBookingHref(s.id)}
-                      className="btn btn-listino-prenota"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        prenotaFromListino(s.id);
-                      }}
-                    >
-                      Prenota
-                    </Link>
-                  </div>
-                </article>
+                  <span className="listino-row-duration">{formatDuration(s)}</span>
+                </a>
               </li>
             ))}
           </ul>

@@ -54,11 +54,12 @@ describe("public copy vs official identity", () => {
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/Felice Polese Barber Shop/);
   });
 
-  it("uses MODERN BARBERING tagline and premium listino with PRENOTA links", () => {
+  it("uses MODERN BARBERING tagline and compact listino that opens booking", () => {
     const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
-    expect(listino).toMatch(/listino-card/);
+    expect(listino).toMatch(/listino-row/);
     expect(listino).toMatch(/serviceBookingHref/);
-    expect(listino).toMatch(/Prenota/);
+    expect(listino).toMatch(/formatDuration/);
+    expect(listino).not.toMatch(/btn-listino-prenota/);
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/Plus_Jakarta_Sans/);
@@ -228,9 +229,10 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/Tradizione/);
     expect(landing).not.toMatch(/Santa Maria degli Angeli/);
     const catalog = readFileSync(join(process.cwd(), "lib/catalog.ts"), "utf8");
-    expect(catalog).toMatch(/Consulenza Tricologica/i);
-    expect(catalog).toMatch(/Razor Taper/);
-    expect(catalog).toMatch(/Skin Fade/);
+    expect(catalog).not.toMatch(/Consulenza Tricologica/i);
+    expect(catalog).not.toMatch(/name: "Razor Taper"/);
+    expect(catalog).not.toMatch(/name: "Skin Fade"/);
+    expect(catalog).not.toMatch(/id: "combo-classico"/);
     expect(landing).toMatch(/VideoReelGrid/);
     expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
     expect(landing).toMatch(/about-video/);
@@ -257,16 +259,33 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/Il tuo appuntamento/);
     expect(wizard).toMatch(/listinoBeside/);
     expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
-    expect(wizard).toMatch(/Tocca Prenota sul listino/);
+    expect(wizard).toMatch(/Tocca un servizio nel listino/);
+    expect(wizard).toMatch(/Qualsiasi disponibilità/);
+    expect(wizard).toMatch(/non disponibile/);
+    expect(wizard).toMatch(/Scegli la data/);
+    expect(wizard).toMatch(/Scegli l&apos;orario/);
+    expect(wizard).toMatch(/getScheduleSlots/);
+    expect(wizard).toMatch(/setStep\(2\)/);
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
-    expect(reel).toMatch(/VIDEO_REELS/);
+    expect(reel).toMatch(/CUTTING_TECHNIQUE_VIDEOS/);
+    expect(reel).toMatch(/Tecniche di taglio/);
+    expect(reel).toMatch(/Scopri alcune delle tecniche che utilizziamo nei nostri tagli/);
+    expect(reel).toMatch(/Prenota il tuo taglio/);
+    expect(reel).not.toMatch(/€/);
     expect(reel).not.toMatch(/<img/);
     expect(reel).not.toMatch(/reveal/);
+    const videos = readFileSync(join(process.cwd(), "lib/site-videos.ts"), "utf8");
+    expect(videos).toMatch(/Razor Taper — Tecnica di sfumatura/);
+    expect(videos).toMatch(/Skin Fade — Tecnica di sfumatura a pelle/);
+    expect(videos).not.toMatch(/id: "razor-taper"/);
+    expect(videos).not.toMatch(/id: "skin-fade"/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
-    expect(chrome).toMatch(/href: "\/#gallery", label: "Studio"/);
-    expect(chrome).toMatch(/href: "\/#listino", label: "Fade"/);
+    expect(chrome).toMatch(/href: "\/#gallery", label: "Tecniche"/);
+    expect(chrome).toMatch(/href: "\/#listino", label: "Listino"/);
+    expect(chrome).not.toMatch(/label: "Fade"/);
+    expect(chrome).not.toMatch(/label: "Consulenza"/);
     expect(chrome).not.toMatch(/\/#about/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/hero-editorial/);
@@ -281,6 +300,8 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/Listino/);
     expect(listino).toMatch(/BOOKING_SERVICE_EVENT/);
     expect(listino).toMatch(/formatPriceRange/);
+    expect(listino).toMatch(/listino-row/);
+    expect(listino).not.toMatch(/listino-card/);
   });
 
   it("shows live hero with booking CTA before and after opening", () => {

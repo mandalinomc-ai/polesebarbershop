@@ -6,15 +6,21 @@ import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
   SERVICES,
+  formatDuration,
   formatPriceRange,
   totalsForServices,
   type Service,
 } from "@/lib/catalog";
 import {
+  WEEKDAY_LABELS_IT,
+  addMonths,
   formatItalianDate,
-  getAvailableSlots,
+  formatItalianMonth,
   getFirstBookableDate,
+  getScheduleSlots,
   listOpenDayChips,
+  monthCalendarWeeks,
+  startOfMonth,
 } from "@/lib/availability";
 import {
   BOOKING_DATE_EVENT,
@@ -31,7 +37,7 @@ import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
 import { postSalonBookingRelay, type SalonRelayPayload } from "@/lib/salon-relay-client";
 
-const STEPS = ["Servizi", "Barbiere", "Data e ora", "I tuoi dati", "Conferma"] as const;
+const STEPS = ["Servizio", "Barbiere", "Data", "Orario", "I tuoi dati", "Conferma"] as const;
 
 type ApiSlot = {
   start: string;
@@ -82,6 +88,7 @@ export function FreshaBookingFlow({
   const firstBookable = useMemo(() => getFirstBookableDate(), []);
   const days = useMemo(() => listOpenDayChips(BOOKING_UI_DAYS), []);
   const [date, setDate] = useState(days[0]?.date || firstBookable);
+  const [month, setMonth] = useState(startOfMonth(days[0]?.date || firstBookable));
   const [slots, setSlots] = useState<ApiSlot[]>([]);
   const [dayOccupancy, setDayOccupancy] = useState<Record<string, DayOccupancyChip>>(
     {},
@@ -143,9 +150,8 @@ export function FreshaBookingFlow({
     const apply = (serviceId: string | null) => {
       if (!serviceId) return;
       if (!SERVICES.some((s) => s.id === serviceId)) return;
-      setSelectedIds((curr) =>
-        curr.includes(serviceId) ? curr : [...curr, serviceId],
-      );
+      setSelectedIds([serviceId]);
+      setStep(2);
     };
     apply(readBookingServiceFromLocation());
     const onPick = (event: Event) => {
@@ -157,7 +163,7 @@ export function FreshaBookingFlow({
 
   const localSlots = useCallback((): ApiSlot[] => {
     if (!date || totals.durationMin <= 0) return [];
-    return getAvailableSlots({
+    return getScheduleSlots({
       date,
       barberId,
       durationMinutes: totals.durationMin,
@@ -166,8 +172,8 @@ export function FreshaBookingFlow({
       end: s.endIso,
       label: s.label,
       barberId: s.barberId,
-      available: true,
-      booked: false,
+      available: s.available,
+      booked: s.booked,
     }));
   }, [date, barberId, totals.durationMin]);
 
@@ -229,6 +235,10 @@ export function FreshaBookingFlow({
     setSlot(null);
   }, [date, barberId, selectedIds.join("|")]);
 
+  useEffect(() => {
+    setMonth(startOfMonth(date));
+  }, [date]);
+
   function toggleService(id: string) {
     setSelectedIds((curr) =>
       curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id],
@@ -238,8 +248,9 @@ export function FreshaBookingFlow({
   function canContinue(): boolean {
     if (step === 1) return selectedIds.length > 0;
     if (step === 2) return Boolean(barberId);
-    if (step === 3) return Boolean(slot && !isSlotTaken(slot));
-    if (step === 4) {
+    if (step === 3) return Boolean(date);
+    if (step === 4) return Boolean(slot && !isSlotTaken(slot));
+    if (step === 5) {
       return (
         firstName.trim().length > 1 &&
         lastName.trim().length > 1 &&
@@ -331,7 +342,7 @@ export function FreshaBookingFlow({
   }
 
   function onPrimary() {
-    if (step < 5) {
+    if (step < 6) {
       if (!canContinue()) return;
       setStep((s) => s + 1);
       return;
@@ -451,7 +462,7 @@ export function FreshaBookingFlow({
           Indietro
         </button>
         <p className="fresha-step-label">
-          Passo {step} di 5 · {STEPS[step - 1]}
+          Passo {step} di {STEPS.length} · {STEPS[step - 1]}
         </p>
         <div className="fresha-progress" aria-hidden="true">
           {STEPS.map((_, i) => (
@@ -466,10 +477,10 @@ export function FreshaBookingFlow({
       <div className="fresha-body">
         {step === 1 && listinoBeside && (
           <>
-            <h3>Servizi scelti</h3>
+            <h3>Servizio scelto</h3>
             <p className="booking-open-note">
-              Tocca Prenota sul listino per aggiungere un servizio. Un solo
-              listino, poi continua qui.
+              Tocca un servizio nel listino per selezionarlo. Passi subito al
+              barbiere.
             </p>
             {selectedServices.length === 0 ? (
               <p className="slot-status">Nessun servizio selezionato.</p>
@@ -485,7 +496,7 @@ export function FreshaBookingFlow({
                   <span>
                     <strong>{s.name}</strong>
                     <small>
-                      {s.durationMin} min · {s.description}
+                      {formatDuration(s)} · {s.description}
                     </small>
                   </span>
                   <span className="meta">{formatPriceRange(s)}</span>
@@ -497,7 +508,7 @@ export function FreshaBookingFlow({
 
         {step === 1 && !listinoBeside && (
           <>
-            <h3>Scegli i servizi</h3>
+            <h3>Scegli il servizio</h3>
             {SERVICE_CATEGORIES.map((cat) => (
               <div key={cat}>
                 <p className="fresha-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
@@ -512,7 +523,7 @@ export function FreshaBookingFlow({
                     <span>
                       <strong>{s.name}</strong>
                       <small>
-                        {s.durationMin} min · {s.description}
+                        {formatDuration(s)} · {s.description}
                       </small>
                     </span>
                     <span className="meta">{formatPriceRange(s)}</span>
@@ -547,28 +558,69 @@ export function FreshaBookingFlow({
 
         {step === 3 && (
           <>
-            <h3>Data e orario</h3>
-            <div className="day-scroller" role="listbox" aria-label="Giorni disponibili">
-              {days.map((d) => {
-                const full = Boolean(dayOccupancy[d.date]?.full);
-                return (
+            <h3>Scegli la data</h3>
+            <div className="booking-calendar" aria-label="Calendario prenotazione">
+              <div className="booking-calendar-nav">
                 <button
-                  key={d.date}
                   type="button"
-                  className={`day-chip${date === d.date ? " selected" : ""}${full ? " full" : ""}`}
-                  onClick={() => setDate(d.date)}
-                  aria-label={
-                    full
-                      ? `${d.dow} ${d.day}, completamente prenotato`
-                      : `${d.dow} ${d.day}`
-                  }
+                  className="fresha-back"
+                  onClick={() => setMonth((curr) => addMonths(curr, -1))}
+                  aria-label="Mese precedente"
                 >
-                  <span className="dow">{d.dow}</span>
-                  <span className="dom">{d.day}</span>
+                  ‹
                 </button>
-                );
-              })}
+                <p className="booking-calendar-month">{formatItalianMonth(month)}</p>
+                <button
+                  type="button"
+                  className="fresha-back"
+                  onClick={() => setMonth((curr) => addMonths(curr, 1))}
+                  aria-label="Mese successivo"
+                >
+                  ›
+                </button>
+              </div>
+              <div className="booking-calendar-weekdays">
+                {WEEKDAY_LABELS_IT.map((label) => (
+                  <span key={label}>{label}</span>
+                ))}
+              </div>
+              <div className="booking-calendar-grid" role="grid" aria-label="Giorni del mese">
+                {monthCalendarWeeks(month).flat().map((cell, index) => {
+                  if (!cell) {
+                    return <span key={`pad-${index}`} className="cal-day pad" />;
+                  }
+                  const bookable = days.some((d) => d.date === cell.date);
+                  const full = Boolean(dayOccupancy[cell.date]?.full);
+                  const selected = date === cell.date;
+                  return (
+                    <button
+                      key={cell.date}
+                      type="button"
+                      className={`cal-day${selected ? " selected" : ""}${!bookable || cell.closed ? " muted" : ""}${full ? " full" : ""}`}
+                      disabled={!bookable}
+                      onClick={() => {
+                        if (!bookable) return;
+                        setDate(cell.date);
+                      }}
+                      aria-label={
+                        full
+                          ? `${formatItalianDate(cell.date)}, completamente prenotato`
+                          : formatItalianDate(cell.date)
+                      }
+                    >
+                      {Number(cell.date.slice(8))}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <h3>Scegli l&apos;orario</h3>
+            <p className="booking-open-note">{formatItalianDate(date)}</p>
             {slotsState === "loading" && (
               <p className="slot-status">Caricamento orari…</p>
             )}
@@ -584,7 +636,7 @@ export function FreshaBookingFlow({
             slots.length > 0 &&
             slots.every(isSlotTaken) ? (
               <p className="slot-status">
-                Tutti gli orari di questo giorno sono prenotati.
+                Tutti gli orari di questo giorno sono non disponibili.
               </p>
             ) : null}
             {slots.length > 0 && (
@@ -599,7 +651,7 @@ export function FreshaBookingFlow({
                     className={`slot-btn${selected ? " selected" : ""}${taken ? " booked" : ""}`}
                     disabled={taken}
                     aria-disabled={taken}
-                    aria-label={taken ? `${s.label}, prenotato` : s.label}
+                    aria-label={taken ? `${s.label}, non disponibile` : s.label}
                     onClick={() => {
                       if (taken) return;
                       setSlot(s);
@@ -607,7 +659,7 @@ export function FreshaBookingFlow({
                   >
                     {s.label}
                     {taken ? (
-                      <span className="slot-booked-hint">Prenotato</span>
+                      <span className="slot-booked-hint">non disponibile</span>
                     ) : null}
                   </button>
                   );
@@ -617,7 +669,7 @@ export function FreshaBookingFlow({
           </>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <>
             <h3>I tuoi dati</h3>
             <div className="customer-fields">
@@ -689,7 +741,7 @@ export function FreshaBookingFlow({
           </>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <>
             <h3>Conferma</h3>
             <ul className="summary-list">
@@ -706,7 +758,7 @@ export function FreshaBookingFlow({
                 </strong>
               </li>
               <li>
-                Durata <strong>{totals.durationMin} min</strong>
+                Durata <strong>{totals.durationLabel}</strong>
               </li>
               <li>
                 Totale <strong>{totals.priceLabel}</strong>
@@ -738,7 +790,7 @@ export function FreshaBookingFlow({
         <div className="fresha-totals">
           <span>
             {totals.durationMin
-              ? `${totals.durationMin} min`
+              ? totals.durationLabel
               : "Nessun servizio"}
             {selectedIds.length
               ? ` · ${selectedIds.length} selezionat${selectedIds.length === 1 ? "o" : "i"}`
@@ -752,7 +804,7 @@ export function FreshaBookingFlow({
           disabled={!canContinue() || submitting}
           onClick={onPrimary}
         >
-          {step === 5
+          {step === 6
             ? submitting
               ? "Invio…"
               : "Conferma prenotazione"
@@ -772,21 +824,21 @@ export function FreshaBookingFlow({
             {selectedServices.map((s) => (
               <li key={s.id}>
                 <strong>{s.name}</strong>
-                <span>{s.durationMin} min · {formatPriceRange(s)}</span>
+                <span>{formatDuration(s)} · {formatPriceRange(s)}</span>
               </li>
             ))}
           </ul>
         )}
         <div className="appointment-sidebar-totals">
           <span>
-            {totals.durationMin ? `${totals.durationMin} min` : "—"}
+            {totals.durationMin ? totals.durationLabel : "—"}
             {selectedIds.length
               ? ` · ${selectedIds.length} servizio${selectedIds.length === 1 ? "" : "i"}`
               : ""}
           </span>
           <strong>{selectedIds.length ? totals.priceLabel : "—"}</strong>
         </div>
-        {step >= 3 && slot ? (
+        {step >= 4 && slot ? (
           <p className="appointment-sidebar-when">
             {formatItalianDate(date)} · {slot.label}
             {barber ? ` · ${barber.name}` : ""}
@@ -821,9 +873,10 @@ export function FreshaBookingFlow({
 export function BookingSectionNote() {
   return (
     <p className="booking-open-note">
-      Prenota già ora, prima dell&apos;apertura ufficiale. Cinque passi online.
-      Orari {SITE.hours.weekdays}. Primo giorno disponibile:{" "}
-      {formatItalianDate(getFirstBookableDate())}. Barbieri: Felice e Davide.
+      Prenota già ora, prima dell&apos;apertura ufficiale. Servizio, barbiere,
+      data e orario. Orari {SITE.hours.weekdays}. Primo giorno disponibile:{" "}
+      {formatItalianDate(getFirstBookableDate())}. Barbieri: Felice, Davide o
+      Qualsiasi disponibilità.
       {" "}Non c&apos;è alcun limite al numero totale di prenotazioni: ogni
       orario libero resta prenotabile finché la poltrona è disponibile.
     </p>
