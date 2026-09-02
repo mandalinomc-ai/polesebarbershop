@@ -1,4 +1,4 @@
-import { CUTTING_TECHNIQUE_VIDEOS, SALON_WORK_VIDEOS } from "@/lib/site-videos";
+import { CUTTING_TECHNIQUE_VIDEOS } from "@/lib/site-videos";
 import { SalonVideo } from "@/components/site/SalonVideo";
 
 function TechniqueCard({
@@ -34,17 +34,6 @@ export function VideoReelGrid() {
           Prenota il tuo taglio
         </a>
       </p>
-      {SALON_WORK_VIDEOS.length ? (
-        <div className="video-reel-grid salon-work-grid">
-          {SALON_WORK_VIDEOS.map((reel) => (
-            <article key={reel.id} className="video-reel-box">
-              <div className="video-reel-media">
-                <SalonVideo video={reel} className="video-reel-player" />
-              </div>
-            </article>
-          ))}
-        </div>
-      ) : null}
     </section>
   );
 }
