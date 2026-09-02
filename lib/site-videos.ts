@@ -72,21 +72,27 @@ export const FELICE_WORKING_VIDEO: SiteVideo = {
 };
 
 /**
- * Cutting techniques shown as video content — not listino, not bookable.
- * Filenames map to existing taglio clips; there are no rasatura-*.mp4 files on disk.
+ * Cutting techniques — dedicated clips synced from public/video/ via scripts/sync-videos.ps1.
+ * Not listino, not bookable.
  */
 export const CUTTING_TECHNIQUE_VIDEOS: SiteVideo[] = [
   {
-    id: "razor-taper-technique",
-    src: `${VIDEO_BASE}/taglio-01.mp4`,
-    alt: "Razor Taper — tecnica di sfumatura in salone",
-    label: "Razor Taper — Tecnica di sfumatura",
+    id: "razor-fade-technique",
+    src: `${VIDEO_BASE}/razor-fade.mp4`,
+    alt: "Razor fade — tecnica di sfumatura in salone",
+    label: "Razor Fade — Tecnica di sfumatura",
   },
   {
-    id: "skin-fade-technique",
-    src: `${VIDEO_BASE}/taglio-02.mp4`,
-    alt: "Skin Fade — tecnica di sfumatura a pelle in salone",
-    label: "Skin Fade — Tecnica di sfumatura a pelle",
+    id: "taper-fade-technique",
+    src: `${VIDEO_BASE}/taper-fade.mp4`,
+    alt: "Taper fade — tecnica di sfumatura in salone",
+    label: "Taper Fade — Tecnica di sfumatura",
+  },
+  {
+    id: "burst-fade-technique",
+    src: `${VIDEO_BASE}/burst-fade.mp4`,
+    alt: "Burst fade — tecnica di sfumatura in salone",
+    label: "Burst Fade — Tecnica di sfumatura",
   },
 ];
 
@@ -132,3 +138,10 @@ export const REQUIRED_VIDEO_FILES = [
 
 /** Drop-in filename for the bio clip: public/assets/videos/felice-working.mp4 */
 export const FELICE_WORKING_FILENAME = "felice-working.mp4" as const;
+
+/** Technique reels — sync from public/video/ with scripts/sync-videos.ps1 */
+export const TECHNIQUE_VIDEO_FILES = [
+  "razor-fade.mp4",
+  "taper-fade.mp4",
+  "burst-fade.mp4",
+] as const;

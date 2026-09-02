@@ -70,16 +70,18 @@ describe("site-videos", () => {
     ]);
   });
 
-  it("keeps Razor Taper and Skin Fade as technique videos, not priced services", () => {
-    expect(CUTTING_TECHNIQUE_VIDEOS).toHaveLength(2);
+  it("keeps fade techniques as dedicated clips, not priced services", () => {
+    expect(CUTTING_TECHNIQUE_VIDEOS).toHaveLength(3);
     expect(CUTTING_TECHNIQUE_VIDEOS.map((v) => v.id)).toEqual([
-      "razor-taper-technique",
-      "skin-fade-technique",
+      "razor-fade-technique",
+      "taper-fade-technique",
+      "burst-fade-technique",
     ]);
-    expect(CUTTING_TECHNIQUE_VIDEOS[0]?.label).toBe("Razor Taper — Tecnica di sfumatura");
-    expect(CUTTING_TECHNIQUE_VIDEOS[1]?.label).toBe("Skin Fade — Tecnica di sfumatura a pelle");
+    expect(CUTTING_TECHNIQUE_VIDEOS[0]?.label).toBe("Razor Fade — Tecnica di sfumatura");
+    expect(CUTTING_TECHNIQUE_VIDEOS[1]?.label).toBe("Taper Fade — Tecnica di sfumatura");
+    expect(CUTTING_TECHNIQUE_VIDEOS[2]?.label).toBe("Burst Fade — Tecnica di sfumatura");
     for (const video of CUTTING_TECHNIQUE_VIDEOS) {
-      expect(video.src).toMatch(/^\/video\/taglio-\d{2}\.mp4$/);
+      expect(video.src).toMatch(/^\/video\/(razor-fade|taper-fade|burst-fade)\.mp4$/);
       expect(video.label).not.toMatch(/€/);
     }
     expect(SALON_WORK_VIDEOS.map((v) => v.id)).toEqual([
