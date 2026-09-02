@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   Bell,
@@ -129,6 +129,8 @@ export function GestionalePanel() {
   const [history, setHistory] = useState<HistoryAppt[]>([]);
   const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
   const [highlightApptId, setHighlightApptId] = useState<string | null>(null);
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const notifyRef = useRef<HTMLDivElement>(null);
 
   const loadAgenda = useCallback(async () => {
     try {
@@ -223,6 +225,21 @@ export function GestionalePanel() {
     enabled: auth === "ok",
     onOpenBooking: openBookingFromNotify,
   });
+
+  useEffect(() => {
+    if (bookingNotify.unhandledCount === 0) setNotifyOpen(false);
+  }, [bookingNotify.unhandledCount]);
+
+  useEffect(() => {
+    if (!notifyOpen) return;
+    function onDocClick(e: MouseEvent) {
+      if (notifyRef.current && !notifyRef.current.contains(e.target as Node)) {
+        setNotifyOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [notifyOpen]);
 
   useEffect(() => {
     void load();
@@ -362,23 +379,94 @@ export function GestionalePanel() {
             <h1 className="font-serif">{SITE.name}</h1>
           </div>
           <div className="crm-top-actions">
-            <button
-              type="button"
-              className="crm-icon-btn crm-notify-bell"
-              aria-label={
-                bookingNotify.unreadCount > 0
-                  ? `${bookingNotify.unreadCount} nuove prenotazioni`
-                  : "Notifiche prenotazioni"
-              }
-              onClick={() => {
-                if (bookingNotify.unreadCount > 0) setTab("agenda");
-              }}
-            >
-              <Bell size={18} aria-hidden />
-              {bookingNotify.unreadCount > 0 ? (
-                <span className="crm-tab-badge">{bookingNotify.unreadCount}</span>
+            <div className="crm-notify-wrap" ref={notifyRef}>
+              <button
+                type="button"
+                className={`crm-icon-btn crm-notify-bell${bookingNotify.unhandledCount > 0 ? " is-active" : ""}`}
+                aria-expanded={notifyOpen}
+                aria-haspopup="true"
+                aria-label={
+                  bookingNotify.unhandledCount > 0
+                    ? `${bookingNotify.unhandledCount} nuove prenotazioni da gestire`
+                    : "Notifiche prenotazioni"
+                }
+                onClick={() => setNotifyOpen((o) => !o)}
+              >
+                <Bell size={18} aria-hidden />
+                {bookingNotify.unhandledCount > 0 ? (
+                  <span className="crm-tab-badge">{bookingNotify.unhandledCount}</span>
+                ) : null}
+              </button>
+              {notifyOpen && bookingNotify.unhandled.length > 0 ? (
+                <div className="crm-notify-panel" role="menu" aria-label="Nuove prenotazioni">
+                  <header className="crm-notify-panel-head">
+                    <strong>Nuove prenotazioni</strong>
+                    <button
+                      type="button"
+                      className="crm-link"
+                      onClick={() => {
+                        bookingNotify.markAllHandled();
+                        setNotifyOpen(false);
+                      }}
+                    >
+                      Segna tutte gestite
+                    </button>
+                  </header>
+                  <ul className="crm-notify-list">
+                    {bookingNotify.unhandled.map((b) => {
+                      const wa = newBookingWhatsAppUrl(b);
+                      const name = `${b.firstName} ${b.lastName}`.trim() || "Cliente";
+                      return (
+                        <li key={b.id} className="crm-notify-item">
+                          <button
+                            type="button"
+                            className="crm-notify-item-main"
+                            onClick={() => {
+                              bookingNotify.openBooking(b);
+                              setNotifyOpen(false);
+                            }}
+                          >
+                            <strong>{name}</strong>
+                            <span>
+                              {b.dateLabel} · {b.timeLabel} · {b.serviceNames}
+                            </span>
+                            <span>{b.barberName}</span>
+                          </button>
+                          <div className="crm-notify-item-actions">
+                            <button
+                              type="button"
+                              className="btn btn-outline"
+                              onClick={() => {
+                                bookingNotify.openBooking(b);
+                                setNotifyOpen(false);
+                              }}
+                            >
+                              Apri agenda
+                            </button>
+                            {wa ? (
+                              <button
+                                type="button"
+                                className="btn btn-whatsapp"
+                                onClick={() => {
+                                  bookingNotify.sendWhatsApp(b);
+                                  setNotifyOpen(false);
+                                }}
+                              >
+                                <MessageCircle size={14} aria-hidden /> WhatsApp
+                              </button>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : notifyOpen ? (
+                <div className="crm-notify-panel crm-notify-panel--empty" role="status">
+                  <p>Nessuna prenotazione da gestire.</p>
+                </div>
               ) : null}
-            </button>
+            </div>
             <input
               className="input-lux"
               type="date"
@@ -524,7 +612,7 @@ export function GestionalePanel() {
                     <button
                       type="button"
                       className="btn btn-whatsapp"
-                      onClick={() => bookingNotify.openBooking(b, true)}
+                      onClick={() => bookingNotify.sendWhatsApp(b)}
                     >
                       <MessageCircle size={16} aria-hidden /> Apri e invia WhatsApp
                     </button>

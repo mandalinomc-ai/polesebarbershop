@@ -19,4 +19,11 @@ describe("GET /api/admin/recent-bookings", () => {
     expect(hook).toMatch(/addEventListener\("focus"/);
     expect(hook).toMatch(/BOOKING_POLL_MS/);
   });
+
+  it("tracks per-booking seen and whatsapp state for handled bell", () => {
+    expect(hook).toMatch(/isBookingHandled/);
+    expect(hook).toMatch(/markWhatsAppSent/);
+    expect(hook).toMatch(/writeBookingState/);
+    expect(hook).toMatch(/unhandledCount/);
+  });
 });

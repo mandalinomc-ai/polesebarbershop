@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   BOOKING_NOTIFY_STORAGE_KEY,
   BOOKING_POLL_MS,
+  BOOKING_STATE_STORAGE_KEY,
   bookingAgendaDate,
   formatNewBookingToast,
   clientReminderWhatsAppUrl,
+  isBookingHandled,
   newBookingWhatsAppUrl,
 } from "./booking-notifications";
 import type { ClientRecord } from "./crm";
@@ -80,5 +82,16 @@ describe("booking-notifications", () => {
 
   it("uses stable localStorage key", () => {
     expect(BOOKING_NOTIFY_STORAGE_KEY).toBe("polese_gestionale_last_seen_at");
+  });
+
+  it("uses per-booking state storage key", () => {
+    expect(BOOKING_STATE_STORAGE_KEY).toBe("polese_gestionale_booking_states");
+  });
+
+  it("considers booking handled only when seen and whatsapp sent", () => {
+    expect(isBookingHandled(undefined)).toBe(false);
+    expect(isBookingHandled({ seen: true, whatsappSent: false })).toBe(false);
+    expect(isBookingHandled({ seen: false, whatsappSent: true })).toBe(false);
+    expect(isBookingHandled({ seen: true, whatsappSent: true })).toBe(true);
   });
 });

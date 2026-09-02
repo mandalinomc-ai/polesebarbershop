@@ -17,7 +17,64 @@ export type RecentBooking = {
 };
 
 export const BOOKING_NOTIFY_STORAGE_KEY = "polese_gestionale_last_seen_at";
+export const BOOKING_STATE_STORAGE_KEY = "polese_gestionale_booking_states";
 export const BOOKING_POLL_MS = 45_000;
+
+export type BookingNotifyState = {
+  seen: boolean;
+  whatsappSent: boolean;
+};
+
+export function isBookingHandled(state: BookingNotifyState | undefined): boolean {
+  return Boolean(state?.seen && state?.whatsappSent);
+}
+
+export function readBookingStates(): Record<string, BookingNotifyState> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(BOOKING_STATE_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, Partial<BookingNotifyState>>;
+    const out: Record<string, BookingNotifyState> = {};
+    for (const [id, v] of Object.entries(parsed)) {
+      if (v && typeof v === "object") {
+        out[id] = { seen: Boolean(v.seen), whatsappSent: Boolean(v.whatsappSent) };
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function writeBookingState(id: string, patch: Partial<BookingNotifyState>) {
+  if (typeof window === "undefined") return;
+  try {
+    const all = readBookingStates();
+    const prev = all[id] || { seen: false, whatsappSent: false };
+    all[id] = { ...prev, ...patch };
+    localStorage.setItem(BOOKING_STATE_STORAGE_KEY, JSON.stringify(all));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function pruneBookingStates(activeIds: Set<string>) {
+  if (typeof window === "undefined") return;
+  try {
+    const all = readBookingStates();
+    let changed = false;
+    for (const id of Object.keys(all)) {
+      if (!activeIds.has(id) && isBookingHandled(all[id])) {
+        delete all[id];
+        changed = true;
+      }
+    }
+    if (changed) localStorage.setItem(BOOKING_STATE_STORAGE_KEY, JSON.stringify(all));
+  } catch {
+    /* ignore */
+  }
+}
 
 export function formatNewBookingToast(b: RecentBooking): string {
   const name = `${b.firstName} ${b.lastName}`.trim() || "Cliente";
