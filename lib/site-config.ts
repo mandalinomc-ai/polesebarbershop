@@ -1,3 +1,5 @@
+import { normalizeWhatsAppNumber } from "./phone";
+
 export const TIMEZONE = "Europe/Rome";
 
 /** When true, homepage shows coming-soon gate only. Default false — full live site with countdown + booking. */
@@ -166,8 +168,33 @@ export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
   return `Ciao Felice, ho prenotato su ${SITE.name}: ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}. Nome: ${name} - Tel: ${tel}`;
 }
 
+/** Cliente → salone (wa.me 351). Il cliente apre la chat con Felice. */
 export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
   return getWhatsAppUrl(getBookingConfirmMessage(opts));
+}
+
+/** Testo che Felice manda al cliente per confermare la prenotazione. */
+export function getCustomerConfirmMessage(opts: BookingConfirmCopy): string {
+  const name = opts.firstName?.trim() || "";
+  const barber = opts.barberName?.trim() ? ` con ${opts.barberName.trim()}` : "";
+  const hello = name ? `Ciao ${name}` : "Ciao";
+  return `${hello}, la tua prenotazione da ${SITE.name} è confermata: ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}${barber}. Ti aspettiamo in ${SITE.streetAddress}. Per modifiche o disdette chiama o scrivi al ${SITE.phone}.`;
+}
+
+/** Salone → cliente. Felice clicca e apre la chat WhatsApp con il numero del cliente. */
+export function getSalonToCustomerWhatsAppUrl(
+  customerPhone: string,
+  opts: BookingConfirmCopy,
+): string | null {
+  return whatsAppMeUrl(customerPhone, getCustomerConfirmMessage(opts));
+}
+
+export function whatsAppMeUrl(phone: string, message: string): string | null {
+  const e164 = normalizeWhatsAppNumber(phone);
+  if (!e164) return null;
+  const digits = e164.replace(/\D/g, "");
+  if (digits.length < 8) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 
 export function bookingWizardHref(date?: string): string {
@@ -298,19 +325,15 @@ export function isResendTestFrom(): boolean {
 }
 
 /**
- * Destinatari avvisi prenotazione al salone.
- * In test mode Resend consegna solo a NOTIFY_EMAIL; con dominio verificato va ad ADMIN_EMAIL.
+ * Destinatari avvisi prenotazione al salone: sempre Gmail di Felice (ADMIN_EMAIL).
+ * NOTIFY_EMAIL (account Resend) resta in copia se è un indirizzo diverso.
+ * Con From di test Resend l'invio a Felice passa da Mailgun/relay, non da resend.dev.
  */
 export function getOwnerNotifyEmails(): string[] {
   const admin = getAdminEmail().trim().toLowerCase();
   const notify = getNotifyEmail()?.toLowerCase() || "";
-
-  if (isResendTestFrom()) {
-    if (notify) return [notify];
-    return [admin];
-  }
-
-  const emails = new Set<string>([admin]);
+  const emails = new Set<string>();
+  if (admin) emails.add(admin);
   if (notify && notify !== admin) emails.add(notify);
   return [...emails];
 }

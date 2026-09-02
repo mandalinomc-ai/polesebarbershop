@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   RESEND_MISSING_IT,
+  CUSTOMER_CONFIRM_WHATSAPP_IT,
   customerCancelEmail,
   customerConfirmEmail,
   isResendConfigured,
   ownerCancelEmail,
   ownerNewBookingEmail,
+  publicCustomerMailError,
   sendBookingEmails,
   sendEmail,
 } from "./email";
@@ -126,6 +128,10 @@ describe("sendEmail", () => {
     expect(err).toHaveBeenCalled();
     const logged = JSON.stringify(err.mock.calls);
     expect(logged).not.toMatch(/re_test_fake_key/);
+    expect(publicCustomerMailError("You can only send testing emails to your own email address.", true)).toBe(
+      CUSTOMER_CONFIRM_WHATSAPP_IT,
+    );
+    expect(publicCustomerMailError("You can only send testing emails to your own email address.", true)).not.toMatch(/403/);
   });
 });
 
@@ -134,6 +140,7 @@ describe("booking email copy", () => {
   const origFrom = process.env.RESEND_FROM;
   const origNotify = process.env.NOTIFY_EMAIL;
   const origAdmin = process.env.ADMIN_EMAIL;
+  const origRelay = process.env.SALON_FORM_RELAY;
 
   afterEach(() => {
     if (origKey === undefined) delete process.env.RESEND_API_KEY;
@@ -144,6 +151,8 @@ describe("booking email copy", () => {
     else process.env.NOTIFY_EMAIL = origNotify;
     if (origAdmin === undefined) delete process.env.ADMIN_EMAIL;
     else process.env.ADMIN_EMAIL = origAdmin;
+    if (origRelay === undefined) delete process.env.SALON_FORM_RELAY;
+    else process.env.SALON_FORM_RELAY = origRelay;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -195,6 +204,7 @@ describe("booking email copy", () => {
       priceLabel: "65 €",
       notes: "Allergia al nichel",
       manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
+      customerWhatsAppUrl: "https://wa.me/393331112233?text=Ciao",
     });
     expect(mail.subject).toMatch(/^NUOVA PRENOTAZIONE/);
     expect(mail.text).toContain("Nome: Mario");
@@ -209,6 +219,9 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("Ora: 09:30");
     expect(mail.text).toContain("Note: Allergia al nichel");
     expect(mail.text).toContain("Gestisci: https://polesebarbershop.vercel.app/appuntamento/abc");
+    expect(mail.text).toContain("Scrivi al cliente su WhatsApp");
+    expect(mail.html).toContain("wa.me/393331112233");
+    expect(mail.text).toContain("Scrivi al cliente su WhatsApp");
   });
 
   it("mentions 30 minuti on cancel emails", () => {
@@ -290,10 +303,62 @@ describe("booking email copy", () => {
     expect(ownerBody.to).toBe("notify@example.com");
   });
 
-  it("delivers owner alert to NOTIFY_EMAIL in Resend test mode", async () => {
+  it("sends Felice salon alert via form relay when Resend is in test mode", async () => {
     process.env.RESEND_API_KEY = "re_test_fake_key";
     process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
+    process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
     process.env.NOTIFY_EMAIL = "notify@example.com";
+    process.env.SALON_FORM_RELAY = "formsubmit";
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      if (String(url).includes("formsubmit")) {
+        return { ok: true, text: async () => JSON.stringify({ success: "true" }) };
+      }
+      return { ok: true, json: async () => ({ id: "ok" }) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = await sendBookingEmails({
+      customerEmail: "eugeniociullo96@gmail.com",
+      customer: customerConfirmEmail({
+        firstName: "Eugenio",
+        service: "Taglio completo",
+        barber: "Felice",
+        date: "martedì 1 settembre 2026",
+        time: "09:30",
+      }),
+      owner: ownerNewBookingEmail({
+        firstName: "Eugenio",
+        lastName: "Test",
+        phone: "+393331112233",
+        email: "eugeniociullo96@gmail.com",
+        service: "Taglio completo",
+        durationMin: 25,
+        barber: "Felice",
+        date: "martedì 1 settembre 2026",
+        time: "09:30",
+        priceLabel: "50 €",
+        customerWhatsAppUrl: "https://wa.me/393331112233?text=Ciao",
+      }),
+      ics: { filename: "x.ics", content: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n" },
+    });
+
+    expect(result.owner.ok).toBe(true);
+    const felice = result.owner.results.find((r) => r.to === "felicepolese550@gmail.com");
+    expect(felice?.result.ok).toBe(true);
+    const formCall = fetchMock.mock.calls.find((call) => String(call[0]).includes("formsubmit"));
+    expect(formCall?.[0]).toContain("felicepolese550%40gmail.com");
+    delete process.env.SALON_FORM_RELAY;
+  });
+
+  it("still copies NOTIFY_EMAIL in Resend test mode without counting it as Felice notified", async () => {
+    process.env.RESEND_API_KEY = "re_test_fake_key";
+    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
+    process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
+    process.env.NOTIFY_EMAIL = "notify@example.com";
+    process.env.SALON_FORM_RELAY = "off";
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -305,6 +370,7 @@ describe("booking email copy", () => {
       });
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await sendBookingEmails({
       customerEmail: "client@example.com",
@@ -330,7 +396,9 @@ describe("booking email copy", () => {
       ics: { filename: "x.ics", content: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n" },
     });
 
-    expect(result.owner.ok).toBe(true);
+    expect(result.owner.ok).toBe(false);
+    expect(result.owner.results.find((r) => r.to === "felicepolese550@gmail.com")?.result.ok).toBe(false);
+    expect(result.owner.results.find((r) => r.to === "notify@example.com")?.result.ok).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const ownerBody = JSON.parse(String((fetchMock.mock.calls[1] as [string, RequestInit])[1].body)) as {
       to: string;

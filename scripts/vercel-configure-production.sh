@@ -15,14 +15,14 @@ if [[ -f .env.local ]]; then
   while IFS='=' read -r key value; do
     [[ "$key" =~ ^#|^$ ]] && continue
     case "$key" in
-      SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|ADMIN_PASSWORD|ADMIN_EMAIL|OWNER_EMAIL|NOTIFY_EMAIL|ADMIN_USER|NEXT_PUBLIC_SUPABASE_URL)
+      SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|ADMIN_PASSWORD|ADMIN_EMAIL|OWNER_EMAIL|NOTIFY_EMAIL|ADMIN_USER|NEXT_PUBLIC_SUPABASE_URL|MAILGUN_API_KEY|MAILGUN_DOMAIN|MAILGUN_FROM|MAILGUN_REGION|SALON_FORM_RELAY)
         export "$key=$value"
         ;;
       RESEND_FROM)
         export RESEND_FROM="$value"
         ;;
     esac
-  done < <(grep -E '^(SUPABASE_|RESEND_|ADMIN_|OWNER_|NEXT_PUBLIC_SUPABASE)' .env.local || true)
+  done < <(grep -E '^(SUPABASE_|RESEND_|ADMIN_|OWNER_|NOTIFY_|NEXT_PUBLIC_SUPABASE_|MAILGUN_|SALON_FORM_RELAY)' .env.local || true)
   set +a
 fi
 
@@ -66,6 +66,17 @@ upsert_env OWNER_EMAIL "$OWNER_EMAIL" plain
 if [[ -n "$NOTIFY_EMAIL" ]]; then
   upsert_env NOTIFY_EMAIL "$NOTIFY_EMAIL" plain
 fi
+if [[ -n "${MAILGUN_API_KEY:-}" && -n "${MAILGUN_DOMAIN:-}" ]]; then
+  upsert_env MAILGUN_API_KEY "$MAILGUN_API_KEY"
+  upsert_env MAILGUN_DOMAIN "$MAILGUN_DOMAIN" plain
+  if [[ -n "${MAILGUN_FROM:-}" ]]; then
+    upsert_env MAILGUN_FROM "$MAILGUN_FROM" plain
+  fi
+  if [[ -n "${MAILGUN_REGION:-}" ]]; then
+    upsert_env MAILGUN_REGION "$MAILGUN_REGION" plain
+  fi
+fi
+upsert_env SALON_FORM_RELAY "${SALON_FORM_RELAY:-formsubmit}" plain
 
 echo "→ Triggering production redeploy…"
 export VERCEL_ORG_ID VERCEL_PROJECT_ID

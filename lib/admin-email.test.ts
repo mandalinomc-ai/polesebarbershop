@@ -60,12 +60,15 @@ describe("owner notify routing", () => {
     expect(isResendTestFrom()).toBe(false);
   });
 
-  it("routes test-mode owner alerts to NOTIFY_EMAIL only", () => {
+  it("always includes the salon Gmail, plus NOTIFY_EMAIL when it differs", () => {
     process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
     process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
     process.env.NOTIFY_EMAIL = "notify@example.com";
     expect(getNotifyEmail()).toBe("notify@example.com");
-    expect(getOwnerNotifyEmails()).toEqual(["notify@example.com"]);
+    expect(getOwnerNotifyEmails()).toEqual([
+      "felicepolese550@gmail.com",
+      "notify@example.com",
+    ]);
   });
 
   it("sends to admin and notify when domain is verified", () => {

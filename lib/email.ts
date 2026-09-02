@@ -1,5 +1,13 @@
 import { Resend } from "resend";
 import {
+  isMailgunConfigured,
+  isResendAllowedRecipient,
+  isResendTestRecipientError,
+  isSalonFormRelayEnabled,
+  sendViaFormSubmit,
+  sendViaMailgun,
+} from "./mail-providers";
+import {
   CANCEL_NOTICE_IT,
   SITE,
   getAdminEmail,
@@ -13,6 +21,20 @@ export type EmailSendResult =
 
 export const RESEND_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
+
+export const CUSTOMER_CONFIRM_WHATSAPP_IT =
+  "Non siamo riusciti a inviarti l'email di conferma. Ti confermiamo su WhatsApp al numero che hai lasciato.";
+
+export const CUSTOMER_CONFIRM_WHATSAPP_NO_PHONE_IT =
+  "Non siamo riusciti a inviarti l'email di conferma. Scrivi al salone su WhatsApp per ricevere la conferma.";
+
+export function publicCustomerMailError(error: string, hasCustomerPhone: boolean): string {
+  if (isResendTestRecipientError(error) || /403|forbidden/i.test(error)) {
+    return hasCustomerPhone ? CUSTOMER_CONFIRM_WHATSAPP_IT : CUSTOMER_CONFIRM_WHATSAPP_NO_PHONE_IT;
+  }
+  if (error === RESEND_MISSING_IT) return error;
+  return hasCustomerPhone ? CUSTOMER_CONFIRM_WHATSAPP_IT : CUSTOMER_CONFIRM_WHATSAPP_NO_PHONE_IT;
+}
 
 const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
 const DEFAULT_FROM = `Felice Polese Barber Shop <onboarding@${RESEND_TEST_DOMAIN}>`;
@@ -44,7 +66,7 @@ function logEmailError(message: string, extra: Record<string, unknown>) {
   console.error(`[email] ${message}`, extra);
 }
 
-export async function sendEmail(opts: {
+async function sendViaResend(opts: {
   to: string;
   subject: string;
   html: string;
@@ -53,10 +75,6 @@ export async function sendEmail(opts: {
 }): Promise<EmailSendResult> {
   const key = getResendApiKey();
   if (!key) {
-    console.warn("[email] RESEND_API_KEY assente: invio saltato", {
-      to: opts.to,
-      subject: opts.subject,
-    });
     return { ok: false, skipped: true, error: RESEND_MISSING_IT };
   }
   try {
@@ -89,13 +107,72 @@ export async function sendEmail(opts: {
       });
       return { ok: false, error: error.message };
     }
-    console.info("[email] inviata", { to: opts.to, subject: opts.subject, id: data?.id });
+    console.info("[email] inviata via Resend", { to: opts.to, subject: opts.subject, id: data?.id });
     return { ok: true, id: data?.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invio email fallito";
-    logEmailError("eccezione durante l'invio", { to: opts.to, subject: opts.subject, error: message });
+    logEmailError("eccezione durante l'invio Resend", { to: opts.to, subject: opts.subject, error: message });
     return { ok: false, error: message };
   }
+}
+
+export async function sendEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  ics?: { filename: string; content: string };
+  /** Salon alerts: Mailgun, then Resend, then FormSubmit if Resend test-mode blocks Felice. */
+  salonFallback?: boolean;
+}): Promise<EmailSendResult> {
+  if (isMailgunConfigured()) {
+    const mailgun = await sendViaMailgun({
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      replyTo: getAdminEmail(),
+      ics: opts.ics,
+    });
+    if (mailgun.ok) {
+      console.info("[email] inviata via Mailgun", { to: opts.to, subject: opts.subject, id: mailgun.id });
+      return { ok: true, id: mailgun.id };
+    }
+    logEmailError("Mailgun ha rifiutato l'invio", { to: opts.to, error: mailgun.error });
+  }
+
+  const key = getResendApiKey();
+  const skipResendTestBlock = opts.salonFallback && isResendTestFrom() && !isResendAllowedRecipient(opts.to);
+  if (key && !skipResendTestBlock) {
+    const resend = await sendViaResend(opts);
+    if (resend.ok) return resend;
+    if (!opts.salonFallback || !isResendTestRecipientError(resend.error || "")) {
+      if (!opts.salonFallback) return resend;
+    }
+  } else if (!key && !opts.salonFallback) {
+    console.warn("[email] RESEND_API_KEY assente: invio saltato", {
+      to: opts.to,
+      subject: opts.subject,
+    });
+    return { ok: false, skipped: true, error: RESEND_MISSING_IT };
+  }
+
+  if (opts.salonFallback && isSalonFormRelayEnabled()) {
+    const relay = await sendViaFormSubmit({
+      to: opts.to,
+      subject: opts.subject,
+      text: opts.text || opts.subject,
+    });
+    if (relay.ok) {
+      console.info("[email] avviso salone via relay", { to: opts.to, subject: opts.subject });
+      return { ok: true };
+    }
+    logEmailError("relay salone non inviato", { to: opts.to, error: relay.error });
+    return { ok: false, error: relay.error };
+  }
+
+  if (!key) return { ok: false, skipped: true, error: RESEND_MISSING_IT };
+  return { ok: false, error: "Invio email al salone non riuscito." };
 }
 
 function escapeHtml(value: string) {
@@ -182,9 +259,11 @@ export function ownerNewBookingEmail(opts: {
   priceLabel: string;
   notes?: string;
   manageUrl?: string;
+  customerWhatsAppUrl?: string | null;
 }) {
   const notes = opts.notes?.trim() || "";
   const manage = opts.manageUrl?.trim() || "";
+  const customerWa = opts.customerWhatsAppUrl?.trim() || "";
   const textLines = [
     "NUOVA PRENOTAZIONE",
     "",
@@ -201,6 +280,9 @@ export function ownerNewBookingEmail(opts: {
   ];
   if (notes) textLines.push(`Note: ${notes}`);
   if (manage) textLines.push(`Gestisci: ${manage}`);
+  if (customerWa) {
+    textLines.push("", `Scrivi al cliente su WhatsApp per confermare: ${customerWa}`);
+  }
   const text = textLines.join("\n");
 
   const row = (label: string, value: string) =>
@@ -224,6 +306,7 @@ export function ownerNewBookingEmail(opts: {
         ${row("Ora", opts.time)}
         ${notes ? row("Note", notes) : ""}
       </table>
+      ${customerWa ? `<p style="margin-top:20px;"><a href="${escapeHtml(customerWa)}" style="display:inline-block;padding:12px 18px;background:#C9A962;color:#0B0B0B;text-decoration:none;">Scrivi al cliente su WhatsApp</a></p>` : ""}
       ${manage ? `<p style="margin-top:20px;"><a href="${escapeHtml(manage)}" style="color:#C9A962;">Apri / gestisci prenotazione</a></p>` : ""}`),
   };
 }
@@ -267,13 +350,12 @@ async function sendOwnerEmails(opts: {
 }): Promise<OwnerNotifyResult> {
   const targets = getOwnerNotifyEmails();
   const results: { to: string; result: EmailSendResult }[] = [];
-  let anyOk = false;
+  const admin = getAdminEmail().trim().toLowerCase();
 
   for (const to of targets) {
     try {
-      const result = await sendEmail({ to, ...opts.owner, ics: opts.ics });
+      const result = await sendEmail({ to, ...opts.owner, ics: opts.ics, salonFallback: true });
       results.push({ to, result });
-      if (result.ok) anyOk = true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Invio email admin fallito";
       logEmailError("avviso salone non inviato", { to, error: message });
@@ -281,18 +363,17 @@ async function sendOwnerEmails(opts: {
     }
   }
 
-  if (!anyOk && isResendTestFrom()) {
-    logEmailError(
-      "Resend in modalità test: imposta NOTIFY_EMAIL all'indirizzo dell'account Resend oppure verifica il dominio",
-      {
-        targets,
-        adminEmail: getAdminEmail(),
-        hint: "https://resend.com/domains — finché il dominio non è verificato, felicepolese550@gmail.com viene rifiutato",
-      },
-    );
+  const adminOk = results.some((row) => row.to === admin && row.result.ok);
+  if (!adminOk) {
+    logEmailError("avviso a Felice non recapitato", {
+      targets,
+      adminEmail: admin,
+      resendTest: isResendTestFrom(),
+      hint: "Mailgun dominio verificato, oppure SALON_FORM_RELAY, oppure verifica polesebarbershop.it su Resend",
+    });
   }
 
-  return { results, ok: anyOk };
+  return { results, ok: adminOk };
 }
 
 export async function sendBookingEmails(opts: {

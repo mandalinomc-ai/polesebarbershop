@@ -2,9 +2,10 @@ import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
-import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@/lib/email";
+import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
-import { SITE, getSiteUrl } from "@/lib/site-config";
+import { SITE, getCustomerConfirmMessage, getSalonToCustomerWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
+import { sendCustomerWhatsApp } from "@/lib/whatsapp-outbound";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
 import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
@@ -119,6 +120,17 @@ export async function POST(request: Request) {
     }
   }
 
+  const confirmCopy = {
+    firstName: body.firstName,
+    phone: body.phone,
+    service: totals.names,
+    dateLabel,
+    timeLabel,
+    barberName,
+  };
+  const customerWhatsAppUrl = getSalonToCustomerWhatsAppUrl(body.phone, confirmCopy);
+  const customerWhatsAppText = getCustomerConfirmMessage(confirmCopy);
+
   const emails = await sendBookingEmails({
     customerEmail: body.email,
     customer: customerConfirmEmail({
@@ -142,13 +154,31 @@ export async function POST(request: Request) {
       priceLabel: totals.priceLabel,
       notes: body.notes,
       manageUrl,
+      customerWhatsAppUrl,
     }),
     ics: { filename, content: icsContent },
   });
-  if (!emails.customer.ok) warnings.push(emails.customer.error);
-  for (const { to, result } of emails.owner.results) {
-    if (!result.ok && "error" in result) {
-      warnings.push(`Avviso salone (${to}): ${result.error}`);
+  if (!emails.customer.ok) {
+    warnings.push(publicCustomerMailError(
+      emails.customer.error,
+      Boolean(body.phone),
+    ));
+  }
+  const ownerFailed = emails.owner.results.filter((r) => !r.result.ok);
+  if (ownerFailed.length && !emails.owner.ok) {
+    warnings.push(
+      `Avviso email al salone non recapitato. Scrivi su WhatsApp al ${SITE.phone} così Felice vede la prenotazione.`,
+    );
+  }
+
+  let customerWhatsAppSent = false;
+  if (!emails.customer.ok && body.phone) {
+    const wa = await sendCustomerWhatsApp(body.phone, customerWhatsAppText);
+    customerWhatsAppSent = Boolean(wa.ok);
+    if (wa.ok) {
+      console.info("[whatsapp] conferma cliente inviata", { phone: body.phone, id: wa.id });
+    } else if (!wa.skipped) {
+      console.warn("[whatsapp] conferma cliente non inviata", { error: wa.error });
     }
   }
 
@@ -157,6 +187,10 @@ export async function POST(request: Request) {
     persisted,
     emailSent: Boolean(emails.customer.ok),
     ownerNotified: Boolean(emails.owner.ok),
+    customerEmailFailed: !emails.customer.ok,
+    confirmViaWhatsApp: !emails.customer.ok,
+    customerWhatsAppSent,
+    customerWhatsAppUrl: customerWhatsAppUrl || null,
     appointmentId,
     manageToken,
     manageUrl,

@@ -95,6 +95,9 @@ export function FreshaBookingFlow({
     warnings: string[];
     emailSent: boolean;
     persisted: boolean;
+    confirmViaWhatsApp: boolean;
+    customerWhatsAppSent: boolean;
+    ownerNotified: boolean;
   } | null>(null);
 
   const selectedServices = useMemo(
@@ -247,12 +250,24 @@ export function FreshaBookingFlow({
         warnings?: string[];
         emailSent?: boolean;
         persisted?: boolean;
+        confirmViaWhatsApp?: boolean;
+        customerWhatsAppSent?: boolean;
+        ownerNotified?: boolean;
       };
       if (!res.ok && !json.ics) {
         setSubmitError(json.error || "Prenotazione non riuscita.");
         if (res.status === 409) void loadSlots();
         return;
       }
+      const salonWa = getBookingConfirmWhatsAppUrl({
+        firstName,
+        phone,
+        service: totals.names,
+        dateLabel: formatItalianDate(date),
+        timeLabel: slot?.label || "",
+        barberName: json.barberName || barber?.name,
+      });
+      const viaWhatsApp = Boolean(json.confirmViaWhatsApp) || !json.emailSent;
       setSuccess({
         manageUrl: json.manageUrl || "#",
         barberName: json.barberName || barber?.name || "",
@@ -262,7 +277,15 @@ export function FreshaBookingFlow({
         warnings: json.warnings || (json.error ? [json.error] : []),
         emailSent: Boolean(json.emailSent),
         persisted: Boolean(json.persisted),
+        confirmViaWhatsApp: viaWhatsApp,
+        customerWhatsAppSent: Boolean(json.customerWhatsAppSent),
+        ownerNotified: Boolean(json.ownerNotified),
       });
+      if (viaWhatsApp) {
+        window.setTimeout(() => {
+          window.open(salonWa, "_blank", "noopener,noreferrer");
+        }, 400);
+      }
     } catch {
       setSubmitError("Connessione non disponibile. Riprova.");
     } finally {
@@ -295,6 +318,24 @@ export function FreshaBookingFlow({
             .ics ha un solo promemoria: 30 minuti prima. Nessun avviso a 1 giorno
             o a 1 ora.
           </p>
+          {success.emailSent ? (
+            <p className="booking-open-note">
+              Ti abbiamo inviato una email di conferma con l&apos;allegato .ics.
+            </p>
+          ) : success.customerWhatsAppSent ? (
+            <p className="booking-open-note">
+              Ti confermiamo su WhatsApp al numero che hai lasciato
+              {phone.trim() ? ` (${phone.trim()})` : ""}.
+            </p>
+          ) : (
+            <p className="booking-open-note">
+              Non siamo riusciti a inviarti l&apos;email di conferma. Ti confermiamo
+              su WhatsApp
+              {phone.trim()
+                ? ` al numero che hai lasciato (${phone.trim()}). Felice ti scrive da ${SITE.phone}.`
+                : ". Scrivi al salone qui sotto: Felice vede la prenotazione e ti risponde."}
+            </p>
+          )}
           <div className="success-actions">
             {success.ics ? (
               <button
@@ -321,9 +362,10 @@ export function FreshaBookingFlow({
               </a>
             ) : null}
             <a
-              className="btn btn-outline"
+              className={success.confirmViaWhatsApp ? "btn btn-gold" : "btn btn-outline"}
               href={getBookingConfirmWhatsAppUrl({
                 firstName,
+                phone,
                 service: totals.names,
                 dateLabel: formatItalianDate(date),
                 timeLabel: slot?.label || "",
@@ -332,15 +374,12 @@ export function FreshaBookingFlow({
               target="_blank"
               rel="noopener noreferrer"
             >
-              WhatsApp salone
+              {success.confirmViaWhatsApp ? "Conferma su WhatsApp" : "WhatsApp salone"}
             </a>
           </div>
-          {success.emailSent ? (
-            <p className="booking-open-note">
-              Ti abbiamo inviato una email di conferma con l&apos;allegato .ics.
-            </p>
-          ) : null}
-          {success.warnings.map((w) => (
+          {success.warnings
+            .filter((w) => !/testing emails|invalid_access|403/i.test(w))
+            .map((w) => (
             <p key={w} className="field-error">
               {w}
             </p>

@@ -72,6 +72,7 @@ describe("POST /api/bookings", () => {
       ok: boolean;
       persisted: boolean;
       emailSent: boolean;
+      confirmViaWhatsApp?: boolean;
       ics: string;
       warnings: string[];
       barberName: string;
@@ -93,6 +94,8 @@ describe("POST /api/bookings", () => {
     expect(json.warnings.length).toBeGreaterThan(0);
     expect(json.warnings.some((w) => /ics|351 252 3087/i.test(w))).toBe(true);
     expect(json.warnings.filter((w) => /^Email admin:/i.test(w))).toEqual([]);
+    expect(json.warnings.join("\n")).not.toMatch(/testing emails|invalid_access/i);
+    expect(json.confirmViaWhatsApp).toBe(true);
     expect(json.manageUrl).toMatch(/\/appuntamento\//);
   });
 });
