@@ -78,6 +78,8 @@ describe("POST /api/bookings", () => {
       persisted: boolean;
       emailSent: boolean;
       confirmViaWhatsApp?: boolean;
+      salonWhatsAppSent?: boolean;
+      customerWhatsAppSent?: boolean;
       salonRelay?: { to?: string; subject: string; message: string } | null;
       ics: string;
       warnings: string[];
@@ -101,7 +103,9 @@ describe("POST /api/bookings", () => {
     expect(json.warnings.some((w) => /ics|351 252 3087/i.test(w))).toBe(true);
     expect(json.warnings.filter((w) => /^Email admin:/i.test(w))).toEqual([]);
     expect(json.warnings.join("\n")).not.toMatch(/testing emails|invalid_access/i);
-    expect(json.confirmViaWhatsApp).toBe(true);
+    expect(json.confirmViaWhatsApp).toBe(false);
+    expect(json.salonWhatsAppSent).toBe(false);
+    expect(json.customerWhatsAppSent).toBe(false);
     expect(json.salonRelay).toMatchObject({
       to: "felicepolese550@gmail.com",
       subject: expect.stringMatching(/NUOVA PRENOTAZIONE/),

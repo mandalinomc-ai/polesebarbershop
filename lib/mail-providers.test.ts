@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  isGmailSmtpConfigured,
   isMailgunConfigured,
   isResendAllowedRecipient,
   isSalonFormRelayEnabled,
@@ -25,6 +26,16 @@ describe("mail providers", () => {
     }
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it("requires Gmail app password to send as the salon inbox", () => {
+    delete process.env.GMAIL_APP_PASSWORD;
+    expect(isGmailSmtpConfigured()).toBe(false);
+    process.env.GMAIL_USER = "felicepolese550@gmail.com";
+    process.env.GMAIL_APP_PASSWORD = "abcd efgh ijkl mnop";
+    expect(isGmailSmtpConfigured()).toBe(true);
+    delete process.env.GMAIL_APP_PASSWORD;
+    delete process.env.GMAIL_USER;
   });
 
   it("requires Mailgun key and domain", () => {

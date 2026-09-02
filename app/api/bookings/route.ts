@@ -4,8 +4,8 @@ import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirs
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
-import { SITE, getAdminEmail, getCustomerConfirmMessage, getSalonToCustomerWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
-import { sendCustomerWhatsApp } from "@/lib/whatsapp-outbound";
+import { SITE, getAdminEmail, getCustomerConfirmMessage, getSalonNewBookingMessage, getSiteUrl } from "@/lib/site-config";
+import { sendCustomerWhatsApp, sendSalonWhatsApp } from "@/lib/whatsapp-outbound";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
 import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
@@ -122,14 +122,19 @@ export async function POST(request: Request) {
 
   const confirmCopy = {
     firstName: body.firstName,
+    lastName: body.lastName,
     phone: body.phone,
+    email: body.email,
     service: totals.names,
     dateLabel,
     timeLabel,
     barberName,
+    priceLabel: totals.priceLabel,
+    durationLabel: totals.durationLabel,
+    manageUrl,
   };
-  const customerWhatsAppUrl = getSalonToCustomerWhatsAppUrl(body.phone, confirmCopy);
   const customerWhatsAppText = getCustomerConfirmMessage(confirmCopy);
+  const salonWhatsAppText = getSalonNewBookingMessage(confirmCopy);
 
   const emails = await sendBookingEmails({
     customerEmail: body.email,
@@ -140,6 +145,8 @@ export async function POST(request: Request) {
       date: dateLabel,
       time: timeLabel,
       manageUrl,
+      priceLabel: totals.priceLabel,
+      durationLabel: totals.durationLabel,
     }),
     owner: ownerNewBookingEmail({
       firstName: body.firstName,
@@ -154,7 +161,6 @@ export async function POST(request: Request) {
       priceLabel: totals.priceLabel,
       notes: body.notes,
       manageUrl,
-      customerWhatsAppUrl,
     }),
     ics: { filename, content: icsContent },
   });
@@ -167,19 +173,31 @@ export async function POST(request: Request) {
   const ownerFailed = emails.owner.results.filter((r) => !r.result.ok);
   if (ownerFailed.length && !emails.owner.ok) {
     warnings.push(
-      `Avviso email al salone non recapitato. Scrivi su WhatsApp al ${SITE.phone} così Felice vede la prenotazione.`,
+      `Avviso email al salone non recapitato a ${getAdminEmail()}.`,
     );
   }
 
-  let customerWhatsAppSent = false;
-  if (!emails.customer.ok && body.phone) {
-    const wa = await sendCustomerWhatsApp(body.phone, customerWhatsAppText);
-    customerWhatsAppSent = Boolean(wa.ok);
-    if (wa.ok) {
-      console.info("[whatsapp] conferma cliente inviata", { phone: body.phone, id: wa.id });
-    } else if (!wa.skipped) {
-      console.warn("[whatsapp] conferma cliente non inviata", { error: wa.error });
-    }
+  const customerWa = body.phone
+    ? await sendCustomerWhatsApp(body.phone, customerWhatsAppText)
+    : { ok: false as const, skipped: true, error: "Numero cliente mancante." };
+  const salonWa = await sendSalonWhatsApp(salonWhatsAppText);
+  const customerWhatsAppSent = Boolean(customerWa.ok);
+  const salonWhatsAppSent = Boolean(salonWa.ok);
+  if (customerWa.ok) {
+    console.info("[whatsapp] conferma cliente inviata", { id: customerWa.id });
+  } else if (!customerWa.skipped) {
+    console.warn("[whatsapp] conferma cliente non inviata", { error: customerWa.error });
+  }
+  if (salonWa.ok) {
+    console.info("[whatsapp] avviso salone inviato", { id: salonWa.id });
+  } else if (!salonWa.skipped) {
+    console.warn("[whatsapp] avviso salone non inviato", { error: salonWa.error });
+  }
+  if (!customerWhatsAppSent && !customerWa.skipped) {
+    warnings.push("WhatsApp al cliente non inviato automaticamente.");
+  }
+  if (!salonWhatsAppSent && !salonWa.skipped) {
+    warnings.push("WhatsApp al salone non inviato automaticamente.");
   }
 
   return NextResponse.json({
@@ -187,10 +205,12 @@ export async function POST(request: Request) {
     persisted,
     emailSent: Boolean(emails.customer.ok),
     ownerNotified: Boolean(emails.owner.ok),
+    ownerWhatsAppSent: salonWhatsAppSent,
     customerEmailFailed: !emails.customer.ok,
-    confirmViaWhatsApp: !emails.customer.ok,
+    confirmViaWhatsApp: customerWhatsAppSent,
     customerWhatsAppSent,
-    customerWhatsAppUrl: customerWhatsAppUrl || null,
+    salonWhatsAppSent,
+    customerWhatsAppUrl: null,
     salonRelay: emails.owner.ok
       ? null
       : {
@@ -202,9 +222,10 @@ export async function POST(request: Request) {
             `Telefono: ${body.phone}`,
             `Email: ${body.email}`,
             `Servizio: ${totals.names}`,
+            `Prezzo: ${totals.priceLabel}`,
+            `Durata: ${totals.durationLabel}`,
             `Barbiere: ${barberName}`,
             `Quando: ${dateLabel} alle ${timeLabel}`,
-            customerWhatsAppUrl ? `WhatsApp cliente: ${customerWhatsAppUrl}` : "",
             `Gestisci: ${manageUrl}`,
           ].filter(Boolean).join("\n"),
         },
