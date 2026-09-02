@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { SITE, getMapsUrl } from "@/lib/site-config";
+import { SITE, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
 import {
   BookingSectionNote,
   FreshaBookingFlow,
@@ -75,7 +75,7 @@ export function LandingSections() {
       <VideoReelGrid />
 
       <section id="prenota" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow">Servizi &amp; prenotazione</div>
+        <div className="eyebrow">Listino &amp; prenotazione</div>
         <h2 className="section-title font-serif">I nostri servizi</h2>
         <div className="booking-layout-grid">
           <ServiceListino />
@@ -106,6 +106,13 @@ export function LandingSections() {
               <br />
               <a href={`tel:${SITE.phoneTel}`} className="contact-link">
                 {SITE.phoneDisplay}
+              </a>
+            </p>
+            <p>
+              <strong>Email</strong>
+              <br />
+              <a href={getMailtoUrl()} className="contact-link">
+                {SITE.email}
               </a>
             </p>
             <p>

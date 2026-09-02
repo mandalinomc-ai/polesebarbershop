@@ -69,7 +69,7 @@ export const SERVICES: Service[] = [
     isVariablePrice: false,
     durationMin: 15,
     durationKnown: false,
-    description: "Solo styling / piega",
+    description: "Solo styling",
   },
   {
     id: "barba-pro",
