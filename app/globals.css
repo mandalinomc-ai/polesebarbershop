@@ -471,6 +471,10 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   margin-top: 2rem;
 }
 @media (min-width: 900px) { .about-grid { grid-template-columns: 1fr 1fr; } }
+.about-grid.about-grid-copy-only {
+  grid-template-columns: 1fr;
+  max-width: 40rem;
+}
 .about-visual {
   position: relative;
   aspect-ratio: 4/5;
