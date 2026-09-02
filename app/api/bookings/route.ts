@@ -119,19 +119,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const confirmCopy = {
-    firstName: body.firstName,
-    lastName: body.lastName,
-    phone: body.phone,
-    email: body.email,
-    service: totals.names,
-    dateLabel,
-    timeLabel,
-    barberName,
-    priceLabel: totals.priceLabel,
-    durationLabel: totals.durationLabel,
-    manageUrl,
-  };
   const emails = await sendBookingEmails({
     customerEmail: body.email,
     customer: customerConfirmEmail({
