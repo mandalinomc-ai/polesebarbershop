@@ -25,10 +25,10 @@ export const RESEND_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
 export const CUSTOMER_CONFIRM_WHATSAPP_IT =
-  "Non siamo riusciti a inviarti l'email di conferma. Ti confermiamo su WhatsApp al numero che hai lasciato.";
+  "Prenotazione salvata. L'email automatica non è ancora attiva.";
 
 export const CUSTOMER_CONFIRM_WHATSAPP_NO_PHONE_IT =
-  "Non siamo riusciti a inviarti l'email di conferma. Scrivi al salone su WhatsApp per ricevere la conferma.";
+  "Prenotazione salvata. L'email automatica non è ancora attiva.";
 
 export function publicCustomerMailError(error: string, hasCustomerPhone: boolean): string {
   if (isResendTestRecipientError(error) || /403|forbidden/i.test(error)) {
