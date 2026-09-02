@@ -4,8 +4,7 @@ import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirs
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
-import { SITE, getAdminEmail, getCustomerConfirmMessage, getSalonNewBookingMessage, getSiteUrl } from "@/lib/site-config";
-import { sendCustomerWhatsApp, sendSalonWhatsApp } from "@/lib/whatsapp-outbound";
+import { SITE, getAdminEmail, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
 import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
@@ -133,9 +132,6 @@ export async function POST(request: Request) {
     durationLabel: totals.durationLabel,
     manageUrl,
   };
-  const customerWhatsAppText = getCustomerConfirmMessage(confirmCopy);
-  const salonWhatsAppText = getSalonNewBookingMessage(confirmCopy);
-
   const emails = await sendBookingEmails({
     customerEmail: body.email,
     customer: customerConfirmEmail({
@@ -177,39 +173,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const customerWa = body.phone
-    ? await sendCustomerWhatsApp(body.phone, customerWhatsAppText)
-    : { ok: false as const, skipped: true, error: "Numero cliente mancante." };
-  const salonWa = await sendSalonWhatsApp(salonWhatsAppText);
-  const customerWhatsAppSent = Boolean(customerWa.ok);
-  const salonWhatsAppSent = Boolean(salonWa.ok);
-  if (customerWa.ok) {
-    console.info("[whatsapp] conferma cliente inviata", { id: customerWa.id });
-  } else if (!customerWa.skipped) {
-    console.warn("[whatsapp] conferma cliente non inviata", { error: customerWa.error });
-  }
-  if (salonWa.ok) {
-    console.info("[whatsapp] avviso salone inviato", { id: salonWa.id });
-  } else if (!salonWa.skipped) {
-    console.warn("[whatsapp] avviso salone non inviato", { error: salonWa.error });
-  }
-  if (!customerWhatsAppSent && !customerWa.skipped) {
-    warnings.push("WhatsApp al cliente non inviato automaticamente.");
-  }
-  if (!salonWhatsAppSent && !salonWa.skipped) {
-    warnings.push("WhatsApp al salone non inviato automaticamente.");
-  }
-
   return NextResponse.json({
     ok: true,
     persisted,
     emailSent: Boolean(emails.customer.ok),
     ownerNotified: Boolean(emails.owner.ok),
-    ownerWhatsAppSent: salonWhatsAppSent,
+    ownerWhatsAppSent: false,
     customerEmailFailed: !emails.customer.ok,
-    confirmViaWhatsApp: customerWhatsAppSent,
-    customerWhatsAppSent,
-    salonWhatsAppSent,
+    confirmViaWhatsApp: false,
+    customerWhatsAppSent: false,
+    salonWhatsAppSent: false,
     customerWhatsAppUrl: null,
     salonRelay: emails.owner.ok
       ? null

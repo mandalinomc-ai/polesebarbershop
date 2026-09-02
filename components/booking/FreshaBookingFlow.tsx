@@ -113,8 +113,6 @@ export function FreshaBookingFlow({
     warnings: string[];
     emailSent: boolean;
     persisted: boolean;
-    customerWhatsAppSent: boolean;
-    salonWhatsAppSent: boolean;
     ownerNotified: boolean;
     salonRelay: SalonRelayPayload | null;
   } | null>(null);
@@ -291,8 +289,6 @@ export function FreshaBookingFlow({
         warnings?: string[];
         emailSent?: boolean;
         persisted?: boolean;
-        customerWhatsAppSent?: boolean;
-        salonWhatsAppSent?: boolean;
         ownerNotified?: boolean;
         salonRelay?: SalonRelayPayload | null;
       };
@@ -311,18 +307,11 @@ export function FreshaBookingFlow({
         warnings: json.warnings || (json.error ? [json.error] : []),
         emailSent: Boolean(json.emailSent),
         persisted: Boolean(json.persisted),
-        customerWhatsAppSent: Boolean(json.customerWhatsAppSent),
-        salonWhatsAppSent: Boolean(json.salonWhatsAppSent),
         ownerNotified: Boolean(json.ownerNotified),
         salonRelay,
       });
       if (salonRelay && !json.ownerNotified) {
         void postSalonBookingRelay(salonRelay);
-      }
-      if (viaWhatsApp) {
-        window.setTimeout(() => {
-          window.open(salonWa, "_blank", "noopener,noreferrer");
-        }, 400);
       }
     } catch {
       setSubmitError("Connessione non disponibile. Riprova.");
@@ -354,10 +343,7 @@ export function FreshaBookingFlow({
           <p className="prose">
             {success.emailSent
               ? "Ti abbiamo inviato l'email di conferma."
-              : "L'email di conferma non è partita in automatico."}{" "}
-            {success.customerWhatsAppSent
-              ? "Ti abbiamo inviato anche un WhatsApp al numero che hai lasciato."
-              : null}
+              : "L'email di conferma non è partita in automatico — salva il file calendario qui sotto o contattaci su WhatsApp."}
           </p>
           <p className="prose">
             Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file

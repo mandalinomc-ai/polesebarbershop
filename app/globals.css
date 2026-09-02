@@ -1121,6 +1121,20 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   cursor: pointer;
 }
 .agenda-card.status-cancelled { opacity: 0.65; }
+.crm-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.25rem; }
+.crm-view-toggle { display: inline-flex; border: 1px solid var(--line); }
+.crm-view-toggle button {
+  border: 0;
+  background: var(--white);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+  min-height: 44px;
+}
+.crm-view-toggle button.active { background: var(--ink); color: #fff; }
+.crm-notes-field textarea { min-height: 5rem; resize: vertical; }
+.crm-table tr.is-cancelled td { opacity: 0.7; }
+.crm-table tr.is-cancelled td[data-label="Stato"] { color: #a33; font-weight: 600; }
 .crm-link { background: none; border: 0; color: var(--ink); font: inherit; cursor: pointer; text-decoration: underline; padding: 0; min-height: 44px; display: inline-flex; align-items: center; }
 .crm-icon-btn { background: transparent; border: 1px solid var(--line); padding: 0.35rem; min-width: 44px; min-height: 44px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .crm-bottom {
