@@ -1,32 +1,22 @@
 # PROJECT_STATE — Felice Polese Barber Shop
 
 **Updated:** 2026-09-02  
-**Public URL to use:** https://felicepolesebarbershop.vercel.app  
-**Vercel project to keep:** `temporary-prompt-quasar-rndxhgh`
+**Public URL:** https://felicepolesebarbershop.vercel.app  
+**Vercel project:** `temporary-prompt-quasar-rndxhgh` (GitHub connected)
 
-## What the client wants
+## Live (verified)
 
-That marble site (the one that opens from the felice URL). Add **working booking**, keep/fix **Maps** and **WhatsApp**, delete the other Vercel projects.
+Marble site + booking wizard + Maps Dante 45 + WhatsApp 351 252 3087.
 
-## Current live (before this publish)
+`/prenota` 200. Availability API returns slots (local mode until Supabase env is set).
 
-| URL | Now |
-|-----|-----|
-| felicepolesebarbershop.vercel.app | Marble look they like. WhatsApp **327** (wrong). Maps Dante **44**. **No** `/prenota`. |
-| polesebarbershop.vercel.app | Same marble family + booking wizard + Maps 45 + WhatsApp **351**. Not the URL they want. |
+## Removed
 
-## Repo (this branch)
+- Vercel project `polesebarbershop` (`polesebarbershop.vercel.app` → 404)
+- Vercel project `temporary-express-magnolia-5pa4zjj`
 
-- Default `NEXT_PUBLIC_SITE_URL` / `SITE.siteUrl` → `https://felicepolesebarbershop.vercel.app`
-- Booking, Maps FAB, WhatsApp FAB already in code (351 + Dante 45)
-- Publish script: `scripts/publish-felice-project.sh`
+Other Vercel sites (Antonella, Ittico, ecc.) were **not** touched.
 
-## After login + script
+## Still missing for real bookings
 
-1. One production deploy onto `temporary-prompt-quasar-rndxhgh`
-2. Delete `polesebarbershop` and `temporary-express-magnolia-5pa4zjj`
-3. Copy Supabase/Resend env onto the remaining project so bookings persist
-
-## Opening
-
-2026-09-07 · Corso Dante 45 · +39 351 252 3087
+`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` (and Resend) on this project’s Production env.

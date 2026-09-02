@@ -1,26 +1,20 @@
 # NEXT ACTION
 
 **Updated:** 2026-09-02  
-**Canonical URL (the one to use):** https://felicepolesebarbershop.vercel.app  
-**Vercel project:** `temporary-prompt-quasar-rndxhgh`
+**USA QUESTO:** https://felicepolesebarbershop.vercel.app
 
-## Goal
+## Fatto
 
-Same marble site the client likes, with **working booking**, Maps (Dante 45) and WhatsApp (**351 252 3087**, not the old 327). Then delete `polesebarbershop` and `temporary-express-magnolia-5pa4zjj`.
+- Prenotazione su `/#prenota` e `/prenota` (HTTP 200)
+- Maps → Corso Dante 45
+- WhatsApp → 351 252 3087 (`wa.me/393512523087`)
+- Marmo, forbici, countdown 7 settembre
+- Progetto Vercel rimasto: `temporary-prompt-quasar-rndxhgh`
+- Cancellati: `polesebarbershop` e `temporary-express-magnolia-5pa4zjj`
+- GitHub collegato a questo progetto
 
-## After `npx vercel login`
+## Ancora da fare (agenda vera)
 
-```bash
-./scripts/publish-felice-project.sh
-```
+Il calendario avvisa *database non configurato*: su Vercel mancano `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (non c’erano nemmeno sul progetto vecchio). Incollali in Environment Variables del progetto rimasto, poi un redeploy.
 
-That deploys this repo **once** onto the preferred project (the domain stays `felicepolesebarbershop.vercel.app`) and removes the other two projects.
-
-## Verify
-
-```bash
-curl -sI https://felicepolesebarbershop.vercel.app/prenota
-curl -sL https://felicepolesebarbershop.vercel.app | grep -o 'Felice Polese Barber Shop' | head -1
-```
-
-READY: `/prenota` HTTP 200, WhatsApp `wa.me/393512523087`, Maps Dante 45.
+Resend idem, per le email di conferma.
