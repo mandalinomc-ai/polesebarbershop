@@ -1,5 +1,16 @@
-import { CUTTING_TECHNIQUE_VIDEOS } from "@/lib/site-videos";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { CUTTING_TECHNIQUE_VIDEOS, TECHNIQUE_VIDEO_FILES } from "@/lib/site-videos";
 import { SalonVideo } from "@/components/site/SalonVideo";
+
+const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
+
+function existingTechniqueVideos() {
+  return CUTTING_TECHNIQUE_VIDEOS.filter((video, index) => {
+    const filename = TECHNIQUE_VIDEO_FILES[index];
+    return filename ? existsSync(join(VIDEO_DIR, filename)) : false;
+  });
+}
 
 function TechniqueCard({
   video,
@@ -17,6 +28,9 @@ function TechniqueCard({
 }
 
 export function VideoReelGrid() {
+  const techniques = existingTechniqueVideos();
+  if (!techniques.length) return null;
+
   return (
     <section id="gallery" className="section-pad section-marble marble-accent">
       <div className="eyebrow">Tecniche</div>
@@ -25,7 +39,7 @@ export function VideoReelGrid() {
         Scopri alcune delle tecniche che utilizziamo nei nostri tagli.
       </p>
       <div className="video-reel-grid technique-grid">
-        {CUTTING_TECHNIQUE_VIDEOS.map((reel) => (
+        {techniques.map((reel) => (
           <TechniqueCard key={reel.id} video={reel} />
         ))}
       </div>

@@ -1176,6 +1176,9 @@ img { max-width: 100%; }
 @media (max-width: 720px) {
   .fresha-footer { flex-direction: column; align-items: stretch; }
   .fresha-footer .btn { width: 100%; }
+  .fresha-booking-head { flex-wrap: wrap; gap: 0.5rem; }
+  .fresha-progress { max-width: 100%; }
+  .fresha-body { padding: 1rem; }
 }
 
 /* Restored Jakarta marble markers + product booking surfaces */

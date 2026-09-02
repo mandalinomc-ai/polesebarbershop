@@ -3,6 +3,7 @@ import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { formatWallDate } from "@/lib/availability";
 import { aggregateClients, aggregateStats, toCrmAppointment, type StatsPeriod } from "@/lib/crm";
+import { loadCrmNotesMap, saveCrmNote } from "@/lib/crm-notes-store";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/supabase-query";
 
@@ -13,18 +14,6 @@ const EMPTY_DB_IT =
   "Database non collegato. Il gestionale è pronto: anagrafica e statistiche si riempiranno dopo aver configurato Supabase.";
 
 const PERIODS = new Set<StatsPeriod>(["today", "7d", "month", "year", "all"]);
-
-async function loadNotesMap(): Promise<Record<string, string>> {
-  const db = getSupabaseAdmin();
-  if (!db) return {};
-  const { data, error } = await db.from("customer_notes").select("client_key, notes");
-  if (error) return {};
-  const map: Record<string, string> = {};
-  for (const row of data || []) {
-    map[row.client_key as string] = (row.notes as string) || "";
-  }
-  return map;
-}
 
 export async function GET(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
@@ -67,13 +56,14 @@ export async function GET(request: Request) {
     });
   }
 
-  const notesMap = await loadNotesMap();
+  const { map: notesMap, source: notesSource } = await loadCrmNotesMap(db);
   const rows = ((data || []) as AppointmentRow[]).map(toCrmAppointment);
   return NextResponse.json({
     date,
     period,
     clients: aggregateClients(rows, notesMap),
     stats: aggregateStats(rows, { date, period }),
+    notesSource,
   });
 }
 
@@ -101,23 +91,16 @@ export async function PATCH(request: Request) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: "Database non disponibile." }, { status: 503 });
 
-  const { data, error } = await db
-    .from("customer_notes")
-    .upsert({ client_key: parsed.data.clientKey, notes: parsed.data.notes }, { onConflict: "client_key" })
-    .select("*")
-    .single();
-
-  if (error) {
-    const missing =
-      error.code === "PGRST205" || /Could not find the table|does not exist/i.test(error.message || "");
+  const saved = await saveCrmNote(db, parsed.data.clientKey, parsed.data.notes);
+  if (!saved.ok) {
     return NextResponse.json(
-      {
-        error: missing
-          ? "Tabella note mancante: esegui supabase/migrations/005_customer_notes.sql nel SQL Editor Supabase."
-          : "Impossibile salvare le note.",
-      },
-      { status: missing ? 503 : 500 },
+      { error: saved.error },
+      { status: saved.needsMigration ? 503 : 500 },
     );
   }
-  return NextResponse.json({ ok: true, notes: data });
+  return NextResponse.json({
+    ok: true,
+    notes: { client_key: parsed.data.clientKey, notes: saved.notes },
+    notesSource: saved.source,
+  });
 }
