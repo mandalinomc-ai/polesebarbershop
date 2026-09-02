@@ -4,8 +4,20 @@ import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirs
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
-import { SITE, getAdminEmail, getSiteUrl } from "@/lib/site-config";
+import {
+  SITE,
+  getAdminEmail,
+  getBookingConfirmWhatsAppUrl,
+  getCustomerConfirmMessage,
+  getSalonNewBookingMessage,
+  getSiteUrl,
+} from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
+import {
+  isWhatsAppConfigured,
+  sendCustomerWhatsApp,
+  sendSalonWhatsApp,
+} from "@/lib/whatsapp-outbound";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
 import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
 
@@ -160,17 +172,61 @@ export async function POST(request: Request) {
     );
   }
 
+  const notifyCopy = {
+    firstName: body.firstName,
+    lastName: body.lastName,
+    phone: body.phone,
+    email: body.email,
+    service: totals.names,
+    dateLabel,
+    timeLabel,
+    barberName,
+    priceLabel: totals.priceLabel,
+    durationLabel: totals.durationLabel,
+    manageUrl,
+  };
+
+  let customerWhatsAppSent = false;
+  let salonWhatsAppSent = false;
+  let confirmViaWhatsApp = false;
+  let customerWhatsAppUrl: string | null = null;
+
+  if (isWhatsAppConfigured()) {
+    const [customerWa, salonWa] = await Promise.all([
+      sendCustomerWhatsApp(body.phone, getCustomerConfirmMessage(notifyCopy)),
+      sendSalonWhatsApp(getSalonNewBookingMessage(notifyCopy)),
+    ]);
+    customerWhatsAppSent = customerWa.ok;
+    salonWhatsAppSent = salonWa.ok;
+    if (!customerWa.ok && !customerWa.skipped) {
+      warnings.push("Conferma WhatsApp al cliente non inviata.");
+    }
+    if (!salonWa.ok && !salonWa.skipped) {
+      warnings.push("Avviso WhatsApp al salone non inviato.");
+    }
+  } else {
+    customerWhatsAppUrl = getBookingConfirmWhatsAppUrl({
+      firstName: body.firstName,
+      phone: body.phone,
+      service: totals.names,
+      dateLabel,
+      timeLabel,
+      barberName,
+    });
+    confirmViaWhatsApp = Boolean(customerWhatsAppUrl);
+  }
+
   return NextResponse.json({
     ok: true,
     persisted,
     emailSent: Boolean(emails.customer.ok),
     ownerNotified: Boolean(emails.owner.ok),
-    ownerWhatsAppSent: false,
+    ownerWhatsAppSent: salonWhatsAppSent,
     customerEmailFailed: !emails.customer.ok,
-    confirmViaWhatsApp: false,
-    customerWhatsAppSent: false,
-    salonWhatsAppSent: false,
-    customerWhatsAppUrl: null,
+    confirmViaWhatsApp,
+    customerWhatsAppSent,
+    salonWhatsAppSent,
+    customerWhatsAppUrl,
     salonRelay: emails.owner.ok
       ? null
       : {

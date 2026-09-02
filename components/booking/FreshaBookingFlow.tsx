@@ -115,6 +115,9 @@ export function FreshaBookingFlow({
     persisted: boolean;
     ownerNotified: boolean;
     salonRelay: SalonRelayPayload | null;
+    customerWhatsAppSent: boolean;
+    confirmViaWhatsApp: boolean;
+    customerWhatsAppUrl: string | null;
   } | null>(null);
 
   const selectedServices = useMemo(
@@ -291,6 +294,9 @@ export function FreshaBookingFlow({
         persisted?: boolean;
         ownerNotified?: boolean;
         salonRelay?: SalonRelayPayload | null;
+        customerWhatsAppSent?: boolean;
+        confirmViaWhatsApp?: boolean;
+        customerWhatsAppUrl?: string | null;
       };
       if (!res.ok && !json.ics) {
         setSubmitError(json.error || "Prenotazione non riuscita.");
@@ -309,6 +315,9 @@ export function FreshaBookingFlow({
         persisted: Boolean(json.persisted),
         ownerNotified: Boolean(json.ownerNotified),
         salonRelay,
+        customerWhatsAppSent: Boolean(json.customerWhatsAppSent),
+        confirmViaWhatsApp: Boolean(json.confirmViaWhatsApp),
+        customerWhatsAppUrl: json.customerWhatsAppUrl || null,
       });
       if (salonRelay && !json.ownerNotified) {
         void postSalonBookingRelay(salonRelay);
@@ -342,9 +351,38 @@ export function FreshaBookingFlow({
           </p>
           <p className="prose">
             {success.emailSent
-              ? "Ti abbiamo inviato l'email di conferma."
+              ? "Riceverai conferma via email con il promemoria calendario (.ics)."
               : "L'email di conferma non è partita in automatico — salva il file calendario qui sotto o contattaci su WhatsApp."}
           </p>
+          {success.customerWhatsAppSent ? (
+            <p className="prose">
+              Ti abbiamo inviato la conferma anche su WhatsApp al numero indicato.
+            </p>
+          ) : success.confirmViaWhatsApp && success.customerWhatsAppUrl ? (
+            <>
+              <p className="prose">
+                Per avvisare il salone su WhatsApp, apri la chat e premi{" "}
+                <strong>Invia</strong> — da questo sito non partiamo in automatico
+                senza il tuo tap.
+              </p>
+              <div className="success-actions">
+                <a
+                  className="btn btn-outline"
+                  href={success.customerWhatsAppUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Apri WhatsApp e invia al salone
+                </a>
+              </div>
+            </>
+          ) : (
+            <p className="prose booking-open-note">
+              WhatsApp: non inviamo messaggi automatici da qui. Il salone può
+              contattarti al numero che hai lasciato; per domande puoi scriverci
+              su WhatsApp.
+            </p>
+          )}
           <p className="prose">
             Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file
             .ics ha un solo promemoria: 30 minuti prima.

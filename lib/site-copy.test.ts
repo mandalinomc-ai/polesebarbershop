@@ -197,6 +197,9 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/postSalonBookingRelay/);
     expect(wizard).not.toMatch(/Conferma su WhatsApp/);
     expect(wizard).toMatch(/Prenotazione confermata/);
+    expect(wizard).toMatch(/Riceverai conferma via email/);
+    expect(wizard).toMatch(/non partiamo in automatico/);
+    expect(wizard).toMatch(/customerWhatsAppSent/);
     expect(wizard).not.toMatch(/twilio/i);
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);

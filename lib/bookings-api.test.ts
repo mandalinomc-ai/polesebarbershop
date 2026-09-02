@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/bookings/route";
 import { DELETE, GET } from "@/app/api/bookings/[token]/route";
 
@@ -103,14 +103,56 @@ describe("POST /api/bookings", () => {
     expect(json.warnings.some((w) => /ics|327 015 6225/i.test(w))).toBe(true);
     expect(json.warnings.filter((w) => /^Email admin:/i.test(w))).toEqual([]);
     expect(json.warnings.join("\n")).not.toMatch(/testing emails|invalid_access/i);
-    expect(json.confirmViaWhatsApp).toBe(false);
+    expect(json.confirmViaWhatsApp).toBe(true);
     expect(json.salonWhatsAppSent).toBe(false);
     expect(json.customerWhatsAppSent).toBe(false);
+    expect(json.customerWhatsAppUrl).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
     expect(json.salonRelay).toMatchObject({
       to: "felicepolese550@gmail.com",
       subject: expect.stringMatching(/NUOVA PRENOTAZIONE/),
     });
     expect(json.manageUrl).toMatch(/\/appuntamento\//);
+  });
+
+  it("sends WhatsApp server-side when Business API credentials are set", async () => {
+    const saved: Record<string, string | undefined> = {};
+    const keys = [
+      "CONVERSATION_APP_ID",
+      "SINCH_PROJECT_ID",
+      "SINCH_KEY_ID",
+      "SINCH_KEY_SECRET",
+    ];
+    for (const key of keys) {
+      saved[key] = process.env[key];
+      process.env[key] = `test-${key}`;
+    }
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => JSON.stringify({ message_id: "wa-1" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      const res = await postBooking(payload());
+      expect(res.status).toBe(200);
+      const json = (await res.json()) as {
+        customerWhatsAppSent: boolean;
+        salonWhatsAppSent: boolean;
+        confirmViaWhatsApp: boolean;
+        customerWhatsAppUrl: string | null;
+      };
+      expect(json.customerWhatsAppSent).toBe(true);
+      expect(json.salonWhatsAppSent).toBe(true);
+      expect(json.confirmViaWhatsApp).toBe(false);
+      expect(json.customerWhatsAppUrl).toBeNull();
+      expect(fetchMock).toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      for (const key of keys) {
+        if (saved[key] === undefined) delete process.env[key];
+        else process.env[key] = saved[key];
+      }
+    }
   });
 });
 
