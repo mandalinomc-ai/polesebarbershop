@@ -118,6 +118,17 @@ body.nav-open { overflow: hidden; }
 .btn-gold:hover {
   background: #222;
 }
+.btn-whatsapp {
+  background: #25D366;
+  color: #fff;
+  border-color: #25D366;
+}
+.btn-whatsapp:hover {
+  background: #128C7E;
+  border-color: #128C7E;
+  color: #fff;
+}
+a.btn-whatsapp { text-decoration: none; }
 
 .section-pad { padding: clamp(4rem, 10vw, 7rem) var(--pad-x); }
 .section-white { background: #FFFFFF; }
@@ -1120,7 +1131,85 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   font: inherit;
   cursor: pointer;
 }
+.agenda-actions .btn-whatsapp {
+  border-color: #25D366;
+  background: #25D366;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.agenda-actions .btn-whatsapp:hover {
+  background: #128C7E;
+  border-color: #128C7E;
+  color: #fff;
+}
 .agenda-card.status-cancelled { opacity: 0.65; }
+.agenda-card.is-highlight {
+  outline: 2px solid #25D366;
+  outline-offset: 2px;
+  animation: agenda-highlight 1.2s ease 2;
+}
+@keyframes agenda-highlight {
+  0%, 100% { background: var(--white); }
+  50% { background: rgba(37, 211, 102, 0.12); }
+}
+.crm-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  background: #25D366;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.crm-notify-bell {
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+}
+.crm-notify-bell .crm-tab-badge {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.1rem;
+  margin: 0;
+}
+.crm-toast-stack {
+  position: fixed;
+  top: calc(var(--safe-top, 0px) + 0.75rem);
+  right: calc(0.75rem + var(--safe-right, 0px));
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(100% - 1.5rem, 22rem);
+  pointer-events: none;
+}
+.crm-toast {
+  pointer-events: auto;
+  border: 1px solid var(--line);
+  background: var(--white);
+  box-shadow: 0 8px 28px rgba(10, 10, 10, 0.12);
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.crm-toast p { margin: 0; font-size: 0.88rem; line-height: 1.4; }
+.crm-toast-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.crm-toast-actions .btn { min-height: 44px; font-size: 0.78rem; padding: 0.35rem 0.65rem; }
+.crm-wa-link {
+  color: #128C7E;
+  font-weight: 600;
+  text-decoration: none;
+}
+.crm-wa-link:hover { color: #25D366; }
 .crm-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.25rem; }
 .crm-view-toggle { display: inline-flex; border: 1px solid var(--line); }
 .crm-view-toggle button {

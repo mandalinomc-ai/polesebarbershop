@@ -40,6 +40,10 @@ describe("mobile QA (390px)", () => {
     expect(crm).toMatch(/crm-mobile-logout/);
     expect(crm).toMatch(/walkin-service/);
     expect(crm).toMatch(/occupancy-table/);
+    expect(crm).toMatch(/btn-whatsapp/);
+    expect(crm).toMatch(/useBookingNotifications/);
+    expect(crm).toMatch(/crm-toast-stack/);
+    expect(css).toMatch(/\.btn-whatsapp/);
     expect(css).toMatch(/\.crm-mobile-logout \{ display: inline-flex; \}/);
     expect(css).toMatch(/\.occupancy-table td\.taken/);
   });

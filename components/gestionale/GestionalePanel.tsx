@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
+  Bell,
   CalendarDays,
   History,
   LayoutDashboard,
@@ -31,6 +32,12 @@ import {
   waMeUrl,
   type NotifyTemplate,
 } from "@/lib/crm-notify";
+import {
+  bookingAgendaDate,
+  newBookingWhatsAppUrl,
+  type RecentBooking,
+} from "@/lib/booking-notifications";
+import { useBookingNotifications } from "@/components/gestionale/useBookingNotifications";
 
 type Tab = "dashboard" | "agenda" | "clienti" | "statistiche" | "storico";
 
@@ -120,6 +127,7 @@ export function GestionalePanel() {
   const [statsPeriod, setStatsPeriod] = useState<StatsPeriod>("month");
   const [history, setHistory] = useState<HistoryAppt[]>([]);
   const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
+  const [highlightApptId, setHighlightApptId] = useState<string | null>(null);
 
   const loadAgenda = useCallback(async () => {
     try {
@@ -195,6 +203,25 @@ export function GestionalePanel() {
       await loadHistory();
     }
   }, [loadAgenda, loadCrm, loadHistory]);
+
+  const openBookingFromNotify = useCallback(
+    (booking: RecentBooking, openWhatsApp?: boolean) => {
+      setDate(bookingAgendaDate(booking));
+      setTab("agenda");
+      setHighlightApptId(booking.id);
+      if (openWhatsApp) {
+        const url = newBookingWhatsAppUrl(booking);
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
+      }
+      void load();
+    },
+    [load],
+  );
+
+  const bookingNotify = useBookingNotifications({
+    enabled: auth === "ok",
+    onOpenBooking: openBookingFromNotify,
+  });
 
   useEffect(() => {
     void load();
@@ -295,6 +322,7 @@ export function GestionalePanel() {
         <nav>
           {TABS.map((t) => {
             const Icon = t.icon;
+            const badge = t.id === "agenda" ? bookingNotify.unreadCount : 0;
             return (
               <button
                 key={t.id}
@@ -304,6 +332,11 @@ export function GestionalePanel() {
               >
                 <Icon size={18} aria-hidden />
                 {t.label}
+                {badge > 0 ? (
+                  <span className="crm-tab-badge" aria-label={`${badge} prenotazioni non lette`}>
+                    {badge}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -328,6 +361,23 @@ export function GestionalePanel() {
             <h1 className="font-serif">{SITE.name}</h1>
           </div>
           <div className="crm-top-actions">
+            <button
+              type="button"
+              className="crm-icon-btn crm-notify-bell"
+              aria-label={
+                bookingNotify.unreadCount > 0
+                  ? `${bookingNotify.unreadCount} nuove prenotazioni`
+                  : "Notifiche prenotazioni"
+              }
+              onClick={() => {
+                if (bookingNotify.unreadCount > 0) setTab("agenda");
+              }}
+            >
+              <Bell size={18} aria-hidden />
+              {bookingNotify.unreadCount > 0 ? (
+                <span className="crm-tab-badge">{bookingNotify.unreadCount}</span>
+              ) : null}
+            </button>
             <input
               className="input-lux"
               type="date"
@@ -372,6 +422,8 @@ export function GestionalePanel() {
             agenda={agenda}
             date={date}
             view={agendaView}
+            highlightId={highlightApptId}
+            onHighlightDone={() => setHighlightApptId(null)}
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
@@ -445,14 +497,46 @@ export function GestionalePanel() {
       <nav className="crm-bottom" aria-label="Sezioni gestionale">
         {TABS.map((t) => {
           const Icon = t.icon;
+          const badge = t.id === "agenda" ? bookingNotify.unreadCount : 0;
           return (
             <button key={t.id} type="button" className={tab === t.id ? "active" : ""} onClick={() => setTab(t.id)}>
               <Icon size={18} aria-hidden />
               {t.label}
+              {badge > 0 ? <span className="crm-tab-badge">{badge}</span> : null}
             </button>
           );
         })}
       </nav>
+
+      {bookingNotify.toasts.length > 0 ? (
+        <div className="crm-toast-stack" aria-live="polite">
+          {bookingNotify.toasts.map((b) => {
+            const wa = newBookingWhatsAppUrl(b);
+            return (
+              <article key={b.id} className="crm-toast">
+                <p>{bookingNotify.formatToast(b)}</p>
+                <div className="crm-toast-actions">
+                  <button type="button" className="btn btn-gold" onClick={() => bookingNotify.openBooking(b)}>
+                    Apri in agenda
+                  </button>
+                  {wa ? (
+                    <button
+                      type="button"
+                      className="btn btn-whatsapp"
+                      onClick={() => bookingNotify.openBooking(b, true)}
+                    >
+                      <MessageCircle size={16} aria-hidden /> Apri e invia WhatsApp
+                    </button>
+                  ) : null}
+                  <button type="button" className="btn btn-outline" onClick={() => bookingNotify.markRead(b.id)}>
+                    Chiudi
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
 
       {walkOpen ? (
         <WalkInModal
@@ -618,6 +702,8 @@ function AgendaView({
   agenda,
   date,
   view,
+  highlightId,
+  onHighlightDone,
   onViewChange,
   onPatch,
   onMove,
@@ -626,11 +712,22 @@ function AgendaView({
   agenda: Agenda | null;
   date: string;
   view: "day" | "week";
+  highlightId?: string | null;
+  onHighlightDone?: () => void;
   onViewChange: (v: "day" | "week") => void;
   onPatch: (id: string, body: Record<string, unknown>) => void;
   onMove: (a: AdminAppt) => void;
   onNotify: (a: AdminAppt) => void;
 }) {
+  useEffect(() => {
+    if (!highlightId) return;
+    const el = document.getElementById(`appt-${highlightId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      const t = window.setTimeout(() => onHighlightDone?.(), 4000);
+      return () => window.clearTimeout(t);
+    }
+  }, [highlightId, agenda, onHighlightDone]);
   const occupying = useMemo(
     () =>
       (agenda?.appointments || [])
@@ -728,7 +825,11 @@ function AgendaView({
               <p className="slot-status">Nessun appuntamento</p>
             ) : (
               byBarber(b.id).map((a) => (
-                <article key={a.id} className={`agenda-card status-${a.status}`}>
+                <article
+                  key={a.id}
+                  id={`appt-${a.id}`}
+                  className={`agenda-card status-${a.status}${highlightId === a.id ? " is-highlight" : ""}`}
+                >
                   <header>
                     <strong>{a.timeLabel}</strong>
                     <span>{a.durationMin} min</span>
@@ -756,8 +857,8 @@ function AgendaView({
                       <button type="button" onClick={() => onPatch(a.id, { status: "cancelled" })}>
                         Annulla
                       </button>
-                      <button type="button" onClick={() => onNotify(a)}>
-                        Invia WhatsApp
+                      <button type="button" className="btn btn-whatsapp" onClick={() => onNotify(a)}>
+                        <MessageCircle size={14} aria-hidden /> Invia WhatsApp
                       </button>
                     </div>
                   )}
@@ -1134,7 +1235,7 @@ function NotifyModal({ client, onClose }: { client: ClientRecord; onClose: () =>
             <Mail size={16} aria-hidden /> {sending ? "Invio…" : "Invia email"}
           </button>
           {wa ? (
-            <a className="btn btn-outline" href={wa} target="_blank" rel="noopener noreferrer">
+            <a className="btn btn-whatsapp" href={wa} target="_blank" rel="noopener noreferrer">
               <MessageCircle size={16} aria-hidden /> Invia WhatsApp
             </a>
           ) : (
@@ -1183,7 +1284,7 @@ function BulkWhatsAppModal({ clients, onClose }: { clients: ClientRecord[]; onCl
                 <li key={c.key}>
                   <span>{c.name}</span>
                   {href ? (
-                    <a href={href} target="_blank" rel="noopener noreferrer">
+                    <a className="crm-wa-link" href={href} target="_blank" rel="noopener noreferrer">
                       Apri WhatsApp
                     </a>
                   ) : null}
