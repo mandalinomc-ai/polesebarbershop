@@ -7,6 +7,8 @@ import {
   SALON_CONTACT_MESSAGE,
   ADMIN_EMAIL_FALLBACK,
   HERO_CTA,
+  HERO_SLOT_CTA,
+  HERO_SENTENCE,
   HERO_BEFORE_OPENING,
   getWhatsAppUrl,
   getMailtoUrl,
@@ -55,13 +57,11 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/listino-card/);
     expect(listino).toMatch(/serviceBookingHref/);
     expect(listino).toMatch(/Prenota/);
-    const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
-    expect(intro).not.toMatch(/OpeningCountdown/);
-    expect(intro).toMatch(/scissors-intro-brand/);
-    expect(intro).toMatch(/Clicca per entrare/);
-    expect(intro).toMatch(/finishIntro\(\)/);
-    expect(intro).not.toMatch(/phase !== "dark"/);
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
+    const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
+    expect(layout).toMatch(/Plus_Jakarta_Sans/);
+    expect(layout).toMatch(/fonts\.googleapis\.com/);
+    expect(layout).toMatch(/SITE_DOCUMENT_TITLE/);
   });
 
   it("uses the official phone, address, CF and P.IVA", () => {
@@ -181,7 +181,7 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/ComingSoon/);
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
-    expect(page).toMatch(/ScissorsIntro/);
+    expect(page).not.toMatch(/ScissorsIntro/);
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(landing).toMatch(/id="about"/);
     expect(landing).not.toMatch(/id="services"/);
@@ -223,9 +223,10 @@ describe("public copy vs official identity", () => {
     expect(landingVideo).toMatch(/FELICE_WORKING_VIDEO/);
     expect(landingVideo).toMatch(/felice-video-hero/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/hero--soon/);
+    expect(hero).toMatch(/hero-editorial/);
     expect(hero).toMatch(/bg-marble-light/);
-    expect(hero).not.toMatch(/hero-editorial/);
+    expect(hero).toMatch(/HERO_VIDEOS/);
+    expect(hero).toMatch(/getHeroHeadline/);
     expect(hero).not.toMatch(/ScissorsIntro/);
   });
 
@@ -234,22 +235,23 @@ describe("public copy vs official identity", () => {
     expect(HERO_BEFORE_OPENING).toBe("Prenota il tuo appuntamento per l'apertura");
     expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
     expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe(HERO_CTA);
+    expect(HERO_SLOT_CTA).toBe("Prenota il tuo slot");
+    expect(HERO_SENTENCE).toBe("Precisione tecnica, stile contemporaneo.");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/getHeroHeadline/);
     expect(hero).toMatch(/HERO_PRE_OPENING_EYEBROW/);
-    expect(hero).toMatch(/Raggiungimi ora su Google Maps/);
+    expect(hero).toMatch(/HERO_SENTENCE/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
+    expect(layout).toMatch(/site-white-canvas/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/marble\.png/);
     expect(css).toMatch(/marble-texture/);
     expect(css).toMatch(/bg-marble-light/);
-    expect(css).toMatch(/scissors-intro/);
-    expect(css).toMatch(/bg-marble-light \.countdown-value/);
-    expect(css).not.toMatch(/scissors-intro-split[\s\S]*marble\.png/);
-    const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
-    expect(scissors).toMatch(/viewBox="0 0 100 110"/);
-    expect(scissors).not.toMatch(/#C9A962|#F4E4BC/);
+    expect(css).toMatch(/marble-accent/);
+    expect(css).toMatch(/glass-card/);
+    expect(css).toMatch(/hero-media-cell/);
+    expect(css).toMatch(/Plus Jakarta Sans/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
   });
 
@@ -313,8 +315,7 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/SiteFabs/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.maps-fab \{/);
-    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/Raggiungimi ora su Google Maps/);
+    expect(chrome).toMatch(/Raggiungimi ora su Google Maps/);
     const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8");
     expect(terms).toMatch(/CANCEL_NOTICE_IT/);
     expect(terms).not.toMatch(/24h|24 ore/);

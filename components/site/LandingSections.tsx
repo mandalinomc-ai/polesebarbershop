@@ -10,7 +10,7 @@ import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 export function LandingSections() {
   return (
     <>
-      <section id="about" className="section-pad bg-marble-light">
+      <section id="about" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow reveal">Felice Polese</div>
         <h2 className="section-title font-serif reveal reveal-d1">
           Tradizione &amp; precisione
@@ -41,7 +41,7 @@ export function LandingSections() {
               </a>
             </p>
           </div>
-          <div className="about-video">
+          <div className="about-video glass-card">
             <video
               autoPlay
               loop
@@ -58,12 +58,12 @@ export function LandingSections() {
 
       <VideoReelGrid />
 
-      <section id="prenota" className="section-pad bg-marble-light">
+      <section id="prenota" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow reveal">Servizi &amp; prenotazione</div>
         <h2 className="section-title font-serif reveal reveal-d1">I nostri servizi</h2>
         <div className="booking-layout-grid reveal">
           <ServiceListino />
-          <div className="booking-flow-wrap">
+          <div className="booking-flow-wrap glass-card">
             <BookingSectionNote />
             <FreshaBookingFlow />
           </div>
@@ -73,13 +73,13 @@ export function LandingSections() {
         </p>
       </section>
 
-      <section id="contact" className="section-pad bg-marble-light">
+      <section id="contact" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow reveal">Contatti</div>
         <h2 className="section-title font-serif reveal reveal-d1">
           Prenota o scrivici
         </h2>
         <div className="contact-grid">
-          <div className="contact-info reveal">
+          <div className="contact-info reveal glass-card" style={{ padding: "1.25rem" }}>
             <p>
               <strong>Indirizzo</strong>
               <br />

@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
-import { SITE, getMapsUrl, IS_COMING_SOON } from "@/lib/site-config";
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { SITE, getMapsUrl, IS_COMING_SOON, SITE_DOCUMENT_TITLE } from "@/lib/site-config";
 import "./globals.css";
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-jakarta",
   display: "swap",
 });
 const cormorant = Cormorant_Garamond({
@@ -16,7 +16,7 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const title = `${SITE.name} — ${SITE.tagline} | ${SITE.city}`;
+const title = SITE_DOCUMENT_TITLE;
 const description = SITE.seo.description;
 const ogImage = `${SITE.siteUrl}/assets/images/og-cover.png`;
 
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0B0B0B",
-  colorScheme: "dark light",
+  themeColor: "#FFFFFF",
+  colorScheme: "light",
   viewportFit: "cover",
 };
 
@@ -104,16 +104,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="it"
-      className={`scroll-smooth ${inter.variable} ${cormorant.variable} ${modeClass}`}
+      className={`scroll-smooth ${jakarta.variable} ${cormorant.variable} ${modeClass}`}
     >
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+          rel="stylesheet"
+        />
         <script
           id="schema-json"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
         />
       </head>
-      <body>{children}</body>
+      <body className="site-white-canvas">{children}</body>
     </html>
   );
 }

@@ -4,19 +4,18 @@
 **Public URL:** https://felicepolesebarbershop.vercel.app  
 **Vercel project:** `temporary-prompt-quasar-rndxhgh` (GitHub connected)
 
-## Live (verified)
+## Overwrite (admitted)
 
-Marble site + booking wizard + Maps Dante 45 + WhatsApp 351 252 3087.
+Live was briefly the scissors GitHub rebuild. That is **not** the site the client liked.
 
-`/prenota` 200. Availability API returns slots (local mode until Supabase env is set).
+## Restore
 
-## Removed
+- Domain aliased to oldest remaining quasar production (`6ve62mbnk`, marble July-3).
+- Git branch reconstructs Jakarta marble (`0da4547` + Google Fonts + `/video/`) **with** booking, Maps Dante 45, WhatsApp 351.
+- Exact pre-overwrite HTML (`Felice Polese | Modern Barbering & Fade Studio` with `marble-accent` / `glass-card` from Google Fonts static page) was **not** in the repo.
 
-- Vercel project `polesebarbershop` (`polesebarbershop.vercel.app` → 404)
-- Vercel project `temporary-express-magnolia-5pa4zjj`
+## Do not
 
-Other Vercel sites (Antonella, Ittico, ecc.) were **not** touched.
-
-## Still missing for real bookings
-
-`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` (and Resend) on this project’s Production env.
+- Deploy current scissors `main` to this project until visual is agreed
+- Delete more Vercel projects
+- Recreate `polesebarbershop` (410 Gone)

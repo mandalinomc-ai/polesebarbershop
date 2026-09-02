@@ -7,10 +7,10 @@ const csp = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob:",
   "media-src 'self' blob:",
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com",
   "frame-src 'self' https://maps.google.com https://www.google.com",
   "upgrade-insecure-requests",
@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   async redirects() {
     return [{ source: "/admin", destination: "/gestionale", permanent: false }];
+  },
+  async rewrites() {
+    return [{ source: "/video/:path*", destination: "/assets/video/:path*" }];
   },
   async headers() {
     return [

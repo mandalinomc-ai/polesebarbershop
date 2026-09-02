@@ -5,8 +5,8 @@ export type SiteVideo = {
   label?: string;
 };
 
-/** Canonical public path — never change without updating committed files in public/assets/video/. */
-export const VIDEO_BASE = "/assets/video";
+/** Public video URL — files live in public/assets/video/, rewritten from /video/. */
+export const VIDEO_BASE = "/video";
 
 /** Felice bio / hero clip — public/assets/videos/ (separate from reel folder). */
 export const VIDEO_HERO_BASE = "/assets/videos";

@@ -5,5 +5,5 @@ type SiteShellProps = {
 };
 
 export function SiteShell({ children }: SiteShellProps) {
-  return <div className="site-shell">{children}</div>;
+  return <div className="site-shell marble-accent">{children}</div>;
 }

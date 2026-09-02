@@ -1,35 +1,34 @@
 # DECISIONS — Felice Polese infrastructure
 
-**Updated:** 2026-09-02 (client: use felice domain only)
+**Updated:** 2026-09-02 (overwrite admitted; marble restored)
 
-## D1 — The site to use is `felicepolesebarbershop.vercel.app`
+## What went wrong
 
-**Decision:** Public URL is **https://felicepolesebarbershop.vercel.app** on Vercel project **`temporary-prompt-quasar-rndxhgh`**.
+A GitHub production deploy of **current main** (scissors intro, title `Felice Polese Barber Shop — MODERN BARBERING…`) was aliased onto **https://felicepolesebarbershop.vercel.app**. That overwrote the marble page the client liked.
 
-That project already has the marble look the client wants. We deploy **this repo** (booking + Maps Dante 45 + WhatsApp 351) onto that project — one production deploy — then delete the other Vercel projects.
+Hobby Vercel cannot `vercel rollback` past the previous production (402). The live domain was pointed back to the oldest remaining production on `temporary-prompt-quasar-rndxhgh`:
 
-Do **not** keep using `polesebarbershop.vercel.app` as the public URL.
+`temporary-prompt-quasar-rndxhgh-6ve62mbnk-anon-phi-vert.vercel.app`
 
-## D2 — Delete leftover Vercel projects after the felice deploy
+That deploy is July-3 / “Polese Barbershop — L'Arte della Barberia d'Élite” (hero-bg, Dante Alighieri 44, WhatsApp 327, `#prenota` already present). It is **marble**, but **not** the exact Plus Jakarta page (`Felice Polese | Modern Barbering & Fade Studio`). That exact HTML was never in this git repo; the deleted `polesebarbershop` project (410) had hosted it.
 
-- `polesebarbershop` (Git-connected duplicate)
-- `temporary-express-magnolia-5pa4zjj` (junk)
+## What we restored in git
 
-Script: `./scripts/publish-felice-project.sh` (needs `npx vercel login`).
+Closest in-repo visual: commit `0da4547` (Plus Jakarta, `hero-media-cell`, white marble canvas), plus Google Fonts, `/video/` rewrites, booking wizard, Maps **Corso Dante 45**, WhatsApp **351 252 3087**. Document title: `Felice Polese | Modern Barbering & Fade Studio`. No scissors intro on the homepage.
 
-## D3 — WhatsApp and Maps on that site
+## D1 — One public URL
 
-Live felice URL currently has an old WhatsApp number and Maps to Dante 44. Repo source of truth:
+**https://felicepolesebarbershop.vercel.app** on Vercel project **`temporary-prompt-quasar-rndxhgh`**.
+
+Do not deploy current scissors `main` onto this project until the client agrees the marble look is back.
+
+## D2 — Do not delete more Vercel projects
+
+Do not recreate deleted `polesebarbershop`.
+
+## D3 — Product copy on the restored look
 
 - WhatsApp: **+39 351 252 3087**
 - Maps: **Corso Dante 45**
-
-FABs already exist in `Chrome.tsx`. They go live on felice when this repo is deployed there.
-
-## D4 — Booking
-
-Fresha wizard is already in the repo (`/#prenota` and `/prenota`). The felice URL 404s `/prenota` until this deploy. Real persist still needs Supabase env on **that** Vercel project.
-
-## D5 — Cloud CLI
-
-Deploy/delete of Vercel projects requires `npx vercel login` in this environment. Device OAuth cannot be completed by the agent alone.
+- Opening: **7 settembre 2026**
+- Booking: `/#prenota` and `/prenota`

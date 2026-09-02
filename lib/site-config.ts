@@ -48,6 +48,9 @@ export const SITE = {
   },
 } as const;
 
+/** Liked-page document title (pre-overwrite marble HTML). */
+export const SITE_DOCUMENT_TITLE = "Felice Polese | Modern Barbering & Fade Studio";
+
 export const SLOT_STEP_MINUTES = 5;
 /** Open days shown in the booking wizard day scroller (no cap on total bookings). */
 export const BOOKING_UI_DAYS = 42;
@@ -83,6 +86,11 @@ export const NOTIFY_WHATSAPP_MESSAGE =
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
 export const HERO_CTA = "Prenota il tuo appuntamento";
+export const HERO_SLOT_CTA = "Prenota il tuo slot";
+export const HERO_MENU_CTA = "Vedi il menu";
+export const HERO_SENTENCE = "Precisione tecnica, stile contemporaneo.";
+export const HERO_LEAD =
+  "Fade ad alta definizione, grooming e skincare. Studio pulito, ritmo veloce, risultato netto. Benevento.";
 export const HERO_PRE_OPENING_EYEBROW = "Prenotazioni già aperte";
 export const HERO_BEFORE_OPENING =
   "Prenota il tuo appuntamento per l'apertura";

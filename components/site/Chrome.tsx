@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-config";
+import { HERO_SLOT_CTA, SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-config";
 import { SITE_PDFS } from "@/lib/site-pdf";
 
 const LINKS = [
-  { href: "/#about", label: "Chi siamo" },
-  { href: "/#prenota", label: "Servizi" },
-  { href: "/#gallery", label: "Galleria" },
+  { href: "/#about", label: "Studio" },
+  { href: "/#prenota", label: "Menu" },
+  { href: "/#prenota", label: "Consulenza" },
+  { href: "/#gallery", label: "Lab" },
+  { href: "/#gallery", label: "Fade" },
+  { href: "/#contact", label: "Orari" },
   { href: "/#contact", label: "Contatti" },
 ];
 
@@ -54,43 +57,45 @@ export function Header() {
           <img
             src="/assets/images/logo.png"
             alt="Felice Polese — Felice Polese Barber Shop"
-            className="brand-logo brand-logo--sm"
+            className="brand-logo brand-logo--crest"
             width={512}
             height={331}
           />
-          <span>{SITE.name}</span>
+          <span className="header-logo-name">{SITE.name}</span>
         </a>
         <nav aria-label="Principale">
           <ul className="nav-desktop">
             {LINKS.map((l) => (
-              <li key={l.href}>
+              <li key={l.label}>
                 <a href={l.href}>{l.label}</a>
               </li>
             ))}
           </ul>
         </nav>
-        <a href="/#prenota" className="btn btn-gold btn-magnetic header-cta header-cta--live">
-          Prenota
-        </a>
-        <button
-          id="nav-toggle"
-          className="nav-toggle"
-          type="button"
-          aria-expanded={open}
-          aria-controls="nav-panel"
-          aria-label={open ? "Chiudi menu" : "Menu"}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
-          )}
-        </button>
+        <div className="header-end">
+          <a href="/#prenota" className="btn btn-ink header-cta header-cta--live">
+            {HERO_SLOT_CTA}
+          </a>
+          <button
+            id="nav-toggle"
+            className="nav-toggle"
+            type="button"
+            aria-expanded={open}
+            aria-controls="nav-panel"
+            aria-label={open ? "Chiudi menu" : "Menu"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            )}
+          </button>
+        </div>
       </header>
       <div
         id="nav-backdrop"
@@ -101,7 +106,7 @@ export function Header() {
       <nav id="nav-panel" className={`nav-panel${open ? " open" : ""}`} aria-label="Menu mobile">
         <ul>
           {LINKS.map((l) => (
-            <li key={l.href}>
+            <li key={l.label}>
               <a href={l.href} onClick={() => setOpen(false)}>
                 {l.label}
               </a>
@@ -109,7 +114,7 @@ export function Header() {
           ))}
           <li>
             <a href="/#prenota" onClick={() => setOpen(false)}>
-              Prenota
+              {HERO_SLOT_CTA}
             </a>
           </li>
         </ul>

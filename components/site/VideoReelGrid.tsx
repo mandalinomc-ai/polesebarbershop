@@ -3,7 +3,7 @@ import { SalonVideo } from "@/components/site/SalonVideo";
 
 export function VideoReelGrid() {
   return (
-    <section id="gallery" className="section-pad section-dark">
+    <section id="gallery" className="section-pad section-marble marble-accent">
       <div className="eyebrow">Dal salone</div>
       <h2 className="section-title font-serif">Taglio &amp; colorazione</h2>
       <div className="video-reel-grid">

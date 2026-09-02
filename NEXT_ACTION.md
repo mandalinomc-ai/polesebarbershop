@@ -3,18 +3,17 @@
 **Updated:** 2026-09-02  
 **USA QUESTO:** https://felicepolesebarbershop.vercel.app
 
-## Fatto
+## Cosa è successo
 
-- Prenotazione su `/#prenota` e `/prenota` (HTTP 200)
-- Maps → Corso Dante 45
-- WhatsApp → 351 252 3087 (`wa.me/393512523087`)
-- Marmo, forbici, countdown 7 settembre
-- Progetto Vercel rimasto: `temporary-prompt-quasar-rndxhgh`
-- Cancellati: `polesebarbershop` e `temporary-express-magnolia-5pa4zjj`
-- GitHub collegato a questo progetto
+Il sito con le **forbici** (rebuild GitHub) ha sovrascritto il marmo che piaceva. Non è stato un “aggiornamento”: è stato uno **sovrascrittura**.
 
-## Ancora da fare (agenda vera)
+## Ora
 
-Il calendario avvisa *database non configurato*: su Vercel mancano `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (non c’erano nemmeno sul progetto vecchio). Incollali in Environment Variables del progetto rimasto, poi un redeploy.
+1. Il dominio è stato riportato sul deploy marmo più vecchio rimasto sul progetto quasar (stile “L'Arte della Barberia”, non Jakarta esatto).
+2. Questo branch ricostruisce il look **Plus Jakarta / marmo bianco / video in hero**, con prenotazione, Maps Dante 45 e WhatsApp 351.
 
-Resend idem, per le email di conferma.
+Non mergiare `main` delle forbici sul progetto Vercel finché Felice non conferma il visivo.
+
+## Ancora da fare
+
+Su Vercel mancano `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (e Resend) per prenotazioni vere e email.

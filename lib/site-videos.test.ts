@@ -20,14 +20,14 @@ const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
 const HERO_VIDEO_DIR = join(process.cwd(), "public", "assets", "videos");
 
 describe("site-videos", () => {
-  it("defines six service reels plus general salon video under /assets/video/", () => {
+  it("defines six service reels plus general salon video under /video/", () => {
     expect(TAGLIO_VIDEOS).toHaveLength(3);
     expect(COLORAZIONE_VIDEOS).toHaveLength(3);
     expect(VIDEO_REELS).toHaveLength(6);
     expect(ALL_SITE_VIDEOS).toHaveLength(8);
 
     for (const video of VIDEO_REELS) {
-      expect(video.src).toMatch(/^\/assets\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
+      expect(video.src).toMatch(/^\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
       expect(video.alt.length).toBeGreaterThan(5);
     }
 
