@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   SERVICE_CATEGORIES,
@@ -5,7 +7,18 @@ import {
   SERVICES,
   formatPriceRange,
 } from "@/lib/catalog";
-import { serviceBookingHref } from "@/lib/site-config";
+import { BOOKING_SERVICE_EVENT, serviceBookingHref } from "@/lib/site-config";
+
+function prenotaFromListino(serviceId: string) {
+  window.dispatchEvent(
+    new CustomEvent(BOOKING_SERVICE_EVENT, { detail: serviceId }),
+  );
+  const url = new URL(window.location.href);
+  url.searchParams.set("servizio", serviceId);
+  url.hash = "prenota";
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  document.getElementById("prenota")?.scrollIntoView({ behavior: "smooth" });
+}
 
 /** Premium listino — real prices from catalog.ts, PRENOTA opens booking with service preselected. */
 export function ServiceListino() {
@@ -31,6 +44,10 @@ export function ServiceListino() {
                     <Link
                       href={serviceBookingHref(s.id)}
                       className="btn btn-listino-prenota"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        prenotaFromListino(s.id);
+                      }}
                     >
                       Prenota
                     </Link>

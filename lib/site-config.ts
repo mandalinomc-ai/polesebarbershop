@@ -98,6 +98,7 @@ export const BOOKING_DATE_PARAM = "data";
 export const BOOKING_SERVICE_PARAM = "servizio";
 export const BOOKING_DATE_STORAGE_KEY = "polese-booking-date";
 export const BOOKING_DATE_EVENT = "polese-booking-date";
+export const BOOKING_SERVICE_EVENT = "polese-booking-service";
 
 export function wallDateRome(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {

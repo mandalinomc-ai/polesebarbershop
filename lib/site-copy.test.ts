@@ -215,6 +215,7 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/fresha-/);
     expect(landing).toMatch(/ServiceListino/);
     expect((landing.match(/<ServiceListino/g) || []).length).toBe(1);
+    expect(landing).toMatch(/listinoBeside/);
     expect(landing).not.toMatch(/id="listino"/);
     expect(landing).not.toMatch(/id="services"/);
     expect(landing).not.toMatch(/hero-bg\.jpg/);
@@ -228,6 +229,9 @@ describe("public copy vs official identity", () => {
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/appointment-sidebar/);
     expect(wizard).toMatch(/Il tuo appuntamento/);
+    expect(wizard).toMatch(/listinoBeside/);
+    expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
+    expect(wizard).toMatch(/Tocca Prenota sul listino/);
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
@@ -248,6 +252,8 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/id="listino"/);
     expect((listino.match(/id="listino"/g) || []).length).toBe(1);
     expect(listino).toMatch(/Listino/);
+    expect(listino).toMatch(/BOOKING_SERVICE_EVENT/);
+    expect(listino).toMatch(/formatPriceRange/);
   });
 
   it("shows live hero with booking CTA before and after opening", () => {

@@ -183,6 +183,7 @@ export function resolveServices(ids: string[]): Service[] | null {
 
 export function formatPrice(service: Service): string {
   if (service.isVariablePrice) return `da ${service.priceEuro} €`;
+  if (service.priceEuro === 0) return "Gratuita";
   return `${service.priceEuro} €`;
 }
 
@@ -203,6 +204,8 @@ export function totalsForServices(services: Service[]) {
     ? priceMaxEuro > priceEuro
       ? `da ${priceEuro} € a ${priceMaxEuro} €`
       : `da ${priceEuro} €`
-    : `${priceEuro} €`;
+    : priceEuro === 0
+      ? "Gratuita"
+      : `${priceEuro} €`;
   return { durationMin, priceEuro, priceMaxEuro, isVariable, names, priceLabel };
 }

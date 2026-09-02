@@ -18,7 +18,7 @@ export function LandingSections() {
           <ServiceListino />
           <div className="booking-flow-wrap glass-card">
             <BookingSectionNote />
-            <FreshaBookingFlow />
+            <FreshaBookingFlow listinoBeside />
           </div>
         </div>
         <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>

@@ -52,9 +52,12 @@ describe("catalog", () => {
     expect(SERVICES.some((s) => s.category === "combo")).toBe(true);
   });
 
-  it("lists Consulenza Tricologica", () => {
+  it("lists Consulenza Tricologica as Gratuita", () => {
     const consult = SERVICES.find((s) => s.id === "consulenza-sede")!;
     expect(consult.name).toBe("Consulenza Tricologica");
+    expect(consult.priceEuro).toBe(0);
+    expect(formatPrice(consult)).toBe("Gratuita");
+    expect(formatPriceRange(consult)).toBe("Gratuita");
   });
 
   it("sums duration and uses a da–a range when any service is variable", () => {

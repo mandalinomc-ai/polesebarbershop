@@ -18,6 +18,7 @@ import {
 } from "@/lib/availability";
 import {
   BOOKING_DATE_EVENT,
+  BOOKING_SERVICE_EVENT,
   BOOKING_UI_DAYS,
   CANCEL_NOTICE_IT,
   SITE,
@@ -61,7 +62,11 @@ function downloadIcs(filename: string, content: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
-export function FreshaBookingFlow() {
+export function FreshaBookingFlow({
+  listinoBeside = false,
+}: {
+  listinoBeside?: boolean;
+}) {
   const [step, setStep] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [barberId, setBarberId] = useState("anyone");
@@ -119,11 +124,19 @@ export function FreshaBookingFlow() {
   }, [days]);
 
   useEffect(() => {
-    const serviceId = readBookingServiceFromLocation();
-    if (!serviceId) return;
-    if (SERVICES.some((s) => s.id === serviceId)) {
-      setSelectedIds([serviceId]);
-    }
+    const apply = (serviceId: string | null) => {
+      if (!serviceId) return;
+      if (!SERVICES.some((s) => s.id === serviceId)) return;
+      setSelectedIds((curr) =>
+        curr.includes(serviceId) ? curr : [...curr, serviceId],
+      );
+    };
+    apply(readBookingServiceFromLocation());
+    const onPick = (event: Event) => {
+      apply((event as CustomEvent<string>).detail);
+    };
+    window.addEventListener(BOOKING_SERVICE_EVENT, onPick);
+    return () => window.removeEventListener(BOOKING_SERVICE_EVENT, onPick);
   }, []);
 
   const localSlots = useCallback((): ApiSlot[] => {
@@ -375,7 +388,38 @@ export function FreshaBookingFlow() {
       </div>
 
       <div className="fresha-body">
-        {step === 1 && (
+        {step === 1 && listinoBeside && (
+          <>
+            <h3>Servizi scelti</h3>
+            <p className="booking-open-note">
+              Tocca Prenota sul listino per aggiungere un servizio. Un solo
+              listino, poi continua qui.
+            </p>
+            {selectedServices.length === 0 ? (
+              <p className="slot-status">Nessun servizio selezionato.</p>
+            ) : (
+              selectedServices.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="fresha-option selected"
+                  onClick={() => toggleService(s.id)}
+                  aria-pressed="true"
+                >
+                  <span>
+                    <strong>{s.name}</strong>
+                    <small>
+                      {s.durationMin} min · {s.description}
+                    </small>
+                  </span>
+                  <span className="meta">{formatPriceRange(s)}</span>
+                </button>
+              ))
+            )}
+          </>
+        )}
+
+        {step === 1 && !listinoBeside && (
           <>
             <h3>Scegli i servizi</h3>
             {SERVICE_CATEGORIES.map((cat) => (
