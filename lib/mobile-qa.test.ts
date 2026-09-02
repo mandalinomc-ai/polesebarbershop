@@ -54,7 +54,7 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("uses white marble theme with stable media and Felice bio video", () => {
+  it("uses white marble theme with video grid after hero, no leftover about block", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
@@ -66,8 +66,10 @@ describe("mobile QA (390px)", () => {
     expect(hero).toMatch(/hero-editorial/);
     expect(landing).not.toMatch(/gallery-grid/);
     expect(landing).not.toMatch(/fresha-/);
+    expect(landing).not.toMatch(/id="about"/);
+    expect(landing).not.toMatch(/FELICE_WORKING_VIDEO/);
     expect(landing).toMatch(/VideoReelGrid/);
-    expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
+    expect(landing).toMatch(/ServiceListino/);
     expect(hero).toMatch(/HERO_VIDEOS/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");

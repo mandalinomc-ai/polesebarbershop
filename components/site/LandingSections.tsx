@@ -5,57 +5,10 @@ import {
 } from "@/components/booking/FreshaBookingFlow";
 import { ServiceListino } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
-import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 
 export function LandingSections() {
   return (
     <>
-      <section id="about" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow reveal">Felice Polese</div>
-        <h2 className="section-title font-serif reveal reveal-d1">
-          Tradizione &amp; precisione
-        </h2>
-        <div className="about-grid">
-          <div className="about-copy reveal">
-            <p className="prose">
-              Da <strong>Santa Maria degli Angeli</strong> al nuovo salone in{" "}
-              <strong>Corso Dante 45</strong>, {SITE.city}: Felice Polese porta la
-              barberia sartoriale in uno spazio luminoso e riservato.
-            </p>
-            <p className="prose">
-              <span className="badge-match">Barber Match 2023 · Giovane Talento</span>
-            </p>
-            <p className="prose">
-              Taglio uomo, barba e rasatura con precisione artigianale. In salone
-              lavorano <strong>Felice</strong> e <strong>Davide</strong> su due
-              poltrone indipendenti.
-            </p>
-            <p className="prose">
-              <a
-                className="map-link"
-                href={getMapsUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                📍 Raggiungimi ora su Google Maps
-              </a>
-            </p>
-          </div>
-          <div className="about-video glass-card">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="felice-video-hero"
-              aria-label={FELICE_WORKING_VIDEO.alt}
-            >
-              <source src={FELICE_WORKING_VIDEO.src} type="video/mp4" />
-            </video>
-          </div>
-        </div>
-      </section>
-
       <VideoReelGrid />
 
       <section id="prenota" className="section-pad bg-marble-light marble-accent">
