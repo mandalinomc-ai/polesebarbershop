@@ -1,51 +1,44 @@
 # NEXT ACTION
 
 **Updated:** 2026-09-02  
-**Goal:** Public domains must serve the current `main` site (Felice Polese Barber Shop, Corso Dante 45, `/prenota`).
+**Canonical live:** https://polesebarbershop.vercel.app — **READY**
 
-## What is already done
+## Done
 
-The latest Git production build is **ready** (commit `9c721e7`):
+`github.autoAlias: true` + push to `main` assigned production domains on the **polesebarbershop** project.
 
-https://polesebarbershop-at512kktm-mandalinomc-8144s-projects.vercel.app
+Verified in browser:
 
-That URL has the correct title, address 45, videos, and `/prenota`.
+- Intro forbici → sito
+- **Felice Polese Barber Shop** / **MODERN BARBERING & FADE STUDIO**
+- **Corso Dante 45**
+- Countdown apertura 7 settembre + prenotazioni già aperte
+- Wizard Fresha su `/#prenota` (servizio → barbiere → data)
+- Video `felice-working.mp4` e reels: HTTP 200
 
-## Blocker
+## Still open
 
-`polesebarbershop.vercel.app` and `felicepolesebarbershop.vercel.app` still point at a **staged-old** deployment (title `Felice Polese | Modern Barbering & Fade Studio`, Corso Dante 44, no `/prenota`).
+### 1. `felicepolesebarbershop.vercel.app` (legacy project)
 
-Vercel Git builds `main` as production but **does not auto-assign domains** (staged production). CLI alias needs `vercel login`.
+Still the **old** site (Dante 44, no `/prenota`). That hostname is on a separate Vercel project.
 
-## Path A — if Vercel CLI is logged in
-
-```bash
-npx vercel alias set https://polesebarbershop-at512kktm-mandalinomc-8144s-projects.vercel.app polesebarbershop.vercel.app
-npx vercel alias set https://polesebarbershop-at512kktm-mandalinomc-8144s-projects.vercel.app felicepolesebarbershop.vercel.app
-```
-
-Or: `./scripts/promote-live-domains.sh`
-
-## Path B — this PR (`github.autoAlias: true`)
-
-Merging to `main` tells Vercel for GitHub to assign production domains on the next production deploy. `vercel.json` now sets `"github": { "autoAlias": true }`.
-
-## Verify READY
+After `npx vercel login`:
 
 ```bash
-curl -sL https://felicepolesebarbershop.vercel.app | grep -o 'Felice Polese Barber Shop' | head -1
-curl -sI https://felicepolesebarbershop.vercel.app/prenota | head -1
-curl -sL https://polesebarbershop.vercel.app | grep -o 'Corso Dante 45' | head -1
+./scripts/promote-live-domains.sh
+# or:
+npx vercel alias set https://polesebarbershop.vercel.app felicepolesebarbershop.vercel.app
 ```
 
-**READY** when both domains show `Felice Polese Barber Shop`, `Corso Dante 45`, and `/prenota` is HTTP 200.
+### 2. Supabase env on the polesebarbershop project
 
-## Optional GitHub secrets (CLI workflow)
+Booking calendar warning: *«database non configurato»*. Slots show in local mode; real persist needs `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (and Resend keys) on the **polesebarbershop** Vercel project. Use `.env.local` + `./scripts/vercel-configure-production.sh` when `VERCEL_TOKEN` is available.
 
-Only needed if you want GitHub Actions to run `vercel deploy --prod` in addition to Vercel Git:
+## READY check (canonical)
 
-| Secret | Value |
-|--------|-------|
-| `VERCEL_TOKEN` | https://vercel.com/account/tokens |
-| `VERCEL_ORG_ID` | Project Settings → General |
-| `VERCEL_PROJECT_ID` | `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf` |
+```bash
+curl -sL https://polesebarbershop.vercel.app | grep -o 'Felice Polese Barber Shop' | head -1
+curl -sI https://polesebarbershop.vercel.app/prenota | head -1
+```
+
+Pass: `Felice Polese Barber Shop` + `/prenota` HTTP 200.

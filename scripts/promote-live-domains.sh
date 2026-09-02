@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Promote the latest Git production deployment to the public Vercel domains.
+# Point the legacy hostname at the current polesebarbershop production site.
 # Requires: npx vercel login  (or VERCEL_TOKEN)
 set -euo pipefail
 
-DEPLOY_URL="${1:-https://polesebarbershop-at512kktm-mandalinomc-8144s-projects.vercel.app}"
+SOURCE="${1:-https://polesebarbershop.vercel.app}"
+TARGET="${2:-felicepolesebarbershop.vercel.app}"
 
-echo "→ Aliasing $DEPLOY_URL"
-npx vercel alias set "$DEPLOY_URL" polesebarbershop.vercel.app
-npx vercel alias set "$DEPLOY_URL" felicepolesebarbershop.vercel.app
+echo "→ $SOURCE  →  $TARGET"
+npx vercel alias set "$SOURCE" "$TARGET"
 
 echo ""
 echo "Verify:"
-echo "  curl -sL https://felicepolesebarbershop.vercel.app | grep -o 'Felice Polese Barber Shop' | head -1"
-echo "  curl -sI https://felicepolesebarbershop.vercel.app/prenota"
+echo "  curl -sL https://$TARGET | grep -o 'Felice Polese Barber Shop' | head -1"
+echo "  curl -sI https://$TARGET/prenota | head -1"
