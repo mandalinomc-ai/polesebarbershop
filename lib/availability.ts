@@ -31,6 +31,39 @@ export type Slot = {
   barberId: string;
 };
 
+/** Full hour grid: free slots stay bookable; taken ones stay visible. */
+export type ScheduleSlot = Slot & {
+  available: boolean;
+  booked: boolean;
+};
+
+export type DayOccupancy = {
+  date: string;
+  availableCount: number;
+  bookedCount: number;
+  full: boolean;
+};
+
+/** Salon agenda rows (day × hours). Finer 5-min wizard steps stay on the public grid. */
+export const OCCUPANCY_STEP_MINUTES = 30;
+
+export type OccupancyAppointment = ExistingAppointment & {
+  id?: string;
+  label?: string;
+};
+
+export type OccupancyCell = {
+  time: string;
+  barberId: string;
+  occupied: boolean;
+  label: string;
+};
+
+export type OccupancyRow = {
+  time: string;
+  cells: OccupancyCell[];
+};
+
 export type GetAvailableSlotsInput = {
   date: string;
   barberId: string;
@@ -306,7 +339,32 @@ function isSlotFree(
   return !busy.some((b) => rangesOverlap(start, end, b.start, b.end));
 }
 
-function slotsForBarber(opts: {
+function evaluateBarberSlot(opts: {
+  date: string;
+  barber: Barber;
+  label: string;
+  durationMinutes: number;
+  busy: { start: Date; end: Date }[];
+  earliest: Date;
+  timeZone: string;
+}): ScheduleSlot | null {
+  const start = wallTimeToUtc(opts.date, opts.label, opts.timeZone);
+  const end = addMinutes(start, opts.durationMinutes);
+  if (start < opts.earliest) return null;
+  const booked = !isSlotFree(start, end, opts.busy);
+  return {
+    start,
+    end,
+    startIso: start.toISOString(),
+    endIso: end.toISOString(),
+    label: opts.label,
+    barberId: opts.barber.id,
+    available: !booked,
+    booked,
+  };
+}
+
+function scheduleForBarber(opts: {
   date: string;
   barber: Barber;
   durationMinutes: number;
@@ -315,7 +373,7 @@ function slotsForBarber(opts: {
   minNoticeMinutes: number;
   slotStepMinutes: number;
   timeZone: string;
-}): Slot[] {
+}): ScheduleSlot[] {
   const hours = getHoursForDate(opts.barber, opts.date);
   const labels = slotStartsForHours(
     hours,
@@ -324,30 +382,32 @@ function slotsForBarber(opts: {
   );
   const busy = appointmentsForBarber(opts.appointments, opts.barber.id);
   const earliest = addMinutes(opts.now, opts.minNoticeMinutes);
-  const slots: Slot[] = [];
+  const slots: ScheduleSlot[] = [];
 
   for (const label of labels) {
-    const start = wallTimeToUtc(opts.date, label, opts.timeZone);
-    const end = addMinutes(start, opts.durationMinutes);
-    if (start < earliest) continue;
-    if (!isSlotFree(start, end, busy)) continue;
-    slots.push({
-      start,
-      end,
-      startIso: start.toISOString(),
-      endIso: end.toISOString(),
+    const slot = evaluateBarberSlot({
+      date: opts.date,
+      barber: opts.barber,
       label,
-      barberId: opts.barber.id,
+      durationMinutes: opts.durationMinutes,
+      busy,
+      earliest,
+      timeZone: opts.timeZone,
     });
+    if (slot) slots.push(slot);
   }
   return slots;
 }
 
+function sortSlots<T extends { start: Date }>(slots: T[]): T[] {
+  return [...slots].sort((a, b) => a.start.getTime() - b.start.getTime());
+}
+
 /**
- * Return free slots for a civil date in Europe/Rome.
- * `anyone` merges real barbers and assigns the least-loaded free barber.
+ * Full slot grid for a civil date in Europe/Rome, including taken hours.
+ * `anyone` stays bookable while at least one chair is free; both busy → booked.
  */
-export function getAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
+export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] {
   const {
     date,
     barberId,
@@ -365,60 +425,134 @@ export function getAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
   if (isClosedDay(date)) return [];
 
   const real = getRealBarbers(barbers);
-
-  if (barberId === ANYONE_BARBER_ID) {
-    const byLabel = new Map<string, Slot>();
-    for (const barber of real) {
-      const barberSlots = slotsForBarber({
-        date,
-        barber,
-        durationMinutes,
-        appointments,
-        now,
-        minNoticeMinutes,
-        slotStepMinutes,
-        timeZone,
-      });
-      for (const slot of barberSlots) {
-        const existing = byLabel.get(slot.label);
-        if (!existing) {
-          byLabel.set(slot.label, slot);
-          continue;
-        }
-        const current = barbers.find((b) => b.id === existing.barberId);
-        const challenger = barber;
-        if (!current) {
-          byLabel.set(slot.label, slot);
-          continue;
-        }
-        const picked = pickLeastLoadedBarber(
-          [current, challenger],
-          appointments,
-          date,
-          timeZone,
-        );
-        if (picked?.id === challenger.id) {
-          byLabel.set(slot.label, slot);
-        }
-      }
-    }
-    return [...byLabel.values()].sort(
-      (a, b) => a.start.getTime() - b.start.getTime(),
-    );
-  }
-
-  const barber = barbers.find((b) => b.id === barberId && !b.virtual);
-  if (!barber) return [];
-
-  return slotsForBarber({
+  const shared = {
     date,
-    barber,
     durationMinutes,
     appointments,
     now,
     minNoticeMinutes,
     slotStepMinutes,
     timeZone,
+  };
+
+  if (barberId === ANYONE_BARBER_ID) {
+    const freeByLabel = new Map<string, ScheduleSlot>();
+    const bookedByLabel = new Map<string, ScheduleSlot>();
+    for (const barber of real) {
+      const barberSlots = scheduleForBarber({ ...shared, barber });
+      for (const slot of barberSlots) {
+        if (slot.available) {
+          bookedByLabel.delete(slot.label);
+          const existing = freeByLabel.get(slot.label);
+          if (!existing) {
+            freeByLabel.set(slot.label, slot);
+            continue;
+          }
+          const current = barbers.find((b) => b.id === existing.barberId);
+          if (!current) {
+            freeByLabel.set(slot.label, slot);
+            continue;
+          }
+          const picked = pickLeastLoadedBarber(
+            [current, barber],
+            appointments,
+            date,
+            timeZone,
+          );
+          if (picked?.id === barber.id) {
+            freeByLabel.set(slot.label, slot);
+          }
+          continue;
+        }
+        if (!freeByLabel.has(slot.label) && !bookedByLabel.has(slot.label)) {
+          bookedByLabel.set(slot.label, {
+            ...slot,
+            barberId: ANYONE_BARBER_ID,
+          });
+        }
+      }
+    }
+    return sortSlots([...freeByLabel.values(), ...bookedByLabel.values()]);
+  }
+
+  const barber = barbers.find((b) => b.id === barberId && !b.virtual);
+  if (!barber) return [];
+
+  return scheduleForBarber({ ...shared, barber });
+}
+
+export function summarizeSchedule(date: string, slots: ScheduleSlot[]): DayOccupancy {
+  const availableCount = slots.filter((s) => s.available).length;
+  const bookedCount = slots.filter((s) => s.booked).length;
+  return {
+    date,
+    availableCount,
+    bookedCount,
+    full: slots.length > 0 && availableCount === 0,
+  };
+}
+
+/**
+ * Return free slots for a civil date in Europe/Rome.
+ * `anyone` merges real barbers and assigns the least-loaded free barber.
+ */
+export function getAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
+  return getScheduleSlots(input).filter((s) => s.available);
+}
+
+export function listDayHourStarts(
+  date: string,
+  stepMinutes: number = OCCUPANCY_STEP_MINUTES,
+  barber?: Barber,
+): string[] {
+  const hours = barber
+    ? getHoursForDate(barber, date)
+    : (SHOP_HOURS[weekdayOfDate(date)] ?? null);
+  if (!hours) return [];
+  const open = toMinutes(hours.open);
+  const close = toMinutes(hours.close);
+  const labels: string[] = [];
+  for (let t = open; t < close; t += stepMinutes) {
+    labels.push(minutesToTime(t));
+  }
+  return labels;
+}
+
+export function getOccupancyGrid(input: {
+  date: string;
+  appointments?: OccupancyAppointment[];
+  barbers?: Barber[];
+  stepMinutes?: number;
+  timeZone?: string;
+}): OccupancyRow[] {
+  const {
+    date,
+    appointments = [],
+    barbers = BARBERS,
+    stepMinutes = OCCUPANCY_STEP_MINUTES,
+    timeZone = TIMEZONE,
+  } = input;
+  if (isClosedDay(date)) return [];
+  const real = getRealBarbers(barbers);
+  return listDayHourStarts(date, stepMinutes).map((time) => {
+    const start = wallTimeToUtc(date, time, timeZone);
+    const end = addMinutes(start, stepMinutes);
+    return {
+      time,
+      cells: real.map((barber) => {
+        const hit = appointments.find(
+          (a) =>
+            a.barberId === barber.id &&
+            rangesOverlap(start, end, asDate(a.startsAt), asDate(a.endsAt)),
+        );
+        return {
+          time,
+          barberId: barber.id,
+          occupied: Boolean(hit),
+          label: hit?.label || "",
+        };
+      }),
+    };
   });
 }
 

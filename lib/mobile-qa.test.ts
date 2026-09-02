@@ -29,13 +29,18 @@ describe("mobile QA (390px)", () => {
   it("does not invent booked slots when the API returns none", () => {
     expect(wizard).toMatch(/setSlots\(Array\.isArray\(json\.slots\) \? json\.slots : \[\]\)/);
     expect(wizard).not.toMatch(/incoming\.length \? incoming : localSlots\(\)/);
+    expect(wizard).toMatch(/aria-disabled=\{taken\}/);
+    expect(wizard).toMatch(/Prenotato/);
+    expect(css).toMatch(/\.slot-btn\.booked/);
   });
 
   it("keeps /gestionale usable on a phone (bottom nav + logout + walk-in taps)", () => {
     expect(crm).toMatch(/crm-bottom/);
     expect(crm).toMatch(/crm-mobile-logout/);
     expect(crm).toMatch(/walkin-service/);
+    expect(crm).toMatch(/occupancy-table/);
     expect(css).toMatch(/\.crm-mobile-logout \{ display: inline-flex; \}/);
+    expect(css).toMatch(/\.occupancy-table td\.taken/);
   });
 
   it("keeps July 3 hero and booking CTA usable at 390px", () => {

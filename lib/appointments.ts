@@ -22,11 +22,16 @@ type DayRow = {
   status: string;
 };
 
-export async function loadDayAppointments(date: string): Promise<DayBusy[]> {
+export async function loadAppointmentsBetween(
+  fromDate: string,
+  toDate: string,
+): Promise<DayBusy[]> {
   const db = getSupabaseAdmin();
   if (!db) return [];
-  const dayStart = wallTimeToUtc(date, "00:00").toISOString();
-  const dayEnd = wallTimeToUtc(date, "23:59").toISOString();
+  const start = fromDate <= toDate ? fromDate : toDate;
+  const end = fromDate <= toDate ? toDate : fromDate;
+  const dayStart = wallTimeToUtc(start, "00:00").toISOString();
+  const dayEnd = wallTimeToUtc(end, "23:59").toISOString();
   const { data, error } = await fetchAllPages<DayRow>(async (from, to) =>
     db
       .from("appointments")
@@ -44,6 +49,10 @@ export async function loadDayAppointments(date: string): Promise<DayBusy[]> {
       startsAt: row.starts_at,
       endsAt: row.ends_at,
     }));
+}
+
+export async function loadDayAppointments(date: string): Promise<DayBusy[]> {
+  return loadAppointmentsBetween(date, date);
 }
 
 export function servicesSnapshot(services: Service[]) {

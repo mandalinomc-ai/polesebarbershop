@@ -14,7 +14,12 @@ import {
   X,
 } from "lucide-react";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
-import { formatItalianDate, getFirstBookableDate } from "@/lib/availability";
+import {
+  formatItalianDate,
+  getFirstBookableDate,
+  getOccupancyGrid,
+  wallTimeToUtc,
+} from "@/lib/availability";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
 import { formatEuroCents, type ClientRecord, type CrmStats } from "@/lib/crm";
@@ -504,6 +509,28 @@ function AgendaView({
   onPatch: (id: string, body: Record<string, unknown>) => void;
   onNotify: (a: AdminAppt) => void;
 }) {
+  const occupying = useMemo(
+    () =>
+      (agenda?.appointments || [])
+        .filter((a) => a.status !== "cancelled")
+        .map((a) => {
+          const start = a.startsAt
+            ? new Date(a.startsAt)
+            : wallTimeToUtc(date, a.timeLabel);
+          const end = new Date(start.getTime() + a.durationMin * 60_000);
+          return {
+            barberId: a.barberId,
+            startsAt: start,
+            endsAt: end,
+            label: `${a.firstName} ${a.lastName}`.trim() || a.serviceNames,
+          };
+        }),
+    [agenda, date],
+  );
+  const occupancy = useMemo(
+    () => getOccupancyGrid({ date, appointments: occupying }),
+    [date, occupying],
+  );
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
   return (
     <div className="crm-stack">
@@ -518,6 +545,43 @@ function AgendaView({
           <strong>{formatEuroCents(agenda?.takings.weekCents || 0)}</strong>
           <small>da lunedì {agenda?.weekStart}</small>
         </article>
+      </section>
+      <section className="occupancy-wrap" aria-label="Occupazione poltrone">
+        <h2 className="font-serif">Tabella orari</h2>
+        <p className="slot-status occupancy-legend">
+          Stessi appuntamenti del prenota online. Grigio = occupato, bianco = libero.
+        </p>
+        {occupancy.length === 0 ? (
+          <p className="slot-status">Nessuna fascia oraria: salone chiuso o data non valida.</p>
+        ) : (
+          <div className="crm-table-wrap occupancy-scroll">
+            <table className="crm-table occupancy-table">
+              <thead>
+                <tr>
+                  <th>Ora</th>
+                  {getRealBarbers().map((b) => (
+                    <th key={b.id}>{b.name}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {occupancy.map((row) => (
+                  <tr key={row.time}>
+                    <th scope="row">{row.time}</th>
+                    {row.cells.map((cell) => (
+                      <td
+                        key={cell.barberId}
+                        className={cell.occupied ? "taken" : "free"}
+                      >
+                        {cell.occupied ? cell.label || "Prenotato" : "Libero"}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
       <section className="agenda-columns">
         {getRealBarbers().map((b) => (

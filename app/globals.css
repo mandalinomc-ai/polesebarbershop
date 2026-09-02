@@ -460,6 +460,8 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .day-chip .dow { display: block; font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .day-chip .dom { display: block; font-family: var(--font-cormorant), serif; font-size: 1.15rem; }
 .day-chip.selected { border-color: var(--ink); background: var(--surface); }
+.day-chip.full { background: var(--surface); color: var(--smoke); }
+.day-chip.full .dow, .day-chip.full .dom { color: var(--smoke); }
 
 /* About */
 .about-grid {
@@ -915,6 +917,21 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   cursor: pointer;
 }
 .slot-btn.selected { border-color: var(--ink); background: var(--surface); }
+.slot-btn.booked,
+.slot-btn:disabled {
+  background: #eceae6;
+  color: var(--smoke);
+  border-color: rgba(0, 0, 0, 0.08);
+  cursor: not-allowed;
+  opacity: 1;
+}
+.slot-btn .slot-booked-hint {
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--smoke);
+}
 .slot-status { color: var(--muted); padding: 0.85rem 0; }
 .customer-fields { display: flex; flex-direction: column; gap: 0.65rem; }
 .input-lux {
@@ -1066,6 +1083,41 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .crm-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 .crm-table th { text-align: left; color: var(--muted); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.6rem; border-bottom: 1px solid var(--line); }
 .crm-table td { padding: 0.6rem; border-bottom: 1px solid var(--line); color: var(--muted); vertical-align: top; }
+.takings { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+.takings article { border: 1px solid var(--line); background: var(--white); padding: 1rem; }
+.takings span { color: var(--muted); font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.takings strong { display: block; font-family: var(--font-cormorant), serif; font-size: 1.5rem; font-weight: 500; margin: 0.25rem 0; }
+.takings small { color: var(--smoke); }
+.occupancy-wrap h2 { margin: 0 0 0.35rem; font-size: 1.35rem; font-weight: 500; }
+.occupancy-legend { padding-top: 0; }
+.occupancy-scroll { max-height: 28rem; }
+.occupancy-table th, .occupancy-table td { text-align: center; }
+.occupancy-table th:first-child, .occupancy-table td:first-child,
+.occupancy-table tbody th { text-align: left; color: var(--ink); font-weight: 600; white-space: nowrap; }
+.occupancy-table td.taken {
+  background: #eceae6;
+  color: var(--ink);
+  font-weight: 600;
+}
+.occupancy-table td.free { background: var(--white); color: var(--smoke); }
+.agenda-columns { display: grid; gap: 1rem; }
+@media (min-width: 800px) { .agenda-columns { grid-template-columns: 1fr 1fr; } }
+.agenda-col { border: 1px solid var(--line); background: var(--white); padding: 1rem; }
+.agenda-col h2 { margin: 0 0 0.65rem; font-size: 1.35rem; font-weight: 500; }
+.agenda-card { border: 1px solid var(--line); padding: 0.75rem; margin-top: 0.65rem; }
+.agenda-card header { display: flex; justify-content: space-between; gap: 0.5rem; }
+.agenda-card p { margin: 0.35rem 0 0; }
+.agenda-price { font-weight: 600; color: var(--ink); }
+.agenda-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.65rem; }
+.agenda-actions button {
+  min-height: 44px;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--line);
+  background: var(--white);
+  font: inherit;
+  cursor: pointer;
+}
+.agenda-card.status-cancelled { opacity: 0.65; }
 .crm-link { background: none; border: 0; color: var(--ink); font: inherit; cursor: pointer; text-decoration: underline; padding: 0; min-height: 44px; display: inline-flex; align-items: center; }
 .crm-icon-btn { background: transparent; border: 1px solid var(--line); padding: 0.35rem; min-width: 44px; min-height: 44px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .crm-bottom {

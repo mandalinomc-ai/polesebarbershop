@@ -38,7 +38,15 @@ type ApiSlot = {
   end: string;
   label: string;
   barberId: string;
+  available?: boolean;
+  booked?: boolean;
 };
+
+type DayOccupancyChip = { full: boolean };
+
+function isSlotTaken(slot: ApiSlot) {
+  return slot.booked === true || slot.available === false;
+}
 
 function initials(name: string) {
   return name
@@ -75,6 +83,9 @@ export function FreshaBookingFlow({
   const days = useMemo(() => listOpenDayChips(BOOKING_UI_DAYS), []);
   const [date, setDate] = useState(days[0]?.date || firstBookable);
   const [slots, setSlots] = useState<ApiSlot[]>([]);
+  const [dayOccupancy, setDayOccupancy] = useState<Record<string, DayOccupancyChip>>(
+    {},
+  );
   const [slotsState, setSlotsState] = useState<
     "idle" | "loading" | "error" | "ready"
   >("idle");
@@ -155,6 +166,8 @@ export function FreshaBookingFlow({
       end: s.endIso,
       label: s.label,
       barberId: s.barberId,
+      available: true,
+      booked: false,
     }));
   }, [date, barberId, totals.durationMin]);
 
@@ -168,15 +181,31 @@ export function FreshaBookingFlow({
         barberId,
         serviceIds: selectedIds.join(","),
         duration: String(totals.durationMin),
+        summaryDates: days.map((d) => d.date).join(","),
       });
       const res = await fetch(`/api/availability?${params.toString()}`);
       const json = (await res.json()) as {
         slots?: ApiSlot[];
+        days?: { date: string; full?: boolean }[];
         error?: string;
         warning?: string;
       };
       if (!res.ok) throw new Error(json.error || "Errore orari");
+      const incoming = Array.isArray(json.slots) ? json.slots : [];
       setSlots(Array.isArray(json.slots) ? json.slots : []);
+      setSlot((curr) => {
+        if (!curr) return curr;
+        const match = incoming.find((s) => s.start === curr.start);
+        if (!match || isSlotTaken(match)) return null;
+        return match;
+      });
+      if (Array.isArray(json.days)) {
+        const next: Record<string, DayOccupancyChip> = {};
+        for (const row of json.days) {
+          if (row?.date) next[row.date] = { full: Boolean(row.full) };
+        }
+        setDayOccupancy(next);
+      }
       setSlotsWarning(json.warning || "");
       setSlotsState("ready");
     } catch (err) {
@@ -188,7 +217,7 @@ export function FreshaBookingFlow({
           : "Calendario locale: gli orari potrebbero non riflettere le prenotazioni reali.",
       );
     }
-  }, [date, barberId, totals.durationMin, selectedIds, localSlots]);
+  }, [date, barberId, totals.durationMin, selectedIds, localSlots, days]);
 
   useEffect(() => {
     if (step >= 3 && totals.durationMin > 0) {
@@ -209,7 +238,7 @@ export function FreshaBookingFlow({
   function canContinue(): boolean {
     if (step === 1) return selectedIds.length > 0;
     if (step === 2) return Boolean(barberId);
-    if (step === 3) return Boolean(slot);
+    if (step === 3) return Boolean(slot && !isSlotTaken(slot));
     if (step === 4) {
       return (
         firstName.trim().length > 1 &&
@@ -520,17 +549,25 @@ export function FreshaBookingFlow({
           <>
             <h3>Data e orario</h3>
             <div className="day-scroller" role="listbox" aria-label="Giorni disponibili">
-              {days.map((d) => (
+              {days.map((d) => {
+                const full = Boolean(dayOccupancy[d.date]?.full);
+                return (
                 <button
                   key={d.date}
                   type="button"
-                  className={`day-chip${date === d.date ? " selected" : ""}`}
+                  className={`day-chip${date === d.date ? " selected" : ""}${full ? " full" : ""}`}
                   onClick={() => setDate(d.date)}
+                  aria-label={
+                    full
+                      ? `${d.dow} ${d.day}, completamente prenotato`
+                      : `${d.dow} ${d.day}`
+                  }
                 >
                   <span className="dow">{d.dow}</span>
                   <span className="dom">{d.day}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
             {slotsState === "loading" && (
               <p className="slot-status">Caricamento orari…</p>
@@ -543,18 +580,38 @@ export function FreshaBookingFlow({
                 Nessuno slot disponibile per questo giorno.
               </p>
             )}
+            {slotsState === "ready" &&
+            slots.length > 0 &&
+            slots.every(isSlotTaken) ? (
+              <p className="slot-status">
+                Tutti gli orari di questo giorno sono prenotati.
+              </p>
+            ) : null}
             {slots.length > 0 && (
-              <div className="slot-grid">
-                {slots.map((s) => (
+              <div className="slot-grid" role="list" aria-label="Orari del giorno">
+                {slots.map((s) => {
+                  const taken = isSlotTaken(s);
+                  const selected = !taken && slot?.start === s.start;
+                  return (
                   <button
                     key={s.start}
                     type="button"
-                    className={`slot-btn${slot?.start === s.start ? " selected" : ""}`}
-                    onClick={() => setSlot(s)}
+                    className={`slot-btn${selected ? " selected" : ""}${taken ? " booked" : ""}`}
+                    disabled={taken}
+                    aria-disabled={taken}
+                    aria-label={taken ? `${s.label}, prenotato` : s.label}
+                    onClick={() => {
+                      if (taken) return;
+                      setSlot(s);
+                    }}
                   >
                     {s.label}
+                    {taken ? (
+                      <span className="slot-booked-hint">Prenotato</span>
+                    ) : null}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
