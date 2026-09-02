@@ -18,8 +18,8 @@ export const SERVICE_MEDIA: Record<string, ServiceMedia> = {
   },
   "taglio-standard": {
     kind: "video",
-    src: `${VIDEO_BASE}/taglio-01.mp4`,
-    diskName: "taglio-01.mp4",
+    src: `${VIDEO_BASE}/taglio-02.mp4`,
+    diskName: "taglio-02.mp4",
   },
   "taglio-bambino": {
     kind: "video",
@@ -37,9 +37,9 @@ export const SERVICE_MEDIA: Record<string, ServiceMedia> = {
     diskName: "barba-pro.jpg",
   },
   "barba-standard": {
-    kind: "video",
-    src: `${VIDEO_BASE}/taglio-03.mp4`,
-    diskName: "taglio-03.mp4",
+    kind: "photo",
+    src: "/images/barba-standard.jpg",
+    diskName: "barba-standard.jpg",
   },
   "decolorazione-meches": {
     kind: "video",

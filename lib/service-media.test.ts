@@ -11,7 +11,9 @@ describe("service-media", () => {
   it("maps all 10 bookable services to official media paths", () => {
     expect(Object.keys(SERVICE_MEDIA).sort()).toEqual(SERVICES.map((s) => s.id).sort());
     expect(SERVICE_MEDIA["taglio-pro"]?.src).toBe("/video/taglio-01.mp4");
+    expect(SERVICE_MEDIA["taglio-standard"]?.src).toBe("/video/taglio-02.mp4");
     expect(SERVICE_MEDIA["barba-pro"]?.src).toBe("/images/barba-pro.jpg");
+    expect(SERVICE_MEDIA["barba-standard"]?.src).toBe("/images/barba-standard.jpg");
     expect(SERVICE_MEDIA["decolorazione-cutanea"]?.src).toBe("/video/decolorazione-cute.mp4");
     expect(SERVICE_MEDIA["tintura-barba"]?.src).toBe("/images/tintura-barba.jpg");
   });

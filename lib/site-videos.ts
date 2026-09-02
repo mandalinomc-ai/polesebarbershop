@@ -9,7 +9,7 @@ export type SiteVideo = {
 export const VIDEO_BASE = "/video";
 
 /** Bump when salon media files change — busts browser/CDN cache on deploy. */
-export const MEDIA_CACHE_VERSION = "drive-e59a16d";
+export const MEDIA_CACHE_VERSION = "media-4b5775f";
 
 export function withMediaCacheBust(src: string): string {
   const sep = src.includes("?") ? "&" : "?";
