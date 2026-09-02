@@ -10,7 +10,7 @@ import {
   getHeroHeadline,
   isBeforeOfficialOpening,
 } from "@/lib/site-config";
-import { HERO_VIDEOS } from "@/lib/site-videos";
+import { HERO_VIDEOS, withMediaCacheBust } from "@/lib/site-videos";
 
 function HeroMediaCell({
   video,
@@ -27,7 +27,7 @@ function HeroMediaCell({
         preload="auto"
         aria-label={video.alt}
       >
-        <source src={video.src} type="video/mp4" />
+        <source src={withMediaCacheBust(video.src)} type="video/mp4" />
       </video>
     </div>
   );

@@ -8,6 +8,14 @@ export type SiteVideo = {
 /** Public video URL — files live in public/assets/video/, rewritten from /video/. */
 export const VIDEO_BASE = "/video";
 
+/** Bump when salon media files change — busts browser/CDN cache on deploy. */
+export const MEDIA_CACHE_VERSION = "drive-e59a16d";
+
+export function withMediaCacheBust(src: string): string {
+  const sep = src.includes("?") ? "&" : "?";
+  return `${src}${sep}v=${MEDIA_CACHE_VERSION}`;
+}
+
 /** Legacy hero folder — bio clip now lives in public/assets/video/ with reels. */
 export const VIDEO_HERO_BASE = "/assets/videos";
 

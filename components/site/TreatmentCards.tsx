@@ -7,6 +7,7 @@ import { getServiceMedia } from "@/lib/service-media";
 import { serviceBookingHref } from "@/lib/site-config";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import type { SiteVideo } from "@/lib/site-videos";
+import { withMediaCacheBust } from "@/lib/site-videos";
 
 function TreatmentCardMedia({
   serviceId,
@@ -24,7 +25,7 @@ function TreatmentCardMedia({
     return (
       <div className="treatment-card-media">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={media.src} alt={serviceName} className="treatment-card-photo" />
+        <img src={withMediaCacheBust(media.src)} alt={serviceName} className="treatment-card-photo" />
       </div>
     );
   }

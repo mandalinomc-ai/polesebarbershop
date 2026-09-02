@@ -10,6 +10,8 @@ node_modules
 .env.*.local
 .next
 out
+public/video/
+tmp/
 coverage
 *.log
 tsconfig.tsbuildinfo

@@ -15,8 +15,16 @@ const env = Object.fromEntries(
 
 const sb = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
-const TEST_EMAIL_PATTERNS = [/^test@/i, /^test-/i, /test-finale-cursor@example\.com$/i];
-const TEST_NAMES = [{ first: "Eugenio", last: "Ciullo" }];
+const TEST_EMAIL_PATTERNS = [
+  /^test@/i,
+  /^test-/i,
+  /test-finale-cursor@example\.com$/i,
+  /eugenio\.test@example\.com$/i,
+];
+const TEST_NAMES = [
+  { first: "Eugenio", last: "Ciullo" },
+  { first: "Eugenio", last: "Test" },
+];
 
 function isTestEmail(email) {
   return TEST_EMAIL_PATTERNS.some((re) => re.test(email.trim()));

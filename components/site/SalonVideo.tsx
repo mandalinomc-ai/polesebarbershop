@@ -1,4 +1,5 @@
 import type { SiteVideo } from "@/lib/site-videos";
+import { withMediaCacheBust } from "@/lib/site-videos";
 
 type SalonVideoProps = {
   video: SiteVideo;
@@ -18,7 +19,7 @@ export function SalonVideo({ video, className = "salon-video-player" }: SalonVid
       disablePictureInPicture
       aria-label={video.alt}
     >
-      <source src={video.src} type="video/mp4" />
+      <source src={withMediaCacheBust(video.src)} type="video/mp4" />
     </video>
   );
 }
