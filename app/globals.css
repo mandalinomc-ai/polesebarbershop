@@ -805,6 +805,20 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .footer-links { display: flex; flex-wrap: wrap; gap: 1rem; }
 .legal-footer p { margin: 0.2rem 0; }
+.footer-powered {
+  margin: 1.25rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(26, 26, 26, 0.42);
+}
+.footer-powered-brand {
+  color: rgba(26, 26, 26, 0.58);
+  font-weight: 600;
+}
 
 /* FABs */
 .fab-stack {
