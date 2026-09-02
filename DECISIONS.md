@@ -1,73 +1,50 @@
 # DECISIONS — Felice Polese infrastructure
 
-**Updated:** 2026-09-01 (final deploy attempt — commit `559fb41`)
+**Updated:** 2026-09-02
 
-## D1 — Canonical Vercel project: `polesebarbershop` (NEW)
+## D1 — Canonical Vercel project: `polesebarbershop`
 
-**Decision:** All new deploys go to the Vercel project **`polesebarbershop`**.
+**Decision:** All new deploys go to Vercel project **`polesebarbershop`**.
 
 - Project ID: `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf`
-- Production URL: `https://polesebarbershop.vercel.app`
-- Serves the premium rebuild with **Felice Polese Barber Shop** branding
-- `NEXT_PUBLIC_SITE_URL` in Vercel production env should be `https://polesebarbershop.vercel.app` (or eventually the custom domain)
+- Intended production URL: `https://polesebarbershop.vercel.app`
+- Latest **built** deployment (2026-09-01, commit `9c721e7`):  
+  `https://polesebarbershop-at512kktm-mandalinomc-8144s-projects.vercel.app`
 
-**Rationale:** This project is linked to the current GitHub repo and CI workflow. It already shows the correct site.
+## D2 — Legacy domain `felicepolesebarbershop.vercel.app`
 
-## D2 — Legacy domain: `felicepolesebarbershop.vercel.app` (OLD project)
+**Decision:** That hostname belongs to a second Vercel project also linked to this GitHub repo (`Production – felicepolesebarbershop` in GitHub Deployments). Do **not** rebuild a separate app. Point the alias at the same `main` deployment as D1.
 
-**Decision:** `felicepolesebarbershop.vercel.app` belongs to a **separate, older Vercel project** (internally "felicepolese") that still serves **Polese Barbershop** branding.
+## D3 — Root cause of “main is built but live is old”
 
-**Action required:** Reassign the alias so `felicepolesebarbershop.vercel.app` points to the latest `polesebarbershop` production deployment:
+**Decision:** Vercel is running **staged production**: Git pushes to `main` create production *builds* (unique `*.vercel.app` URLs) but **do not auto-assign** the project domains. Confirmed 2026-09-02:
 
-```bash
-npx vercel alias set <polesebarbershop-deploy-url> felicepolesebarbershop.vercel.app
-```
+- Unique prod build = new site (Barber Shop, Dante 45, `/prenota`)
+- `polesebarbershop.vercel.app` and the team URL `polesebarbershop-mandalinomc-8144s-projects.vercel.app` = old site (Dante 44, no booking)
 
-**Do NOT** rebuild the old project. **Do NOT** change application code for this — it is purely a Vercel alias/routing fix.
+`master` is **not** the production branch (pushing `main` → `master` created a **Preview** only).
 
-## D3 — Cloud vs local Vercel authentication
+**Fix in repo:** `vercel.json` `"github": { "autoAlias": true }` so the next production Git deploy assigns domains.
 
-**Decision:** Vercel deploy and alias operations require an authenticated Vercel account. Two paths:
+**Fix with CLI (if logged in):** `scripts/promote-live-domains.sh` / `vercel alias set <deploy-url> <domain>`.
 
-| Path | Works? | Notes |
-|------|--------|-------|
-| **Cloud agent `vercel login`** | Blocked | `npx vercel whoami` → Logged out (2026-09-01). OAuth device flow needs a human to visit `vercel.com/oauth/device` and approve. |
-| **Cloud `VERCEL_TOKEN` env** | Not available | No token injected in cloud VM. |
-| **GitHub Actions secrets** | Not configured | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` all empty → CI deploy fails. |
-| **User local PC** | **Preferred** | User runs `vercel login` interactively, then `link`, `deploy`, `alias`. |
+## D4 — Cloud vs local Vercel authentication
 
-**Rationale:** Vercel CLI auth is account-bound. Cloud agents cannot complete browser OAuth without user action. Local terminal is the reliable path until GitHub secrets are set.
+CLI alias/promote still needs an account. Cloud `npx vercel whoami` is logged out unless the user completes device OAuth (`https://vercel.com/oauth/device`). No `VERCEL_TOKEN` in the cloud VM.
 
-## D4 — GitHub CI for production deploys
+## D5 — GitHub Actions CLI deploy is optional
 
-**Decision:** `.github/workflows/vercel-production.yml` deploys `main` to `polesebarbershop` on every push, using:
+**Decision:** Vercel Git is the primary builder. The Actions workflow must **not** fail the repo when secrets are missing. Skip the CLI job unless `VERCEL_TOKEN` is set.
 
-- `VERCEL_TOKEN` — personal/team token from https://vercel.com/account/tokens
-- `VERCEL_ORG_ID` — team/user ID
-- `VERCEL_PROJECT_ID` — `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf`
+## D6 — Do not change booking/design for deploy work
 
-**Status:** Workflow exists but secrets are missing. Until configured, deploys must be manual (local CLI).
-
-## D5 — Do not change code for deploy tasks
-
-**Decision:** Deploy/alias/domain work is **infrastructure only**. Do not modify:
-
-- Booking logic or Supabase schema
-- Site design, copy, or assets
-- Resend/Supabase env configuration in code
-
-Continuity docs and Vercel routing are the scope.
-
-## D6 — Supabase & Resend (unchanged)
-
-- Supabase: single project `dbbncprluqjrofjemfbg` — appointments, barbers, services, CRM
-- Resend: test-mode from address until `polesebarbershop.it` domain verified
-- 30-minute online cancellation enforced at all layers (app + API + DB)
+Deploy/alias/domain work is infrastructure. Do not modify booking logic, Supabase schema, or visual design for this task.
 
 ## D7 — URL strategy (target state)
 
 | URL | Target |
 |-----|--------|
-| `polesebarbershop.vercel.app` | Primary Vercel production URL |
-| `felicepolesebarbershop.vercel.app` | Alias → same deployment as above |
+| Unique Git production URL | Already correct `main` |
+| `polesebarbershop.vercel.app` | Same deployment (autoAlias or `alias set`) |
+| `felicepolesebarbershop.vercel.app` | Same deployment |
 | `polesebarbershop.it` (future) | Custom domain after DNS + Resend verification |

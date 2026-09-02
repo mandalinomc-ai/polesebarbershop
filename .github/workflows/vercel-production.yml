@@ -1,4 +1,5 @@
-# Deploy main to the polesebarbershop Vercel project on every push.
+# Optional CLI production deploy. Vercel Git integration already builds
+# every push to main; this workflow only runs when GitHub secrets exist.
 #
 # Required GitHub repository secrets (Settings → Secrets and variables → Actions):
 #   VERCEL_TOKEN          — https://vercel.com/account/tokens
@@ -22,7 +23,26 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
+  check-creds:
+    runs-on: ubuntu-latest
+    outputs:
+      has_creds: ${{ steps.creds.outputs.has_creds }}
+    steps:
+      - name: Check Vercel secrets
+        id: creds
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "has_creds=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::VERCEL_TOKEN is not set. Skipping CLI deploy. Vercel Git still builds from main (github.autoAlias)."
+          else
+            echo "has_creds=true" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
+    needs: check-creds
+    if: needs.check-creds.outputs.has_creds == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

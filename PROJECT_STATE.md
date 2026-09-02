@@ -1,107 +1,68 @@
 # PROJECT_STATE — Felice Polese Barber Shop
 
-**Updated:** 2026-09-01 (final deploy attempt — commit `559fb41`)  
+**Updated:** 2026-09-02  
 **Repo:** [mandalinomc-ai/polesebarbershop](https://github.com/mandalinomc-ai/polesebarbershop)
 
-## GitHub `main`
+## GitHub
 
 | Field | Value |
 |-------|-------|
-| HEAD | `559fb41` — *docs: add continuity docs for Vercel deploy and domain alias* |
-| Branch | `main` (clean working tree) |
-| Verified | ✓ `git status` clean, on `main`, at `559fb41` |
+| Default branch | `main` @ `9c721e7`+ (this PR on top) |
+| `master` | Fast-forwarded to `9c721e7` on 2026-09-02 (was stale Polese Barbershop / Dante 44). Vercel treats `master` as **Preview**, not Production. |
 
-### Recent commits (newest first)
+### Code on `main` (verified)
 
-```
-559fb41 docs: add continuity docs for Vercel deploy and domain alias
-1a29103 fix: enforce 30-minute cancellation window server-side
-f02f76c chore: remove dead CSS and unused hero/product images
-b5cef50 ci: run Vercel production deploy on every main push (was skipped)
-a5fe950 fix: intro dark reveal, visible countdown numbers, silver scissors deploy
-```
+- Name: **Felice Polese Barber Shop**
+- Tagline: **MODERN BARBERING & FADE STUDIO**
+- Address: Corso Dante **45**, Benevento
+- Booking: `/prenota` + `/api/availability` + `/api/bookings`
+- Cancellation: 30 minutes (`CANCEL_MINUTES_BEFORE`)
+- Opening date: 2026-09-07
+
+## Live URLs (2026-09-02)
+
+| URL | What it serves now |
+|-----|-------------------|
+| `https://polesebarbershop-at512kktm-mandalinomc-8144s-projects.vercel.app` | **CORRECT** current `main` (title with Barber Shop, Dante 45, `/prenota` 200, videos 200). Availability API runs but preview env may lack Supabase (`database non configurato`). |
+| `https://polesebarbershop.vercel.app` | **STALE** — `Felice Polese \| Modern Barbering & Fade Studio`, Dante **44**, `/prenota` 404 |
+| `https://felicepolesebarbershop.vercel.app` | **STALE** — same old site as above |
+| `https://polesebarbershop-mandalinomc-8144s-projects.vercel.app` | **STALE** — current *assigned* production of the Git-connected project (auto-assign off) |
+
+GitHub Deployments: Vercel Git App **does** build `main` as `Production – polesebarbershop` / `Production – felicepolesebarbershop`, but `production_environment: false` and domains are **not** switched (staged production).
 
 ## Vercel projects
 
-| Project | Role | Project ID (known) | Default URL | Live branding |
-|---------|------|-------------------|-------------|---------------|
-| **polesebarbershop** | **NEW — canonical** | `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf` (from CI workflow) | `polesebarbershop.vercel.app` | **Felice Polese Barber Shop** ✓ |
-| **felicepolese** (legacy) | **OLD — domain to reassign** | unknown (separate Vercel project) | `felicepolesebarbershop.vercel.app` | **Polese Barbershop** (stale) ✗ |
+| Project | Role | Project ID | Git production builds |
+|---------|------|------------|------------------------|
+| **polesebarbershop** | Canonical | `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf` | Yes, from this repo `main` |
+| **felicepolesebarbershop** / legacy **felicepolese** | Owns `felicepolesebarbershop.vercel.app` | unknown | Also connected to this repo |
 
-### Domain verification (2026-09-01 — final deploy attempt)
+## CI
 
-```bash
-curl -s https://felicepolesebarbershop.vercel.app | grep -oE 'Felice Polese Barber Shop|Modern Barbering|Polese Barbershop' | sort -u
-# → Polese Barbershop  (WRONG — old deploy, alias NOT updated)
+`.github/workflows/vercel-production.yml` — CLI deploy on `main` **only if** `VERCEL_TOKEN` is set. Secrets were empty, so every push failed; the workflow now skips instead of going red.
 
-curl -s https://polesebarbershop.vercel.app | grep -oE 'Felice Polese Barber Shop|Modern Barbering|Polese Barbershop' | sort -u
-# → Felice Polese Barber Shop  (CORRECT)
-```
+Vercel Git integration is the real build path. `vercel.json` `github.autoAlias: true` restores domain assignment on production deploys.
 
-**STATUS: NOT READY** — `felicepolesebarbershop.vercel.app` does not show new branding.
-
-### Final deploy attempt (2026-09-01)
-
-| Step | Result |
-|------|--------|
-| Git on `main` @ `559fb41` | ✓ |
-| `npx vercel whoami` | ✗ Logged out |
-| `npx vercel link --project polesebarbershop` | **Skipped** (auth blocker) |
-| `npx vercel --prod` | **Skipped** (auth blocker) |
-| `npx vercel alias set … felicepolesebarbershop.vercel.app` | **Skipped** (auth blocker) |
-
-### CI deploy status
-
-Workflow: `.github/workflows/vercel-production.yml` — runs on every `main` push.
-
-**Status: FAILING** — GitHub secrets not configured:
-
-- `VERCEL_TOKEN` — empty
-- `VERCEL_ORG_ID` — empty
-- `VERCEL_PROJECT_ID` — empty
-
-### Cloud Vercel CLI
-
-- `npx vercel whoami` → **Logged out**
-- No `VERCEL_TOKEN` in cloud environment
-- Deploy/alias requires user `npx vercel login` locally or GitHub secrets
-
-## Booking system
+## Booking / email (unchanged)
 
 | Component | Status |
 |-----------|--------|
-| Stack | Next.js 15 App Router + Supabase + Resend (.ics attachments) |
-| Supabase project | `dbbncprluqjrofjemfbg.supabase.co` |
-| Migrations | `001_schema.sql`, `002_crm_indexes.sql`, `002_cancel_30_min.sql`, `003_service_display_names.sql` |
-| Cancellation policy | **30 minutes** — enforced in app (`CANCEL_MINUTES_BEFORE`), API, and DB function `cancel_appointment_by_token` |
-| Booking horizon | 365 days open; UI shows 42-day scroller |
-| Opening date | 2026-09-07 (countdown on homepage) |
-| Admin | `/gestionale` (cookie session) |
-| Public booking | `/prenota` |
+| Stack | Next.js 15 App Router + Supabase + Resend (.ics) |
+| Supabase | `dbbncprluqjrofjemfbg.supabase.co` |
+| Cancel window | 30 minutes |
+| Admin | `/gestionale` |
+| Resend | Test mode `onboarding@resend.dev`; `polesebarbershop.it` not verified |
 
-### Email (Resend)
+## What is NOT done until domains switch
 
-- From (test mode): `Felice Polese Barber Shop <onboarding@resend.dev>`
-- Admin/owner: `felicepolese550@gmail.com`
-- NOTIFY_EMAIL (Resend account inbox until domain verified): `mandalinomc@gmail.com`
-- Custom domain `polesebarbershop.it` **not yet verified** in Resend
+1. Public `.vercel.app` hosts still serve the old Dante-44 site
+2. GitHub Actions CLI deploy still needs secrets if you want a second deploy path
+3. Resend custom domain not verified
+4. Preview unique URL may not have production Supabase env (check `/api/availability` after alias)
 
 ## Site config highlights
 
 - Official name: **Felice Polese Barber Shop**
-- Tagline: **Modern Barbering & Fade Studio**
-- Canonical URL in code default: `https://polesebarbershop.vercel.app`
-- Address: Corso Dante 45, 82100 Benevento
+- Canonical URL in code: `https://polesebarbershop.vercel.app`
 - Phone/WhatsApp: +39 351 252 3087
 - Instagram: @felicepolese_barber
-
-## What is NOT done
-
-1. `felicepolesebarbershop.vercel.app` still serves the **old** Polese Barbershop project
-2. Vercel CLI auth blocked cloud deploy (logged out)
-3. GitHub → Vercel CI secrets missing — auto-deploy on push broken
-4. Resend custom domain not verified (emails to felicepolese550@gmail.com blocked until then)
-
-## Related branches (context)
-
-Many `cursor/*` feature branches exist; production truth is `main` at `559fb41+`.
