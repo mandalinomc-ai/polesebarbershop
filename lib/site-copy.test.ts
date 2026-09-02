@@ -292,8 +292,9 @@ describe("public copy vs official identity", () => {
     expect(reel).not.toMatch(/<img/);
     expect(reel).not.toMatch(/reveal/);
     const videos = readFileSync(join(process.cwd(), "lib/site-videos.ts"), "utf8");
-    expect(videos).toMatch(/Razor Taper — Tecnica di sfumatura/);
-    expect(videos).toMatch(/Skin Fade — Tecnica di sfumatura a pelle/);
+    expect(videos).toMatch(/Razor Fade — Tecnica di sfumatura/);
+    expect(videos).toMatch(/Taper Fade — Tecnica di sfumatura/);
+    expect(videos).toMatch(/Burst Fade — Tecnica di sfumatura/);
     expect(videos).not.toMatch(/id: "razor-taper"/);
     expect(videos).not.toMatch(/id: "skin-fade"/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
