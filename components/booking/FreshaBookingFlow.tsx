@@ -680,7 +680,7 @@ export function FreshaBookingFlow({
                   className="input-lux"
                   type="tel"
                   inputMode="tel"
-                  placeholder="351 252 3087"
+                  placeholder="327 015 6225"
                   autoComplete="tel-national"
                   enterKeyHint="done"
                   value={phone}

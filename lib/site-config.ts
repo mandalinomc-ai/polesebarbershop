@@ -27,10 +27,10 @@ export const SITE = {
   latitude: 41.1298,
   longitude: 14.7825,
   openingDate: "2026-09-07",
-  phone: "+39 351 252 3087",
-  phoneDisplay: "351 252 3087",
-  phoneTel: "+393512523087",
-  whatsapp: "393512523087",
+  phone: "+39 327 015 6225",
+  phoneDisplay: "327 015 6225",
+  phoneTel: "+393270156225",
+  whatsapp: "393270156225",
   email: "felicepolese550@gmail.com",
   instagram: "https://instagram.com/felicepolese_barber",
   instagramHandle: "@felicepolese_barber",
@@ -54,7 +54,7 @@ export const SITE = {
 export const SITE_DOCUMENT_TITLE = "Felice Polese | Modern Barbering & Fade Studio";
 
 /** Public FAB / disdette on the website (customers write here). Not salon booking alerts. */
-export const PUBLIC_CONTACT_WHATSAPP = "+393512523087";
+export const PUBLIC_CONTACT_WHATSAPP = "+393270156225";
 /** Official salon WhatsApp for automatic booking alerts. */
 export const SALON_NOTIFY_WHATSAPP_FALLBACK = "+393270156225";
 
@@ -184,7 +184,7 @@ export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
   return `Ciao Felice, ho prenotato su ${SITE.name}: ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}. Nome: ${name} - Tel: ${tel}`;
 }
 
-/** Cliente → salone (wa.me 351). Il cliente apre la chat con Felice. */
+/** Cliente → salone (wa.me 327). Il cliente apre la chat con Felice. */
 export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
   return getWhatsAppUrl(getBookingConfirmMessage(opts));
 }
@@ -199,7 +199,7 @@ export function getCustomerConfirmMessage(opts: BookingConfirmCopy): string {
   return `${hello}, la tua prenotazione da ${SITE.name} è confermata: ${opts.service}${price}${duration} il ${opts.dateLabel} alle ${opts.timeLabel}${barber}. Ti aspettiamo in ${SITE.streetAddress}. Per modifiche o disdette chiama o scrivi al ${SITE.phone}.`;
 }
 
-/** Testo automatico WhatsApp al salone (numero ufficiale 327, non il 351 del sito). */
+/** Testo automatico WhatsApp al salone (numero ufficiale 327). */
 export function getSalonNewBookingMessage(opts: BookingConfirmCopy): string {
   const name = [opts.firstName, opts.lastName].filter(Boolean).join(" ").trim() || "Cliente";
   const price = opts.priceLabel?.trim() ? ` · ${opts.priceLabel.trim()}` : "";

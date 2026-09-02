@@ -11,7 +11,7 @@ Live was briefly the scissors GitHub rebuild. That is **not** the site the clien
 ## Restore
 
 - Domain aliased to oldest remaining quasar production (`6ve62mbnk`, marble July-3).
-- Git branch reconstructs Jakarta marble (`0da4547` + Google Fonts + `/video/`) **with** booking, Maps Dante 45, WhatsApp 351.
+- Git branch reconstructs Jakarta marble (`0da4547` + Google Fonts + `/video/`) **with** booking, Maps Dante 45, WhatsApp 327.
 - Exact pre-overwrite HTML (`Felice Polese | Modern Barbering & Fade Studio` with `marble-accent` / `glass-card` from Google Fonts static page) was **not** in the repo.
 
 ## Do not

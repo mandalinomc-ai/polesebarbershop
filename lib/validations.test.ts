@@ -4,15 +4,15 @@ import { normalizeItalianPhone, resolveBookingPhone } from "./phone";
 
 describe("phone + booking validation", () => {
   it("normalises Italian mobiles to +39", () => {
-    expect(normalizeItalianPhone("351 252 3087")).toBe("+393512523087");
-    expect(normalizeItalianPhone("+39 351 252 3087")).toBe("+393512523087");
+    expect(normalizeItalianPhone("327 015 6225")).toBe("+393270156225");
+    expect(normalizeItalianPhone("+39 327 015 6225")).toBe("+393270156225");
     expect(normalizeItalianPhone("03270156225")).toBe("+393270156225");
   });
 
   it("resolves wizard phone without doubling +39", () => {
-    expect(resolveBookingPhone("351 252 3087")).toBe("+393512523087");
-    expect(resolveBookingPhone("+393512523087")).toBe("+393512523087");
-    expect(resolveBookingPhone("+39 351 252 3087")).toBe("+393512523087");
+    expect(resolveBookingPhone("327 015 6225")).toBe("+393270156225");
+    expect(resolveBookingPhone("+393270156225")).toBe("+393270156225");
+    expect(resolveBookingPhone("+39 327 015 6225")).toBe("+393270156225");
   });
 
   it("rejects booking without GDPR consent", () => {

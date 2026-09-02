@@ -177,7 +177,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("⏱ Durata: 25 min");
     expect(mail.text).toContain("👤 Barber: Felice");
     expect(mail.text).toContain("📍 Dove siamo: Corso Dante 45");
-    expect(mail.text).toContain("📞 Telefono salone: +39 351 252 3087");
+    expect(mail.text).toContain("📞 Telefono salone: +39 327 015 6225");
     expect(mail.text).toContain(`almeno ${CANCEL_NOTICE_IT} di anticipo`);
     expect(mail.text).toContain("Ti aspettiamo! 🔥");
     expect(mail.text).toContain("Gestisci o disdici: https://polesebarbershop.vercel.app/appuntamento/abc");

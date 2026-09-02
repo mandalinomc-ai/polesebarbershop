@@ -14,7 +14,7 @@ That deploy is July-3 / “Polese Barbershop — L'Arte della Barberia d'Élite�
 
 ## What we restored in git
 
-Closest in-repo visual: commit `0da4547` (Plus Jakarta, `hero-media-cell`, white marble canvas), plus Google Fonts, `/video/` rewrites, booking wizard, Maps **Corso Dante 45**, WhatsApp **351 252 3087**. Document title: `Felice Polese | Modern Barbering & Fade Studio`. No scissors intro on the homepage.
+Closest in-repo visual: commit `0da4547` (Plus Jakarta, `hero-media-cell`, white marble canvas), plus Google Fonts, `/video/` rewrites, booking wizard, Maps **Corso Dante 45**, WhatsApp **327 015 6225**. Document title: `Felice Polese | Modern Barbering & Fade Studio`. No scissors intro on the homepage.
 
 ## D1 — One public URL
 
@@ -28,7 +28,7 @@ Do not recreate deleted `polesebarbershop`.
 
 ## D3 — Product copy on the restored look
 
-- WhatsApp: **+39 351 252 3087**
+- WhatsApp: **+39 327 015 6225**
 - Maps: **Corso Dante 45**
 - Opening: **7 settembre 2026**
 - Booking: `/#prenota` and `/prenota`
