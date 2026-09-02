@@ -1,4 +1,5 @@
 import { formatItalianDate, formatWallDate, formatWallTime } from "@/lib/availability";
+import type { ClientRecord } from "@/lib/crm";
 import { buildNotifyCopy, waMeUrl } from "@/lib/crm-notify";
 
 export type RecentBooking = {
@@ -37,6 +38,26 @@ export function newBookingWhatsAppUrl(b: RecentBooking): string | null {
     barberName: b.barberName,
   });
   return waMeUrl(b.phone || "", copy.text);
+}
+
+export function clientReminderWhatsAppUrl(
+  client: Pick<ClientRecord, "firstName" | "phone" | "nextVisitAt" | "history">,
+): string | null {
+  const nowIso = new Date().toISOString();
+  const upcoming = client.history
+    .filter((h) => !h.cancelled && h.startsAt > nowIso)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
+  const startsAt = upcoming?.startsAt || client.nextVisitAt;
+  const dateLabel = startsAt ? formatItalianDate(formatWallDate(new Date(startsAt))) : undefined;
+  const timeLabel = startsAt ? formatWallTime(new Date(startsAt)) : undefined;
+  const copy = buildNotifyCopy("reminder", {
+    firstName: client.firstName,
+    dateLabel,
+    timeLabel,
+    serviceNames: upcoming?.serviceNames,
+    barberName: upcoming?.barberName,
+  });
+  return waMeUrl(client.phone, copy.text);
 }
 
 export function readLastSeenAt(): string {

@@ -1204,12 +1204,35 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .crm-toast p { margin: 0; font-size: 0.88rem; line-height: 1.4; }
 .crm-toast-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .crm-toast-actions .btn { min-height: 44px; font-size: 0.78rem; padding: 0.35rem 0.65rem; }
-.crm-wa-link {
-  color: #128C7E;
-  font-weight: 600;
-  text-decoration: none;
+.crm-phone-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
 }
-.crm-wa-link:hover { color: #25D366; }
+.crm-table .btn-whatsapp,
+.crm-wa-bulk .btn-whatsapp {
+  border-color: #25D366;
+  background: #25D366;
+  color: #fff;
+  font-size: 0.58rem;
+  padding: 0.35rem 0.55rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.crm-table .btn-whatsapp:hover,
+.crm-wa-bulk .btn-whatsapp:hover {
+  background: #128C7E;
+  border-color: #128C7E;
+  color: #fff;
+}
+.crm-wa-bulk li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
 .crm-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.25rem; }
 .crm-view-toggle { display: inline-flex; border: 1px solid var(--line); }
 .crm-view-toggle button {

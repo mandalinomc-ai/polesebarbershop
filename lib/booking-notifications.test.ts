@@ -4,8 +4,10 @@ import {
   BOOKING_POLL_MS,
   bookingAgendaDate,
   formatNewBookingToast,
+  clientReminderWhatsAppUrl,
   newBookingWhatsAppUrl,
 } from "./booking-notifications";
+import type { ClientRecord } from "./crm";
 
 describe("booking-notifications", () => {
   const sample = {
@@ -34,6 +36,41 @@ describe("booking-notifications", () => {
     const url = newBookingWhatsAppUrl(sample);
     expect(url).toMatch(/^https:\/\/wa\.me\/393331112233\?text=/);
     expect(url).toContain(encodeURIComponent("Mario"));
+  });
+
+  it("builds client reminder wa.me with upcoming appointment details", () => {
+    const client: Pick<ClientRecord, "firstName" | "phone" | "nextVisitAt" | "history"> = {
+      firstName: "Eugenio",
+      phone: "+393483470654",
+      nextVisitAt: "2026-09-10T08:00:00.000Z",
+      history: [
+        {
+          id: "x",
+          startsAt: "2026-09-10T08:00:00.000Z",
+          status: "confirmed",
+          cancelled: false,
+          serviceNames: "Taglio Pro",
+          barberName: "Felice",
+          priceCents: 1500,
+          isWalkIn: false,
+        },
+      ],
+    };
+    const url = clientReminderWhatsAppUrl(client);
+    expect(url).toMatch(/^https:\/\/wa\.me\/393483470654\?text=/);
+    expect(url).toContain(encodeURIComponent("Eugenio"));
+    expect(url).toContain(encodeURIComponent("Taglio Pro"));
+  });
+
+  it("returns null for client reminder without phone", () => {
+    expect(
+      clientReminderWhatsAppUrl({
+        firstName: "Test",
+        phone: "",
+        nextVisitAt: null,
+        history: [],
+      }),
+    ).toBeNull();
   });
 
   it("exports polling interval between 30 and 60 seconds", () => {

@@ -41,6 +41,8 @@ describe("mobile QA (390px)", () => {
     expect(crm).toMatch(/walkin-service/);
     expect(crm).toMatch(/occupancy-table/);
     expect(crm).toMatch(/btn-whatsapp/);
+    expect(crm).toMatch(/PROMEMORIA WHATSAPP/);
+    expect(crm).toMatch(/clientReminderWhatsAppUrl/);
     expect(crm).toMatch(/useBookingNotifications/);
     expect(crm).toMatch(/crm-toast-stack/);
     expect(css).toMatch(/\.btn-whatsapp/);

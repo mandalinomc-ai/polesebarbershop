@@ -34,6 +34,7 @@ import {
 } from "@/lib/crm-notify";
 import {
   bookingAgendaDate,
+  clientReminderWhatsAppUrl,
   newBookingWhatsAppUrl,
   type RecentBooking,
 } from "@/lib/booking-notifications";
@@ -894,6 +895,7 @@ function ClientiView({
   total: number;
 }) {
   const open = selected && clients.find((c) => c.key === selected.key) ? selected : null;
+  const openReminderWa = open ? clientReminderWhatsAppUrl(open) : null;
   const [notesDraft, setNotesDraft] = useState("");
   const [notesMsg, setNotesMsg] = useState("");
   useEffect(() => {
@@ -912,7 +914,7 @@ function ClientiView({
             placeholder="Cerca nome, telefono, email…"
           />
         </label>
-        <button type="button" className="btn btn-outline" onClick={onBulk} disabled={clients.length === 0}>
+        <button type="button" className="btn btn-whatsapp" onClick={onBulk} disabled={clients.length === 0}>
           <MessageCircle size={16} aria-hidden /> WhatsApp massivo
         </button>
       </div>
@@ -939,14 +941,30 @@ function ClientiView({
               </tr>
             </thead>
             <tbody>
-              {clients.map((c) => (
+              {clients.map((c) => {
+                const reminderWa = clientReminderWhatsAppUrl(c);
+                return (
                 <tr key={c.key} className={open?.key === c.key ? "is-open" : ""}>
                   <td data-label="Cliente">
                     <button type="button" className="crm-link" onClick={() => onSelect(open?.key === c.key ? null : c)}>
                       {c.name || "—"}
                     </button>
                   </td>
-                  <td data-label="Telefono">{c.phone || "—"}</td>
+                  <td data-label="Telefono">
+                    <div className="crm-phone-cell">
+                      <span>{c.phone || "—"}</span>
+                      {reminderWa ? (
+                        <a
+                          className="btn btn-whatsapp crm-wa-reminder"
+                          href={reminderWa}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MessageCircle size={14} aria-hidden /> PROMEMORIA WHATSAPP
+                        </a>
+                      ) : null}
+                    </div>
+                  </td>
                   <td data-label="Email">{c.email || "—"}</td>
                   <td data-label="Servizi">{c.services.slice(0, 2).map((s) => s.name).join(", ") || "—"}</td>
                   <td data-label="Visite">
@@ -964,7 +982,7 @@ function ClientiView({
                     </button>
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         </div>
@@ -978,9 +996,23 @@ function ClientiView({
                 {open.phone || "Nessun telefono"} · {open.email || "Nessuna email"}
               </p>
             </div>
-            <button type="button" className="btn btn-gold" onClick={() => onNotify(open)}>
-              Contatta
-            </button>
+            <div className="admin-head-actions">
+              {openReminderWa ? (
+                <a
+                  className="btn btn-whatsapp"
+                  href={openReminderWa}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle size={16} aria-hidden /> PROMEMORIA WHATSAPP
+                </a>
+              ) : open?.phone ? null : (
+                <span className="field-error">{WHATSAPP_MISSING_IT}</span>
+              )}
+              <button type="button" className="btn btn-gold" onClick={() => onNotify(open)}>
+                Contatta
+              </button>
+            </div>
           </header>
           <p className="crm-meta">
             {open.visitCount} visite (di cui {open.cancelledCount} annullate) · spesa {formatEuroCents(open.spendCents)}
@@ -1284,8 +1316,8 @@ function BulkWhatsAppModal({ clients, onClose }: { clients: ClientRecord[]; onCl
                 <li key={c.key}>
                   <span>{c.name}</span>
                   {href ? (
-                    <a className="crm-wa-link" href={href} target="_blank" rel="noopener noreferrer">
-                      Apri WhatsApp
+                    <a className="btn btn-whatsapp" href={href} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle size={14} aria-hidden /> Apri WhatsApp
                     </a>
                   ) : null}
                 </li>
