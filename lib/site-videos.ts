@@ -8,7 +8,7 @@ export type SiteVideo = {
 /** Public video URL — files live in public/assets/video/, rewritten from /video/. */
 export const VIDEO_BASE = "/video";
 
-/** Felice bio / hero clip — public/assets/videos/ (separate from reel folder). */
+/** Legacy hero folder — bio clip now lives in public/assets/video/ with reels. */
 export const VIDEO_HERO_BASE = "/assets/videos";
 
 /** Real salon footage — user-provided mp4 in public/assets/video/. */
@@ -62,12 +62,15 @@ export const SALONE_GENERALE_VIDEO: SiteVideo = {
 };
 
 /**
- * Felice beside bio — only rendered when this file exists.
- * Drop the chosen clip here as public/assets/videos/felice-working.mp4
+ * Felice beside bio — only rendered when the synced file exists.
+ * Windows source: public/video/video felice polese bio.mp4
+ * After sync: public/assets/video/video-felice-polese-bio.mp4
  */
+export const FELICE_BIO_SOURCE_BASENAME = "video felice polese bio" as const;
+
 export const FELICE_WORKING_VIDEO: SiteVideo = {
-  id: "felice-working",
-  src: `${VIDEO_HERO_BASE}/felice-working.mp4`,
+  id: "felice-bio",
+  src: `${VIDEO_BASE}/video-felice-polese-bio.mp4`,
   alt: "Felice Polese al lavoro — Felice Polese Barber Shop Benevento",
 };
 
@@ -136,8 +139,8 @@ export const REQUIRED_VIDEO_FILES = [
   "colorazione-03.mp4",
 ] as const;
 
-/** Drop-in filename for the bio clip: public/assets/videos/felice-working.mp4 */
-export const FELICE_WORKING_FILENAME = "felice-working.mp4" as const;
+/** Synced bio clip filename under public/assets/video/ */
+export const FELICE_WORKING_FILENAME = "video-felice-polese-bio.mp4" as const;
 
 /** Technique reels — sync from public/video/ with scripts/sync-videos.ps1 */
 export const TECHNIQUE_VIDEO_FILES = [
