@@ -16,9 +16,10 @@ describe("automatic WhatsApp (no wa.me)", () => {
     if (!result.ok) expect(result.skipped).toBe(true);
   });
 
-  it("sends salon alerts to 327, never to the public 351 number", async () => {
+  it("sends salon alerts to official 327 number, never to the old 351 number", async () => {
     expect(getSalonNotifyWhatsApp()).toBe("+393270156225");
-    expect(getSalonNotifyWhatsApp()).not.toBe(PUBLIC_CONTACT_WHATSAPP);
+    expect(getSalonNotifyWhatsApp()).not.toBe("+393512523087");
+    expect(PUBLIC_CONTACT_WHATSAPP).toBe("+393270156225");
     const salon = await sendSalonWhatsApp("NUOVA PRENOTAZIONE");
     expect(salon.ok).toBe(false);
     if (!salon.ok) expect(salon.skipped).toBe(true);

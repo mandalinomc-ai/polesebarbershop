@@ -70,8 +70,8 @@ describe("public copy vs official identity", () => {
   });
 
   it("uses the official phone, address, CF and P.IVA", () => {
-    expect(SITE.phone).toBe("+39 351 252 3087");
-    expect(SITE.whatsapp).toBe("393512523087");
+    expect(SITE.phone).toBe("+39 327 015 6225");
+    expect(SITE.whatsapp).toBe("393270156225");
     expect(SITE.address).toBe("Corso Dante 45");
     expect(SITE.openingDate).toBe("2026-09-07");
     expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
@@ -81,6 +81,7 @@ describe("public copy vs official identity", () => {
     expect(getSalonNotifyWhatsApp()).toBe(SALON_NOTIFY_WHATSAPP_FALLBACK);
     expect(getSalonNotifyWhatsApp()).toBe("+393270156225");
     expect(getSalonNotifyWhatsApp()).not.toBe("+393512523087");
+    expect(getSalonNotifyWhatsApp()).not.toMatch(/351/);
   });
 
   it("uses Felice Polese Gmail as salon email, not the GitHub Gmail", () => {
@@ -104,7 +105,9 @@ describe("public copy vs official identity", () => {
       /200\s+prenotazioni/i,
       /limite\s+di\s+200/i,
       /hero--marble/,
-      /hero-bg\.webp/,
+      /393512523087/,
+      /351\s*252\s*3087/,
+      /\+39\s*351/,
       /Menu grooming/i,
       /grooming premium/i,
     ];
@@ -123,7 +126,7 @@ describe("public copy vs official identity", () => {
     );
     const publicHits: string[] = [];
     for (const file of publicUi) {
-      if (/327\s*015\s*6225/.test(readFileSync(file, "utf8"))) publicHits.push(file);
+      if (/351\s*252\s*3087|393512523087/.test(readFileSync(file, "utf8"))) publicHits.push(file);
     }
     expect(publicHits).toEqual([]);
   });
@@ -159,10 +162,10 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/href="\/gestionale"/);
   });
 
-  it("keeps shop WhatsApp on wa.me/393512523087 without Twilio", () => {
-    expect(SITE.whatsapp).toBe("393512523087");
-    expect(SITE.phone).toBe("+39 351 252 3087");
-    expect(getWhatsAppUrl()).toMatch(/^https:\/\/wa\.me\/393512523087\?text=/);
+  it("keeps shop WhatsApp on wa.me/393270156225 without Twilio", () => {
+    expect(SITE.whatsapp).toBe("393270156225");
+    expect(SITE.phone).toBe("+39 327 015 6225");
+    expect(getWhatsAppUrl()).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
     const confirm = getBookingConfirmWhatsAppUrl({
       firstName: "Mario",
       service: "Taglio classico",
@@ -170,7 +173,7 @@ describe("public copy vs official identity", () => {
       timeLabel: "09:30",
       barberName: "Felice",
     });
-    expect(confirm).toMatch(/^https:\/\/wa\.me\/393512523087\?text=/);
+    expect(confirm).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
     expect(confirm).toContain(encodeURIComponent("ho prenotato"));
     const toClient = getSalonToCustomerWhatsAppUrl("+39 333 111 2233", {
       firstName: "Mario",
@@ -347,11 +350,11 @@ describe("public copy vs official identity", () => {
     expect(SITE.hours.sunday).toMatch(/Chiuso/);
     expect(SITE.instagramHandle).toBe("@felicepolese_barber");
     expect(SITE.instagram).toBe("https://instagram.com/felicepolese_barber");
-    expect(getWhatsAppChatUrl()).toBe("https://wa.me/393512523087");
+    expect(getWhatsAppChatUrl()).toBe("https://wa.me/393270156225");
     expect(getPrenotaUrl()).toMatch(/\/#prenota$/);
     const channels = getSocialChannels();
     expect(channels.map((c) => c.id)).toEqual(["instagram", "whatsapp", "prenota"]);
-    expect(channels[1]?.qrPayload).toBe("https://wa.me/393512523087");
+    expect(channels[1]?.qrPayload).toBe("https://wa.me/393270156225");
     expect(channels[2]?.label).toBe(HERO_CTA);
     for (const ch of channels) {
       const file = join(process.cwd(), "public", ch.qr.replace(/^\//, ""));

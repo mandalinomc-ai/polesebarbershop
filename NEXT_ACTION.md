@@ -10,7 +10,7 @@ Il sito con le **forbici** (rebuild GitHub) ha sovrascritto il marmo che piaceva
 ## Ora
 
 1. Il dominio è stato riportato sul deploy marmo più vecchio rimasto sul progetto quasar (stile “L'Arte della Barberia”, non Jakarta esatto).
-2. Questo branch ricostruisce il look **Plus Jakarta / marmo bianco / video in hero**, con prenotazione, Maps Dante 45 e WhatsApp 351.
+2. Questo branch ricostruisce il look **Plus Jakarta / marmo bianco / video in hero**, con prenotazione, Maps Dante 45 e WhatsApp 327.
 
 Non mergiare `main` delle forbici sul progetto Vercel finché Felice non conferma il visivo.
 
