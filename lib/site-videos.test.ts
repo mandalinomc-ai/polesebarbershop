@@ -26,6 +26,15 @@ describe("site-videos", () => {
     expect(VIDEO_REELS).toHaveLength(6);
     expect(ALL_SITE_VIDEOS).toHaveLength(8);
 
+    expect(VIDEO_REELS.map((v) => v.id)).toEqual([
+      "taglio-01",
+      "taglio-02",
+      "taglio-03",
+      "colorazione-01",
+      "colorazione-02",
+      "colorazione-03",
+    ]);
+
     for (const video of VIDEO_REELS) {
       expect(video.src).toMatch(/^\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
       expect(video.alt.length).toBeGreaterThan(5);

@@ -20,14 +20,15 @@ function HeroMediaCell({
   return (
     <div className="hero-media-cell">
       <video
-        src={video.src}
         autoPlay
         muted
         loop
         playsInline
         preload="auto"
         aria-label={video.alt}
-      />
+      >
+        <source src={video.src} type="video/mp4" />
+      </video>
     </div>
   );
 }
@@ -56,7 +57,7 @@ export function Hero() {
             </a>
           </div>
         </div>
-        <div className="hero-media reveal reveal-d1">
+        <div className="hero-media">
           {HERO_VIDEOS.map((video) => (
             <HeroMediaCell key={video.id} video={video} />
           ))}

@@ -10,7 +10,7 @@ import { serviceBookingHref } from "@/lib/site-config";
 /** Premium listino — real prices from catalog.ts, PRENOTA opens booking with service preselected. */
 export function ServiceListino() {
   return (
-    <div className="booking-listino">
+    <div className="booking-listino" id="listino">
       <h3 className="booking-listino-title font-serif">Listino</h3>
       {SERVICE_CATEGORIES.map((cat) => (
         <div key={cat} className="booking-listino-group">

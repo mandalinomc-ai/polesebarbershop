@@ -10,13 +10,14 @@ export function SalonVideo({ video, className = "salon-video-player" }: SalonVid
   return (
     <video
       className={className}
-      src={video.src}
       autoPlay
       muted
       loop
       playsInline
-      preload="metadata"
+      preload="auto"
       aria-label={video.alt}
-    />
+    >
+      <source src={video.src} type="video/mp4" />
+    </video>
   );
 }

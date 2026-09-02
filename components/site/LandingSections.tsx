@@ -12,9 +12,9 @@ export function LandingSections() {
       <VideoReelGrid />
 
       <section id="prenota" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow reveal">Servizi &amp; prenotazione</div>
-        <h2 className="section-title font-serif reveal reveal-d1">I nostri servizi</h2>
-        <div className="booking-layout-grid reveal">
+        <div className="eyebrow">Servizi &amp; prenotazione</div>
+        <h2 className="section-title font-serif">I nostri servizi</h2>
+        <div className="booking-layout-grid">
           <ServiceListino />
           <div className="booking-flow-wrap glass-card">
             <BookingSectionNote />

@@ -214,6 +214,9 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/gallery-grid/);
     expect(landing).not.toMatch(/fresha-/);
     expect(landing).toMatch(/ServiceListino/);
+    expect((landing.match(/<ServiceListino/g) || []).length).toBe(1);
+    expect(landing).not.toMatch(/id="listino"/);
+    expect(landing).not.toMatch(/id="services"/);
     expect(landing).not.toMatch(/hero-bg\.jpg/);
     expect(landing).not.toMatch(/brand-products\.jpg/);
     const videoIdx = landing.indexOf("VideoReelGrid");
@@ -240,6 +243,11 @@ describe("public copy vs official identity", () => {
     expect(hero).toMatch(/HERO_VIDEOS/);
     expect(hero).toMatch(/getHeroHeadline/);
     expect(hero).not.toMatch(/ScissorsIntro/);
+    expect(hero).not.toMatch(/hero-media reveal/);
+    const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
+    expect(listino).toMatch(/id="listino"/);
+    expect((listino.match(/id="listino"/g) || []).length).toBe(1);
+    expect(listino).toMatch(/Listino/);
   });
 
   it("shows live hero with booking CTA before and after opening", () => {
