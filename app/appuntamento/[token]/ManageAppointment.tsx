@@ -51,7 +51,7 @@ export function ManageAppointment({ token }: { token: string }) {
   }, [token]);
 
   async function cancel() {
-    if (!confirm("Vuoi davvero disdire questo appuntamento? Lo slot tornerà libero.")) return;
+    if (!confirm("Vuoi davvero disdire questo appuntamento? Il posto tornerà libero.")) return;
     setCancelling(true);
     setError("");
     try {
@@ -125,7 +125,7 @@ export function ManageAppointment({ token }: { token: string }) {
         <>
           <p className="booking-open-note" style={{ marginTop: "1.25rem" }}>
             Puoi disdire gratuitamente fino a {CANCEL_NOTICE_IT} prima.
-            Lo slot si libera e il promemoria di 30 minuti non parte. Oltre tale
+            Il posto si libera e il promemoria di 30 minuti non parte. Oltre tale
             termine chiama il {SITE.phone}.
           </p>
           <div className="success-actions" style={{ justifyContent: "stretch" }}>
@@ -159,7 +159,7 @@ export function ManageAppointment({ token }: { token: string }) {
       ) : (
         <>
           <p className="booking-open-note" style={{ marginTop: "1.25rem" }}>
-            Prenotazione annullata. Lo slot è di nuovo libero: il promemoria di
+            Prenotazione annullata. Il posto è di nuovo libero: il promemoria di
             30 minuti non parte. Apri il file .ics di disdetta per togliere
             l&apos;evento dal calendario.
           </p>

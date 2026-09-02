@@ -54,7 +54,7 @@ export default function PrivacyPage() {
           <p>
             Per disdire un appuntamento usa il link ricevuto via email
             (/appuntamento/…) oppure chiama il {SITE.phone}. La disdetta libera
-            lo slot e il promemoria di 30 minuti non parte.
+            il posto e il promemoria di 30 minuti non parte.
           </p>
         </div>
       </main>

@@ -32,7 +32,7 @@ export default function TermsPage() {
             Puoi disdire gratuitamente fino a {CANCEL_NOTICE_IT} prima
             dell&apos;appuntamento, dal link ricevuto via email
             (/appuntamento/…). Oltre tale termine chiama il {SITE.phone}. La
-            disdetta libera subito lo slot e annulla il promemoria di 30 minuti
+            disdetta libera subito il posto e annulla il promemoria di 30 minuti
             (file .ics di cancellazione). I no-show reiterati possono comportare
             la richiesta di un acconto per prenotazioni successive.
           </p>

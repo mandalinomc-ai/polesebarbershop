@@ -99,7 +99,7 @@ export const NOTIFY_WHATSAPP_MESSAGE =
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
 export const HERO_CTA = "Prenota il tuo appuntamento";
-export const HERO_SLOT_CTA = "Prenota il tuo slot";
+export const HERO_SLOT_CTA = "Prenota il tuo posto";
 export const HERO_MENU_CTA = "Vedi il menu";
 export const HERO_SENTENCE = "Precisione tecnica, stile contemporaneo.";
 export const HERO_LEAD =

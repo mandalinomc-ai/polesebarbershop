@@ -347,7 +347,7 @@ describe("public copy vs official identity", () => {
     expect(HERO_BEFORE_OPENING).toBe("Prenota il tuo appuntamento per l'apertura");
     expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
     expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe(HERO_CTA);
-    expect(HERO_SLOT_CTA).toBe("Prenota il tuo slot");
+    expect(HERO_SLOT_CTA).toBe("Prenota il tuo posto");
     expect(HERO_SENTENCE).toBe("Precisione tecnica, stile contemporaneo.");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/getHeroHeadline/);
