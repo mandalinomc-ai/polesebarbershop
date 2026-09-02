@@ -1379,13 +1379,15 @@ img, video { backface-visibility: hidden; }
 }
 
 .brand-logo--crest {
-  width: 58px;
+  width: auto;
   height: 58px;
-  border-radius: 50%;
-  object-fit: cover;
+  max-width: 96px;
+  object-fit: contain;
   object-position: center;
-  filter: invert(1);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  filter: brightness(0);
 }
 .header-logo-name {
   position: absolute;

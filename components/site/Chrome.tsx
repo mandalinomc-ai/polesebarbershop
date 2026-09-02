@@ -55,11 +55,11 @@ export function Header() {
       >
         <a href="/#hero" className="header-logo">
           <img
-            src="/assets/images/logo.png"
+            src="/assets/images/logo.svg"
             alt="Felice Polese — Felice Polese Barber Shop"
             className="brand-logo brand-logo--crest"
-            width={512}
-            height={331}
+            width={1115}
+            height={725}
           />
           <span className="header-logo-name">{SITE.name}</span>
         </a>
