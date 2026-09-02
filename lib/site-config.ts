@@ -11,7 +11,8 @@ export const SITE = {
   tagline: "MODERN BARBERING & FADE STUDIO",
   heroHeadline: "MODERN BARBERING & FADE STUDIO",
   siteUrl:
-    process.env.NEXT_PUBLIC_SITE_URL || "https://polesebarbershop.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://felicepolesebarbershop.vercel.app",
   address: "Corso Dante 45",
   addressFull: "Corso Dante 45 – 82100 Benevento (BN)",
   streetAddress: "Corso Dante 45",

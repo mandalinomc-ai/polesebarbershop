@@ -9,7 +9,7 @@
 # Required Vercel production env vars (Project → Settings → Environment Variables):
 #   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM,
 #   ADMIN_PASSWORD, ADMIN_EMAIL, OWNER_EMAIL,
-#   NEXT_PUBLIC_SITE_URL=https://polesebarbershop.vercel.app
+#   NEXT_PUBLIC_SITE_URL=https://felicepolesebarbershop.vercel.app
 
 name: Vercel production
 

@@ -1,46 +1,35 @@
 # DECISIONS — Felice Polese infrastructure
 
-**Updated:** 2026-09-02
+**Updated:** 2026-09-02 (client: use felice domain only)
 
-## D1 — Canonical public URL: `polesebarbershop.vercel.app`
+## D1 — The site to use is `felicepolesebarbershop.vercel.app`
 
-**Decision:** Production for GitHub `main` is the Vercel project **polesebarbershop** (`prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf`).
+**Decision:** Public URL is **https://felicepolesebarbershop.vercel.app** on Vercel project **`temporary-prompt-quasar-rndxhgh`**.
 
-As of 2026-09-02 this hostname **serves the current site** (autoAlias on). Share this URL.
+That project already has the marble look the client wants. We deploy **this repo** (booking + Maps Dante 45 + WhatsApp 351) onto that project — one production deploy — then delete the other Vercel projects.
 
-## D2 — Legacy hostname `felicepolesebarbershop.vercel.app`
+Do **not** keep using `polesebarbershop.vercel.app` as the public URL.
 
-**Decision:** Still attached to a **separate** Vercel project. Do not rebuild that app. After CLI login:
+## D2 — Delete leftover Vercel projects after the felice deploy
 
-```bash
-npx vercel alias set https://polesebarbershop.vercel.app felicepolesebarbershop.vercel.app
-```
+- `polesebarbershop` (Git-connected duplicate)
+- `temporary-express-magnolia-5pa4zjj` (junk)
 
-(`scripts/promote-live-domains.sh`)
+Script: `./scripts/publish-felice-project.sh` (needs `npx vercel login`).
 
-## D3 — Staged production was the outage
+## D3 — WhatsApp and Maps on that site
 
-Git built `main` on unique URLs while public aliases stayed on an old Dante-44 deploy. **`github.autoAlias: true`** in `vercel.json` made the next production Git deploy assign domains on the polesebarbershop project.
+Live felice URL currently has an old WhatsApp number and Maps to Dante 44. Repo source of truth:
 
-`master` is not the production branch (pushing it created Preview only).
+- WhatsApp: **+39 351 252 3087**
+- Maps: **Corso Dante 45**
 
-## D4 — GitHub Actions CLI is optional
+FABs already exist in `Chrome.tsx`. They go live on felice when this repo is deployed there.
 
-Skip the workflow when `VERCEL_TOKEN` is missing. Vercel Git is the source of production builds.
+## D4 — Booking
 
-## D5 — Do not change booking/design for deploy work
+Fresha wizard is already in the repo (`/#prenota` and `/prenota`). The felice URL 404s `/prenota` until this deploy. Real persist still needs Supabase env on **that** Vercel project.
 
-Honored. Booking, visuals, and Supabase schema were not modified in this pass.
+## D5 — Cloud CLI
 
-## D6 — Production env vars still required for real bookings
-
-The new project’s production deployment does **not** have `SUPABASE_*` / `RESEND_*` set. Until `./scripts/vercel-configure-production.sh` (or the dashboard) is run, the calendar is local-only.
-
-## D7 — URL strategy
-
-| URL | State 2026-09-02 |
-|-----|------------------|
-| `polesebarbershop.vercel.app` | Current `main` — use this |
-| Team `*.vercel.app` | Same production |
-| `felicepolesebarbershop.vercel.app` | Old site — alias still needed |
-| `polesebarbershop.it` | Future DNS + Resend |
+Deploy/delete of Vercel projects requires `npx vercel login` in this environment. Device OAuth cannot be completed by the agent alone.
