@@ -27,6 +27,8 @@ import {
   HERO_CALENDAR_DAYS,
   IS_COMING_SOON,
   NOTIFY_WHATSAPP_MESSAGE,
+  getSalonNotifyWhatsApp,
+  SALON_NOTIFY_WHATSAPP_FALLBACK,
 } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out", ".vercel"]);
@@ -69,12 +71,16 @@ describe("public copy vs official identity", () => {
 
   it("uses the official phone, address, CF and P.IVA", () => {
     expect(SITE.phone).toBe("+39 351 252 3087");
+    expect(SITE.whatsapp).toBe("393512523087");
     expect(SITE.address).toBe("Corso Dante 45");
     expect(SITE.openingDate).toBe("2026-09-07");
     expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
     expect(SITE.vatNumber).toBe("01894030624");
     expect(SITE.previousAddress).toBe("ex Via Ungaretti 6");
     expect(SITE.pricesIncludeVat).toMatch(/IVA inclusa/);
+    expect(getSalonNotifyWhatsApp()).toBe(SALON_NOTIFY_WHATSAPP_FALLBACK);
+    expect(getSalonNotifyWhatsApp()).toBe("+393270156225");
+    expect(getSalonNotifyWhatsApp()).not.toBe("+393512523087");
   });
 
   it("uses Felice Polese Gmail as salon email, not the GitHub Gmail", () => {
@@ -87,7 +93,6 @@ describe("public copy vs official identity", () => {
   it("has no leftover old phone, wrong address, or banned copy in source", () => {
     const files = walk(process.cwd());
     const banned = [
-      /327\s*015\s*6225/,
       /Corso Dante Alighieri, 44/,
       /Corso Dante Alighieri 44/,
       /Combo premium/,
@@ -113,6 +118,14 @@ describe("public copy vs official identity", () => {
       }
     }
     expect(hits).toEqual([]);
+    const publicUi = files.filter((file) =>
+      /\/(components\/site|components\/booking\/FreshaBookingFlow)/.test(file),
+    );
+    const publicHits: string[] = [];
+    for (const file of publicUi) {
+      if (/327\s*015\s*6225/.test(readFileSync(file, "utf8"))) publicHits.push(file);
+    }
+    expect(publicHits).toEqual([]);
   });
 
   it("uses a generic salon contact message without specialist consult language", () => {
@@ -178,10 +191,9 @@ describe("public copy vs official identity", () => {
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/getWhatsAppUrl/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
-    expect(wizard).toMatch(/getBookingConfirmWhatsAppUrl/);
     expect(wizard).toMatch(/postSalonBookingRelay/);
-    expect(wizard).toMatch(/Conferma su WhatsApp/);
-    expect(wizard).toMatch(/Ti confermiamo su WhatsApp/);
+    expect(wizard).not.toMatch(/Conferma su WhatsApp/);
+    expect(wizard).toMatch(/Prenotazione confermata/);
     expect(wizard).not.toMatch(/twilio/i);
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);

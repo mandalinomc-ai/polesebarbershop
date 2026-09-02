@@ -1,10 +1,12 @@
 import { Resend } from "resend";
 import {
+  isGmailSmtpConfigured,
   isMailgunConfigured,
   isResendAllowedRecipient,
   isResendTestRecipientError,
   isSalonFormRelayEnabled,
   sendViaFormSubmit,
+  sendViaGmail,
   sendViaMailgun,
 } from "./mail-providers";
 import {
@@ -122,9 +124,25 @@ export async function sendEmail(opts: {
   html: string;
   text?: string;
   ics?: { filename: string; content: string };
-  /** Salon alerts: Mailgun, then Resend, then FormSubmit if Resend test-mode blocks Felice. */
+  /** Salon alerts: Gmail/Mailgun, then Resend, then FormSubmit if Resend test-mode blocks Felice. */
   salonFallback?: boolean;
 }): Promise<EmailSendResult> {
+  if (isGmailSmtpConfigured()) {
+    const gmail = await sendViaGmail({
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      replyTo: getAdminEmail(),
+      ics: opts.ics,
+    });
+    if (gmail.ok) {
+      console.info("[email] inviata via Gmail", { to: opts.to, subject: opts.subject, id: gmail.id });
+      return { ok: true, id: gmail.id };
+    }
+    logEmailError("Gmail ha rifiutato l'invio", { to: opts.to, error: gmail.error });
+  }
+
   if (isMailgunConfigured()) {
     const mailgun = await sendViaMailgun({
       to: opts.to,
@@ -201,18 +219,24 @@ export function customerConfirmEmail(opts: {
   time: string;
   manageUrl?: string;
   priceLabel?: string;
+  durationLabel?: string;
 }) {
   const manage = opts.manageUrl?.trim() || "";
+  const price = opts.priceLabel?.trim() || "";
+  const duration = opts.durationLabel?.trim() || "";
   const textLines = [
     `Ciao ${opts.firstName}, la tua prenotazione da ${SITE.name} è confermata! 💈`,
     "",
     `📅 Data e Ora: ${opts.date} alle ${opts.time}`,
     `✂️ Servizio: ${opts.service}`,
+    price ? `💶 Prezzo: ${price}` : "",
+    duration ? `⏱ Durata: ${duration}` : "",
     `👤 Barber: ${opts.barber}`,
     `📍 Dove siamo: ${CUSTOMER_CONFIRM_ADDRESS}`,
+    `📞 Telefono salone: ${SITE.phone}`,
     "",
     `Per modifiche o disdette ti preghiamo di avvisarci con almeno ${CANCEL_NOTICE_IT} di anticipo.`,
-  ];
+  ].filter((line) => line !== "");
   if (manage) {
     textLines.push("", `Gestisci o disdici: ${manage}`);
   }
@@ -224,6 +248,8 @@ export function customerConfirmEmail(opts: {
   const barber = escapeHtml(opts.barber);
   const date = escapeHtml(opts.date);
   const time = escapeHtml(opts.time);
+  const priceHtml = price ? `💶 Prezzo: <strong>${escapeHtml(price)}</strong><br/>` : "";
+  const durationHtml = duration ? `⏱ Durata: <strong>${escapeHtml(duration)}</strong><br/>` : "";
   const manageHref = manage ? escapeHtml(manage) : "";
   const manageHtml = manage
     ? `<p style="margin:20px 0 0;"><a href="${manageHref}" style="color:#C9A962;">Gestisci o disdici</a></p>`
@@ -237,8 +263,9 @@ export function customerConfirmEmail(opts: {
       <p style="margin:24px 0 8px;letter-spacing:0.18em;text-transform:uppercase;font-size:11px;color:#C9A962;">Dettagli</p>
       <p style="line-height:1.8;margin:0;">📅 Data e Ora: <strong>${date}</strong> alle <strong>${time}</strong><br/>
       ✂️ Servizio: <strong>${service}</strong><br/>
-      👤 Barber: <strong>${barber}</strong><br/>
-      📍 Dove siamo: ${CUSTOMER_CONFIRM_ADDRESS}</p>
+      ${priceHtml}${durationHtml}👤 Barber: <strong>${barber}</strong><br/>
+      📍 Dove siamo: ${CUSTOMER_CONFIRM_ADDRESS}<br/>
+      📞 Telefono salone: ${SITE.phone}</p>
       <p style="margin-top:24px;">Per modifiche o disdette ti preghiamo di avvisarci con almeno <strong>${CANCEL_NOTICE_IT}</strong> di anticipo.</p>
       ${manageHtml}
       <p style="margin-top:24px;font-size:18px;">Ti aspettiamo! 🔥</p>
@@ -263,7 +290,6 @@ export function ownerNewBookingEmail(opts: {
 }) {
   const notes = opts.notes?.trim() || "";
   const manage = opts.manageUrl?.trim() || "";
-  const customerWa = opts.customerWhatsAppUrl?.trim() || "";
   const textLines = [
     "NUOVA PRENOTAZIONE",
     "",
@@ -280,9 +306,6 @@ export function ownerNewBookingEmail(opts: {
   ];
   if (notes) textLines.push(`Note: ${notes}`);
   if (manage) textLines.push(`Gestisci: ${manage}`);
-  if (customerWa) {
-    textLines.push("", `Scrivi al cliente su WhatsApp per confermare: ${customerWa}`);
-  }
   const text = textLines.join("\n");
 
   const row = (label: string, value: string) =>
@@ -306,7 +329,6 @@ export function ownerNewBookingEmail(opts: {
         ${row("Ora", opts.time)}
         ${notes ? row("Note", notes) : ""}
       </table>
-      ${customerWa ? `<p style="margin-top:20px;"><a href="${escapeHtml(customerWa)}" style="display:inline-block;padding:12px 18px;background:#C9A962;color:#0B0B0B;text-decoration:none;">Scrivi al cliente su WhatsApp</a></p>` : ""}
       ${manage ? `<p style="margin-top:20px;"><a href="${escapeHtml(manage)}" style="color:#C9A962;">Apri / gestisci prenotazione</a></p>` : ""}`),
   };
 }

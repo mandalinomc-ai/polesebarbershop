@@ -28,7 +28,6 @@ import {
   BOOKING_UI_DAYS,
   CANCEL_NOTICE_IT,
   SITE,
-  getBookingConfirmWhatsAppUrl,
   getWhatsAppUrl,
   readBookingDateFromLocation,
   readBookingServiceFromLocation,
@@ -114,8 +113,8 @@ export function FreshaBookingFlow({
     warnings: string[];
     emailSent: boolean;
     persisted: boolean;
-    confirmViaWhatsApp: boolean;
     customerWhatsAppSent: boolean;
+    salonWhatsAppSent: boolean;
     ownerNotified: boolean;
     salonRelay: SalonRelayPayload | null;
   } | null>(null);
@@ -292,8 +291,8 @@ export function FreshaBookingFlow({
         warnings?: string[];
         emailSent?: boolean;
         persisted?: boolean;
-        confirmViaWhatsApp?: boolean;
         customerWhatsAppSent?: boolean;
+        salonWhatsAppSent?: boolean;
         ownerNotified?: boolean;
         salonRelay?: SalonRelayPayload | null;
       };
@@ -302,15 +301,6 @@ export function FreshaBookingFlow({
         if (res.status === 409) void loadSlots();
         return;
       }
-      const salonWa = getBookingConfirmWhatsAppUrl({
-        firstName,
-        phone,
-        service: totals.names,
-        dateLabel: formatItalianDate(date),
-        timeLabel: slot?.label || "",
-        barberName: json.barberName || barber?.name,
-      });
-      const viaWhatsApp = Boolean(json.confirmViaWhatsApp) || !json.emailSent;
       const salonRelay = json.salonRelay || null;
       setSuccess({
         manageUrl: json.manageUrl || "#",
@@ -321,8 +311,8 @@ export function FreshaBookingFlow({
         warnings: json.warnings || (json.error ? [json.error] : []),
         emailSent: Boolean(json.emailSent),
         persisted: Boolean(json.persisted),
-        confirmViaWhatsApp: viaWhatsApp,
         customerWhatsAppSent: Boolean(json.customerWhatsAppSent),
+        salonWhatsAppSent: Boolean(json.salonWhatsAppSent),
         ownerNotified: Boolean(json.ownerNotified),
         salonRelay,
       });
@@ -357,33 +347,22 @@ export function FreshaBookingFlow({
           <p className="eyebrow">Confermata</p>
           <h3 className="font-serif">Grazie, {firstName}.</h3>
           <p className="prose">
-            Prenotazione per <strong>{totals.names}</strong> con{" "}
+            Prenotazione confermata per <strong>{totals.names}</strong> con{" "}
             <strong>{success.barberName}</strong> il {formatItalianDate(date)}{" "}
             alle {slot?.label} · {totals.priceLabel}.
           </p>
           <p className="prose">
-            Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file
-            .ics ha un solo promemoria: 30 minuti prima. Nessun avviso a 1 giorno
-            o a 1 ora.
+            {success.emailSent
+              ? "Ti abbiamo inviato l'email di conferma."
+              : "L'email di conferma non è partita in automatico."}{" "}
+            {success.customerWhatsAppSent
+              ? "Ti abbiamo inviato anche un WhatsApp al numero che hai lasciato."
+              : null}
           </p>
-          {success.emailSent ? (
-            <p className="booking-open-note">
-              Ti abbiamo inviato una email di conferma con l&apos;allegato .ics.
-            </p>
-          ) : success.customerWhatsAppSent ? (
-            <p className="booking-open-note">
-              Ti confermiamo su WhatsApp al numero che hai lasciato
-              {phone.trim() ? ` (${phone.trim()})` : ""}.
-            </p>
-          ) : (
-            <p className="booking-open-note">
-              Non siamo riusciti a inviarti l&apos;email di conferma. Ti confermiamo
-              su WhatsApp
-              {phone.trim()
-                ? ` al numero che hai lasciato (${phone.trim()}). Felice ti scrive da ${SITE.phone}.`
-                : ". Scrivi al salone qui sotto: Felice vede la prenotazione e ti risponde."}
-            </p>
-          )}
+          <p className="prose">
+            Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file
+            .ics ha un solo promemoria: 30 minuti prima.
+          </p>
           <div className="success-actions">
             {success.ics ? (
               <button
@@ -409,21 +388,6 @@ export function FreshaBookingFlow({
                 Scarica .ics
               </a>
             ) : null}
-            <a
-              className={success.confirmViaWhatsApp ? "btn btn-gold" : "btn btn-outline"}
-              href={getBookingConfirmWhatsAppUrl({
-                firstName,
-                phone,
-                service: totals.names,
-                dateLabel: formatItalianDate(date),
-                timeLabel: slot?.label || "",
-                barberName: success.barberName,
-              })}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {success.confirmViaWhatsApp ? "Conferma su WhatsApp" : "WhatsApp salone"}
-            </a>
           </div>
           {success.warnings
             .filter((w) => !/testing emails|invalid_access|403/i.test(w))
@@ -845,25 +809,12 @@ export function FreshaBookingFlow({
           </p>
         ) : null}
         <a
-          className="btn btn-gold appointment-sidebar-wa"
-          href={
-            selectedIds.length
-              ? getBookingConfirmWhatsAppUrl({
-                  firstName: firstName.trim() || undefined,
-                  phone: phone.trim() || undefined,
-                  service: totals.names,
-                  dateLabel: slot ? formatItalianDate(date) : "—",
-                  timeLabel: slot?.label || "—",
-                  barberName: barber?.name,
-                })
-              : getWhatsAppUrl(
-                  `Ciao, vorrei prenotare un appuntamento da ${SITE.name}.`,
-                )
-          }
+          className="btn btn-outline appointment-sidebar-wa"
+          href={getWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"
         >
-          WhatsApp
+          Aiuto WhatsApp
         </a>
       </aside>
     </div>

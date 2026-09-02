@@ -1,4 +1,5 @@
-import { getAdminEmail, isResendTestFrom } from "./site-config";
+import nodemailer from "nodemailer";
+import { getAdminEmail, isResendTestFrom, SITE } from "./site-config";
 
 const FORMSUBMIT_HOST = ["formsubmit", "co"].join(".");
 
@@ -36,8 +37,61 @@ export function isResendAllowedRecipient(to: string): boolean {
 }
 
 export type ProviderSendResult =
-  | { ok: true; id?: string; provider: "mailgun" | "formsubmit" }
-  | { ok: false; error: string; provider: "mailgun" | "formsubmit" };
+  | { ok: true; id?: string; provider: "gmail" | "mailgun" | "formsubmit" }
+  | { ok: false; error: string; provider: "gmail" | "mailgun" | "formsubmit" };
+
+export function gmailSmtpUser(): string {
+  return process.env.GMAIL_USER?.trim() || getAdminEmail();
+}
+
+/** Gmail "password per le app" — sends as the salon inbox to any recipient. */
+export function isGmailSmtpConfigured(): boolean {
+  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+  const user = gmailSmtpUser();
+  return pass.length >= 8 && user.includes("@");
+}
+
+export async function sendViaGmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  replyTo?: string;
+  ics?: { filename: string; content: string };
+}): Promise<ProviderSendResult> {
+  if (!isGmailSmtpConfigured()) {
+    return { ok: false, provider: "gmail", error: "Gmail non configurato." };
+  }
+  const user = gmailSmtpUser();
+  const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+    });
+    const info = await transporter.sendMail({
+      from: `${SITE.name} <${user}>`,
+      to: opts.to,
+      replyTo: opts.replyTo || getAdminEmail(),
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      attachments: opts.ics
+        ? [{
+            filename: opts.ics.filename,
+            content: opts.ics.content,
+            contentType: "text/calendar; charset=utf-8",
+          }]
+        : undefined,
+    });
+    return { ok: true, provider: "gmail", id: info.messageId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invio Gmail fallito";
+    return { ok: false, provider: "gmail", error: message };
+  }
+}
 
 export async function sendViaMailgun(opts: {
   to: string;
