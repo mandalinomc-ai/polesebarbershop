@@ -8,13 +8,21 @@ C:\Users\pcgam\Desktop\progetti CURSOR\siti-web\polesebarbershop\public\video\
 
 The site serves videos from `public\assets\video\`. The URL `/video/...` is rewritten to `/assets/video/...` — do **not** leave files only under `public\video\`.
 
-## Quick sync (PowerShell)
+## Quick sync
 
-From the repo root — **no manual rename needed**:
+From the repo root — **no manual rename needed**.
+
+**Windows (PowerShell):**
 
 ```powershell
 cd "C:\Users\pcgam\Desktop\progetti CURSOR\siti-web\polesebarbershop"
 .\scripts\sync-videos.ps1
+```
+
+**Linux / macOS / Cloud VM (bash):**
+
+```bash
+./scripts/sync-videos.sh
 ```
 
 The script reads your original filenames from `public\video\` and copies them into `public\assets\video\` with URL-safe names.
@@ -42,7 +50,9 @@ git push
 | `burst fade` | `public\assets\video\burst-fade.mp4` | `/video/burst-fade.mp4` |
 | **`video felice polese bio`** | **`public\assets\video\video-felice-polese-bio.mp4`** | **`/video/video-felice-polese-bio.mp4`** (About section beside bio) |
 | `meches` | *(optional — not wired)* | — |
-| `decolorazione cute` | *(optional — not wired)* | — |
+| `decolorazione cute` | `public\assets\video\decolorazione-cute.mp4` | `/video/decolorazione-cute.mp4` (Decolorazione Cutanea card) |
+| `barba-pro.jpg` | `public\images\barba-pro.jpg` | `/images/barba-pro.jpg` (Barba Pro card) |
+| `tintura-barba.jpg` | `public\images\tintura-barba.jpg` | `/images/tintura-barba.jpg` (Tintura Barba card) |
 
 Filenames may appear without `.mp4` in Explorer; the sync script checks both forms.
 
