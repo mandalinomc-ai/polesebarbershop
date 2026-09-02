@@ -9,7 +9,7 @@ const LINKS = [
   { href: "/#prenota", label: "Menu" },
   { href: "/#prenota", label: "Consulenza" },
   { href: "/#gallery", label: "Lab" },
-  { href: "/#gallery", label: "Fade" },
+  { href: "/#listino", label: "Fade" },
   { href: "/#contact", label: "Orari" },
   { href: "/#contact", label: "Contatti" },
 ];

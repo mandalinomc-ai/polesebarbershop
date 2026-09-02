@@ -183,7 +183,7 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/Hero/);
     expect(page).not.toMatch(/ScissorsIntro/);
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(landing).not.toMatch(/id="about"/);
+    expect(landing).toMatch(/id="about"/);
     expect(landing).not.toMatch(/Tradizione/);
     expect(landing).not.toMatch(/id="services"/);
     expect(landing).toMatch(/id="prenota"/);
@@ -197,20 +197,23 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/section-dark/);
   });
 
-  it("keeps video grid then listino then contact, without the leftover about block", () => {
+  it("keeps bio+Felice video, then reels, then one listino and contact", () => {
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(landing).not.toMatch(/Consulenza in sede/);
     expect(landing).not.toMatch(/id="consulenza"/);
-    expect(landing).not.toMatch(/id="about"/);
-    expect(landing).not.toMatch(/Barber Match 2023/);
+    expect(landing).toMatch(/id="about"/);
+    expect(landing).toMatch(/Barber Match 2023/);
+    expect(landing).toMatch(/giovane talento/i);
     expect(landing).not.toMatch(/Tradizione/);
     expect(landing).not.toMatch(/Santa Maria degli Angeli/);
     const catalog = readFileSync(join(process.cwd(), "lib/catalog.ts"), "utf8");
     expect(catalog).toMatch(/Consulenza Tricologica/i);
+    expect(catalog).toMatch(/Razor Taper/);
+    expect(catalog).toMatch(/Skin Fade/);
     expect(landing).toMatch(/VideoReelGrid/);
-    expect(landing).not.toMatch(/FELICE_WORKING_VIDEO/);
-    expect(landing).not.toMatch(/about-video/);
-    expect(landing).not.toMatch(/felice-video-hero/);
+    expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
+    expect(landing).toMatch(/about-video/);
+    expect(landing).toMatch(/felice-video-hero/);
     expect(landing).not.toMatch(/gallery-grid/);
     expect(landing).not.toMatch(/fresha-/);
     expect(landing).toMatch(/ServiceListino/);
@@ -220,10 +223,12 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/id="services"/);
     expect(landing).not.toMatch(/hero-bg\.jpg/);
     expect(landing).not.toMatch(/brand-products\.jpg/);
-    const videoIdx = landing.indexOf("VideoReelGrid");
+    const aboutIdx = landing.indexOf('id="about"');
+    const videoIdx = landing.indexOf("<VideoReelGrid");
     const prenotaIdx = landing.indexOf('id="prenota"');
     const contactIdx = landing.indexOf('id="contact"');
-    expect(videoIdx).toBeGreaterThan(-1);
+    expect(aboutIdx).toBeGreaterThan(-1);
+    expect(videoIdx).toBeGreaterThan(aboutIdx);
     expect(prenotaIdx).toBeGreaterThan(videoIdx);
     expect(contactIdx).toBeGreaterThan(prenotaIdx);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
@@ -240,6 +245,7 @@ describe("public copy vs official identity", () => {
     expect(reel).not.toMatch(/reveal/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/href: "\/#gallery", label: "Studio"/);
+    expect(chrome).toMatch(/href: "\/#listino", label: "Fade"/);
     expect(chrome).not.toMatch(/\/#about/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/hero-editorial/);

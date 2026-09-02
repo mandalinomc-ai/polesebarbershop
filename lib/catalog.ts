@@ -11,10 +11,11 @@ export const SHOP_HOURS: Record<number, DayHours> = {
   6: { open: "09:30", close: "20:00" },
 };
 
-export type ServiceCategory = "taglio" | "barba" | "combo" | "tecnici" | "consulenza";
+export type ServiceCategory = "taglio" | "sfumature" | "barba" | "combo" | "tecnici" | "consulenza";
 
 export const SERVICE_CATEGORY_LABEL: Record<ServiceCategory, string> = {
   taglio: "Taglio Normale / Sartoriale",
+  sfumature: "Sfumature",
   barba: "Barba",
   combo: "Combo",
   tecnici: "Trattamenti Tecnici",
@@ -52,6 +53,26 @@ export const SERVICES: Service[] = [
     isVariablePrice: false,
     durationMin: 25,
     description: "Taglio con shampoo e maschera",
+  },
+  {
+    id: "razor-taper",
+    name: "Razor Taper",
+    category: "sfumature",
+    priceEuro: 20,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 30,
+    description: "Sfumatura taper rifinita al rasoio",
+  },
+  {
+    id: "skin-fade",
+    name: "Skin Fade",
+    category: "sfumature",
+    priceEuro: 25,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 35,
+    description: "Sfumatura a pelle, fade ad alta definizione",
   },
   {
     id: "barba-pro",
@@ -147,6 +168,7 @@ export const SERVICES: Service[] = [
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
   "taglio",
+  "sfumature",
   "barba",
   "combo",
   "tecnici",

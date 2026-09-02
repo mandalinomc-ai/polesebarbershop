@@ -66,8 +66,8 @@ describe("mobile QA (390px)", () => {
     expect(hero).toMatch(/hero-editorial/);
     expect(landing).not.toMatch(/gallery-grid/);
     expect(landing).not.toMatch(/fresha-/);
-    expect(landing).not.toMatch(/id="about"/);
-    expect(landing).not.toMatch(/FELICE_WORKING_VIDEO/);
+    expect(landing).toMatch(/id="about"/);
+    expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
     expect(landing).toMatch(/VideoReelGrid/);
     expect(landing).toMatch(/ServiceListino/);
     expect(hero).toMatch(/HERO_VIDEOS/);

@@ -488,6 +488,12 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+.badge-match-inline {
+  position: static;
+  display: inline-block;
+  left: auto;
+  bottom: auto;
+}
 
 /* Services */
 .cat-label {

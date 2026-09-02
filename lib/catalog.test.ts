@@ -22,6 +22,8 @@ describe("catalog", () => {
     ).toEqual([
       { id: "taglio-standard", name: "Taglio Normale", category: "taglio", priceEuro: 15, priceMaxEuro: null, durationMin: 30 },
       { id: "taglio-pro", name: "Taglio Sartoriale", category: "taglio", priceEuro: 50, priceMaxEuro: null, durationMin: 25 },
+      { id: "razor-taper", name: "Razor Taper", category: "sfumature", priceEuro: 20, priceMaxEuro: null, durationMin: 30 },
+      { id: "skin-fade", name: "Skin Fade", category: "sfumature", priceEuro: 25, priceMaxEuro: null, durationMin: 35 },
       { id: "barba-pro", name: "Barba", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20 },
       { id: "barba-standard", name: "Rifinitura barba", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
       { id: "combo-classico", name: "Combo Taglio + Barba", category: "combo", priceEuro: 30, priceMaxEuro: null, durationMin: 45 },
@@ -50,6 +52,19 @@ describe("catalog", () => {
   it("includes Taglio Sartoriale and Combo services", () => {
     expect(SERVICES.some((s) => /sartoriale/i.test(s.name))).toBe(true);
     expect(SERVICES.some((s) => s.category === "combo")).toBe(true);
+  });
+
+  it("lists Razor Taper and Skin Fade sfumature in the listino", () => {
+    const razor = SERVICES.find((s) => s.id === "razor-taper")!;
+    const fade = SERVICES.find((s) => s.id === "skin-fade")!;
+    expect(razor.name).toBe("Razor Taper");
+    expect(razor.category).toBe("sfumature");
+    expect(razor.priceEuro).toBe(20);
+    expect(formatPrice(razor)).toBe("20 €");
+    expect(fade.name).toBe("Skin Fade");
+    expect(fade.category).toBe("sfumature");
+    expect(fade.priceEuro).toBe(25);
+    expect(formatPrice(fade)).toBe("25 €");
   });
 
   it("lists Consulenza Tricologica as Gratuita", () => {
