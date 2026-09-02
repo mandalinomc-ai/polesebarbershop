@@ -14,12 +14,10 @@ import {
   SALONE_GENERALE_VIDEO,
   TAGLIO_VIDEOS,
   VIDEO_BASE,
-  VIDEO_HERO_BASE,
   VIDEO_REELS,
 } from "./site-videos";
 
 const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
-const HERO_VIDEO_DIR = join(process.cwd(), "public", "assets", "videos");
 
 describe("site-videos", () => {
   it("defines six service reels plus general salon video under /video/", () => {
@@ -92,8 +90,9 @@ describe("site-videos", () => {
     ]);
   });
 
-  it("points the bio clip at public/assets/videos/felice-working.mp4", () => {
-    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_HERO_BASE}/${FELICE_WORKING_FILENAME}`);
-    expect(existsSync(HERO_VIDEO_DIR), `missing folder ${HERO_VIDEO_DIR}`).toBe(true);
+  it("points the bio clip at public/assets/video/video-felice-polese-bio.mp4", () => {
+    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_BASE}/video-felice-polese-bio.mp4`);
+    expect(FELICE_WORKING_FILENAME).toBe("video-felice-polese-bio.mp4");
+    expect(existsSync(VIDEO_DIR), `missing folder ${VIDEO_DIR}`).toBe(true);
   });
 });

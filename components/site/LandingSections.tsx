@@ -17,7 +17,7 @@ const FELICE_BIO_VIDEO_PATH = join(
   process.cwd(),
   "public",
   "assets",
-  "videos",
+  "video",
   FELICE_WORKING_FILENAME,
 );
 

@@ -7,8 +7,7 @@
 
 param(
     [string]$SourceDir = "$PSScriptRoot\..\public\video",
-    [string]$ReelDir = "$PSScriptRoot\..\public\assets\video",
-    [string]$BioDir = "$PSScriptRoot\..\public\assets\videos"
+    [string]$ReelDir = "$PSScriptRoot\..\public\assets\video"
 )
 
 $ErrorActionPreference = "Stop"
@@ -57,14 +56,13 @@ $Mappings = [ordered]@{
     "razor fade"             = Join-Path $ReelDir "razor-fade.mp4"
     "taper fade"             = Join-Path $ReelDir "taper-fade.mp4"
     "burst fade"             = Join-Path $ReelDir "burst-fade.mp4"
-    "video felice polese bio" = Join-Path $BioDir "felice-working.mp4"
+    "video felice polese bio" = Join-Path $ReelDir "video-felice-polese-bio.mp4"
 }
 
 Write-Host ""
 Write-Host "Salon video sync"
 Write-Host "  Source : $SourceDir"
-Write-Host "  Reels  : $ReelDir"
-Write-Host "  Bio    : $BioDir"
+Write-Host "  Dest   : $ReelDir"
 Write-Host ""
 
 if (-not (Test-Path -LiteralPath $SourceDir)) {
@@ -89,6 +87,6 @@ Write-Host ""
 Write-Host "Done: $copied copied, $skipped skipped."
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  git add public/assets/video public/assets/videos"
+Write-Host "  git add public/assets/video"
 Write-Host "  git commit -m \"Add real salon videos\""
 Write-Host "  git push"
