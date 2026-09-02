@@ -29,6 +29,7 @@ import {
 } from "@/lib/site-config";
 import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
+import { postSalonBookingRelay, type SalonRelayPayload } from "@/lib/salon-relay-client";
 
 const STEPS = ["Servizi", "Barbiere", "Data e ora", "I tuoi dati", "Conferma"] as const;
 
@@ -98,6 +99,7 @@ export function FreshaBookingFlow({
     confirmViaWhatsApp: boolean;
     customerWhatsAppSent: boolean;
     ownerNotified: boolean;
+    salonRelay: SalonRelayPayload | null;
   } | null>(null);
 
   const selectedServices = useMemo(
@@ -253,6 +255,7 @@ export function FreshaBookingFlow({
         confirmViaWhatsApp?: boolean;
         customerWhatsAppSent?: boolean;
         ownerNotified?: boolean;
+        salonRelay?: SalonRelayPayload | null;
       };
       if (!res.ok && !json.ics) {
         setSubmitError(json.error || "Prenotazione non riuscita.");
@@ -268,6 +271,7 @@ export function FreshaBookingFlow({
         barberName: json.barberName || barber?.name,
       });
       const viaWhatsApp = Boolean(json.confirmViaWhatsApp) || !json.emailSent;
+      const salonRelay = json.salonRelay || null;
       setSuccess({
         manageUrl: json.manageUrl || "#",
         barberName: json.barberName || barber?.name || "",
@@ -280,7 +284,11 @@ export function FreshaBookingFlow({
         confirmViaWhatsApp: viaWhatsApp,
         customerWhatsAppSent: Boolean(json.customerWhatsAppSent),
         ownerNotified: Boolean(json.ownerNotified),
+        salonRelay,
       });
+      if (salonRelay && !json.ownerNotified) {
+        void postSalonBookingRelay(salonRelay);
+      }
       if (viaWhatsApp) {
         window.setTimeout(() => {
           window.open(salonWa, "_blank", "noopener,noreferrer");

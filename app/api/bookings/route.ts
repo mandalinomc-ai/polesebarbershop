@@ -4,7 +4,7 @@ import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirs
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
-import { SITE, getCustomerConfirmMessage, getSalonToCustomerWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
+import { SITE, getAdminEmail, getCustomerConfirmMessage, getSalonToCustomerWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
 import { sendCustomerWhatsApp } from "@/lib/whatsapp-outbound";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
@@ -191,6 +191,23 @@ export async function POST(request: Request) {
     confirmViaWhatsApp: !emails.customer.ok,
     customerWhatsAppSent,
     customerWhatsAppUrl: customerWhatsAppUrl || null,
+    salonRelay: emails.owner.ok
+      ? null
+      : {
+          to: getAdminEmail(),
+          subject: `NUOVA PRENOTAZIONE — ${body.firstName} ${body.lastName}`,
+          message: [
+            "NUOVA PRENOTAZIONE",
+            `Nome: ${body.firstName} ${body.lastName}`,
+            `Telefono: ${body.phone}`,
+            `Email: ${body.email}`,
+            `Servizio: ${totals.names}`,
+            `Barbiere: ${barberName}`,
+            `Quando: ${dateLabel} alle ${timeLabel}`,
+            customerWhatsAppUrl ? `WhatsApp cliente: ${customerWhatsAppUrl}` : "",
+            `Gestisci: ${manageUrl}`,
+          ].filter(Boolean).join("\n"),
+        },
     appointmentId,
     manageToken,
     manageUrl,

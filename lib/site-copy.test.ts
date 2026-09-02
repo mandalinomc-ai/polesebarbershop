@@ -178,6 +178,7 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/getWhatsAppUrl/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/getBookingConfirmWhatsAppUrl/);
+    expect(wizard).toMatch(/postSalonBookingRelay/);
     expect(wizard).toMatch(/Conferma su WhatsApp/);
     expect(wizard).toMatch(/Ti confermiamo su WhatsApp/);
     expect(wizard).not.toMatch(/twilio/i);

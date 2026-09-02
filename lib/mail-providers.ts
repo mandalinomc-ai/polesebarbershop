@@ -134,28 +134,59 @@ export async function sendViaFormSubmit(opts: {
       }),
     });
     const raw = await res.text();
-    let parsed: { success?: string; message?: string; error?: string } = {};
-    try {
-      parsed = JSON.parse(raw) as typeof parsed;
-    } catch {
-      /* ignore */
+    if (res.ok && !/just a moment|cloudflare/i.test(raw)) {
+      let parsed: { success?: string; message?: string; error?: string } = {};
+      try {
+        parsed = JSON.parse(raw) as typeof parsed;
+      } catch {
+        /* HTML thank-you still counts as delivered/activation */
+      }
+      const note = `${parsed.success || ""} ${parsed.message || ""}`.toLowerCase();
+      if (/activat|confirm your email|check your email/.test(note)) {
+        console.warn("[email] relay salone: prima attivazione, Felice deve cliccare il link nella mail", {
+          to: opts.to,
+        });
+      }
+      return { ok: true, provider: "formsubmit" };
     }
-    if (!res.ok) {
-      return {
-        ok: false,
-        provider: "formsubmit",
-        error: parsed.message || parsed.error || `Relay HTTP ${res.status}`,
-      };
-    }
-    const note = `${parsed.success || ""} ${parsed.message || ""}`.toLowerCase();
-    if (/activat|confirm your email|check your email/.test(note)) {
-      console.warn("[email] relay salone: prima attivazione, Felice deve cliccare il link nella mail", {
-        to: opts.to,
-      });
-    }
-    return { ok: true, provider: "formsubmit" };
+    return sendViaFormSubmitUrlEncoded(opts, raw, res.status);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Relay salone fallito";
+    return sendViaFormSubmitUrlEncoded(opts, error instanceof Error ? error.message : "Relay salone fallito", 0);
+  }
+}
+
+async function sendViaFormSubmitUrlEncoded(
+  opts: { to: string; subject: string; text: string },
+  previousError: string,
+  previousStatus: number,
+): Promise<ProviderSendResult> {
+  try {
+    const body = new URLSearchParams({
+      _subject: opts.subject,
+      _template: "box",
+      _captcha: "false",
+      message: opts.text,
+    });
+    const res = await fetch(`https://${FORMSUBMIT_HOST}/${encodeURIComponent(opts.to.trim().toLowerCase())}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "text/html,application/json",
+      },
+      body,
+      redirect: "follow",
+    });
+    const raw = await res.text();
+    if (res.ok && !/just a moment|cloudflare/i.test(raw)) {
+      return { ok: true, provider: "formsubmit" };
+    }
+    return {
+      ok: false,
+      provider: "formsubmit",
+      error: previousError?.slice(0, 180) || `Relay HTTP ${previousStatus || res.status}`,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : previousError;
     return { ok: false, provider: "formsubmit", error: message };
   }
 }

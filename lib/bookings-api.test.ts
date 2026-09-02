@@ -73,6 +73,7 @@ describe("POST /api/bookings", () => {
       persisted: boolean;
       emailSent: boolean;
       confirmViaWhatsApp?: boolean;
+      salonRelay?: { to?: string; subject: string; message: string } | null;
       ics: string;
       warnings: string[];
       barberName: string;
@@ -96,6 +97,10 @@ describe("POST /api/bookings", () => {
     expect(json.warnings.filter((w) => /^Email admin:/i.test(w))).toEqual([]);
     expect(json.warnings.join("\n")).not.toMatch(/testing emails|invalid_access/i);
     expect(json.confirmViaWhatsApp).toBe(true);
+    expect(json.salonRelay).toMatchObject({
+      to: "felicepolese550@gmail.com",
+      subject: expect.stringMatching(/NUOVA PRENOTAZIONE/),
+    });
     expect(json.manageUrl).toMatch(/\/appuntamento\//);
   });
 });
