@@ -56,6 +56,7 @@ $Mappings = [ordered]@{
     "razor fade"             = Join-Path $ReelDir "razor-fade.mp4"
     "taper fade"             = Join-Path $ReelDir "taper-fade.mp4"
     "burst fade"             = Join-Path $ReelDir "burst-fade.mp4"
+    "decolorazione cute"     = Join-Path $ReelDir "decolorazione-cute.mp4"
     "video felice polese bio" = Join-Path $ReelDir "video-felice-polese-bio.mp4"
 }
 
@@ -82,7 +83,7 @@ foreach ($entry in $Mappings.GetEnumerator()) {
 Write-Host ""
 Write-Host "Optional clips (not copied — site works without them):"
 Write-Host "  meches            -> spare colorazione reel or archive"
-Write-Host "  decolorazione cute -> spare colorazione reel or archive"
+Write-Host "  barba-pro.jpg / tintura-barba.jpg -> public/images/"
 Write-Host ""
 Write-Host "Done: $copied copied, $skipped skipped."
 Write-Host ""

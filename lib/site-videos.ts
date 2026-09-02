@@ -54,13 +54,6 @@ export const COLORAZIONE_VIDEOS: SiteVideo[] = [
   },
 ];
 
-/** General salon walkthrough — legacy path under /assets/video/. */
-export const SALONE_GENERALE_VIDEO: SiteVideo = {
-  id: "salone-generale",
-  src: `${VIDEO_BASE}/salone-generale.mp4`,
-  alt: "Tour del salone Felice Polese Barber Shop — Corso Dante, Benevento",
-};
-
 /**
  * Felice beside bio — only rendered when the synced file exists.
  * Windows source: public/video/video felice polese bio.mp4
@@ -76,26 +69,26 @@ export const FELICE_WORKING_VIDEO: SiteVideo = {
 
 /**
  * Cutting techniques — dedicated clips synced from public/video/ via scripts/sync-videos.ps1.
- * Not listino, not bookable.
+ * Not listino, not bookable. Order: Taper, Burst, Razor.
  */
 export const CUTTING_TECHNIQUE_VIDEOS: SiteVideo[] = [
-  {
-    id: "razor-fade-technique",
-    src: `${VIDEO_BASE}/razor-fade.mp4`,
-    alt: "Razor fade — tecnica di sfumatura in salone",
-    label: "Razor Fade — Tecnica di sfumatura",
-  },
   {
     id: "taper-fade-technique",
     src: `${VIDEO_BASE}/taper-fade.mp4`,
     alt: "Taper fade — tecnica di sfumatura in salone",
-    label: "Taper Fade — Tecnica di sfumatura",
+    label: "Taper Fade",
   },
   {
     id: "burst-fade-technique",
     src: `${VIDEO_BASE}/burst-fade.mp4`,
     alt: "Burst fade — tecnica di sfumatura in salone",
-    label: "Burst Fade — Tecnica di sfumatura",
+    label: "Burst Fade",
+  },
+  {
+    id: "razor-fade-technique",
+    src: `${VIDEO_BASE}/razor-fade.mp4`,
+    alt: "Razor fade — tecnica di sfumatura in salone",
+    label: "Razor Fade",
   },
 ];
 
@@ -122,15 +115,10 @@ export const GALLERY_VIDEOS: SiteVideo[] = [
   COLORAZIONE_VIDEOS[2]!,
 ];
 
-export const ALL_SITE_VIDEOS: SiteVideo[] = [
-  FELICE_WORKING_VIDEO,
-  SALONE_GENERALE_VIDEO,
-  ...VIDEO_REELS,
-];
+export const ALL_SITE_VIDEOS: SiteVideo[] = [FELICE_WORKING_VIDEO, ...VIDEO_REELS];
 
 /** Filenames that must exist under public/assets/video/ (committed to git). */
 export const REQUIRED_VIDEO_FILES = [
-  "salone-generale.mp4",
   "taglio-01.mp4",
   "taglio-02.mp4",
   "taglio-03.mp4",
@@ -144,7 +132,10 @@ export const FELICE_WORKING_FILENAME = "video-felice-polese-bio.mp4" as const;
 
 /** Technique reels — sync from public/video/ with scripts/sync-videos.ps1 */
 export const TECHNIQUE_VIDEO_FILES = [
-  "razor-fade.mp4",
   "taper-fade.mp4",
   "burst-fade.mp4",
+  "razor-fade.mp4",
 ] as const;
+
+/** Optional service clip — wire path even when missing from git. */
+export const DECOLORAZIONE_CUTE_FILENAME = "decolorazione-cute.mp4" as const;

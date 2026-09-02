@@ -11,7 +11,6 @@ import {
   GALLERY_VIDEOS,
   HERO_VIDEOS,
   REQUIRED_VIDEO_FILES,
-  SALONE_GENERALE_VIDEO,
   TAGLIO_VIDEOS,
   VIDEO_BASE,
   VIDEO_REELS,
@@ -20,11 +19,11 @@ import {
 const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
 
 describe("site-videos", () => {
-  it("defines six service reels plus general salon video under /video/", () => {
+  it("defines six service reels under /video/ without salone-generale", () => {
     expect(TAGLIO_VIDEOS).toHaveLength(3);
     expect(COLORAZIONE_VIDEOS).toHaveLength(3);
     expect(VIDEO_REELS).toHaveLength(6);
-    expect(ALL_SITE_VIDEOS).toHaveLength(8);
+    expect(ALL_SITE_VIDEOS).toHaveLength(7);
 
     expect(VIDEO_REELS.map((v) => v.id)).toEqual([
       "taglio-01",
@@ -40,7 +39,7 @@ describe("site-videos", () => {
       expect(video.alt.length).toBeGreaterThan(5);
     }
 
-    expect(SALONE_GENERALE_VIDEO.src).toBe(`${VIDEO_BASE}/salone-generale.mp4`);
+    expect(ALL_SITE_VIDEOS.some((v) => v.id === "salone-generale")).toBe(false);
   });
 
   it("has all required mp4 files committed on disk in public/assets/video/", () => {
@@ -68,18 +67,18 @@ describe("site-videos", () => {
     ]);
   });
 
-  it("keeps fade techniques as dedicated clips, not priced services", () => {
+  it("keeps fade techniques as dedicated clips in Taper / Burst / Razor order", () => {
     expect(CUTTING_TECHNIQUE_VIDEOS).toHaveLength(3);
     expect(CUTTING_TECHNIQUE_VIDEOS.map((v) => v.id)).toEqual([
-      "razor-fade-technique",
       "taper-fade-technique",
       "burst-fade-technique",
+      "razor-fade-technique",
     ]);
-    expect(CUTTING_TECHNIQUE_VIDEOS[0]?.label).toBe("Razor Fade — Tecnica di sfumatura");
-    expect(CUTTING_TECHNIQUE_VIDEOS[1]?.label).toBe("Taper Fade — Tecnica di sfumatura");
-    expect(CUTTING_TECHNIQUE_VIDEOS[2]?.label).toBe("Burst Fade — Tecnica di sfumatura");
+    expect(CUTTING_TECHNIQUE_VIDEOS[0]?.label).toBe("Taper Fade");
+    expect(CUTTING_TECHNIQUE_VIDEOS[1]?.label).toBe("Burst Fade");
+    expect(CUTTING_TECHNIQUE_VIDEOS[2]?.label).toBe("Razor Fade");
     for (const video of CUTTING_TECHNIQUE_VIDEOS) {
-      expect(video.src).toMatch(/^\/video\/(razor-fade|taper-fade|burst-fade)\.mp4$/);
+      expect(video.src).toMatch(/^\/video\/(taper-fade|burst-fade|razor-fade)\.mp4$/);
       expect(video.label).not.toMatch(/€/);
     }
     expect(SALON_WORK_VIDEOS.map((v) => v.id)).toEqual([

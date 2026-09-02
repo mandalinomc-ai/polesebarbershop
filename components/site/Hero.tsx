@@ -52,7 +52,7 @@ export function Hero() {
             <a href="/#prenota" className="btn btn-ink btn-dark" aria-label={getHeroHeadline()}>
               {HERO_SLOT_CTA}
             </a>
-            <a href="/#prenota" className="btn btn-ghost">
+            <a href="/#trattamenti" className="btn btn-ghost">
               {HERO_MENU_CTA}
             </a>
           </div>

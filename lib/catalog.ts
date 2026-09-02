@@ -34,7 +34,7 @@ export type Service = {
 };
 
 /**
- * Official listino — exactly these 9 bookable services.
+ * Official listino — exactly these 10 bookable services.
  * Razor Taper / Skin Fade / other rasature are techniques, not services.
  */
 export const SERVICES: Service[] = [
@@ -61,6 +61,17 @@ export const SERVICES: Service[] = [
     description: "Taglio classico",
   },
   {
+    id: "taglio-bambino",
+    name: "Taglio Bambino",
+    category: "capelli",
+    priceEuro: 12,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 20,
+    durationKnown: true,
+    description: "Taglio dedicato ai più piccoli",
+  },
+  {
     id: "acconciatura",
     name: "Acconciatura",
     category: "capelli",
@@ -68,7 +79,7 @@ export const SERVICES: Service[] = [
     priceMaxEuro: null,
     isVariablePrice: false,
     durationMin: 15,
-    durationKnown: false,
+    durationKnown: true,
     description: "Solo styling",
   },
   {
@@ -89,8 +100,8 @@ export const SERVICES: Service[] = [
     priceEuro: 5,
     priceMaxEuro: null,
     isVariablePrice: false,
-    durationMin: 15,
-    durationKnown: false,
+    durationMin: 10,
+    durationKnown: true,
     description: "Rifinitura / Modellatura classica",
   },
   {
@@ -201,6 +212,13 @@ export function formatPrice(service: Service): string {
 
 export function formatPriceRange(service: Service): string {
   return formatPrice(service);
+}
+
+/** Card/listino display — variable prices as «da X €», zero as «Gratis». */
+export function formatCardPrice(service: Service): string {
+  if (service.priceEuro === 0) return "Gratis";
+  if (service.isVariablePrice) return `da ${service.priceEuro} €`;
+  return `${service.priceEuro} €`;
 }
 
 export function formatDuration(service: Service): string {

@@ -6,7 +6,9 @@ import {
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
 import { ServiceListino } from "@/components/booking/ServiceListino";
-import { VideoReelGrid } from "@/components/site/VideoReelGrid";
+import { TreatmentCards } from "@/components/site/TreatmentCards";
+import { ConsulenzaSection } from "@/components/site/ConsulenzaSection";
+import { SfumatureSection } from "@/components/site/SfumatureSection";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import {
   FELICE_WORKING_FILENAME,
@@ -72,7 +74,11 @@ export function LandingSections() {
         </div>
       </section>
 
-      <VideoReelGrid />
+      <TreatmentCards />
+
+      <ConsulenzaSection />
+
+      <SfumatureSection />
 
       <section id="prenota" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow">Listino &amp; prenotazione</div>

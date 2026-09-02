@@ -5,6 +5,7 @@ import {
   UNOFFICIAL_SERVICE_IDS,
   formatPrice,
   formatPriceRange,
+  formatCardPrice,
   formatDuration,
   totalsForServices,
   resolveServices,
@@ -22,9 +23,9 @@ describe("catalog", () => {
     expect(getBarber("anyone")?.name).toBe("Qualsiasi disponibilità");
   });
 
-  it("lists exactly the 9 official listino services and no extras", () => {
+  it("lists exactly the 10 official listino services and no extras", () => {
     expect(SERVICE_CATEGORIES).toEqual(["capelli", "barba", "colore"]);
-    expect(SERVICES).toHaveLength(9);
+    expect(SERVICES).toHaveLength(10);
     expect(
       SERVICES.map((s) => ({
         id: s.id,
@@ -38,9 +39,10 @@ describe("catalog", () => {
     ).toEqual([
       { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25, durationKnown: true },
       { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30, durationKnown: true },
-      { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
+      { id: "taglio-bambino", name: "Taglio Bambino", category: "capelli", priceEuro: 12, priceMaxEuro: null, durationMin: 20, durationKnown: true },
+      { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: true },
       { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20, durationKnown: true },
-      { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
+      { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 10, durationKnown: true },
       { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 45, durationKnown: false },
       { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 45, durationKnown: false },
       { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 30, durationKnown: false },
@@ -59,15 +61,17 @@ describe("catalog", () => {
     expect(SERVICES.some((s) => s.category === ("sfumature" as never))).toBe(false);
   });
 
-  it("shows official ranges as 40–100 € and fixed prices as 50 €", () => {
+  it("shows official ranges as 40–100 € and card prices as da X €", () => {
     const meches = SERVICES.find((s) => s.id === "decolorazione-meches")!;
     expect(formatPrice(meches)).toBe("40–100 €");
     expect(formatPriceRange(meches)).toBe("40–100 €");
+    expect(formatCardPrice(meches)).toBe("da 40 €");
     const pro = SERVICES.find((s) => s.id === "taglio-pro")!;
     expect(formatPrice(pro)).toBe("50 €");
+    expect(formatCardPrice(pro)).toBe("50 €");
     expect(formatDuration(pro)).toBe("25 min");
-    expect(formatDuration(SERVICES.find((s) => s.id === "acconciatura")!)).toBe("durata n/d");
-    expect(formatDuration(SERVICES.find((s) => s.id === "barba-standard")!)).toBe("durata n/d");
+    expect(formatDuration(SERVICES.find((s) => s.id === "acconciatura")!)).toBe("15 min");
+    expect(formatDuration(SERVICES.find((s) => s.id === "barba-standard")!)).toBe("10 min");
   });
 
   it("sums duration buffers and uses an en-dash range when any service is variable", () => {
