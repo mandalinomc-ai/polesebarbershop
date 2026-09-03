@@ -1,100 +1,84 @@
 # PROJECT_STATE — Felice Polese Barber Shop
 
-**Updated:** 2026-09-02  
+**Updated:** 2026-09-03  
 **Public URL:** https://felicepolesebarbershop.vercel.app  
-**Vercel project:** `temporary-prompt-quasar-rndxhgh` (GitHub connected)
+**Vercel project:** `temporary-prompt-quasar-rndxhgh` (alias: felicepolesebarbershop)  
+**Branch:** `cursor/gestionale-crm-final-6157`
 
-## Overwrite (admitted)
+## Status summary
 
-Live was briefly the scissors GitHub rebuild. That is **not** the site the client liked.
-
-## Restore
-
-- Domain aliased to oldest remaining quasar production (`6ve62mbnk`, marble July-3).
-- Git branch reconstructs Jakarta marble (`0da4547` + Google Fonts + `/video/`) **with** booking, Maps Dante 45, WhatsApp 327.
-- Exact pre-overwrite HTML (`Felice Polese | Modern Barbering & Fade Studio` with `marble-accent` / `glass-card` from Google Fonts static page) was **not** in the repo.
-
-## Do not
-
-| Project | Role | Project ID (known) | Default URL | Live branding |
-|---------|------|-------------------|-------------|---------------|
-| **polesebarbershop** | **NEW — canonical** | `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf` (from CI workflow) | `polesebarbershop.vercel.app` | **Felice Polese Barber Shop** ✓ |
-| **felicepolese** (legacy) | **OLD — domain to reassign** | unknown (separate Vercel project) | `felicepolesebarbershop.vercel.app` | **Polese Barbershop** (stale) ✗ |
-
-### Domain verification (2026-09-01 — final deploy attempt)
-
-```bash
-curl -s https://felicepolesebarbershop.vercel.app | grep -oE 'Felice Polese Barber Shop|Modern Barbering|Polese Barbershop' | sort -u
-# → Polese Barbershop  (WRONG — old deploy, alias NOT updated)
-
-curl -s https://polesebarbershop.vercel.app | grep -oE 'Felice Polese Barber Shop|Modern Barbering|Polese Barbershop' | sort -u
-# → Felice Polese Barber Shop  (CORRECT)
-```
-
-**STATUS: NOT READY** — `felicepolesebarbershop.vercel.app` does not show new branding.
-
-### Final deploy attempt (2026-09-01)
-
-| Step | Result |
+| Area | Status |
 |------|--------|
-| Git on `main` @ `559fb41` | ✓ |
-| `npx vercel whoami` | ✗ Logged out |
-| `npx vercel link --project polesebarbershop` | **Skipped** (auth blocker) |
-| `npx vercel --prod` | **Skipped** (auth blocker) |
-| `npx vercel alias set … felicepolesebarbershop.vercel.app` | **Skipped** (auth blocker) |
+| Production site | **READY** — homepage 200, Felice branding, Maps Dante 44, listino, videos |
+| Gmail SMTP | **READY** — `GMAIL_USER` + `GMAIL_APP_PASSWORD` on Production; live booking email verified |
+| Supabase bookings | **READY** — test booking persisted |
+| Next step | User review of inbox + later cleanup of unused Vercel projects |
 
-### CI deploy status
+## Deploy (2026-09-03)
 
-Workflow: `.github/workflows/vercel-production.yml` — runs on every `main` push.
+- Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
+- Force prod: `npx vercel --prod --yes --force`
+- Deployment: `temporary-prompt-quasar-rndxhgh-k05uygvc8.vercel.app`
+- Aliased: https://felicepolesebarbershop.vercel.app
+- Inspect: https://vercel.com/mandalinomc-8144s-projects/temporary-prompt-quasar-rndxhgh/Fdi2MnFoUaZcw2Uz4UAbXSTTXRzE
 
-**Status: FAILING** — GitHub secrets not configured:
+## Env (names only — never log secret values)
 
-- `VERCEL_TOKEN` — empty
-- `VERCEL_ORG_ID` — empty
-- `VERCEL_PROJECT_ID` — empty
+Confirmed via `npx vercel env ls` on `temporary-prompt-quasar-rndxhgh`:
 
-### Cloud Vercel CLI
+| Name | Production |
+|------|------------|
+| `GMAIL_APP_PASSWORD` | present (Secret) |
+| `GMAIL_USER` | present |
+| `BOOKING_NOTIFICATION_EMAIL` | present |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | present |
+| `OWNER_EMAIL` / `ADMIN_EMAIL` | present (`felicepolese550@gmail.com`) |
 
-- `npx vercel whoami` → **Logged out**
-- No `VERCEL_TOKEN` in cloud environment
-- Deploy/alias requires user `npx vercel login` locally or GitHub secrets
+## Email verification (2026-09-03)
+
+Safe live POST to `/api/bookings` with customer email = owner only (`felicepolese550@gmail.com`):
+
+- HTTP 200
+- `ok: true`
+- `persisted: true`
+- `emailSent: true`
+- `ownerNotified: true`
+- `customerEmailFailed: false`
+- `warnings: []`
+- No GMAIL missing / skip errors
+
+Service: Taglio Pro · Felice · 2026-09-09 08:30 (test row may remain in CRM — cancel from gestionale if desired).
+
+## Site health checks (2026-09-03)
+
+- Homepage HTTP **200**
+- Brand: Felice Polese present
+- Maps: Corso Dante Alighieri, **44** (Benevento)
+- Listino / prices present (e.g. 50 €)
+- Videos: `/video/*.mp4` returning 200
+- `/prenota` HTTP 200
 
 ## Booking system
 
 | Component | Status |
 |-----------|--------|
-| Stack | Next.js 15 App Router + Supabase + Gmail SMTP (.ics attachments) |
-| Supabase project | `dbbncprluqjrofjemfbg.supabase.co` |
-| Migrations | `001_schema.sql`, `002_crm_indexes.sql`, `002_cancel_30_min.sql`, `003_service_display_names.sql` |
-| Cancellation policy | **30 minutes** — enforced in app (`CANCEL_MINUTES_BEFORE`), API, and DB function `cancel_appointment_by_token` |
-| Booking horizon | 365 days open; UI shows 42-day scroller |
-| Opening date | 2026-09-07 (countdown on homepage) |
-| Admin | `/gestionale` (cookie session) |
+| Stack | Next.js 15 + Supabase + Gmail SMTP (.ics) |
+| Supabase | `dbbncprluqjrofjemfbg.supabase.co` |
+| Cancellation | 30 minutes before |
+| Opening | 2026-09-07 |
+| Admin | `/gestionale` |
 | Public booking | `/prenota` |
-
-### Email (Gmail SMTP)
-
-- From: `Felice Polese Barber Shop <felicepolese550@gmail.com>`
-- Admin/owner: `felicepolese550@gmail.com`
-- BOOKING_NOTIFICATION_EMAIL: `felicepolese550@gmail.com`
-- Email sent via Gmail SMTP (nodemailer)
 
 ## Site config highlights
 
 - Official name: **Felice Polese Barber Shop**
 - Tagline: **Modern Barbering & Fade Studio**
-- Canonical URL in code default: `https://polesebarbershop.vercel.app`
-- Address: Corso Dante 45, 82100 Benevento
-- Phone/WhatsApp: +39 351 252 3087
+- Address: Corso Dante Alighieri, 44, 82100 Benevento
+- Phone/WhatsApp: +39 327 015 6225
 - Instagram: @felicepolese_barber
 
-## What is NOT done
+## Still later (non-blocking)
 
-1. `felicepolesebarbershop.vercel.app` still serves the **old** Polese Barbershop project
-2. Vercel CLI auth blocked cloud deploy (logged out)
-3. GitHub → Vercel CI secrets missing — auto-deploy on push broken
-4. Gmail App Password must be configured on Vercel (GMAIL_USER, GMAIL_APP_PASSWORD)
-
-## Related branches (context)
-
-Many `cursor/*` feature branches exist; production truth is `main` at `559fb41+`.
+1. User reviews Gmail inbox for the test confirmation + owner alert
+2. Cleanup unused / duplicate Vercel projects (e.g. polesebarbershop) when Felice confirms
+3. Optional: cancel leftover test appointment from gestionale
