@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -136,10 +136,11 @@ describe("site-videos", () => {
     ]);
   });
 
-  it("points the bio clip at public/assets/videos/felice-working.mp4", () => {
-    expect(FELICE_WORKING_VIDEO.src).toBe("/assets/videos/felice-working.mp4");
-    expect(FELICE_WORKING_FILENAME).toBe("felice-working.mp4");
-    const bioPath = join(process.cwd(), "public", "assets", "videos", FELICE_WORKING_FILENAME);
+  it("points the bio clip at public/assets/video/video-felice-polese-bio.mp4", () => {
+    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_BASE}/video-felice-polese-bio.mp4`);
+    expect(FELICE_WORKING_FILENAME).toBe("video-felice-polese-bio.mp4");
+    const bioPath = join(VIDEO_DIR, FELICE_WORKING_FILENAME);
     expect(existsSync(bioPath), `missing ${bioPath}`).toBe(true);
+    expect(statSync(bioPath).size).toBeGreaterThan(1_000_000);
   });
 });
