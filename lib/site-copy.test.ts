@@ -284,9 +284,9 @@ describe("public copy vs official identity", () => {
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
-    expect(reel).toMatch(/CUTTING_TECHNIQUE_VIDEOS/);
-    expect(reel).toMatch(/Tecniche di taglio/);
-    expect(reel).toMatch(/Scopri alcune delle tecniche che utilizziamo nei nostri tagli/);
+    expect(reel).toMatch(/VIDEO_REELS/);
+    expect(reel).toMatch(/Sfumature/);
+    expect(reel).toMatch(/Le nostre sfumature/);
     expect(reel).toMatch(/Prenota il tuo taglio/);
     expect(reel).not.toMatch(/€/);
     expect(reel).not.toMatch(/<img/);
@@ -298,11 +298,11 @@ describe("public copy vs official identity", () => {
     expect(videos).not.toMatch(/id: "razor-taper"/);
     expect(videos).not.toMatch(/id: "skin-fade"/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
-    expect(chrome).toMatch(/href: "\/#gallery", label: "Tecniche"/);
+    expect(chrome).toMatch(/href: "\/#gallery", label: "Sfumature"/);
     expect(chrome).toMatch(/href: "\/#listino", label: "Listino"/);
     expect(chrome).not.toMatch(/label: "Fade"/);
     expect(chrome).not.toMatch(/label: "Consulenza"/);
-    expect(chrome).not.toMatch(/\/#about/);
+    expect(chrome).toMatch(/href: "\/#about", label: "Servizi"/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/hero-editorial/);
     expect(hero).toMatch(/bg-marble-light/);

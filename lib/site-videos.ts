@@ -61,16 +61,10 @@ export const SALONE_GENERALE_VIDEO: SiteVideo = {
   alt: "Tour del salone Felice Polese Barber Shop — Corso Dante, Benevento",
 };
 
-/**
- * Felice beside bio — only rendered when the synced file exists.
- * Windows source: public/video/video felice polese bio.mp4
- * After sync: public/assets/video/video-felice-polese-bio.mp4
- */
-export const FELICE_BIO_SOURCE_BASENAME = "video felice polese bio" as const;
-
+/** Felice beside bio — public/assets/videos/felice-working.mp4 (restored from git). */
 export const FELICE_WORKING_VIDEO: SiteVideo = {
-  id: "felice-bio",
-  src: `${VIDEO_BASE}/video-felice-polese-bio.mp4`,
+  id: "felice-working",
+  src: `${VIDEO_HERO_BASE}/felice-working.mp4`,
   alt: "Felice Polese al lavoro — Felice Polese Barber Shop Benevento",
 };
 
@@ -139,8 +133,8 @@ export const REQUIRED_VIDEO_FILES = [
   "colorazione-03.mp4",
 ] as const;
 
-/** Synced bio clip filename under public/assets/video/ */
-export const FELICE_WORKING_FILENAME = "video-felice-polese-bio.mp4" as const;
+/** Bio clip filename under public/assets/videos/ */
+export const FELICE_WORKING_FILENAME = "felice-working.mp4" as const;
 
 /** Technique reels — sync from public/video/ with scripts/sync-videos.ps1 */
 export const TECHNIQUE_VIDEO_FILES = [

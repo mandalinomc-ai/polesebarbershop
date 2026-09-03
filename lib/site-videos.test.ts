@@ -90,9 +90,10 @@ describe("site-videos", () => {
     ]);
   });
 
-  it("points the bio clip at public/assets/video/video-felice-polese-bio.mp4", () => {
-    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_BASE}/video-felice-polese-bio.mp4`);
-    expect(FELICE_WORKING_FILENAME).toBe("video-felice-polese-bio.mp4");
-    expect(existsSync(VIDEO_DIR), `missing folder ${VIDEO_DIR}`).toBe(true);
+  it("points the bio clip at public/assets/videos/felice-working.mp4", () => {
+    expect(FELICE_WORKING_VIDEO.src).toBe("/assets/videos/felice-working.mp4");
+    expect(FELICE_WORKING_FILENAME).toBe("felice-working.mp4");
+    const bioPath = join(process.cwd(), "public", "assets", "videos", FELICE_WORKING_FILENAME);
+    expect(existsSync(bioPath), `missing ${bioPath}`).toBe(true);
   });
 });

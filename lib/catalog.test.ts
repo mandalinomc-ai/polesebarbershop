@@ -22,9 +22,9 @@ describe("catalog", () => {
     expect(getBarber("anyone")?.name).toBe("Qualsiasi disponibilità");
   });
 
-  it("lists exactly the 9 official listino services and no extras", () => {
+  it("lists exactly the 10 official listino services and no extras", () => {
     expect(SERVICE_CATEGORIES).toEqual(["capelli", "barba", "colore"]);
-    expect(SERVICES).toHaveLength(9);
+    expect(SERVICES).toHaveLength(10);
     expect(
       SERVICES.map((s) => ({
         id: s.id,
@@ -36,18 +36,16 @@ describe("catalog", () => {
         durationKnown: s.durationKnown,
       })),
     ).toEqual([
-      { id: "taglio-standard", name: "Taglio Normale", category: "taglio", priceEuro: 15, priceMaxEuro: null, durationMin: 30 },
-      { id: "taglio-pro", name: "Taglio Sartoriale", category: "taglio", priceEuro: 50, priceMaxEuro: null, durationMin: 25 },
-      { id: "taglio-bambino", name: "Taglio Bambino", category: "taglio", priceEuro: 10, priceMaxEuro: null, durationMin: 20 },
-      { id: "barba-pro", name: "Barba", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20 },
-      { id: "barba-standard", name: "Rifinitura barba", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
-      { id: "combo-classico", name: "Combo Taglio + Barba", category: "combo", priceEuro: 30, priceMaxEuro: null, durationMin: 45 },
-      { id: "combo-sartoriale", name: "Combo Sartoriale + Barba", category: "combo", priceEuro: 60, priceMaxEuro: null, durationMin: 40 },
-      { id: "decolorazione-meches", name: "Meches", category: "tecnici", priceEuro: 40, priceMaxEuro: 100, durationMin: 45 },
-      { id: "decolorazione-cutanea", name: "Decolorazione", category: "tecnici", priceEuro: 50, priceMaxEuro: 120, durationMin: 45 },
-      { id: "tintura-capelli", name: "Tintura capelli", category: "tecnici", priceEuro: 10, priceMaxEuro: 30, durationMin: 30 },
-      { id: "tintura-barba", name: "Tintura barba", category: "tecnici", priceEuro: 5, priceMaxEuro: 15, durationMin: 20 },
-      { id: "consulenza-sede", name: "Consulenza Tricologica", category: "consulenza", priceEuro: 0, priceMaxEuro: null, durationMin: 30 },
+      { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25, durationKnown: true },
+      { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30, durationKnown: true },
+      { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
+      { id: "taglio-bambino", name: "Taglio Bambino", category: "capelli", priceEuro: 10, priceMaxEuro: null, durationMin: 20, durationKnown: true },
+      { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20, durationKnown: true },
+      { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
+      { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 45, durationKnown: false },
+      { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 45, durationKnown: false },
+      { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 30, durationKnown: false },
+      { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, durationMin: 20, durationKnown: false },
     ]);
   });
 
