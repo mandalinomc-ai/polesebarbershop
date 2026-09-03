@@ -1,25 +1,13 @@
-import nodemailer from "nodemailer";
 import {
   isGmailSmtpConfigured,
-  isMailgunConfigured,
-  isResendAllowedRecipient,
-  isResendTestRecipientError,
-  isSalonFormRelayEnabled,
-  sendViaFormSubmit,
   sendViaGmail,
-  sendViaMailgun,
 } from "./mail-providers";
 import {
   CANCEL_NOTICE_IT,
   SITE,
   getAdminEmail,
   getBookingNotificationEmail,
-  isResendTestFrom,
 } from "./site-config";
-
-function getResendApiKey(): string | undefined {
-  return process.env.RESEND_API_KEY || undefined;
-}
 
 export type EmailSendResult =
   | { ok: true; skipped?: boolean; id?: string }
@@ -31,14 +19,6 @@ export const GMAIL_MISSING_IT =
 /** @deprecated kept as alias for compatibility */
 export const RESEND_MISSING_IT = GMAIL_MISSING_IT;
 
-/** True when Gmail SMTP credentials are configured. */
-export function isGmailConfigured() {
-  return Boolean(getGmailUser() && getGmailAppPassword());
-}
-
-/** @deprecated alias — use isGmailConfigured */
-export const isResendConfigured = isGmailConfigured;
-
 function getGmailUser(): string | null {
   const u = process.env.GMAIL_USER?.trim();
   return u && u.includes("@") ? u : null;
@@ -49,66 +29,16 @@ function getGmailAppPassword(): string | null {
   return p && p.length >= 8 ? p : null;
 }
 
-function getTransporter() {
-  const user = getGmailUser();
-  const pass = getGmailAppPassword();
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: { user, pass },
-  });
+/** True when Gmail SMTP credentials are configured. */
+export function isGmailConfigured() {
+  return Boolean(getGmailUser() && getGmailAppPassword());
 }
+
+/** @deprecated alias — use isGmailConfigured */
+export const isResendConfigured = isGmailConfigured;
 
 function logEmailError(message: string, extra: Record<string, unknown>) {
   console.error(`[email] ${message}`, extra);
-}
-
-async function sendViaResend(opts: {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
-  ics?: { filename: string; content: string };
-}): Promise<EmailSendResult> {
-  const transporter = getTransporter();
-  if (!transporter) {
-    console.warn("[email] GMAIL_USER / GMAIL_APP_PASSWORD assente: invio saltato", {
-      to: opts.to,
-      subject: opts.subject,
-    });
-    return { ok: false, skipped: true, error: GMAIL_MISSING_IT };
-  }
-  try {
-    const gmailUser = getGmailUser()!;
-    const from = `Felice Polese Barber Shop <${gmailUser}>`;
-    const cancelled = Boolean(opts.ics && /METHOD:CANCEL/.test(opts.ics.content));
-    const attachments = opts.ics
-      ? [{
-          filename: opts.ics.filename,
-          content: Buffer.from(opts.ics.content, "utf8"),
-          contentType: cancelled
-            ? "text/calendar; charset=utf-8; method=CANCEL"
-            : "text/calendar; charset=utf-8; method=PUBLISH",
-        }]
-      : undefined;
-
-    const info = await transporter.sendMail({
-      from,
-      to: opts.to,
-      replyTo: getAdminEmail(),
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-      attachments,
-    });
-    const id = info.messageId || undefined;
-    console.info("[email] inviata", { to: opts.to, subject: opts.subject, id });
-    return { ok: true, id };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Invio email fallito";
-    logEmailError("eccezione durante l'invio Resend", { to: opts.to, subject: opts.subject, error: message });
-    return { ok: false, error: message };
-  }
 }
 
 export async function sendEmail(opts: {
@@ -117,73 +47,31 @@ export async function sendEmail(opts: {
   html: string;
   text?: string;
   ics?: { filename: string; content: string };
-  /** Salon alerts: Gmail/Mailgun, then Resend, then FormSubmit if Resend test-mode blocks Felice. */
+  /** Ignored — Gmail SMTP is the only transport. */
   salonFallback?: boolean;
 }): Promise<EmailSendResult> {
-  if (isGmailSmtpConfigured()) {
-    const gmail = await sendViaGmail({
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-      replyTo: getAdminEmail(),
-      ics: opts.ics,
-    });
-    if (gmail.ok) {
-      console.info("[email] inviata via Gmail", { to: opts.to, subject: opts.subject, id: gmail.id });
-      return { ok: true, id: gmail.id };
-    }
-    logEmailError("Gmail ha rifiutato l'invio", { to: opts.to, error: gmail.error });
-  }
-
-  if (isMailgunConfigured()) {
-    const mailgun = await sendViaMailgun({
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-      replyTo: getAdminEmail(),
-      ics: opts.ics,
-    });
-    if (mailgun.ok) {
-      console.info("[email] inviata via Mailgun", { to: opts.to, subject: opts.subject, id: mailgun.id });
-      return { ok: true, id: mailgun.id };
-    }
-    logEmailError("Mailgun ha rifiutato l'invio", { to: opts.to, error: mailgun.error });
-  }
-
-  const key = getResendApiKey();
-  const skipResendTestBlock = opts.salonFallback && isResendTestFrom() && !isResendAllowedRecipient(opts.to);
-  if (key && !skipResendTestBlock) {
-    const resend = await sendViaResend(opts);
-    if (resend.ok) return resend;
-    if (!opts.salonFallback || !isResendTestRecipientError(resend.error || "")) {
-      if (!opts.salonFallback) return resend;
-    }
-  } else if (!key && !opts.salonFallback) {
-    console.warn("[email] RESEND_API_KEY assente: invio saltato", {
+  if (!isGmailSmtpConfigured() && !isGmailConfigured()) {
+    console.warn("[email] GMAIL_USER / GMAIL_APP_PASSWORD assente: invio saltato", {
       to: opts.to,
       subject: opts.subject,
     });
-    return { ok: false, skipped: true, error: RESEND_MISSING_IT };
+    return { ok: false, skipped: true, error: GMAIL_MISSING_IT };
   }
 
-  if (opts.salonFallback && isSalonFormRelayEnabled()) {
-    const relay = await sendViaFormSubmit({
-      to: opts.to,
-      subject: opts.subject,
-      text: opts.text || opts.subject,
-    });
-    if (relay.ok) {
-      console.info("[email] avviso salone via relay", { to: opts.to, subject: opts.subject });
-      return { ok: true };
-    }
-    logEmailError("relay salone non inviato", { to: opts.to, error: relay.error });
-    return { ok: false, error: relay.error };
+  const gmail = await sendViaGmail({
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    text: opts.text,
+    replyTo: getAdminEmail(),
+    ics: opts.ics,
+  });
+  if (gmail.ok) {
+    console.info("[email] inviata via Gmail", { to: opts.to, subject: opts.subject, id: gmail.id });
+    return { ok: true, id: gmail.id };
   }
-
-  if (!key) return { ok: false, skipped: true, error: RESEND_MISSING_IT };
-  return { ok: false, error: "Invio email al salone non riuscito." };
+  logEmailError("Gmail ha rifiutato l'invio", { to: opts.to, error: gmail.error });
+  return { ok: false, error: gmail.error };
 }
 
 function escapeHtml(value: string) {
