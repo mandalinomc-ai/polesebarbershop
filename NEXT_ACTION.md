@@ -1,19 +1,23 @@
 # NEXT ACTION
 
-**Updated:** 2026-09-02  
-**USA QUESTO:** https://felicepolesebarbershop.vercel.app
+**Updated:** 2026-09-03  
+**USA QUESTO:** https://felicepolesebarbershop.vercel.app  
+**Vercel:** `temporary-prompt-quasar-rndxhgh` (NOT polesebarbershop)
 
-## Cosa è successo
+## Fatto oggi
 
-Il sito con le **forbici** (rebuild GitHub) ha sovrascritto il marmo che piaceva. Non è stato un “aggiornamento”: è stato uno **sovrascrittura**.
+1. `GMAIL_APP_PASSWORD` presente su **Production** (insieme a `GMAIL_USER` / `BOOKING_NOTIFICATION_EMAIL`)
+2. Redeploy production forzato → nuovo env caricato
+3. Test prenotazione live verso **solo** `felicepolese550@gmail.com` → `persisted` + `emailSent` + `ownerNotified` OK
+4. Site healthy: homepage 200, Maps Dante 44, prezzi, video
 
-## Ora
+## Prossimo passo (utente)
 
-1. Il dominio è stato riportato sul deploy marmo più vecchio rimasto sul progetto quasar (stile “L'Arte della Barberia”, non Jakarta esatto).
-2. Questo branch ricostruisce il look **Plus Jakarta / marmo bianco / video in hero**, con prenotazione, Maps Dante 45 e WhatsApp 327.
+1. **Review:** controlla inbox Gmail (`felicepolese550@gmail.com`) — conferma cliente + avviso salone del test Taglio Pro 9 set 08:30
+2. Se vuoi, cancella l’appuntamento di test da `/gestionale`
+3. **Più avanti:** cleanup progetti Vercel inutilizzati / duplicati (es. polesebarbershop) quando confermi che Felice vive solo su questo progetto
 
-Non mergiare `main` delle forbici sul progetto Vercel finché Felice non conferma il visivo.
+## Non fare
 
-## Ancora da fare
-
-Su Vercel mancano `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (e Resend) per prenotazioni vere e email.
+- Non toccare `polesebarbershop` come target di deploy
+- Non stampare / condividere `GMAIL_APP_PASSWORD`
