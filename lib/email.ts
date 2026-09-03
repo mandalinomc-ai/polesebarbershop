@@ -1,121 +1,44 @@
-import { Resend } from "resend";
 import {
   isGmailSmtpConfigured,
-  isMailgunConfigured,
-  isResendAllowedRecipient,
-  isResendTestRecipientError,
-  isSalonFormRelayEnabled,
-  sendViaFormSubmit,
   sendViaGmail,
-  sendViaMailgun,
 } from "./mail-providers";
 import {
   CANCEL_NOTICE_IT,
   SITE,
   getAdminEmail,
-  getOwnerNotifyEmails,
-  isResendTestFrom,
+  getBookingNotificationEmail,
 } from "./site-config";
 
 export type EmailSendResult =
   | { ok: true; skipped?: boolean; id?: string }
   | { ok: false; skipped?: boolean; error: string };
 
-export const RESEND_MISSING_IT =
+export const GMAIL_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
-export const CUSTOMER_CONFIRM_WHATSAPP_IT =
-  "Prenotazione salvata. L'email automatica non è ancora attiva.";
+/** @deprecated kept as alias for compatibility */
+export const RESEND_MISSING_IT = GMAIL_MISSING_IT;
 
-export const CUSTOMER_CONFIRM_WHATSAPP_NO_PHONE_IT =
-  "Prenotazione salvata. L'email automatica non è ancora attiva.";
-
-export function publicCustomerMailError(error: string, hasCustomerPhone: boolean): string {
-  if (isResendTestRecipientError(error) || /403|forbidden/i.test(error)) {
-    return hasCustomerPhone ? CUSTOMER_CONFIRM_WHATSAPP_IT : CUSTOMER_CONFIRM_WHATSAPP_NO_PHONE_IT;
-  }
-  if (error === RESEND_MISSING_IT) return error;
-  return hasCustomerPhone ? CUSTOMER_CONFIRM_WHATSAPP_IT : CUSTOMER_CONFIRM_WHATSAPP_NO_PHONE_IT;
+function getGmailUser(): string | null {
+  const u = process.env.GMAIL_USER?.trim();
+  return u && u.includes("@") ? u : null;
 }
 
-const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
-const DEFAULT_FROM = `Felice Polese Barber Shop <onboarding@${RESEND_TEST_DOMAIN}>`;
-
-function fromAddress() {
-  const from = process.env.RESEND_FROM?.trim() || "";
-  const domain = from.match(/@([^>\s]+)/)?.[1]?.toLowerCase() || "";
-  if (!from || domain === "example.com" || domain.endsWith(".example.com") || domain === "localhost") {
-    if (from && domain && domain !== RESEND_TEST_DOMAIN) {
-      console.warn("[email] RESEND_FROM dominio non inviabile; uso il From di test Resend", { domain });
-    }
-    return DEFAULT_FROM;
-  }
-  return from;
+function getGmailAppPassword(): string | null {
+  const p = process.env.GMAIL_APP_PASSWORD?.trim();
+  return p && p.length >= 8 ? p : null;
 }
 
-/** True only when a real Resend key (`re_…`) is set. Placeholders do not count. */
-export function isResendConfigured() {
-  return Boolean(getResendApiKey());
+/** True when Gmail SMTP credentials are configured. */
+export function isGmailConfigured() {
+  return Boolean(getGmailUser() && getGmailAppPassword());
 }
 
-function getResendApiKey(): string | null {
-  const key = process.env.RESEND_API_KEY?.trim() || "";
-  if (!key || !key.startsWith("re_")) return null;
-  return key;
-}
+/** @deprecated alias — use isGmailConfigured */
+export const isResendConfigured = isGmailConfigured;
 
 function logEmailError(message: string, extra: Record<string, unknown>) {
   console.error(`[email] ${message}`, extra);
-}
-
-async function sendViaResend(opts: {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
-  ics?: { filename: string; content: string };
-}): Promise<EmailSendResult> {
-  const key = getResendApiKey();
-  if (!key) {
-    return { ok: false, skipped: true, error: RESEND_MISSING_IT };
-  }
-  try {
-    const resend = new Resend(key);
-    const cancelled = Boolean(opts.ics && /METHOD:CANCEL/.test(opts.ics.content));
-    const { data, error } = await resend.emails.send({
-      from: fromAddress(),
-      to: opts.to,
-      replyTo: getAdminEmail(),
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-      attachments: opts.ics
-        ? [{
-            filename: opts.ics.filename,
-            // Base64 string: JSON.stringify(Buffer) is not valid for the Resend API.
-            content: Buffer.from(opts.ics.content, "utf8").toString("base64"),
-            contentType: cancelled
-              ? "text/calendar; charset=utf-8; method=CANCEL"
-              : "text/calendar; charset=utf-8; method=PUBLISH",
-          }]
-        : undefined,
-    });
-    if (error) {
-      logEmailError("Resend ha rifiutato l'invio", {
-        to: opts.to,
-        subject: opts.subject,
-        name: error.name,
-        error: error.message,
-      });
-      return { ok: false, error: error.message };
-    }
-    console.info("[email] inviata via Resend", { to: opts.to, subject: opts.subject, id: data?.id });
-    return { ok: true, id: data?.id };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Invio email fallito";
-    logEmailError("eccezione durante l'invio Resend", { to: opts.to, subject: opts.subject, error: message });
-    return { ok: false, error: message };
-  }
 }
 
 export async function sendEmail(opts: {
@@ -124,73 +47,31 @@ export async function sendEmail(opts: {
   html: string;
   text?: string;
   ics?: { filename: string; content: string };
-  /** Salon alerts: Gmail/Mailgun, then Resend, then FormSubmit if Resend test-mode blocks Felice. */
+  /** Ignored — Gmail SMTP is the only transport. */
   salonFallback?: boolean;
 }): Promise<EmailSendResult> {
-  if (isGmailSmtpConfigured()) {
-    const gmail = await sendViaGmail({
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-      replyTo: getAdminEmail(),
-      ics: opts.ics,
-    });
-    if (gmail.ok) {
-      console.info("[email] inviata via Gmail", { to: opts.to, subject: opts.subject, id: gmail.id });
-      return { ok: true, id: gmail.id };
-    }
-    logEmailError("Gmail ha rifiutato l'invio", { to: opts.to, error: gmail.error });
-  }
-
-  if (isMailgunConfigured()) {
-    const mailgun = await sendViaMailgun({
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-      replyTo: getAdminEmail(),
-      ics: opts.ics,
-    });
-    if (mailgun.ok) {
-      console.info("[email] inviata via Mailgun", { to: opts.to, subject: opts.subject, id: mailgun.id });
-      return { ok: true, id: mailgun.id };
-    }
-    logEmailError("Mailgun ha rifiutato l'invio", { to: opts.to, error: mailgun.error });
-  }
-
-  const key = getResendApiKey();
-  const skipResendTestBlock = opts.salonFallback && isResendTestFrom() && !isResendAllowedRecipient(opts.to);
-  if (key && !skipResendTestBlock) {
-    const resend = await sendViaResend(opts);
-    if (resend.ok) return resend;
-    if (!opts.salonFallback || !isResendTestRecipientError(resend.error || "")) {
-      if (!opts.salonFallback) return resend;
-    }
-  } else if (!key && !opts.salonFallback) {
-    console.warn("[email] RESEND_API_KEY assente: invio saltato", {
+  if (!isGmailSmtpConfigured() && !isGmailConfigured()) {
+    console.warn("[email] GMAIL_USER / GMAIL_APP_PASSWORD assente: invio saltato", {
       to: opts.to,
       subject: opts.subject,
     });
-    return { ok: false, skipped: true, error: RESEND_MISSING_IT };
+    return { ok: false, skipped: true, error: GMAIL_MISSING_IT };
   }
 
-  if (opts.salonFallback && isSalonFormRelayEnabled()) {
-    const relay = await sendViaFormSubmit({
-      to: opts.to,
-      subject: opts.subject,
-      text: opts.text || opts.subject,
-    });
-    if (relay.ok) {
-      console.info("[email] avviso salone via relay", { to: opts.to, subject: opts.subject });
-      return { ok: true };
-    }
-    logEmailError("relay salone non inviato", { to: opts.to, error: relay.error });
-    return { ok: false, error: relay.error };
+  const gmail = await sendViaGmail({
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    text: opts.text,
+    replyTo: getAdminEmail(),
+    ics: opts.ics,
+  });
+  if (gmail.ok) {
+    console.info("[email] inviata via Gmail", { to: opts.to, subject: opts.subject, id: gmail.id });
+    return { ok: true, id: gmail.id };
   }
-
-  if (!key) return { ok: false, skipped: true, error: RESEND_MISSING_IT };
-  return { ok: false, error: "Invio email al salone non riuscito." };
+  logEmailError("Gmail ha rifiutato l'invio", { to: opts.to, error: gmail.error });
+  return { ok: false, error: gmail.error };
 }
 
 function escapeHtml(value: string) {
@@ -341,6 +222,31 @@ export function customerCancelEmail(opts: { firstName: string; service: string; 
   };
 }
 
+/** Client notice when staff cancels from the gestionale (not a self-cancel). */
+export function staffCancelCustomerEmail(opts: {
+  firstName: string;
+  service: string;
+  date: string;
+  time: string;
+  barber?: string;
+  bodyText: string;
+}) {
+  const barber = opts.barber?.trim()
+    ? `<br/>👤 Barber: <strong>${escapeHtml(opts.barber)}</strong>`
+    : "";
+  return {
+    subject: `Appuntamento annullato dal salone — ${SITE.name}`,
+    text: opts.bodyText,
+    html: wrap(`
+      <p>Ciao ${escapeHtml(opts.firstName)},</p>
+      <p>il tuo appuntamento per <strong>${escapeHtml(opts.service)}</strong> del
+      <strong>${escapeHtml(opts.date)}</strong> alle <strong>${escapeHtml(opts.time)}</strong>
+      è stato <strong>annullato dal salone</strong>.${barber}</p>
+      <p>Lo slot è di nuovo libero. Puoi riprenotare online o su WhatsApp al ${SITE.phone}.</p>
+      <p style="font-size:13px;color:#B5B5B5;">Apri l'allegato .ics di disdetta per rimuovere l'evento dal calendario.</p>`),
+  };
+}
+
 export function ownerCancelEmail(opts: {
   firstName: string; lastName: string; email: string; service: string; date: string; time: string;
 }) {
@@ -370,32 +276,19 @@ async function sendOwnerEmails(opts: {
   owner: { subject: string; html: string; text: string };
   ics: { filename: string; content: string };
 }): Promise<OwnerNotifyResult> {
-  const targets = getOwnerNotifyEmails();
+  const target = getBookingNotificationEmail();
   const results: { to: string; result: EmailSendResult }[] = [];
-  const admin = getAdminEmail().trim().toLowerCase();
 
-  for (const to of targets) {
-    try {
-      const result = await sendEmail({ to, ...opts.owner, ics: opts.ics, salonFallback: true });
-      results.push({ to, result });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Invio email admin fallito";
-      logEmailError("avviso salone non inviato", { to, error: message });
-      results.push({ to, result: { ok: false, error: message } });
-    }
+  try {
+    const result = await sendEmail({ to: target, ...opts.owner, ics: opts.ics });
+    results.push({ to: target, result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invio email admin fallito";
+    logEmailError("avviso salone non inviato", { to: target, error: message });
+    results.push({ to: target, result: { ok: false, error: message } });
   }
 
-  const adminOk = results.some((row) => row.to === admin && row.result.ok);
-  if (!adminOk) {
-    logEmailError("avviso a Felice non recapitato", {
-      targets,
-      adminEmail: admin,
-      resendTest: isResendTestFrom(),
-      hint: "Mailgun dominio verificato, oppure SALON_FORM_RELAY, oppure verifica polesebarbershop.it su Resend",
-    });
-  }
-
-  return { results, ok: adminOk };
+  return { results, ok: results.some((r) => r.result.ok) };
 }
 
 export async function sendBookingEmails(opts: {
@@ -408,6 +301,11 @@ export async function sendBookingEmails(opts: {
   const owner = await sendOwnerEmails({ owner: opts.owner, ics: opts.ics });
   const admin = owner.results[0]?.result ?? { ok: false, error: "Nessun destinatario salone configurato." };
   return { customer, admin, owner };
+}
+
+export function publicCustomerMailError(error: string | undefined, hasPhone: boolean): string {
+  const base = `Email di conferma non inviata al cliente: ${error ?? "errore sconosciuto"}.`;
+  return hasPhone ? `${base} Il cliente riceverà conferma via WhatsApp.` : base;
 }
 
 export async function sendCancelEmails(opts: {

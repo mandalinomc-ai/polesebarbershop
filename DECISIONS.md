@@ -28,7 +28,36 @@ Do not recreate deleted `polesebarbershop`.
 
 ## D3 — Product copy on the restored look
 
-- WhatsApp: **+39 327 015 6225**
-- Maps: **Corso Dante 45**
-- Opening: **7 settembre 2026**
-- Booking: `/#prenota` and `/prenota`
+## D4 — GitHub CI for production deploys
+
+**Decision:** `.github/workflows/vercel-production.yml` deploys `main` to `polesebarbershop` on every push, using:
+
+- `VERCEL_TOKEN` — personal/team token from https://vercel.com/account/tokens
+- `VERCEL_ORG_ID` — team/user ID
+- `VERCEL_PROJECT_ID` — `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf`
+
+**Status:** Workflow exists but secrets are missing. Until configured, deploys must be manual (local CLI).
+
+## D5 — Do not change code for deploy tasks
+
+**Decision:** Deploy/alias/domain work is **infrastructure only**. Do not modify:
+
+- Booking logic or Supabase schema
+- Site design, copy, or assets
+- Gmail SMTP/Supabase env configuration in code
+
+Continuity docs and Vercel routing are the scope.
+
+## D6 — Supabase & Gmail SMTP
+
+- Supabase: single project `dbbncprluqjrofjemfbg` — appointments, barbers, services, CRM
+- Gmail SMTP via nodemailer (App Password auth) — replaces Resend
+- 30-minute online cancellation enforced at all layers (app + API + DB)
+
+## D7 — URL strategy (target state)
+
+| URL | Target |
+|-----|--------|
+| `polesebarbershop.vercel.app` | Primary Vercel production URL |
+| `felicepolesebarbershop.vercel.app` | Alias → same deployment as above |
+| `polesebarbershop.it` (future) | Custom domain after DNS verification |

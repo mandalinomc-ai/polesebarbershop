@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   getAdminEmail,
-  getNotifyEmail,
-  getOwnerNotifyEmails,
-  isResendTestFrom,
+  getBookingNotificationEmail,
 } from "./site-config";
 
 describe("getAdminEmail", () => {
@@ -36,48 +34,26 @@ describe("getAdminEmail", () => {
   });
 });
 
-describe("owner notify routing", () => {
+describe("getBookingNotificationEmail", () => {
+  const origBooking = process.env.BOOKING_NOTIFICATION_EMAIL;
   const origAdmin = process.env.ADMIN_EMAIL;
-  const origOwner = process.env.OWNER_EMAIL;
-  const origNotify = process.env.NOTIFY_EMAIL;
-  const origFrom = process.env.RESEND_FROM;
 
   afterEach(() => {
+    if (origBooking === undefined) delete process.env.BOOKING_NOTIFICATION_EMAIL;
+    else process.env.BOOKING_NOTIFICATION_EMAIL = origBooking;
     if (origAdmin === undefined) delete process.env.ADMIN_EMAIL;
     else process.env.ADMIN_EMAIL = origAdmin;
-    if (origOwner === undefined) delete process.env.OWNER_EMAIL;
-    else process.env.OWNER_EMAIL = origOwner;
-    if (origNotify === undefined) delete process.env.NOTIFY_EMAIL;
-    else process.env.NOTIFY_EMAIL = origNotify;
-    if (origFrom === undefined) delete process.env.RESEND_FROM;
-    else process.env.RESEND_FROM = origFrom;
   });
 
-  it("detects Resend test From", () => {
-    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
-    expect(isResendTestFrom()).toBe(true);
-    process.env.RESEND_FROM = "Polese <noreply@polesebarbershop.it>";
-    expect(isResendTestFrom()).toBe(false);
+  it("prefers BOOKING_NOTIFICATION_EMAIL", () => {
+    process.env.BOOKING_NOTIFICATION_EMAIL = "booking@example.com";
+    process.env.ADMIN_EMAIL = "admin@example.com";
+    expect(getBookingNotificationEmail()).toBe("booking@example.com");
   });
 
-  it("always includes the salon Gmail, plus NOTIFY_EMAIL when it differs", () => {
-    process.env.RESEND_FROM = "Felice Polese Barber Shop <onboarding@resend.dev>";
-    process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
-    process.env.NOTIFY_EMAIL = "notify@example.com";
-    expect(getNotifyEmail()).toBe("notify@example.com");
-    expect(getOwnerNotifyEmails()).toEqual([
-      "felicepolese550@gmail.com",
-      "notify@example.com",
-    ]);
-  });
-
-  it("sends to admin and notify when domain is verified", () => {
-    process.env.RESEND_FROM = "Polese <noreply@polesebarbershop.it>";
-    process.env.ADMIN_EMAIL = "felicepolese550@gmail.com";
-    process.env.NOTIFY_EMAIL = "notify@example.com";
-    expect(getOwnerNotifyEmails()).toEqual([
-      "felicepolese550@gmail.com",
-      "notify@example.com",
-    ]);
+  it("falls back to ADMIN_EMAIL", () => {
+    delete process.env.BOOKING_NOTIFICATION_EMAIL;
+    process.env.ADMIN_EMAIL = "admin@example.com";
+    expect(getBookingNotificationEmail()).toBe("admin@example.com");
   });
 });

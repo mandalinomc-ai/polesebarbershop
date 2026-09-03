@@ -7,9 +7,9 @@
 #   VERCEL_PROJECT_ID     — prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf
 #
 # Required Vercel production env vars (Project → Settings → Environment Variables):
-#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM,
-#   ADMIN_PASSWORD, ADMIN_EMAIL, OWNER_EMAIL,
-#   NEXT_PUBLIC_SITE_URL=https://felicepolesebarbershop.vercel.app
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, GMAIL_USER, GMAIL_APP_PASSWORD,
+#   BOOKING_NOTIFICATION_EMAIL, ADMIN_PASSWORD, ADMIN_EMAIL, OWNER_EMAIL,
+#   NEXT_PUBLIC_SITE_URL=https://polesebarbershop.vercel.app
 
 name: Vercel production
 

@@ -116,7 +116,7 @@ export async function GET(request: Request) {
       days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
       firstBookableDate: first,
       shopOpen: false,
-      warning: "Il salone è chiuso in questo giorno (lunedì e domenica).",
+      warning: "Il salone è chiuso in questo giorno (domenica).",
     });
   }
 

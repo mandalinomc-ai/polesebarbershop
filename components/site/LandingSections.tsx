@@ -1,6 +1,4 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { SITE, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
+import { SITE, getMailtoUrl, getMapsUrl, getWhatsAppUrl } from "@/lib/site-config";
 import {
   BookingSectionNote,
   FreshaBookingFlow,
@@ -8,21 +6,9 @@ import {
 import { ServiceListino } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
 import { SalonVideo } from "@/components/site/SalonVideo";
-import {
-  FELICE_WORKING_FILENAME,
-  FELICE_WORKING_VIDEO,
-} from "@/lib/site-videos";
-
-const FELICE_BIO_VIDEO_PATH = join(
-  process.cwd(),
-  "public",
-  "assets",
-  "video",
-  FELICE_WORKING_FILENAME,
-);
+import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 
 export function LandingSections() {
-  const showFeliceBioVideo = existsSync(FELICE_BIO_VIDEO_PATH);
   return (
     <>
       <section id="about" className="section-pad bg-marble-light marble-accent">
@@ -30,11 +16,7 @@ export function LandingSections() {
         <h2 className="section-title font-serif reveal reveal-d1">
           Felice Polese giovane talento
         </h2>
-        <div
-          className={
-            showFeliceBioVideo ? "about-grid" : "about-grid about-grid-copy-only"
-          }
-        >
+        <div className="about-grid">
           <div className="about-copy reveal">
             <p className="prose">
               <span className="badge-match badge-match-inline">
@@ -44,7 +26,7 @@ export function LandingSections() {
             <p className="prose">
               Felice Polese, giovane talento della barberia italiana, porta la
               tecnica del fade e il taglio sartoriale nel nuovo salone in{" "}
-              <strong>Corso Dante 45</strong>, {SITE.city}.
+              <strong>{SITE.address}</strong>, {SITE.city}.
             </p>
             <p className="prose">
               In salone lavorano <strong>Felice</strong> e <strong>Davide</strong>{" "}
@@ -61,14 +43,12 @@ export function LandingSections() {
               </a>
             </p>
           </div>
-          {showFeliceBioVideo ? (
-            <div className="about-video glass-card">
-              <SalonVideo
-                video={FELICE_WORKING_VIDEO}
-                className="felice-video-hero"
-              />
-            </div>
-          ) : null}
+          <div className="about-video glass-card">
+            <SalonVideo
+              video={FELICE_WORKING_VIDEO}
+              className="felice-video-hero"
+            />
+          </div>
         </div>
       </section>
 
@@ -107,6 +87,15 @@ export function LandingSections() {
               <a href={`tel:${SITE.phoneTel}`} className="contact-link">
                 {SITE.phoneDisplay}
               </a>
+              <br />
+              <a
+                href={getWhatsAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="contact-link"
+              >
+                Consulenza su WhatsApp
+              </a>
             </p>
             <p>
               <strong>Email</strong>
@@ -118,9 +107,17 @@ export function LandingSections() {
             <p>
               <strong>Orari</strong>
               <br />
-              {SITE.hours.weekdays}
-              <br />
               {SITE.hours.monday}
+              <br />
+              {SITE.hours.tuesday}
+              <br />
+              {SITE.hours.wednesday}
+              <br />
+              {SITE.hours.thursday}
+              <br />
+              {SITE.hours.friday}
+              <br />
+              {SITE.hours.saturday}
               <br />
               {SITE.hours.sunday}
             </p>

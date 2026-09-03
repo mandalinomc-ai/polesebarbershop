@@ -2,7 +2,7 @@
   "name": "polesebarbershop",
   "version": "2.0.0",
   "private": true,
-  "description": "Felice Polese Barber Shop — sito pubblico e prenotazioni (Resend + .ics, senza Twilio/QStash)",
+  "description": "Felice Polese Barber Shop — sito pubblico e prenotazioni (Gmail SMTP + .ics, senza Twilio/QStash)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -25,7 +25,6 @@
     "nodemailer": "^9.1.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "resend": "^4.8.0",
     "tailwind-merge": "^3.3.1",
     "zod": "^3.25.76"
   },

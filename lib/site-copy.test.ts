@@ -56,12 +56,13 @@ describe("public copy vs official identity", () => {
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/Felice Polese Barber Shop/);
   });
 
-  it("uses MODERN BARBERING tagline and compact listino that opens booking", () => {
+  it("uses MODERN BARBERING tagline and listino price boxes with PRENOTA CTA", () => {
     const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
-    expect(listino).toMatch(/listino-row/);
+    expect(listino).toMatch(/listino-box/);
     expect(listino).toMatch(/serviceBookingHref/);
     expect(listino).toMatch(/formatDuration/);
-    expect(listino).not.toMatch(/btn-listino-prenota/);
+    expect(listino).toMatch(/btn-listino-prenota/);
+    expect(listino).toMatch(/Prenota/);
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/Plus_Jakarta_Sans/);
@@ -72,7 +73,7 @@ describe("public copy vs official identity", () => {
   it("uses the official phone, address, CF and P.IVA", () => {
     expect(SITE.phone).toBe("+39 327 015 6225");
     expect(SITE.whatsapp).toBe("393270156225");
-    expect(SITE.address).toBe("Corso Dante 45");
+    expect(SITE.address).toBe("Corso Dante Alighieri, 44");
     expect(SITE.openingDate).toBe("2026-09-07");
     expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
     expect(SITE.vatNumber).toBe("01894030624");
@@ -94,8 +95,9 @@ describe("public copy vs official identity", () => {
   it("has no leftover old phone, wrong address, or banned copy in source", () => {
     const files = walk(process.cwd());
     const banned = [
-      /Corso Dante Alighieri, 44/,
-      /Corso Dante Alighieri 44/,
+      /Corso Dante 45/,
+      /Alighieri, 45/,
+      /Dante 45/,
       /Combo premium/,
       /dermatolog/i,
       /caduta capelli/i,
@@ -245,6 +247,7 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/Santa Maria degli Angeli/);
     const catalog = readFileSync(join(process.cwd(), "lib/catalog.ts"), "utf8");
     expect(catalog).not.toMatch(/Consulenza Tricologica/i);
+    expect(catalog).not.toMatch(/Tintura Nero/);
     expect(catalog).not.toMatch(/name: "Razor Taper"/);
     expect(catalog).not.toMatch(/name: "Skin Fade"/);
     expect(catalog).not.toMatch(/id: "combo-classico"/);
@@ -274,22 +277,26 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/Il tuo appuntamento/);
     expect(wizard).toMatch(/listinoBeside/);
     expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
-    expect(wizard).toMatch(/Tocca un servizio nel listino/);
+    expect(wizard).toMatch(/Tocca i servizi nel listino/);
     expect(wizard).toMatch(/Qualsiasi disponibilità/);
     expect(wizard).toMatch(/non disponibile/);
     expect(wizard).toMatch(/Scegli la data/);
     expect(wizard).toMatch(/Scegli l&apos;orario/);
     expect(wizard).toMatch(/getScheduleSlots/);
-    expect(wizard).toMatch(/setStep\(2\)/);
+    expect(wizard).toMatch(/setStep\(1\)/);
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
+    expect(reel).toMatch(/SERVICE_SHOWCASE_VIDEOS/);
+    expect(reel).toMatch(/Ogni trattamento con il suo media/);
+    expect(reel).toMatch(/service-price-on-media/);
+    expect(reel).toMatch(/FillCoverImage/);
+    expect(reel).not.toMatch(/Tintura Nero/);
     expect(reel).toMatch(/CUTTING_TECHNIQUE_VIDEOS/);
-    expect(reel).toMatch(/Tecniche di taglio/);
-    expect(reel).toMatch(/Scopri alcune delle tecniche che utilizziamo nei nostri tagli/);
+    expect(reel).toMatch(/Sfumature/);
     expect(reel).toMatch(/Prenota il tuo taglio/);
-    expect(reel).not.toMatch(/€/);
-    expect(reel).not.toMatch(/<img/);
+    expect(reel).toMatch(/formatPriceRange/);
+    expect(reel).toMatch(/serviceBookingHref/);
     expect(reel).not.toMatch(/reveal/);
     const videos = readFileSync(join(process.cwd(), "lib/site-videos.ts"), "utf8");
     expect(videos).toMatch(/Razor Fade — Tecnica di sfumatura/);
@@ -298,11 +305,11 @@ describe("public copy vs official identity", () => {
     expect(videos).not.toMatch(/id: "razor-taper"/);
     expect(videos).not.toMatch(/id: "skin-fade"/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
-    expect(chrome).toMatch(/href: "\/#gallery", label: "Tecniche"/);
+    expect(chrome).toMatch(/href: "\/#gallery", label: "Sfumature"/);
     expect(chrome).toMatch(/href: "\/#listino", label: "Listino"/);
     expect(chrome).not.toMatch(/label: "Fade"/);
     expect(chrome).not.toMatch(/label: "Consulenza"/);
-    expect(chrome).not.toMatch(/\/#about/);
+    expect(chrome).toMatch(/href: "\/#about", label: "Servizi"/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/hero-editorial/);
     expect(hero).toMatch(/bg-marble-light/);
@@ -316,7 +323,9 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/Listino/);
     expect(listino).toMatch(/BOOKING_SERVICE_EVENT/);
     expect(listino).toMatch(/formatPriceRange/);
-    expect(listino).toMatch(/listino-row/);
+    expect(listino).toMatch(/listino-box/);
+    expect(listino).toMatch(/btn-listino-prenota/);
+    expect(listino).toMatch(/Prenota/);
     expect(listino).not.toMatch(/listino-card/);
   });
 
@@ -325,11 +334,12 @@ describe("public copy vs official identity", () => {
     expect(HERO_BEFORE_OPENING).toBe("Prenota il tuo appuntamento per l'apertura");
     expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
     expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe(HERO_CTA);
-    expect(HERO_SLOT_CTA).toBe("Prenota il tuo slot");
+    expect(HERO_SLOT_CTA).toBe("Prenota il tuo posto");
     expect(HERO_SENTENCE).toBe("Precisione tecnica, stile contemporaneo.");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/getHeroHeadline/);
     expect(hero).toMatch(/HERO_PRE_OPENING_EYEBROW/);
+    expect(hero).toMatch(/OpeningCountdown/);
     expect(hero).toMatch(/HERO_SENTENCE/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
@@ -346,9 +356,16 @@ describe("public copy vs official identity", () => {
   });
 
   it("puts contact info and maps link in July 3 contact section", () => {
-    expect(SITE.hours.weekdays).toBe("Mar — Sab · 09:30 — 20:00");
-    expect(SITE.hours.monday).toMatch(/Chiuso/);
+    expect(SITE.hours.monday).toBe("Lun · 15:00 — 19:00");
+    expect(SITE.hours.tuesday).toBe("Mar · 08:30 — 19:00");
+    expect(SITE.hours.wednesday).toBe("Mer · 08:30 — 19:00");
+    expect(SITE.hours.thursday).toBe("Gio · 08:30 — 20:00");
+    expect(SITE.hours.friday).toBe("Ven · 08:00 — 21:00");
+    expect(SITE.hours.saturday).toBe("Sab · 08:00 — 21:00");
     expect(SITE.hours.sunday).toMatch(/Chiuso/);
+    expect(SITE.hours.weekdays).toMatch(/15:00/);
+    expect(SITE.hours.weekdays).toMatch(/08:30/);
+    expect(SITE.hours.weekdays).toMatch(/08:00—21:00/);
     expect(SITE.instagramHandle).toBe("@felicepolese_barber");
     expect(SITE.instagram).toBe("https://instagram.com/felicepolese_barber");
     expect(getWhatsAppChatUrl()).toBe("https://wa.me/393270156225");
@@ -365,6 +382,8 @@ describe("public copy vs official identity", () => {
     const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(contact).toMatch(/id="contact"/);
     expect(contact).toMatch(/Raggiungimi ora su Google Maps/);
+    expect(contact).toMatch(/Consulenza su WhatsApp/);
+    expect(contact).toMatch(/getWhatsAppUrl/);
     expect(contact).toMatch(/SITE\.hours/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/SITE_PDFS\.logo/);
@@ -385,17 +404,19 @@ describe("public copy vs official identity", () => {
     expect(crm).not.toMatch(/\.limit\(4000\)/);
   });
 
-  it("stacks a Maps FAB Raggiungimi ora to Corso Dante 45", () => {
+  it("stacks a Maps FAB Raggiungimi ora to Corso Dante Alighieri, 44", () => {
     expect(CANCEL_MINUTES_BEFORE).toBe(30);
-    expect(MAPS_DESTINATION).toBe("Corso Dante 45, 82100 Benevento");
-    expect(getMapsUrl()).toContain("maps.google.com");
-    expect(getMapsUrl()).toContain("destination=");
-    expect(getMapsUrl()).toContain(encodeURIComponent("Corso Dante 45"));
+    expect(MAPS_DESTINATION).toBe("Corso Dante Alighieri, 44, 82100 Benevento");
+    expect(getMapsUrl()).toBe(
+      "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent("Corso Dante Alighieri, 44, 82100 Benevento"),
+    );
+    expect(getMapsUrl()).toContain(encodeURIComponent("Corso Dante Alighieri, 44"));
     expect(CANCEL_NOTICE_IT).toBe("30 minuti");
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/id="maps-fab"/);
     expect(chrome).toMatch(/aria-label="Raggiungimi ora su Google Maps"/);
-    expect(chrome).toMatch(/Raggiungimi ora su Google Maps — Corso Dante 45/);
+    expect(chrome).toMatch(/Raggiungimi ora su Google Maps — \$\{SITE\.address\}/);
     expect(chrome).toMatch(/fab-stack/);
     expect(chrome).toMatch(/<MapsFab \/>/);
     expect(chrome).toMatch(/<WhatsAppFab \/>/);

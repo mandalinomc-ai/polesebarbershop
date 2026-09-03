@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
+  History,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -13,6 +14,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
 import {
   formatItalianDate,
@@ -22,7 +24,7 @@ import {
 } from "@/lib/availability";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
-import { formatEuroCents, type ClientRecord, type CrmStats } from "@/lib/crm";
+import { formatEuroCents, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
 import {
   NOTIFY_TEMPLATE_LABEL,
   WHATSAPP_MISSING_IT,
@@ -31,7 +33,7 @@ import {
   type NotifyTemplate,
 } from "@/lib/crm-notify";
 
-type Tab = "dashboard" | "agenda" | "clienti" | "statistiche";
+type Tab = "dashboard" | "agenda" | "clienti" | "statistiche" | "storico";
 
 type AdminAppt = {
   id: string;
@@ -53,9 +55,30 @@ type AdminAppt = {
 type Agenda = {
   date: string;
   weekStart: string;
+  view?: string;
+  rangeFrom?: string;
+  rangeTo?: string;
   appointments: AdminAppt[];
   takings: { dayCents: number; weekCents: number };
   warning?: string;
+};
+
+type HistoryAppt = {
+  id: string;
+  status: string;
+  statusLabel: string;
+  barberName: string;
+  serviceNames: string;
+  customerName: string;
+  phone?: string;
+  email?: string;
+  startsAt: string;
+  timeLabel: string;
+  dateLabel: string;
+  durationMin: number;
+  priceCents: number;
+  isWalkIn: boolean;
+  notes?: string | null;
 };
 
 const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
@@ -63,6 +86,7 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "agenda", label: "Agenda", icon: CalendarDays },
   { id: "clienti", label: "Clienti", icon: Users },
   { id: "statistiche", label: "Statistiche", icon: BarChart3 },
+  { id: "storico", label: "Storico", icon: History },
 ];
 
 const STATUS_IT: Record<string, string> = {
@@ -93,10 +117,15 @@ export function GestionalePanel() {
   const [selected, setSelected] = useState<ClientRecord | null>(null);
   const [notifyFor, setNotifyFor] = useState<ClientRecord | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [agendaView, setAgendaView] = useState<"day" | "week">("day");
+  const [statsPeriod, setStatsPeriod] = useState<StatsPeriod>("month");
+  const [history, setHistory] = useState<HistoryAppt[]>([]);
+  const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
+  const [bellTick, setBellTick] = useState(0);
 
   const loadAgenda = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/appointments?date=${date}`);
+      const res = await fetch(`/api/admin/appointments?date=${date}&view=${agendaView}`);
       if (res.status === 401) {
         setAuth("needed");
         return false;
@@ -116,11 +145,11 @@ export function GestionalePanel() {
       setAuth((prev) => (prev === "ok" ? "ok" : "needed"));
       return false;
     }
-  }, [date]);
+  }, [date, agendaView]);
 
   const loadCrm = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/crm?date=${date}`);
+      const res = await fetch(`/api/admin/crm?date=${date}&period=${statsPeriod}`);
       if (res.status === 401) {
         setAuth("needed");
         return;
@@ -142,13 +171,33 @@ export function GestionalePanel() {
     } catch {
       setError("Connessione non disponibile. Riprova.");
     }
-  }, [date]);
+  }, [date, statsPeriod]);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/history");
+      if (res.status === 401) {
+        setAuth("needed");
+        return;
+      }
+      const json = (await res.json()) as { appointments?: HistoryAppt[]; warning?: string };
+      if (!res.ok) return;
+      setHistory(json.appointments || []);
+      if (json.warning) setCrmWarning(json.warning);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setError("");
     const ok = await loadAgenda();
-    if (ok) await loadCrm();
-  }, [loadAgenda, loadCrm]);
+    if (ok) {
+      await loadCrm();
+      await loadHistory();
+      setBellTick((n) => n + 1);
+    }
+  }, [loadAgenda, loadCrm, loadHistory]);
 
   useEffect(() => {
     void load();
@@ -282,6 +331,13 @@ export function GestionalePanel() {
             <h1 className="font-serif">{SITE.name}</h1>
           </div>
           <div className="crm-top-actions">
+            <CrmNotificationBell
+              reloadToken={bellTick}
+              onOpenAppointment={(d) => {
+                setDate(d);
+                setTab("agenda");
+              }}
+            />
             <input
               className="input-lux"
               type="date"
@@ -314,6 +370,7 @@ export function GestionalePanel() {
             stats={stats}
             clients={clients}
             date={date}
+            agenda={agenda}
             onOpenClient={(c) => {
               setSelected(c);
               setTab("clienti");
@@ -324,7 +381,10 @@ export function GestionalePanel() {
           <AgendaView
             agenda={agenda}
             date={date}
+            view={agendaView}
+            onViewChange={setAgendaView}
             onPatch={patch}
+            onMove={setMoveAppt}
             onNotify={(appt) => {
               const match =
                 clients.find(
@@ -344,6 +404,10 @@ export function GestionalePanel() {
                   lastVisitAt: appt.startsAt || null,
                   lastVisitStatus: appt.status,
                   spendCents: appt.priceCents,
+                  nextVisitAt: null,
+                  topService: null,
+                  topBarber: appt.barberName,
+                  crmNotes: "",
                   services: [],
                   history: [
                     {
@@ -371,10 +435,21 @@ export function GestionalePanel() {
             onSelect={setSelected}
             onNotify={setNotifyFor}
             onBulk={() => setBulkOpen(true)}
+            onSaveNotes={async (key, notes) => {
+              const res = await fetch("/api/admin/crm", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clientKey: key, notes }),
+              });
+              if (res.ok) void loadCrm();
+            }}
             total={clients.length}
           />
         ) : null}
-        {tab === "statistiche" ? <StatsView stats={stats} date={date} weekStart={agenda?.weekStart} /> : null}
+        {tab === "statistiche" ? (
+          <StatsView stats={stats} date={date} weekStart={agenda?.weekStart} period={statsPeriod} onPeriodChange={setStatsPeriod} />
+        ) : null}
+        {tab === "storico" ? <StoricoView history={history} /> : null}
       </div>
 
       <nav className="crm-bottom" aria-label="Sezioni gestionale">
@@ -401,6 +476,17 @@ export function GestionalePanel() {
       ) : null}
       {notifyFor ? <NotifyModal client={notifyFor} onClose={() => setNotifyFor(null)} /> : null}
       {bulkOpen ? <BulkWhatsAppModal clients={filteredClients} onClose={() => setBulkOpen(false)} /> : null}
+      {moveAppt ? (
+        <MoveModal
+          appt={moveAppt}
+          date={date}
+          onClose={() => setMoveAppt(null)}
+          onSaved={() => {
+            setMoveAppt(null);
+            void load();
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -419,35 +505,75 @@ function DashboardView({
   stats,
   clients,
   date,
+  agenda,
   onOpenClient,
 }: {
   stats: CrmStats | null;
   clients: ClientRecord[];
   date: string;
+  agenda: Agenda | null;
   onOpenClient: (c: ClientRecord) => void;
 }) {
   const recent = clients.slice(0, 6);
+  const todayAppts = (agenda?.appointments || []).filter((a) => a.status !== "cancelled");
+  const upcoming = clients
+    .flatMap((c) => c.history)
+    .filter((h) => !h.cancelled && h.startsAt > new Date().toISOString())
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+    .slice(0, 5);
   return (
     <div className="crm-stack">
       <section className="crm-kpis">
-        <Kpi label="Clienti" value={String(stats?.totalClients ?? 0)} hint="Anagrafica da prenotazioni e walk-in" />
-        <Kpi label="Visite" value={String(stats?.totalVisits ?? 0)} hint="Inclusi gli appuntamenti annullati" />
+        <Kpi label="Oggi in agenda" value={String(stats?.todayAppointments ?? todayAppts.length)} hint={formatItalianDate(date)} />
+        <Kpi label="Prossimi" value={String(stats?.upcomingCount ?? 0)} hint="Appuntamenti futuri confermati" />
+        <Kpi label="Incasso previsto oggi" value={formatEuroCents(stats?.expectedRevenueCents || 0)} hint="Solo confermati" />
+        <Kpi label="Confermati" value={String(stats?.confirmedCount ?? 0)} hint={`Periodo: ${stats?.period || "all"}`} />
+        <Kpi label="Annullati" value={String(stats?.cancelledCount ?? 0)} hint={pct(stats?.cancelRate || 0)} />
+        <Kpi label="Clienti nuovi / di ritorno" value={`${stats?.newClients ?? 0} / ${stats?.returningClients ?? 0}`} />
+        <Kpi label="Clienti totali" value={String(stats?.totalClients ?? 0)} hint="Anagrafica da prenotazioni e walk-in" />
         <Kpi label="Incasso giorno" value={formatEuroCents(stats?.takings.dayCents || 0)} hint={formatItalianDate(date)} />
         <Kpi
           label="Incasso settimana"
           value={formatEuroCents(stats?.takings.weekCents || 0)}
           hint="Walk-in + prenotazioni confermate"
         />
-        <Kpi
-          label="Disdette / no-show"
-          value={pct(stats?.cancelRate || 0)}
-          hint={`${stats?.cancelledCount ?? 0} annullati su ${stats?.totalVisits ?? 0}`}
-        />
-        <Kpi
-          label="Visite per cliente"
-          value={(stats?.visitsPerClient || 0).toLocaleString("it-IT", { maximumFractionDigits: 1 })}
-        />
       </section>
+      <div className="crm-split">
+        <section className="crm-card">
+          <h2 className="font-serif">Appuntamenti di oggi</h2>
+          {todayAppts.length === 0 ? (
+            <p className="slot-status">Nessun appuntamento oggi.</p>
+          ) : (
+            <ul className="crm-list">
+              {todayAppts.map((a) => (
+                <li key={a.id}>
+                  <strong>{a.timeLabel}</strong>
+                  <span>
+                    {a.firstName} {a.lastName} · {a.serviceNames} · {a.barberName}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section className="crm-card">
+          <h2 className="font-serif">Prossimi appuntamenti</h2>
+          {upcoming.length === 0 ? (
+            <p className="slot-status">Nessun appuntamento in programma.</p>
+          ) : (
+            <ul className="crm-list">
+              {upcoming.map((h) => (
+                <li key={h.id}>
+                  <strong>{new Date(h.startsAt).toLocaleString("it-IT")}</strong>
+                  <span>
+                    {h.serviceNames} · {h.barberName}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
       <div className="crm-split">
         <section className="crm-card">
           <h2 className="font-serif">Servizi più prenotati</h2>
@@ -501,12 +627,18 @@ function DashboardView({
 function AgendaView({
   agenda,
   date,
+  view,
+  onViewChange,
   onPatch,
+  onMove,
   onNotify,
 }: {
   agenda: Agenda | null;
   date: string;
+  view: "day" | "week";
+  onViewChange: (v: "day" | "week") => void;
   onPatch: (id: string, body: Record<string, unknown>) => void;
+  onMove: (a: AdminAppt) => void;
   onNotify: (a: AdminAppt) => void;
 }) {
   const occupying = useMemo(
@@ -534,6 +666,21 @@ function AgendaView({
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
   return (
     <div className="crm-stack">
+      <div className="crm-toolbar">
+        <div className="crm-view-toggle">
+          <button type="button" className={view === "day" ? "active" : ""} onClick={() => onViewChange("day")}>
+            Giorno
+          </button>
+          <button type="button" className={view === "week" ? "active" : ""} onClick={() => onViewChange("week")}>
+            Settimana
+          </button>
+        </div>
+        {view === "week" && agenda?.rangeFrom ? (
+          <p className="slot-status">
+            {formatItalianDate(agenda.rangeFrom)} — {formatItalianDate(agenda.rangeTo || agenda.rangeFrom)}
+          </p>
+        ) : null}
+      </div>
       <section className="takings">
         <article>
           <span>Incasso giorno</span>
@@ -607,14 +754,20 @@ function AgendaView({
                     <p className="field-error">Annullato — resta in storico cliente</p>
                   ) : (
                     <div className="agenda-actions">
+                      <button type="button" onClick={() => onPatch(a.id, { status: "confirmed" })}>
+                        Conferma
+                      </button>
                       <button type="button" onClick={() => onPatch(a.id, { status: "completed" })}>
                         Completato
+                      </button>
+                      <button type="button" onClick={() => onMove(a)}>
+                        Sposta
                       </button>
                       <button type="button" onClick={() => onPatch(a.id, { status: "cancelled" })}>
                         Annulla
                       </button>
                       <button type="button" onClick={() => onNotify(a)}>
-                        Contatta
+                        Invia WhatsApp
                       </button>
                     </div>
                   )}
@@ -636,6 +789,7 @@ function ClientiView({
   onSelect,
   onNotify,
   onBulk,
+  onSaveNotes,
   total,
 }: {
   clients: ClientRecord[];
@@ -645,9 +799,16 @@ function ClientiView({
   onSelect: (c: ClientRecord | null) => void;
   onNotify: (c: ClientRecord) => void;
   onBulk: () => void;
+  onSaveNotes: (key: string, notes: string) => Promise<void>;
   total: number;
 }) {
   const open = selected && clients.find((c) => c.key === selected.key) ? selected : null;
+  const [notesDraft, setNotesDraft] = useState("");
+  const [notesMsg, setNotesMsg] = useState("");
+  useEffect(() => {
+    setNotesDraft(open?.crmNotes || "");
+    setNotesMsg("");
+  }, [open?.key, open?.crmNotes]);
   return (
     <div className="crm-stack">
       <div className="crm-toolbar">
@@ -732,7 +893,30 @@ function ClientiView({
           </header>
           <p className="crm-meta">
             {open.visitCount} visite (di cui {open.cancelledCount} annullate) · spesa {formatEuroCents(open.spendCents)}
+            {open.topService ? ` · top servizio: ${open.topService}` : ""}
+            {open.topBarber ? ` · top barbiere: ${open.topBarber}` : ""}
+            {open.nextVisitAt ? ` · prossimo: ${new Date(open.nextVisitAt).toLocaleString("it-IT")}` : ""}
           </p>
+          <label className="crm-notes-field">
+            Note cliente
+            <textarea
+              className="input-lux"
+              rows={3}
+              value={notesDraft}
+              onChange={(e) => setNotesDraft(e.target.value)}
+              placeholder="Preferenze, allergie, promemoria…"
+            />
+          </label>
+          <div className="admin-head-actions">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => void onSaveNotes(open.key, notesDraft).then(() => setNotesMsg("Note salvate."))}
+            >
+              Salva note
+            </button>
+            {notesMsg ? <span className="crm-ok">{notesMsg}</span> : null}
+          </div>
           <h3>Storico (inclusi annullati)</h3>
           {open.history.length === 0 ? (
             <p className="slot-status">Nessuna visita.</p>
@@ -743,7 +927,7 @@ function ClientiView({
                   <span>{new Date(h.startsAt).toLocaleString("it-IT")}</span>
                   <span>{h.serviceNames || "—"}</span>
                   <span>{h.barberName}</span>
-                  <span>{STATUS_IT[h.status] || h.status}</span>
+                  <span>{h.cancelled ? "ANNULLATA" : STATUS_IT[h.status] || h.status}</span>
                   <span>{formatEuroCents(h.priceCents)}</span>
                 </li>
               ))}
@@ -755,30 +939,110 @@ function ClientiView({
   );
 }
 
-function StatsView({ stats, date, weekStart }: { stats: CrmStats | null; date: string; weekStart?: string }) {
+function StatsView({
+  stats,
+  date,
+  weekStart,
+  period,
+  onPeriodChange,
+}: {
+  stats: CrmStats | null;
+  date: string;
+  weekStart?: string;
+  period: StatsPeriod;
+  onPeriodChange: (p: StatsPeriod) => void;
+}) {
+  const periods: { id: StatsPeriod; label: string }[] = [
+    { id: "today", label: "Oggi" },
+    { id: "7d", label: "7 giorni" },
+    { id: "month", label: "Mese" },
+    { id: "year", label: "Anno" },
+    { id: "all", label: "Tutto" },
+  ];
+  const maxAppt = Math.max(...(stats?.appointmentsOverTime.map((p) => p.count) || [1]), 1);
+  const maxRev = Math.max(...(stats?.revenueOverTime.map((p) => p.revenueCents) || [1]), 1);
   return (
     <div className="crm-stack">
+      <div className="crm-toolbar">
+        {periods.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            className={period === p.id ? "btn btn-gold" : "btn btn-outline"}
+            onClick={() => onPeriodChange(p.id)}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
       <section className="crm-kpis">
+        <Kpi label="Appuntamenti" value={String(stats?.totalVisits ?? 0)} hint={`Periodo: ${period}`} />
+        <Kpi label="Incasso periodo" value={formatEuroCents(stats?.takings.totalCents || 0)} />
+        <Kpi label="Ticket medio" value={formatEuroCents(stats?.ticketMedioCents || 0)} />
+        <Kpi label="Clienti nuovi" value={String(stats?.newClients ?? 0)} />
+        <Kpi label="Clienti di ritorno" value={String(stats?.returningClients ?? 0)} />
         <Kpi label="Visite per cliente" value={(stats?.visitsPerClient || 0).toLocaleString("it-IT", { maximumFractionDigits: 2 })} />
-        <Kpi label="Tasso disdetta / no-show" value={pct(stats?.cancelRate || 0)} hint={`${stats?.cancelledCount ?? 0} su ${stats?.totalVisits ?? 0}`} />
+        <Kpi label="Tasso disdetta" value={pct(stats?.cancelRate || 0)} hint={`${stats?.cancelledCount ?? 0} su ${stats?.totalVisits ?? 0}`} />
         <Kpi label="Incasso giorno" value={formatEuroCents(stats?.takings.dayCents || 0)} hint={formatItalianDate(date)} />
         <Kpi label="Incasso settimana" value={formatEuroCents(stats?.takings.weekCents || 0)} hint={weekStart ? `da lunedì ${weekStart}` : undefined} />
       </section>
       <div className="crm-split">
         <section className="crm-card">
-          <h2 className="font-serif">Servizi più frequenti</h2>
-          {stats?.mostFrequentServices.length ? (
+          <h2 className="font-serif">Appuntamenti nel tempo</h2>
+          {stats?.appointmentsOverTime.length ? (
             <ul className="crm-bars">
-              {stats.mostFrequentServices.map((s) => {
-                const max = stats.mostFrequentServices[0]?.count || 1;
+              {stats.appointmentsOverTime.map((p) => (
+                <li key={p.date}>
+                  <div>
+                    <span>{p.date}</span>
+                    <em>{p.count}</em>
+                  </div>
+                  <div className="crm-bar">
+                    <span style={{ width: `${(p.count / maxAppt) * 100}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="slot-status">Nessun dato nel periodo selezionato.</p>
+          )}
+        </section>
+        <section className="crm-card">
+          <h2 className="font-serif">Incassi nel tempo</h2>
+          {stats?.revenueOverTime.length ? (
+            <ul className="crm-bars">
+              {stats.revenueOverTime.map((p) => (
+                <li key={`rev-${p.date}`}>
+                  <div>
+                    <span>{p.date}</span>
+                    <em>{formatEuroCents(p.revenueCents)}</em>
+                  </div>
+                  <div className="crm-bar">
+                    <span style={{ width: `${(p.revenueCents / maxRev) * 100}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="slot-status">Nessun incasso nel periodo.</p>
+          )}
+        </section>
+      </div>
+      <div className="crm-split">
+        <section className="crm-card">
+          <h2 className="font-serif">Servizi per incasso</h2>
+          {stats?.revenueByService.length ? (
+            <ul className="crm-bars">
+              {stats.revenueByService.map((s) => {
+                const max = stats.revenueByService[0]?.revenueCents || 1;
                 return (
-                  <li key={s.id}>
+                  <li key={`rev-${s.id}`}>
                     <div>
                       <span>{s.name}</span>
-                      <em>{s.count}</em>
+                      <em>{formatEuroCents(s.revenueCents)}</em>
                     </div>
                     <div className="crm-bar">
-                      <span style={{ width: `${(s.count / max) * 100}%` }} />
+                      <span style={{ width: `${(s.revenueCents / max) * 100}%` }} />
                     </div>
                   </li>
                 );
@@ -789,13 +1053,15 @@ function StatsView({ stats, date, weekStart }: { stats: CrmStats | null; date: s
           )}
         </section>
         <section className="crm-card">
-          <h2 className="font-serif">Incassi per poltrona</h2>
+          <h2 className="font-serif">Felice vs Davide</h2>
           {stats?.takingsByBarber.length ? (
             <ul className="crm-list">
               {stats.takingsByBarber.map((b) => (
                 <li key={b.barberId}>
                   <strong>{b.name}</strong>
-                  <span>{formatEuroCents(b.cents)}</span>
+                  <span>
+                    {formatEuroCents(b.cents)} · {b.count} app.
+                  </span>
                 </li>
               ))}
             </ul>
@@ -879,15 +1145,15 @@ function NotifyModal({ client, onClose }: { client: ClientRecord; onClose: () =>
           </button>
           {wa ? (
             <a className="btn btn-outline" href={wa} target="_blank" rel="noopener noreferrer">
-              <MessageCircle size={16} aria-hidden /> WhatsApp (gratis)
+              <MessageCircle size={16} aria-hidden /> Invia WhatsApp
             </a>
           ) : (
             <span className="field-error">{WHATSAPP_MISSING_IT}</span>
           )}
         </div>
         <p className="crm-hint">
-          WhatsApp si apre su wa.me con il tuo account: zero costi, niente Twilio. L&apos;email usa Resend se la chiave è
-          impostata.
+          WhatsApp si apre su wa.me con il tuo account: zero costi, niente Twilio. L&apos;email usa Gmail SMTP se le
+          credenziali sono impostate.
         </p>
         {msg ? <p className={msg.startsWith("Email") ? "crm-ok" : "field-error"}>{msg}</p> : null}
       </div>
@@ -1040,6 +1306,135 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
           </button>
           <button type="submit" className="btn btn-gold" disabled={saving || serviceIds.length === 0}>
             {saving ? "Salvataggio…" : "Salva walk-in"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function StoricoView({ history }: { history: HistoryAppt[] }) {
+  return (
+    <div className="crm-stack">
+      <section className="crm-card">
+        <h2 className="font-serif">Storico completo</h2>
+        <p className="slot-status">Tutti gli appuntamenti, inclusi gli annullati (ANNULLATA). Non vengono eliminati.</p>
+        {history.length === 0 ? (
+          <p className="slot-status">Nessun appuntamento in archivio.</p>
+        ) : (
+          <div className="crm-table-wrap">
+            <table className="crm-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Ora</th>
+                  <th>Cliente</th>
+                  <th>Servizio</th>
+                  <th>Barbiere</th>
+                  <th>Stato</th>
+                  <th>Prezzo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((h) => (
+                  <tr key={h.id} className={h.status === "cancelled" ? "is-cancelled" : ""}>
+                    <td data-label="Data">{h.dateLabel}</td>
+                    <td data-label="Ora">{h.timeLabel}</td>
+                    <td data-label="Cliente">{h.customerName}</td>
+                    <td data-label="Servizio">{h.serviceNames}</td>
+                    <td data-label="Barbiere">{h.barberName}</td>
+                    <td data-label="Stato">{h.statusLabel}</td>
+                    <td data-label="Prezzo">{formatEuroCents(h.priceCents)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function MoveModal({
+  appt,
+  date,
+  onClose,
+  onSaved,
+}: {
+  appt: AdminAppt;
+  date: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [moveDate, setMoveDate] = useState(date);
+  const [startTime, setStartTime] = useState(appt.timeLabel);
+  const [barberId, setBarberId] = useState(appt.barberId);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (appt.startsAt) {
+      const d = new Date(appt.startsAt);
+      setMoveDate(d.toISOString().slice(0, 10));
+    } else {
+      setMoveDate(date);
+    }
+    setStartTime(appt.timeLabel);
+    setBarberId(appt.barberId);
+  }, [appt, date]);
+
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    const res = await fetch("/api/admin/appointments", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: appt.id, date: moveDate, startTime, barberId }),
+    });
+    const json = (await res.json()) as { error?: string };
+    setSaving(false);
+    if (!res.ok) {
+      setError(json.error || "Impossibile spostare.");
+      return;
+    }
+    onSaved();
+  }
+
+  return (
+    <div className="admin-modal-backdrop" onClick={onClose}>
+      <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={save}>
+        <p className="eyebrow">Sposta appuntamento</p>
+        <h2 className="font-serif">
+          {appt.firstName} {appt.lastName}
+        </h2>
+        <p className="slot-status">{appt.serviceNames}</p>
+        <label>
+          Data
+          <input className="input-lux" type="date" value={moveDate} min={SITE.openingDate} onChange={(e) => setMoveDate(e.target.value)} />
+        </label>
+        <label>
+          Orario
+          <input className="input-lux" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+        </label>
+        <label>
+          Barbiere
+          <select className="input-lux" value={barberId} onChange={(e) => setBarberId(e.target.value)}>
+            {getRealBarbers().map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {error ? <p className="field-error">{error}</p> : null}
+        <div className="admin-head-actions">
+          <button type="button" className="btn btn-outline" onClick={onClose}>
+            Annulla
+          </button>
+          <button type="submit" className="btn btn-gold" disabled={saving}>
+            {saving ? "Salvataggio…" : "Sposta"}
           </button>
         </div>
       </form>

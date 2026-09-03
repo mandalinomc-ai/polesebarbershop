@@ -3,6 +3,7 @@ export type SiteVideo = {
   src: string;
   alt: string;
   label?: string;
+  posterSrc?: string;
 };
 
 /** Public video URL — files live in public/assets/video/, rewritten from /video/. */
@@ -54,6 +55,20 @@ export const COLORAZIONE_VIDEOS: SiteVideo[] = [
   },
 ];
 
+export const MECHES_VIDEO: SiteVideo = {
+  id: "meches",
+  src: `${VIDEO_BASE}/meches.mp4`,
+  alt: "Meches in salone — Felice Polese Barber Shop",
+  label: "Meches",
+};
+
+export const DECOLORAZIONE_CUTANEA_VIDEO: SiteVideo = {
+  id: "decolorazione-cutanea",
+  src: `${VIDEO_BASE}/decolorazione-cutanea.mp4`,
+  alt: "Decolorazione cutanea in salone — Felice Polese Barber Shop",
+  label: "Decolorazione cutanea",
+};
+
 /** General salon walkthrough — legacy path under /assets/video/. */
 export const SALONE_GENERALE_VIDEO: SiteVideo = {
   id: "salone-generale",
@@ -62,9 +77,8 @@ export const SALONE_GENERALE_VIDEO: SiteVideo = {
 };
 
 /**
- * Felice beside bio — only rendered when the synced file exists.
- * Windows source: public/video/video felice polese bio.mp4
- * After sync: public/assets/video/video-felice-polese-bio.mp4
+ * Felice beside bio — Drive clip at the midnight (43c7824) public URL.
+ * Identical file also lives at public/assets/videos/felice-working.mp4.
  */
 export const FELICE_BIO_SOURCE_BASENAME = "video felice polese bio" as const;
 
@@ -126,7 +140,108 @@ export const ALL_SITE_VIDEOS: SiteVideo[] = [
   FELICE_WORKING_VIDEO,
   SALONE_GENERALE_VIDEO,
   ...VIDEO_REELS,
+  MECHES_VIDEO,
+  DECOLORAZIONE_CUTANEA_VIDEO,
 ];
+
+export type ServiceShowcaseVideo = Omit<SiteVideo, "src"> & {
+  serviceId: string;
+  sourceFile: string;
+  /** Dedicated salon clip. Omitted when the treatment has no Drive video. */
+  src?: string;
+  /** Generated still used when there is no dedicated clip. */
+  imageSrc?: string;
+};
+
+/**
+ * Exact shared-treatment media when available, otherwise conservative reuse of
+ * existing real salon footage from the same category. No stock assets.
+ */
+export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
+  {
+    serviceId: "taglio-pro",
+    id: "service-taglio-pro",
+    src: `${VIDEO_BASE}/taglio-01.mp4`,
+    alt: "Taglio Pro — clip reale dal salone Felice Polese",
+    label: "Taglio Pro",
+    sourceFile: "taglio-01.mp4",
+  },
+  {
+    serviceId: "taglio-standard",
+    id: "service-taglio-standard",
+    src: `${VIDEO_BASE}/taglio-02.mp4`,
+    alt: "Taglio Standard — clip reale dal salone Felice Polese",
+    label: "Taglio Standard",
+    sourceFile: "taglio-02.mp4",
+  },
+  {
+    serviceId: "acconciatura",
+    id: "service-acconciatura",
+    src: `${VIDEO_BASE}/taglio-03.mp4`,
+    alt: "Acconciatura e styling — clip reale dal salone Felice Polese",
+    label: "Acconciatura",
+    sourceFile: "taglio-03.mp4",
+  },
+  {
+    serviceId: "taglio-bambino",
+    id: "service-taglio-bambino",
+    src: `${VIDEO_BASE}/taglio-01.mp4`,
+    alt: "Taglio Bambino — clip reale dal salone Felice Polese",
+    label: "Taglio Bambino",
+    sourceFile: "taglio-01.mp4",
+  },
+  {
+    serviceId: "barba-pro",
+    id: "service-barba-pro",
+    alt: "Barba Pro — foto servizio Felice Polese",
+    label: "Barba Pro",
+    posterSrc: "/assets/images/services/barba-pro.jpg",
+    imageSrc: "/assets/images/services/barba-pro.jpg",
+    sourceFile: "barba-pro.jpg",
+  },
+  {
+    serviceId: "barba-standard",
+    id: "service-barba-standard",
+    alt: "Barba Standard — foto servizio Felice Polese",
+    label: "Barba Standard",
+    posterSrc: "/assets/images/services/barba-pro.jpg",
+    imageSrc: "/assets/images/services/barba-pro.jpg",
+    sourceFile: "barba-pro.jpg",
+  },
+  {
+    serviceId: "decolorazione-meches",
+    id: "service-decolorazione-meches",
+    src: MECHES_VIDEO.src,
+    alt: "Decolorazione Meches — clip reale dal salone Felice Polese",
+    label: "Decolorazione Meches",
+    sourceFile: "meches.mp4",
+  },
+  {
+    serviceId: "decolorazione-cutanea",
+    id: "service-decolorazione-cutanea",
+    src: DECOLORAZIONE_CUTANEA_VIDEO.src,
+    alt: "Decolorazione Cutanea — clip reale dal salone Felice Polese",
+    label: "Decolorazione Cutanea",
+    sourceFile: "decolorazione-cutanea.mp4",
+  },
+  {
+    serviceId: "tintura-capelli",
+    id: "service-tintura-capelli",
+    src: `${VIDEO_BASE}/colorazione-02.mp4`,
+    alt: "Tintura Capelli — clip reale dal salone Felice Polese",
+    label: "Tintura Capelli",
+    sourceFile: "colorazione-02.mp4",
+  },
+  {
+    serviceId: "tintura-barba",
+    id: "service-tintura-barba",
+    alt: "Tintura Barba — foto servizio Felice Polese",
+    label: "Tintura Barba",
+    posterSrc: "/assets/images/services/tintura-barba.jpg",
+    imageSrc: "/assets/images/services/tintura-barba.jpg",
+    sourceFile: "tintura-barba.jpg",
+  },
+] as const;
 
 /** Filenames that must exist under public/assets/video/ (committed to git). */
 export const REQUIRED_VIDEO_FILES = [
@@ -137,6 +252,9 @@ export const REQUIRED_VIDEO_FILES = [
   "colorazione-01.mp4",
   "colorazione-02.mp4",
   "colorazione-03.mp4",
+  "meches.mp4",
+  "decolorazione-cutanea.mp4",
+  "video-felice-polese-bio.mp4",
 ] as const;
 
 /** Synced bio clip filename under public/assets/video/ */

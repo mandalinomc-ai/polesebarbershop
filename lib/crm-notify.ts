@@ -60,8 +60,34 @@ export function waMeUrl(phone: string, text: string): string | null {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-export const RESEND_CRM_MISSING_IT =
-  "Invio email non configurato: manca RESEND_API_KEY. Imposta la chiave Resend (piano gratuito) per mandare email dal gestionale.";
+export const GMAIL_CRM_MISSING_IT =
+  "Invio email non configurato: manca GMAIL_USER / GMAIL_APP_PASSWORD. Imposta le credenziali Gmail SMTP per mandare email dal gestionale.";
+
+/** @deprecated alias */
+export const RESEND_CRM_MISSING_IT = GMAIL_CRM_MISSING_IT;
 
 export const WHATSAPP_MISSING_IT =
   "Numero WhatsApp non disponibile per questo cliente.";
+
+export type StaffCancelCopyInput = {
+  firstName: string;
+  serviceNames: string;
+  dateLabel: string;
+  timeLabel: string;
+  barberName?: string;
+};
+
+/** Automatic message when the salon cancels from the gestionale. */
+export function buildStaffCancelCopy(opts: StaffCancelCopyInput) {
+  const nome = (opts.firstName || "").trim() || "ciao";
+  const barber = opts.barberName ? ` con ${opts.barberName}` : "";
+  const bookUrl = `${SITE.siteUrl.replace(/\/$/, "")}/#prenota`;
+  const text =
+    `Ciao ${nome}, il tuo appuntamento da ${SITE.name} per ${opts.serviceNames}${barber} ` +
+    `del ${opts.dateLabel} alle ${opts.timeLabel} è stato annullato dal salone. ` +
+    `Lo slot è di nuovo libero. Per riprenotare: ${bookUrl} oppure WhatsApp ${SITE.phone}.`;
+  return {
+    subject: `Appuntamento annullato dal salone — ${SITE.name}`,
+    text,
+  };
+}

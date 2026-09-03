@@ -47,20 +47,41 @@ export type ClientRecord = {
   cancelledCount: number;
   lastVisitAt: string | null;
   lastVisitStatus: string | null;
+  nextVisitAt: string | null;
   spendCents: number;
+  topService: string | null;
+  topBarber: string | null;
+  crmNotes: string;
   services: ClientServiceStat[];
   history: ClientHistoryItem[];
 };
 
+export type StatsPeriod = "today" | "7d" | "month" | "year" | "all";
+
+export type TimeSeriesPoint = { date: string; count: number; revenueCents: number };
+
+export type ServiceRevenueStat = { id: string; name: string; count: number; revenueCents: number };
+
 export type CrmStats = {
+  period: StatsPeriod;
   totalClients: number;
   totalVisits: number;
   cancelledCount: number;
+  confirmedCount: number;
   cancelRate: number;
   visitsPerClient: number;
+  newClients: number;
+  returningClients: number;
+  todayAppointments: number;
+  upcomingCount: number;
+  expectedRevenueCents: number;
+  ticketMedioCents: number;
   mostFrequentServices: ClientServiceStat[];
-  takings: { dayCents: number; weekCents: number };
-  takingsByBarber: { barberId: string; name: string; cents: number }[];
+  revenueByService: ServiceRevenueStat[];
+  takings: { dayCents: number; weekCents: number; monthCents: number; totalCents: number };
+  takingsByBarber: { barberId: string; name: string; cents: number; count: number }[];
+  appointmentsOverTime: TimeSeriesPoint[];
+  revenueOverTime: TimeSeriesPoint[];
 };
 
 export function isPaidStatus(status: string) {
@@ -117,7 +138,32 @@ function bump(map: Map<string, ClientServiceStat>, id: string, name: string) {
   else map.set(id, { id, name, count: 1 });
 }
 
-export function aggregateClients(rows: CrmAppointment[]): ClientRecord[] {
+function bumpRevenue(map: Map<string, ServiceRevenueStat>, id: string, name: string, cents: number) {
+  const prev = map.get(id);
+  if (prev) {
+    prev.count += 1;
+    prev.revenueCents += cents;
+  } else map.set(id, { id, name, count: 1, revenueCents: cents });
+}
+
+export function periodBounds(period: StatsPeriod, anchorDate: string): { from: string | null; to: string | null } {
+  if (period === "all") return { from: null, to: null };
+  if (period === "today") return { from: anchorDate, to: anchorDate };
+  if (period === "7d") return { from: addDays(anchorDate, -6), to: anchorDate };
+  if (period === "month") return { from: `${anchorDate.slice(0, 7)}-01`, to: anchorDate };
+  if (period === "year") return { from: `${anchorDate.slice(0, 4)}-01-01`, to: anchorDate };
+  return { from: null, to: null };
+}
+
+function inPeriod(wallDay: string, from: string | null, to: string | null) {
+  if (!from || !to) return true;
+  return wallDay >= from && wallDay <= to;
+}
+
+export function aggregateClients(
+  rows: CrmAppointment[],
+  notesMap: Record<string, string> = {},
+): ClientRecord[] {
   const groups = new Map<
     string,
     {
@@ -151,7 +197,11 @@ export function aggregateClients(rows: CrmAppointment[]): ClientRecord[] {
           cancelledCount: 0,
           lastVisitAt: null,
           lastVisitStatus: null,
+          nextVisitAt: null,
           spendCents: 0,
+          topService: null,
+          topBarber: null,
+          crmNotes: notesMap[key] || "",
           services: [],
           history: [],
         },
@@ -182,6 +232,23 @@ export function aggregateClients(rows: CrmAppointment[]): ClientRecord[] {
     });
   }
 
+  // Second pass: next visit + top service/barber
+  const nowIso = new Date().toISOString();
+  for (const group of groups.values()) {
+    const rec = group.row;
+    const future = rec.history
+      .filter((h) => !h.cancelled && h.startsAt > nowIso)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    rec.nextVisitAt = future[0]?.startsAt || null;
+    rec.topService = rec.services[0]?.name || null;
+    const barberCounts = new Map<string, number>();
+    for (const h of rec.history.filter((x) => !x.cancelled)) {
+      barberCounts.set(h.barberName, (barberCounts.get(h.barberName) || 0) + 1);
+    }
+    rec.topBarber = [...barberCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    rec.crmNotes = notesMap[rec.key] || rec.crmNotes;
+  }
+
   return [...groups.values()]
     .map(({ row, services }) => ({
       ...row,
@@ -193,48 +260,115 @@ export function aggregateClients(rows: CrmAppointment[]): ClientRecord[] {
 
 export function aggregateStats(
   rows: CrmAppointment[],
-  opts: { date: string } = { date: formatWallDate(new Date()) },
+  opts: { date: string; period?: StatsPeriod } = { date: formatWallDate(new Date()) },
 ): CrmStats {
   const date = opts.date;
+  const period = opts.period || "all";
+  const { from, to } = periodBounds(period, date);
   const weekStart = mondayOfWeek(date);
   const weekEnd = addDays(weekStart, 7);
+  const monthStart = `${date.slice(0, 7)}-01`;
+  const periodRows = rows.filter((appt) => {
+    const wallDay =
+      appt.dateLabel && /^\d{4}-\d{2}-\d{2}$/.test(appt.dateLabel)
+        ? appt.dateLabel
+        : formatWallDate(new Date(appt.startsAt));
+    return inPeriod(wallDay, from, to);
+  });
   const clients = aggregateClients(rows);
+  const periodClients = aggregateClients(periodRows);
   const serviceMap = new Map<string, ClientServiceStat>();
-  const barberTakings = new Map<string, { barberId: string; name: string; cents: number }>();
+  const revenueMap = new Map<string, ServiceRevenueStat>();
+  const barberTakings = new Map<string, { barberId: string; name: string; cents: number; count: number }>();
   let cancelledCount = 0;
+  let confirmedCount = 0;
   let dayCents = 0;
   let weekCents = 0;
+  let monthCents = 0;
+  let totalCents = 0;
+  let paidCount = 0;
+  const nowIso = new Date().toISOString();
+  let todayAppointments = 0;
+  let upcomingCount = 0;
+  let expectedRevenueCents = 0;
+  const seriesMap = new Map<string, TimeSeriesPoint>();
 
   for (const appt of rows) {
+    const wallDay =
+      appt.dateLabel && /^\d{4}-\d{2}-\d{2}$/.test(appt.dateLabel)
+        ? appt.dateLabel
+        : formatWallDate(new Date(appt.startsAt));
+    if (wallDay === date && !isCancelledStatus(appt.status)) todayAppointments += 1;
+    if (appt.startsAt > nowIso && !isCancelledStatus(appt.status)) {
+      upcomingCount += 1;
+      if (wallDay === date) expectedRevenueCents += appt.priceCents;
+    }
+  }
+
+  for (const appt of periodRows) {
     if (isCancelledStatus(appt.status)) cancelledCount += 1;
+    else if (appt.status === "confirmed" || appt.status === "pending") confirmedCount += 1;
     for (const svc of serviceEntries(appt)) bump(serviceMap, svc.id, svc.name);
-    const wallDay = appt.dateLabel && /^\d{4}-\d{2}-\d{2}$/.test(appt.dateLabel)
-      ? appt.dateLabel
-      : formatWallDate(new Date(appt.startsAt));
+    const wallDay =
+      appt.dateLabel && /^\d{4}-\d{2}-\d{2}$/.test(appt.dateLabel)
+        ? appt.dateLabel
+        : formatWallDate(new Date(appt.startsAt));
+    const point = seriesMap.get(wallDay) || { date: wallDay, count: 0, revenueCents: 0 };
+    point.count += 1;
+    if (isPaidStatus(appt.status)) {
+      point.revenueCents += appt.priceCents;
+      paidCount += 1;
+      for (const svc of serviceEntries(appt)) bumpRevenue(revenueMap, svc.id, svc.name, appt.priceCents);
+    }
+    seriesMap.set(wallDay, point);
     if (isPaidStatus(appt.status)) {
       if (wallDay === date) dayCents += appt.priceCents;
       if (wallDay >= weekStart && wallDay < weekEnd) weekCents += appt.priceCents;
+      if (wallDay >= monthStart && wallDay <= date) monthCents += appt.priceCents;
+      totalCents += appt.priceCents;
       const barber = barberTakings.get(appt.barberId) || {
         barberId: appt.barberId,
         name: appt.barberName || getBarber(appt.barberId)?.name || appt.barberId,
         cents: 0,
+        count: 0,
       };
       barber.cents += appt.priceCents;
+      barber.count += 1;
       barberTakings.set(appt.barberId, barber);
     }
   }
 
-  const totalVisits = rows.length;
-  const totalClients = clients.length;
+  let newClients = 0;
+  let returningClients = 0;
+  for (const c of periodClients) {
+    const paidVisits = c.history.filter((h) => !h.cancelled).length;
+    if (paidVisits <= 1 && c.visitCount <= 1) newClients += 1;
+    else if (paidVisits > 1 || c.visitCount > 1) returningClients += 1;
+  }
+
+  const totalVisits = periodRows.length;
+  const totalClients = periodClients.length;
+  const sortedSeries = [...seriesMap.values()].sort((a, b) => a.date.localeCompare(b.date));
   return {
+    period,
     totalClients,
     totalVisits,
     cancelledCount,
+    confirmedCount,
     cancelRate: totalVisits === 0 ? 0 : cancelledCount / totalVisits,
     visitsPerClient: totalClients === 0 ? 0 : totalVisits / totalClients,
+    newClients,
+    returningClients,
+    todayAppointments,
+    upcomingCount,
+    expectedRevenueCents,
+    ticketMedioCents: paidCount === 0 ? 0 : Math.round(totalCents / paidCount),
     mostFrequentServices: [...serviceMap.values()].sort((a, b) => b.count - a.count).slice(0, 8),
-    takings: { dayCents, weekCents },
+    revenueByService: [...revenueMap.values()].sort((a, b) => b.revenueCents - a.revenueCents).slice(0, 8),
+    takings: { dayCents, weekCents, monthCents, totalCents },
     takingsByBarber: [...barberTakings.values()].sort((a, b) => b.cents - a.cents),
+    appointmentsOverTime: sortedSeries,
+    revenueOverTime: sortedSeries.map((p) => ({ date: p.date, count: p.count, revenueCents: p.revenueCents })),
   };
 }
 

@@ -15,9 +15,9 @@ export const SITE = {
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL ||
     "https://felicepolesebarbershop.vercel.app",
-  address: "Corso Dante 45",
-  addressFull: "Corso Dante 45 – 82100 Benevento (BN)",
-  streetAddress: "Corso Dante 45",
+  address: "Corso Dante Alighieri, 44",
+  addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
+  streetAddress: "Corso Dante Alighieri, 44",
   previousAddress: "ex Via Ungaretti 6",
   city: "Benevento",
   province: "BN",
@@ -38,15 +38,21 @@ export const SITE = {
   vatNumber: "01894030624",
   pricesIncludeVat: "Tutti i prezzi sono da intendersi IVA inclusa.",
   hours: {
-    weekdays: "Mar — Sab · 09:30 — 20:00",
-    monday: "Lun · Chiuso",
+    monday: "Lun · 15:00 — 19:00",
+    tuesday: "Mar · 08:30 — 19:00",
+    wednesday: "Mer · 08:30 — 19:00",
+    thursday: "Gio · 08:30 — 20:00",
+    friday: "Ven · 08:00 — 21:00",
+    saturday: "Sab · 08:00 — 21:00",
     sunday: "Dom · Chiuso",
+    weekdays:
+      "Lun 15:00—19:00 · Mar–Mer 08:30—19:00 · Gio 08:30—20:00 · Ven–Sab 08:00—21:00",
   },
   seo: {
     keywords:
-      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Davide, Corso Dante 45",
+      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Davide, Corso Dante Alighieri 44",
     description:
-      "Felice Polese Barber Shop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante 45. Prenota online.",
+      "Felice Polese Barber Shop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante Alighieri, 44. Prenota online.",
   },
 } as const;
 
@@ -87,7 +93,8 @@ export function canCancelAppointment(
     (new Date(startsAt).getTime() - now.getTime()) / 60_000;
   return minutesLeft >= CANCEL_MINUTES_BEFORE;
 }
-export const MAPS_DESTINATION = "Corso Dante 45, 82100 Benevento";
+export const MAPS_DESTINATION =
+  "Corso Dante Alighieri, 44, 82100 Benevento";
 
 /** Generic salon contact — info, hours, prices or a quick tip. */
 export const SALON_CONTACT_MESSAGE =
@@ -99,7 +106,7 @@ export const NOTIFY_WHATSAPP_MESSAGE =
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
 export const HERO_CTA = "Prenota il tuo appuntamento";
-export const HERO_SLOT_CTA = "Prenota il tuo slot";
+export const HERO_SLOT_CTA = "Prenota il tuo posto";
 export const HERO_MENU_CTA = "Vedi il menu";
 export const HERO_SENTENCE = "Precisione tecnica, stile contemporaneo.";
 export const HERO_LEAD =
@@ -261,7 +268,7 @@ export const SALON_CONTACT = {
 } as const;
 
 export function getMapsUrl(): string {
-  return `https://maps.google.com/?destination=${encodeURIComponent(MAPS_DESTINATION)}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(MAPS_DESTINATION)}`;
 }
 
 export function getWhatsAppUrl(message?: string): string {
@@ -334,10 +341,13 @@ export function getSiteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || SITE.siteUrl).replace(/\/$/, "");
 }
 
-/** Gmail del salone per avvisi prenotazioni (non l'account GitHub). */
-export const ADMIN_EMAIL_FALLBACK = "felicepolese550@gmail.com";
+export function isResendTestFrom(): boolean {
+  const from = process.env.RESEND_FROM ?? "";
+  return from.includes("resend.dev") || from.includes("onboarding@");
+}
 
-const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
+/** Gmail del salone per avvisi prenotazioni. */
+export const ADMIN_EMAIL_FALLBACK = "felicepolese550@gmail.com";
 
 export function getAdminEmail(): string {
   return (
@@ -347,29 +357,10 @@ export function getAdminEmail(): string {
   );
 }
 
-/** Inbox che riceve davvero le email con From di test Resend (account owner). */
-export function getNotifyEmail(): string | null {
-  const email = process.env.NOTIFY_EMAIL?.trim();
-  return email || null;
-}
-
-/** True when RESEND_FROM uses onboarding@resend.dev (piano gratuito, dominio non verificato). */
-export function isResendTestFrom(): boolean {
-  const from = process.env.RESEND_FROM?.trim() || "";
-  const domain = from.match(/@([^>\s]+)/)?.[1]?.toLowerCase() || "";
-  return !from || domain === RESEND_TEST_DOMAIN;
-}
-
-/**
- * Destinatari avvisi prenotazione al salone: sempre Gmail di Felice (ADMIN_EMAIL).
- * NOTIFY_EMAIL (account Resend) resta in copia se è un indirizzo diverso.
- * Con From di test Resend l'invio a Felice passa da Mailgun/relay, non da resend.dev.
- */
-export function getOwnerNotifyEmails(): string[] {
-  const admin = getAdminEmail().trim().toLowerCase();
-  const notify = getNotifyEmail()?.toLowerCase() || "";
-  const emails = new Set<string>();
-  if (admin) emails.add(admin);
-  if (notify && notify !== admin) emails.add(notify);
-  return [...emails];
+/** Recipient for booking notification emails (owner inbox). */
+export function getBookingNotificationEmail(): string {
+  return (
+    process.env.BOOKING_NOTIFICATION_EMAIL ||
+    getAdminEmail()
+  );
 }

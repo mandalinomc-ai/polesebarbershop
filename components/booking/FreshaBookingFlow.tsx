@@ -113,8 +113,6 @@ export function FreshaBookingFlow({
     warnings: string[];
     emailSent: boolean;
     persisted: boolean;
-    customerWhatsAppSent: boolean;
-    salonWhatsAppSent: boolean;
     ownerNotified: boolean;
     salonRelay: SalonRelayPayload | null;
   } | null>(null);
@@ -146,13 +144,19 @@ export function FreshaBookingFlow({
   }, [days]);
 
   useEffect(() => {
-    const apply = (serviceId: string | null) => {
+    const apply = (serviceId: string | null, opts?: { replace?: boolean }) => {
       if (!serviceId) return;
       if (!SERVICES.some((s) => s.id === serviceId)) return;
-      setSelectedIds([serviceId]);
-      setStep(2);
+      setSelectedIds((curr) => {
+        if (opts?.replace) return [serviceId];
+        return curr.includes(serviceId)
+          ? curr.filter((x) => x !== serviceId)
+          : [...curr, serviceId];
+      });
+      // Stay on service step so the client can add more before Continua.
+      setStep(1);
     };
-    apply(readBookingServiceFromLocation());
+    apply(readBookingServiceFromLocation(), { replace: true });
     const onPick = (event: Event) => {
       apply((event as CustomEvent<string>).detail);
     };
@@ -291,8 +295,6 @@ export function FreshaBookingFlow({
         warnings?: string[];
         emailSent?: boolean;
         persisted?: boolean;
-        customerWhatsAppSent?: boolean;
-        salonWhatsAppSent?: boolean;
         ownerNotified?: boolean;
         salonRelay?: SalonRelayPayload | null;
       };
@@ -311,18 +313,11 @@ export function FreshaBookingFlow({
         warnings: json.warnings || (json.error ? [json.error] : []),
         emailSent: Boolean(json.emailSent),
         persisted: Boolean(json.persisted),
-        customerWhatsAppSent: Boolean(json.customerWhatsAppSent),
-        salonWhatsAppSent: Boolean(json.salonWhatsAppSent),
         ownerNotified: Boolean(json.ownerNotified),
         salonRelay,
       });
       if (salonRelay && !json.ownerNotified) {
         void postSalonBookingRelay(salonRelay);
-      }
-      if (viaWhatsApp) {
-        window.setTimeout(() => {
-          window.open(salonWa, "_blank", "noopener,noreferrer");
-        }, 400);
       }
     } catch {
       setSubmitError("Connessione non disponibile. Riprova.");
@@ -353,17 +348,15 @@ export function FreshaBookingFlow({
           </p>
           <p className="prose">
             {success.emailSent
-              ? "Ti abbiamo inviato l'email di conferma."
-              : "L'email di conferma non è partita in automatico."}{" "}
-            {success.customerWhatsAppSent
-              ? "Ti abbiamo inviato anche un WhatsApp al numero che hai lasciato."
-              : null}
+              ? "Ti abbiamo inviato l'email di conferma con file calendario allegato."
+              : "L'email di conferma non è partita in automatico — usa i pulsanti calendario qui sotto."}
           </p>
-          <p className="prose">
+          <p className="prose success-calendar-label">
             Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file
-            .ics ha un solo promemoria: 30 minuti prima.
+            .ics ha un solo promemoria: 30 minuti prima. Questi pulsanti sono
+            separati da WhatsApp.
           </p>
-          <div className="success-actions">
+          <div className="success-actions" aria-label="Aggiungi al calendario">
             {success.ics ? (
               <button
                 type="button"
@@ -388,6 +381,20 @@ export function FreshaBookingFlow({
                 Scarica .ics
               </a>
             ) : null}
+          </div>
+          <div className="success-whatsapp-row">
+            <a
+              className="btn btn-outline"
+              href={getWhatsAppUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Scrivi su WhatsApp
+            </a>
+            <p className="booking-open-note">
+              WhatsApp è solo per messaggi al salone — non sostituisce il
+              calendario.
+            </p>
           </div>
           {success.warnings
             .filter((w) => !/testing emails|invalid_access|403/i.test(w))
@@ -441,10 +448,10 @@ export function FreshaBookingFlow({
       <div className="fresha-body">
         {step === 1 && listinoBeside && (
           <>
-            <h3>Servizio scelto</h3>
+            <h3>Servizi scelti</h3>
             <p className="booking-open-note">
-              Tocca un servizio nel listino per selezionarlo. Passi subito al
-              barbiere.
+              Tocca i servizi nel listino per aggiungerli o toglierli. Puoi
+              selezionarne più di uno: i minuti si sommano in automatico.
             </p>
             {selectedServices.length === 0 ? (
               <p className="slot-status">Nessun servizio selezionato.</p>
@@ -459,9 +466,7 @@ export function FreshaBookingFlow({
                 >
                   <span>
                     <strong>{s.name}</strong>
-                    <small>
-                      {formatDuration(s)} · {s.description}
-                    </small>
+                    <small>{s.description}</small>
                   </span>
                   <span className="meta">{formatPriceRange(s)}</span>
                 </button>
@@ -473,6 +478,10 @@ export function FreshaBookingFlow({
         {step === 1 && !listinoBeside && (
           <>
             <h3>Scegli il servizio</h3>
+            <p className="booking-open-note">
+              Seleziona uno o più servizi. Sul listino vedi il prezzo; i minuti
+              totali si sommano nel riepilogo in basso.
+            </p>
             {SERVICE_CATEGORIES.map((cat) => (
               <div key={cat}>
                 <p className="fresha-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
@@ -486,9 +495,7 @@ export function FreshaBookingFlow({
                   >
                     <span>
                       <strong>{s.name}</strong>
-                      <small>
-                        {formatDuration(s)} · {s.description}
-                      </small>
+                      <small>{s.description}</small>
                     </span>
                     <span className="meta">{formatPriceRange(s)}</span>
                   </button>
@@ -750,11 +757,11 @@ export function FreshaBookingFlow({
         )}
       </div>
 
-      <div className="fresha-footer">
+      <div className="fresha-footer" aria-label="Riepilogo ordine">
         <div className="fresha-totals">
           <span>
             {totals.durationMin
-              ? totals.durationLabel
+              ? `Totale ${totals.durationLabel}`
               : "Nessun servizio"}
             {selectedIds.length
               ? ` · ${selectedIds.length} selezionat${selectedIds.length === 1 ? "o" : "i"}`

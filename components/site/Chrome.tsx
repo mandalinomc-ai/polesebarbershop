@@ -5,7 +5,8 @@ import { HERO_SLOT_CTA, SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-conf
 import { SITE_PDFS } from "@/lib/site-pdf";
 
 const LINKS = [
-  { href: "/#gallery", label: "Tecniche" },
+  { href: "/#about", label: "Servizi" },
+  { href: "/#gallery", label: "Sfumature" },
   { href: "/#listino", label: "Listino" },
   { href: "/#prenota", label: "Prenota" },
   { href: "/#contact", label: "Orari" },
@@ -147,7 +148,7 @@ export function MapsFab() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Raggiungimi ora su Google Maps"
-      title="Raggiungimi ora su Google Maps — Corso Dante 45, Benevento"
+      title={`Raggiungimi ora su Google Maps — ${SITE.address}, ${SITE.city}`}
     >
       <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />

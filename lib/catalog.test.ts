@@ -22,9 +22,9 @@ describe("catalog", () => {
     expect(getBarber("anyone")?.name).toBe("Qualsiasi disponibilità");
   });
 
-  it("lists exactly the 9 official listino services and no extras", () => {
+  it("lists exactly the 10 official listino services and no extras", () => {
     expect(SERVICE_CATEGORIES).toEqual(["capelli", "barba", "colore"]);
-    expect(SERVICES).toHaveLength(9);
+    expect(SERVICES).toHaveLength(10);
     expect(
       SERVICES.map((s) => ({
         id: s.id,
@@ -39,6 +39,7 @@ describe("catalog", () => {
       { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25, durationKnown: true },
       { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30, durationKnown: true },
       { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
+      { id: "taglio-bambino", name: "Taglio Bambino", category: "capelli", priceEuro: 10, priceMaxEuro: null, durationMin: 20, durationKnown: true },
       { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20, durationKnown: true },
       { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
       { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 45, durationKnown: false },
