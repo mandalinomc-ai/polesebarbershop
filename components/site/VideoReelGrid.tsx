@@ -43,7 +43,7 @@ export function VideoReelGrid() {
         ))}
       </div>
 
-      <h3 className="section-title font-serif technique-subtitle">Ogni trattamento</h3>
+      <h3 className="section-title font-serif technique-subtitle">Ogni trattamento con il suo media</h3>
       <p className="prose technique-lead">
         Clip reali dal salone per taglio, barba e trattamenti colore.
       </p>
