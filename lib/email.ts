@@ -14,7 +14,12 @@ import {
   SITE,
   getAdminEmail,
   getBookingNotificationEmail,
+  isResendTestFrom,
 } from "./site-config";
+
+function getResendApiKey(): string | undefined {
+  return process.env.RESEND_API_KEY || undefined;
+}
 
 export type EmailSendResult =
   | { ok: true; skipped?: boolean; id?: string }
@@ -383,6 +388,11 @@ export async function sendBookingEmails(opts: {
   const owner = await sendOwnerEmails({ owner: opts.owner, ics: opts.ics });
   const admin = owner.results[0]?.result ?? { ok: false, error: "Nessun destinatario salone configurato." };
   return { customer, admin, owner };
+}
+
+export function publicCustomerMailError(error: string | undefined, hasPhone: boolean): string {
+  const base = `Email di conferma non inviata al cliente: ${error ?? "errore sconosciuto"}.`;
+  return hasPhone ? `${base} Il cliente riceverà conferma via WhatsApp.` : base;
 }
 
 export async function sendCancelEmails(opts: {

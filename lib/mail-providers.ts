@@ -37,8 +37,8 @@ export function isResendAllowedRecipient(to: string): boolean {
 }
 
 export type ProviderSendResult =
-  | { ok: true; id?: string; provider: "gmail" | "mailgun" | "formsubmit" }
-  | { ok: false; error: string; provider: "gmail" | "mailgun" | "formsubmit" };
+  | { ok: true; id?: string; provider: "gmail" | "mailgun" | "formsubmit" | "resend" }
+  | { ok: false; error: string; provider: "gmail" | "mailgun" | "formsubmit" | "resend" };
 
 export function gmailSmtpUser(): string {
   return process.env.GMAIL_USER?.trim() || getAdminEmail();
@@ -242,5 +242,28 @@ async function sendViaFormSubmitUrlEncoded(
   } catch (error) {
     const message = error instanceof Error ? error.message : previousError;
     return { ok: false, provider: "formsubmit", error: message };
+  }
+}
+
+export async function sendViaResend(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}): Promise<ProviderSendResult> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return { ok: false, provider: "resend", error: "RESEND_API_KEY mancante" };
+  const from = process.env.RESEND_FROM || `${SITE.name} <onboarding@resend.dev>`;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: opts.to, subject: opts.subject, html: opts.html, text: opts.text }),
+    });
+    const data = await res.json();
+    if (res.ok && data.id) return { ok: true, provider: "resend", id: data.id };
+    return { ok: false, provider: "resend", error: data.message || `HTTP ${res.status}` };
+  } catch (error) {
+    return { ok: false, provider: "resend", error: error instanceof Error ? error.message : "Resend error" };
   }
 }

@@ -334,6 +334,11 @@ export function getSiteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || SITE.siteUrl).replace(/\/$/, "");
 }
 
+export function isResendTestFrom(): boolean {
+  const from = process.env.RESEND_FROM ?? "";
+  return from.includes("resend.dev") || from.includes("onboarding@");
+}
+
 /** Gmail del salone per avvisi prenotazioni. */
 export const ADMIN_EMAIL_FALLBACK = "felicepolese550@gmail.com";
 
