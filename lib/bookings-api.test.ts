@@ -98,7 +98,7 @@ describe("POST /api/bookings", () => {
     expect(json.ics.match(/BEGIN:VALARM/g)).toEqual(["BEGIN:VALARM"]);
     expect(json.ics).not.toMatch(/TRIGGER:-PT1H/);
     expect(json.ics).not.toMatch(/TRIGGER:-P1D/);
-    expect(json.ics).toContain("Corso Dante Alighieri, 44");
+    expect(json.ics).toContain("Corso Dante Alighieri\\, 44");
     expect(json.ics).toContain("+39 327 015 6225");
     expect(json.warnings.length).toBeGreaterThan(0);
     expect(json.warnings.some((w) => /ics|327 015 6225/i.test(w))).toBe(true);

@@ -35,7 +35,7 @@ describe("ics", () => {
     expect(ics).toContain("ACTION:DISPLAY");
     expect(ics).toContain("DTSTART:20260901T073000Z");
     expect(ics).toContain("DTEND:20260901T075500Z");
-    expect(ics).toContain("Corso Dante Alighieri, 44");
+    expect(ics).toContain("Corso Dante Alighieri\\, 44");
     expect(ics).toContain("END:VCALENDAR");
     expect(ics.endsWith("\r\n")).toBe(true);
   });
