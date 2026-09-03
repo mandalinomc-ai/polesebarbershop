@@ -11,6 +11,7 @@ import {
   isBeforeOfficialOpening,
 } from "@/lib/site-config";
 import { HERO_VIDEOS } from "@/lib/site-videos";
+import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 
 function HeroMediaCell({
   video,
@@ -48,6 +49,7 @@ export function Hero() {
           {beforeOpening ? (
             <p className="hero-pre-opening">{HERO_PRE_OPENING_EYEBROW}</p>
           ) : null}
+          {beforeOpening ? <OpeningCountdown /> : null}
           <div className="hero-actions">
             <a href="/#prenota" className="btn btn-ink btn-dark" aria-label={getHeroHeadline()}>
               {HERO_SLOT_CTA}

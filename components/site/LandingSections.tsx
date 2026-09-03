@@ -1,4 +1,4 @@
-import { SITE, getMailtoUrl, getMapsUrl } from "@/lib/site-config";
+import { SITE, getMailtoUrl, getMapsUrl, getWhatsAppUrl } from "@/lib/site-config";
 import {
   BookingSectionNote,
   FreshaBookingFlow,
@@ -86,6 +86,15 @@ export function LandingSections() {
               <br />
               <a href={`tel:${SITE.phoneTel}`} className="contact-link">
                 {SITE.phoneDisplay}
+              </a>
+              <br />
+              <a
+                href={getWhatsAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="contact-link"
+              >
+                Consulenza su WhatsApp
               </a>
             </p>
             <p>

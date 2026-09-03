@@ -56,12 +56,13 @@ describe("public copy vs official identity", () => {
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/Felice Polese Barber Shop/);
   });
 
-  it("uses MODERN BARBERING tagline and compact listino that opens booking", () => {
+  it("uses MODERN BARBERING tagline and listino price boxes with PRENOTA CTA", () => {
     const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
-    expect(listino).toMatch(/listino-row/);
+    expect(listino).toMatch(/listino-box/);
     expect(listino).toMatch(/serviceBookingHref/);
     expect(listino).toMatch(/formatDuration/);
-    expect(listino).not.toMatch(/btn-listino-prenota/);
+    expect(listino).toMatch(/btn-listino-prenota/);
+    expect(listino).toMatch(/>Prenota</);
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/Plus_Jakarta_Sans/);
@@ -316,7 +317,9 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/Listino/);
     expect(listino).toMatch(/BOOKING_SERVICE_EVENT/);
     expect(listino).toMatch(/formatPriceRange/);
-    expect(listino).toMatch(/listino-row/);
+    expect(listino).toMatch(/listino-box/);
+    expect(listino).toMatch(/btn-listino-prenota/);
+    expect(listino).toMatch(/>Prenota</);
     expect(listino).not.toMatch(/listino-card/);
   });
 
@@ -330,6 +333,7 @@ describe("public copy vs official identity", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/getHeroHeadline/);
     expect(hero).toMatch(/HERO_PRE_OPENING_EYEBROW/);
+    expect(hero).toMatch(/OpeningCountdown/);
     expect(hero).toMatch(/HERO_SENTENCE/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
@@ -365,6 +369,8 @@ describe("public copy vs official identity", () => {
     const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(contact).toMatch(/id="contact"/);
     expect(contact).toMatch(/Raggiungimi ora su Google Maps/);
+    expect(contact).toMatch(/Consulenza su WhatsApp/);
+    expect(contact).toMatch(/getWhatsAppUrl/);
     expect(contact).toMatch(/SITE\.hours/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/SITE_PDFS\.logo/);

@@ -34,7 +34,7 @@ export type Service = {
 };
 
 /**
- * Official listino — exactly these 9 bookable services.
+ * Official listino — exactly these 10 bookable services.
  * Razor Taper / Skin Fade / other rasature are techniques, not services.
  */
 export const SERVICES: Service[] = [
