@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { findSlot, getAvailableSlots, wallTimeToUtc } from "@/lib/availability";
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
-import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
+import {
+  AppointmentsUnavailableError,
+  loadDayAppointments,
+  publicAppointment,
+  servicesSnapshot,
+} from "@/lib/appointments";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { flattenZodError, walkInSchema } from "@/lib/validations";
 
@@ -25,9 +30,19 @@ export async function POST(request: Request) {
   if (!barber || barber.virtual) return NextResponse.json({ error: "Seleziona Felice o Davide." }, { status: 400 });
   const totals = totalsForServices(services);
   const startsAt = wallTimeToUtc(body.date, body.startTime);
+  let dayAppointments;
+  try {
+    dayAppointments = await loadDayAppointments(body.date);
+  } catch (err) {
+    const message =
+      err instanceof AppointmentsUnavailableError
+        ? err.message
+        : "Calendario non disponibile. Riprova tra poco.";
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
   const slots = getAvailableSlots({
     date: body.date, barberId: body.barberId, durationMinutes: totals.durationMin,
-    appointments: await loadDayAppointments(body.date), minNoticeMinutes: 0, now: new Date(0),
+    appointments: dayAppointments, minNoticeMinutes: 0, now: new Date(0),
   });
   const slot = findSlot(slots, startsAt);
   if (!slot) return NextResponse.json({ error: "Orario non disponibile per questa poltrona." }, { status: 409 });
@@ -43,7 +58,7 @@ export async function POST(request: Request) {
     service_ids: services.map((s) => s.id),
     services_snapshot: servicesSnapshot(services),
     starts_at: slot.startIso,
-    ends_at: slot.endIso,
+    ends_at: slot.blockEndIso,
     duration_min: totals.durationMin,
     price_cents: Math.round(body.priceEuro * 100),
     is_walk_in: true,

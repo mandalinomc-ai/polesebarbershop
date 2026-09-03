@@ -38,15 +38,15 @@ describe("getAvailableSlots", () => {
     expect(getAvailableSlots({ date: SUNDAY, barberId: "davide", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
     expect(getAvailableSlots({ date: "2026-08-29", barberId: "felice", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
   });
-  it("generates Monday slots from 15:00; last 25-min slot is 18:35", () => {
+  it("generates Monday slots from 15:00; last 25-min (+5 buffer) slot is 18:30", () => {
     const slots = getAvailableSlots({ date: MONDAY_OPEN, barberId: "felice", durationMinutes: 25, now: nowBeforeOpening });
     expect(slots[0]?.label).toBe("15:00");
-    expect(slots.at(-1)?.label).toBe("18:35");
+    expect(slots.at(-1)?.label).toBe("18:30");
   });
-  it("generates Tuesday slots from 08:30; last 25-min slot is 18:35", () => {
+  it("generates Tuesday slots from 08:30; last 25-min (+5 buffer) slot is 18:30", () => {
     const slots = getAvailableSlots({ date: TUESDAY, barberId: "felice", durationMinutes: 25, now: nowBeforeOpening });
     expect(slots[0]?.label).toBe("08:30");
-    expect(slots.at(-1)?.label).toBe("18:35");
+    expect(slots.at(-1)?.label).toBe("18:30");
     expect(slots.every((s) => s.barberId === "felice")).toBe(true);
   });
   it("blocks overlap but allows adjacent and anyone uses the free chair", () => {

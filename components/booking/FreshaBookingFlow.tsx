@@ -17,7 +17,6 @@ import {
   formatItalianDate,
   formatItalianMonth,
   getFirstBookableDate,
-  getScheduleSlots,
   listOpenDayChips,
   monthCalendarWeeks,
   startOfMonth,
@@ -164,22 +163,6 @@ export function FreshaBookingFlow({
     return () => window.removeEventListener(BOOKING_SERVICE_EVENT, onPick);
   }, []);
 
-  const localSlots = useCallback((): ApiSlot[] => {
-    if (!date || totals.durationMin <= 0) return [];
-    return getScheduleSlots({
-      date,
-      barberId,
-      durationMinutes: totals.durationMin,
-    }).map((s) => ({
-      start: s.startIso,
-      end: s.endIso,
-      label: s.label,
-      barberId: s.barberId,
-      available: s.available,
-      booked: s.booked,
-    }));
-  }, [date, barberId, totals.durationMin]);
-
   const loadSlots = useCallback(async () => {
     if (!date || totals.durationMin <= 0) return;
     setSlotsState("loading");
@@ -198,10 +181,21 @@ export function FreshaBookingFlow({
         days?: { date: string; full?: boolean }[];
         error?: string;
         warning?: string;
+        sourceUnavailable?: boolean;
       };
-      if (!res.ok) throw new Error(json.error || "Errore orari");
+      if (!res.ok || json.sourceUnavailable) {
+        setSlots([]);
+        setSlot(null);
+        setSlotsState("error");
+        setSlotsWarning(
+          json.warning ||
+            json.error ||
+            "Calendario non disponibile. Riprova tra poco.",
+        );
+        return;
+      }
       const incoming = Array.isArray(json.slots) ? json.slots : [];
-      setSlots(Array.isArray(json.slots) ? json.slots : []);
+      setSlots(incoming);
       setSlot((curr) => {
         if (!curr) return curr;
         const match = incoming.find((s) => s.start === curr.start);
@@ -217,16 +211,13 @@ export function FreshaBookingFlow({
       }
       setSlotsWarning(json.warning || "");
       setSlotsState("ready");
-    } catch (err) {
-      setSlots(localSlots());
-      setSlotsState("ready");
-      setSlotsWarning(
-        err instanceof Error
-          ? `${err.message} Mostriamo gli orari locali.`
-          : "Calendario locale: gli orari potrebbero non riflettere le prenotazioni reali.",
-      );
+    } catch {
+      setSlots([]);
+      setSlot(null);
+      setSlotsState("error");
+      setSlotsWarning("Calendario non disponibile. Riprova tra poco.");
     }
-  }, [date, barberId, totals.durationMin, selectedIds, localSlots, days]);
+  }, [date, barberId, totals.durationMin, selectedIds, days]);
 
   useEffect(() => {
     if (step >= 3 && totals.durationMin > 0) {
@@ -598,7 +589,16 @@ export function FreshaBookingFlow({
             {slotsWarning ? (
               <p className="slot-status">{slotsWarning}</p>
             ) : null}
-            {slotsState === "ready" && slots.length === 0 && (
+            {slotsState === "error" ? (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => void loadSlots()}
+              >
+                Riprova
+              </button>
+            ) : null}
+            {slotsState === "ready" && slots.length === 0 && !slotsWarning && (
               <p className="slot-status">
                 Nessuno slot disponibile per questo giorno.
               </p>

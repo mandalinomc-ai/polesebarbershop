@@ -13,7 +13,11 @@ import {
   resolveServices,
   totalsForServices,
 } from "@/lib/catalog";
-import { loadAppointmentsBetween, loadDayAppointments } from "@/lib/appointments";
+import {
+  AppointmentsUnavailableError,
+  loadAppointmentsBetween,
+  loadDayAppointments,
+} from "@/lib/appointments";
 import { BOOKING_UI_DAYS, SITE } from "@/lib/site-config";
 import { availabilityQuerySchema, flattenZodError } from "@/lib/validations";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -23,12 +27,17 @@ export const dynamic = "force-dynamic";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+const RETRY_MESSAGE =
+  "Calendario non disponibile in questo momento. Riprova tra poco.";
+
 function serializeSlot(s: ScheduleSlot) {
   return {
     start: s.startIso,
     end: s.endIso,
     startIso: s.startIso,
     endIso: s.endIso,
+    blockEnd: s.blockEndIso,
+    blockEndIso: s.blockEndIso,
     label: s.label,
     barberId: s.barberId,
     available: s.available,
@@ -45,6 +54,27 @@ function parseSummaryDates(raw: string | null, selectedDate: string): string[] {
   return unique.slice(0, BOOKING_UI_DAYS + 1);
 }
 
+function emptyPayload(
+  date: string,
+  first: string,
+  warning: string,
+  durationMinutes = 0,
+) {
+  return {
+    date,
+    slots: [],
+    days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
+    firstBookableDate: first,
+    shopOpen: false,
+    durationMinutes,
+    availableCount: 0,
+    bookedCount: 0,
+    full: false,
+    warning,
+    sourceUnavailable: true,
+  };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const parsed = availabilityQuerySchema.safeParse({
@@ -54,14 +84,12 @@ export async function GET(request: Request) {
       searchParams.get("serviceIds") || searchParams.get("duration") || "",
   });
 
-  // Also accept duration-only (wizard fallback) without service ids.
   const date = searchParams.get("date") || "";
   const barberId = searchParams.get("barberId") || ANYONE_BARBER_ID;
   const durationParam = Number(searchParams.get("duration") || "0");
   const serviceIdsRaw = searchParams.get("serviceIds") || "";
 
   let durationMinutes = 0;
-  let warning: string | undefined;
 
   if (serviceIdsRaw) {
     if (!parsed.success) {
@@ -105,6 +133,7 @@ export async function GET(request: Request) {
       days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
       firstBookableDate: first,
       shopOpen: false,
+      durationMinutes,
       warning: `Le prenotazioni aprono dal ${formatItalianDate(SITE.openingDate)}.`,
     });
   }
@@ -116,22 +145,34 @@ export async function GET(request: Request) {
       days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
       firstBookableDate: first,
       shopOpen: false,
+      durationMinutes,
       warning: "Il salone è chiuso in questo giorno (domenica).",
     });
   }
 
   if (!isSupabaseConfigured()) {
-    warning =
-      "Calendario in modalità locale: il database non è configurato. Gli orari mostrati potrebbero non riflettere le prenotazioni reali.";
+    return NextResponse.json(emptyPayload(date, first, RETRY_MESSAGE, durationMinutes), {
+      status: 503,
+    });
   }
 
   const summaryDates = parseSummaryDates(searchParams.get("summaryDates"), date);
   const rangeStart = summaryDates.reduce((min, d) => (d < min ? d : min), date);
   const rangeEnd = summaryDates.reduce((max, d) => (d > max ? d : max), date);
-  const appointments =
-    summaryDates.length > 1
-      ? await loadAppointmentsBetween(rangeStart, rangeEnd)
-      : await loadDayAppointments(date);
+
+  let appointments;
+  try {
+    appointments =
+      summaryDates.length > 1
+        ? await loadAppointmentsBetween(rangeStart, rangeEnd)
+        : await loadDayAppointments(date);
+  } catch (err) {
+    const message =
+      err instanceof AppointmentsUnavailableError ? err.message : RETRY_MESSAGE;
+    return NextResponse.json(emptyPayload(date, first, message, durationMinutes), {
+      status: 503,
+    });
+  }
 
   const slots = getScheduleSlots({
     date,
@@ -161,11 +202,11 @@ export async function GET(request: Request) {
     firstBookableDate: first,
     shopOpen: true,
     durationMinutes,
-    warning,
     availableCount: occupancy.availableCount,
     bookedCount: occupancy.bookedCount,
     full: occupancy.full,
     days,
     slots: slots.map(serializeSlot),
+    sourceUnavailable: false,
   });
 }

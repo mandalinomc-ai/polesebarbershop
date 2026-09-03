@@ -7,14 +7,30 @@ import {
   type DayHours,
 } from "./catalog";
 import {
+  BOOKING_BUFFER_MINUTES,
+  SLOT_INTERVAL_MINUTES,
+  blockEndFromStart,
+  candidateStartLabels,
+  clientEndFromStart,
+  isIntervalFree,
+  overlaps,
+  TIMEZONE,
+  addMinutes as bookingAddMinutes,
+  formatWallDate as bookingFormatWallDate,
+  formatWallTime as bookingFormatWallTime,
+  minutesToTime as bookingMinutesToTime,
+  timeToMinutes,
+  wallTimeToUtc as bookingWallTimeToUtc,
+} from "./booking";
+import {
   BOOKING_HORIZON_DAYS,
   MIN_NOTICE_MINUTES,
-  SLOT_STEP_MINUTES,
   SITE,
-  TIMEZONE,
 } from "./site-config";
 
-export { TIMEZONE };
+export { TIMEZONE, BOOKING_BUFFER_MINUTES, SLOT_INTERVAL_MINUTES };
+/** @deprecated Prefer SLOT_INTERVAL_MINUTES — kept for existing imports. */
+export const SLOT_STEP_MINUTES = SLOT_INTERVAL_MINUTES;
 
 export type ExistingAppointment = {
   barberId: string;
@@ -24,9 +40,13 @@ export type ExistingAppointment = {
 
 export type Slot = {
   start: Date;
+  /** Client-facing service end (no operational buffer). */
   end: Date;
   startIso: string;
   endIso: string;
+  /** Chair occupation end = service + BOOKING_BUFFER_MINUTES. */
+  blockEnd: Date;
+  blockEndIso: string;
   label: string;
   barberId: string;
 };
@@ -73,6 +93,8 @@ export type GetAvailableSlotsInput = {
   now?: Date;
   minNoticeMinutes?: number;
   slotStepMinutes?: number;
+  /** Internal chair buffer; default BOOKING_BUFFER_MINUTES. */
+  bufferMinutes?: number;
   timeZone?: string;
 };
 
@@ -84,86 +106,26 @@ function parseDateParts(date: string): { y: number; m: number; d: number } {
   return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
 }
 
-function parseTimeParts(time: string): { h: number; min: number } {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(time);
-  if (!match) {
-    throw new Error(`Invalid time: ${time}`);
-  }
-  return { h: Number(match[1]), min: Number(match[2]) };
-}
-
-/**
- * Convert a civil wall clock in `timeZone` (default Europe/Rome) to a UTC Date.
- * Handles DST by measuring the zone offset twice.
- */
 export function wallTimeToUtc(
   date: string,
   time: string,
   timeZone: string = TIMEZONE,
 ): Date {
-  const { y, m, d } = parseDateParts(date);
-  const { h, min } = parseTimeParts(time);
-  const utcGuess = Date.UTC(y, m - 1, d, h, min, 0);
-
-  const asWallUtc = (ms: number): number => {
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hourCycle: "h23",
-    }).formatToParts(new Date(ms));
-    const get = (type: string) =>
-      Number(parts.find((p) => p.type === type)?.value);
-    return Date.UTC(
-      get("year"),
-      get("month") - 1,
-      get("day"),
-      get("hour"),
-      get("minute"),
-      get("second"),
-    );
-  };
-
-  const offset = asWallUtc(utcGuess) - utcGuess;
-  let adjusted = utcGuess - offset;
-  const offset2 = asWallUtc(adjusted) - adjusted;
-  if (offset2 !== offset) {
-    adjusted = utcGuess - offset2;
-  }
-  return new Date(adjusted);
+  return bookingWallTimeToUtc(date, time, timeZone);
 }
 
 export function formatWallTime(
   instant: Date,
   timeZone: string = TIMEZONE,
 ): string {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(instant);
-  const hour = parts.find((p) => p.type === "hour")?.value ?? "00";
-  const minute = parts.find((p) => p.type === "minute")?.value ?? "00";
-  return `${hour}:${minute}`;
+  return bookingFormatWallTime(instant, timeZone);
 }
 
 export function formatWallDate(
   instant: Date,
   timeZone: string = TIMEZONE,
 ): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(instant);
-  const get = (type: string) => parts.find((p) => p.type === type)?.value;
-  return `${get("year")}-${get("month")}-${get("day")}`;
+  return bookingFormatWallDate(instant, timeZone);
 }
 
 export function formatItalianDate(date: string): string {
@@ -184,27 +146,25 @@ export function weekdayOfDate(date: string): number {
 }
 
 export function toMinutes(time: string): number {
-  const { h, min } = parseTimeParts(time);
-  return h * 60 + min;
+  return timeToMinutes(time);
 }
 
 export function minutesToTime(total: number): string {
-  const h = Math.floor(total / 60);
-  const min = total % 60;
-  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+  return bookingMinutesToTime(total);
 }
 
 export function addMinutes(instant: Date, minutes: number): Date {
-  return new Date(instant.getTime() + minutes * 60_000);
+  return bookingAddMinutes(instant, minutes);
 }
 
+/** Semi-open [start, end) overlap — delegated to lib/booking. */
 export function rangesOverlap(
   aStart: Date,
   aEnd: Date,
   bStart: Date,
   bEnd: Date,
 ): boolean {
-  return aStart < bEnd && bStart < aEnd;
+  return overlaps(aStart, aEnd, bStart, bEnd);
 }
 
 function asDate(value: Date | string): Date {
@@ -320,23 +280,13 @@ function slotStartsForHours(
   hours: DayHours,
   durationMinutes: number,
   slotStepMinutes: number,
+  bufferMinutes: number = BOOKING_BUFFER_MINUTES,
 ): string[] {
   if (!hours || durationMinutes <= 0) return [];
-  const open = toMinutes(hours.open);
-  const close = toMinutes(hours.close);
-  const labels: string[] = [];
-  for (let t = open; t + durationMinutes <= close; t += slotStepMinutes) {
-    labels.push(minutesToTime(t));
-  }
-  return labels;
-}
-
-function isSlotFree(
-  start: Date,
-  end: Date,
-  busy: { start: Date; end: Date }[],
-): boolean {
-  return !busy.some((b) => rangesOverlap(start, end, b.start, b.end));
+  return candidateStartLabels(hours.open, hours.close, durationMinutes, {
+    slotIntervalMinutes: slotStepMinutes,
+    bufferMinutes,
+  });
 }
 
 function evaluateBarberSlot(opts: {
@@ -347,16 +297,24 @@ function evaluateBarberSlot(opts: {
   busy: { start: Date; end: Date }[];
   earliest: Date;
   timeZone: string;
+  bufferMinutes: number;
 }): ScheduleSlot | null {
   const start = wallTimeToUtc(opts.date, opts.label, opts.timeZone);
-  const end = addMinutes(start, opts.durationMinutes);
+  const end = clientEndFromStart(start, opts.durationMinutes);
+  const blockEnd = blockEndFromStart(
+    start,
+    opts.durationMinutes,
+    opts.bufferMinutes,
+  );
   if (start < opts.earliest) return null;
-  const booked = !isSlotFree(start, end, opts.busy);
+  const booked = !isIntervalFree(start, blockEnd, opts.busy);
   return {
     start,
     end,
     startIso: start.toISOString(),
     endIso: end.toISOString(),
+    blockEnd,
+    blockEndIso: blockEnd.toISOString(),
     label: opts.label,
     barberId: opts.barber.id,
     available: !booked,
@@ -373,12 +331,14 @@ function scheduleForBarber(opts: {
   minNoticeMinutes: number;
   slotStepMinutes: number;
   timeZone: string;
+  bufferMinutes: number;
 }): ScheduleSlot[] {
   const hours = getHoursForDate(opts.barber, opts.date);
   const labels = slotStartsForHours(
     hours,
     opts.durationMinutes,
     opts.slotStepMinutes,
+    opts.bufferMinutes,
   );
   const busy = appointmentsForBarber(opts.appointments, opts.barber.id);
   const earliest = addMinutes(opts.now, opts.minNoticeMinutes);
@@ -393,6 +353,7 @@ function scheduleForBarber(opts: {
       busy,
       earliest,
       timeZone: opts.timeZone,
+      bufferMinutes: opts.bufferMinutes,
     });
     if (slot) slots.push(slot);
   }
@@ -416,7 +377,8 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
     barbers = BARBERS,
     now = new Date(),
     minNoticeMinutes = MIN_NOTICE_MINUTES,
-    slotStepMinutes = SLOT_STEP_MINUTES,
+    slotStepMinutes = SLOT_INTERVAL_MINUTES,
+    bufferMinutes = BOOKING_BUFFER_MINUTES,
     timeZone = TIMEZONE,
   } = input;
 
@@ -432,6 +394,7 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
     now,
     minNoticeMinutes,
     slotStepMinutes,
+    bufferMinutes,
     timeZone,
   };
 

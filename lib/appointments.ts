@@ -1,10 +1,18 @@
 import { formatItalianDate, formatWallDate, formatWallTime, wallTimeToUtc } from "@/lib/availability";
 import { getBarber, type Service } from "@/lib/catalog";
-import { getSupabaseAdmin, type AppointmentRow } from "@/lib/supabase";
+import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/supabase-query";
 
 export type DayBusy = { barberId: string; startsAt: string; endsAt: string };
 const BLOCKING = ["pending", "confirmed", "walk_in", "completed"] as const;
+
+/** Raised when appointments cannot be loaded — callers must not invent free slots. */
+export class AppointmentsUnavailableError extends Error {
+  constructor(message = "Calendario non disponibile. Riprova tra poco.") {
+    super(message);
+    this.name = "AppointmentsUnavailableError";
+  }
+}
 
 /** Cancelled appointments free the chair and must not get the 30-min reminder. */
 export function occupiesSlot(status: string): boolean {
@@ -26,8 +34,17 @@ export async function loadAppointmentsBetween(
   fromDate: string,
   toDate: string,
 ): Promise<DayBusy[]> {
+  if (!isSupabaseConfigured()) {
+    throw new AppointmentsUnavailableError(
+      "Database non configurato. Non possiamo mostrare orari verificati. Riprova più tardi.",
+    );
+  }
   const db = getSupabaseAdmin();
-  if (!db) return [];
+  if (!db) {
+    throw new AppointmentsUnavailableError(
+      "Calendario non raggiungibile. Riprova tra poco.",
+    );
+  }
   const start = fromDate <= toDate ? fromDate : toDate;
   const end = fromDate <= toDate ? toDate : fromDate;
   const dayStart = wallTimeToUtc(start, "00:00").toISOString();
@@ -41,7 +58,11 @@ export async function loadAppointmentsBetween(
       .order("starts_at", { ascending: true })
       .range(from, to),
   );
-  if (error) return [];
+  if (error) {
+    throw new AppointmentsUnavailableError(
+      "Impossibile leggere le prenotazioni. Riprova tra poco.",
+    );
+  }
   return data
     .filter((row) => occupiesSlot(row.status))
     .map((row) => ({

@@ -282,7 +282,8 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/non disponibile/);
     expect(wizard).toMatch(/Scegli la data/);
     expect(wizard).toMatch(/Scegli l&apos;orario/);
-    expect(wizard).toMatch(/getScheduleSlots/);
+    expect(wizard).toMatch(/\/api\/availability/);
+    expect(wizard).toMatch(/Riprova/);
     expect(wizard).toMatch(/setStep\(1\)/);
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);

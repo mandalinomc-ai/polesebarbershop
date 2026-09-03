@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { addDays, formatItalianDate, formatWallDate, formatWallTime, mondayOfWeek, wallTimeToUtc } from "@/lib/availability";
+import { blockEndFromStart } from "@/lib/booking";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { namesFromSnapshot, publicAppointment } from "@/lib/appointments";
 import { isPaidStatus } from "@/lib/crm";
@@ -259,7 +260,7 @@ export async function PATCH(request: Request) {
       ? wallTimeToUtc(moveDate, moveTime)
       : new Date(row.starts_at);
     const durationMin = row.duration_min;
-    const endsAt = new Date(start.getTime() + durationMin * 60_000);
+    const endsAt = blockEndFromStart(start, durationMin);
     patch.starts_at = start.toISOString();
     patch.ends_at = endsAt.toISOString();
     if (moveBarber) patch.barber_id = moveBarber;

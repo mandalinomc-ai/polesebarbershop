@@ -7,7 +7,12 @@ import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
 import { SITE, getAdminEmail, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
-import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
+import {
+  AppointmentsUnavailableError,
+  loadDayAppointments,
+  publicAppointment,
+  servicesSnapshot,
+} from "@/lib/appointments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,11 +37,24 @@ export async function POST(request: Request) {
   }
 
   const startsAt = wallTimeToUtc(body.date, body.startTime);
+
+  let dayAppointments;
+  try {
+    dayAppointments = await loadDayAppointments(body.date);
+  } catch (err) {
+    const message =
+      err instanceof AppointmentsUnavailableError
+        ? err.message
+        : "Calendario non disponibile. Riprova tra poco.";
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
+
+  // Server-side revalidation: re-read appointments, recompute slots, reject if gone.
   const slots = getAvailableSlots({
     date: body.date,
     barberId: body.barberId,
     durationMinutes: totals.durationMin,
-    appointments: await loadDayAppointments(body.date),
+    appointments: dayAppointments,
   });
   const slot = findSlot(slots, startsAt);
   if (!slot) {
@@ -48,6 +66,7 @@ export async function POST(request: Request) {
   const manageUrl = `${getSiteUrl()}/appuntamento/${manageToken}`;
   const timeLabel = formatWallTime(slot.start);
   const dateLabel = formatItalianDate(body.date);
+  // ICS / GCal use client-facing service end (no operational buffer).
   const icsContent = buildIcs({
     uid: `${manageToken}@polesebarbershop.it`,
     startsAt: slot.start,
@@ -88,7 +107,8 @@ export async function POST(request: Request) {
         service_ids: services.map((s) => s.id),
         services_snapshot: servicesSnapshot(services),
         starts_at: slot.startIso,
-        ends_at: slot.endIso,
+        // Chair occupation includes internal BOOKING_BUFFER_MINUTES.
+        ends_at: slot.blockEndIso,
         duration_min: totals.durationMin,
         price_cents: totals.priceEuro * 100,
         is_walk_in: false,
@@ -193,6 +213,7 @@ export async function POST(request: Request) {
     manageToken,
     manageUrl,
     barberId: slot.barberId, barberName, startsAt: slot.startIso, endsAt: slot.endIso,
+    blockEndsAt: slot.blockEndIso,
     durationMinutes: totals.durationMin, totalPrice: totals.priceEuro, priceLabel: totals.priceLabel,
     serviceNames: totals.names, dateLabel, timeLabel, ics: icsContent, icsFilename: filename,
     googleCalendarUrl: gcal, warnings, appointment: row ? publicAppointment(row) : null,

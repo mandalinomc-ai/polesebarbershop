@@ -71,49 +71,40 @@ describe("POST /api/bookings", () => {
     expect(res.status).toBe(400);
   });
 
-  it("confirms with ICS VALARM 30 min even without Supabase/Resend", async () => {
+  it("rejects booking when appointments source of truth is unavailable", async () => {
     const res = await postBooking(payload());
-    expect(res.status).toBe(200);
-    const json = (await res.json()) as {
-      ok: boolean;
-      persisted: boolean;
-      emailSent: boolean;
-      confirmViaWhatsApp?: boolean;
-      salonWhatsAppSent?: boolean;
-      customerWhatsAppSent?: boolean;
-      salonRelay?: { to?: string; subject: string; message: string } | null;
-      ics: string;
-      warnings: string[];
-      barberName: string;
-      timeLabel: string;
-      manageUrl: string;
-    };
-    expect(json.ok).toBe(true);
-    expect(json.persisted).toBe(false);
-    expect(json.emailSent).toBe(false);
-    expect(json.barberName).toBe("Felice");
-    expect(json.timeLabel).toBe("09:30");
-    expect(json.ics).toContain("BEGIN:VALARM");
-    expect(json.ics).toContain("TRIGGER:-PT30M");
-    expect(json.ics.match(/BEGIN:VALARM/g)).toEqual(["BEGIN:VALARM"]);
-    expect(json.ics).not.toMatch(/TRIGGER:-PT1H/);
-    expect(json.ics).not.toMatch(/TRIGGER:-P1D/);
-    expect(json.ics).toContain("Corso Dante Alighieri\\, 44");
-    expect(json.ics).toContain("+39 327 015 6225");
-    expect(json.warnings.length).toBeGreaterThan(0);
-    expect(json.warnings.some((w) => /ics|327 015 6225/i.test(w))).toBe(true);
-    expect(json.warnings.filter((w) => /^Email admin:/i.test(w))).toEqual([]);
-    expect(json.warnings.join("\n")).not.toMatch(/testing emails|invalid_access/i);
-    expect(json.confirmViaWhatsApp).toBe(false);
-    expect(json.salonWhatsAppSent).toBe(false);
-    expect(json.customerWhatsAppSent).toBe(false);
-    expect(json.salonRelay).toMatchObject({
-      to: "felicepolese550@gmail.com",
-      subject: expect.stringMatching(/NUOVA PRENOTAZIONE/),
-    });
-    expect(json.manageUrl).toMatch(/\/appuntamento\//);
+    expect(res.status).toBe(503);
+    const json = (await res.json()) as { error: string };
+    expect(json.error).toMatch(/calendario|database|riprova/i);
+  });
+
+  it("rejects GDPR and unofficial services before calendar checks", async () => {
+    expect((await postBooking(payload({ gdprConsent: false }))).status).toBe(400);
+    expect((await postBooking(payload({ serviceIds: ["razor-taper"] }))).status).toBe(400);
   });
 });
+
+describe("POST /api/bookings — validation (no calendar)", () => {
+  withoutCloud();
+  it("rejects missing GDPR consent (Zod, server-side)", async () => {
+    const res = await postBooking(payload({ gdprConsent: false }));
+    expect(res.status).toBe(400);
+    const json = (await res.json()) as { error: string };
+    expect(json.error).toMatch(/consenso/i);
+  });
+
+  it("rejects Razor Taper and Skin Fade as bookable leftover services", async () => {
+    expect((await postBooking(payload({ serviceIds: ["razor-taper"] }))).status).toBe(400);
+    expect((await postBooking(payload({ serviceIds: ["skin-fade"] }))).status).toBe(400);
+  });
+
+  it("rejects unknown leftover services such as Taglio sartoriale", async () => {
+    const res = await postBooking(payload({ serviceIds: ["taglio-sartoriale"] }));
+    expect(res.status).toBe(400);
+  });
+});
+
+/* ICS VALARM / Dante 44 covered in lib/ics.test.ts when calendar is available. */
 
 describe("GET/DELETE /api/bookings/[token]", () => {
   withoutCloud();
