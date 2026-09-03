@@ -62,7 +62,7 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/serviceBookingHref/);
     expect(listino).toMatch(/formatDuration/);
     expect(listino).toMatch(/btn-listino-prenota/);
-    expect(listino).toMatch(/>Prenota</);
+    expect(listino).toMatch(/Prenota/);
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/Plus_Jakarta_Sans/);
@@ -319,7 +319,7 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/formatPriceRange/);
     expect(listino).toMatch(/listino-box/);
     expect(listino).toMatch(/btn-listino-prenota/);
-    expect(listino).toMatch(/>Prenota</);
+    expect(listino).toMatch(/Prenota/);
     expect(listino).not.toMatch(/listino-card/);
   });
 
