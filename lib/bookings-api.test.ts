@@ -61,6 +61,11 @@ describe("POST /api/bookings", () => {
     expect(json.error).toMatch(/consenso/i);
   });
 
+  it("rejects Razor Taper and Skin Fade as bookable leftover services", async () => {
+    expect((await postBooking(payload({ serviceIds: ["razor-taper"] }))).status).toBe(400);
+    expect((await postBooking(payload({ serviceIds: ["skin-fade"] }))).status).toBe(400);
+  });
+
   it("rejects unknown leftover services such as Taglio sartoriale", async () => {
     const res = await postBooking(payload({ serviceIds: ["taglio-sartoriale"] }));
     expect(res.status).toBe(400);
@@ -73,6 +78,10 @@ describe("POST /api/bookings", () => {
       ok: boolean;
       persisted: boolean;
       emailSent: boolean;
+      confirmViaWhatsApp?: boolean;
+      salonWhatsAppSent?: boolean;
+      customerWhatsAppSent?: boolean;
+      salonRelay?: { to?: string; subject: string; message: string } | null;
       ics: string;
       warnings: string[];
       barberName: string;
@@ -90,10 +99,18 @@ describe("POST /api/bookings", () => {
     expect(json.ics).not.toMatch(/TRIGGER:-PT1H/);
     expect(json.ics).not.toMatch(/TRIGGER:-P1D/);
     expect(json.ics).toContain("Corso Dante 45");
-    expect(json.ics).toContain("+39 351 252 3087");
+    expect(json.ics).toContain("+39 327 015 6225");
     expect(json.warnings.length).toBeGreaterThan(0);
-    expect(json.warnings.some((w) => /ics|351 252 3087/i.test(w))).toBe(true);
+    expect(json.warnings.some((w) => /ics|327 015 6225/i.test(w))).toBe(true);
     expect(json.warnings.filter((w) => /^Email admin:/i.test(w))).toEqual([]);
+    expect(json.warnings.join("\n")).not.toMatch(/testing emails|invalid_access/i);
+    expect(json.confirmViaWhatsApp).toBe(false);
+    expect(json.salonWhatsAppSent).toBe(false);
+    expect(json.customerWhatsAppSent).toBe(false);
+    expect(json.salonRelay).toMatchObject({
+      to: "felicepolese550@gmail.com",
+      subject: expect.stringMatching(/NUOVA PRENOTAZIONE/),
+    });
     expect(json.manageUrl).toMatch(/\/appuntamento\//);
   });
 });

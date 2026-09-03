@@ -5,18 +5,20 @@ type SalonVideoProps = {
   className?: string;
 };
 
-/** Autoplay muted loop — real salon mp4 from public/assets/video/. */
+/** Autoplay muted loop — real salon mp4, not a still frame. */
 export function SalonVideo({ video, className = "salon-video-player" }: SalonVideoProps) {
   return (
     <video
       className={className}
-      src={video.src}
       autoPlay
       muted
       loop
       playsInline
-      preload="metadata"
+      preload="auto"
+      disablePictureInPicture
       aria-label={video.alt}
-    />
+    >
+      <source src={video.src} type="video/mp4" />
+    </video>
   );
 }

@@ -67,14 +67,19 @@ describe("booking email copy", () => {
       date: "martedì 1 settembre 2026",
       time: "09:30",
       manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
+      priceLabel: "50 €",
+      durationLabel: "25 min",
     });
     expect(mail.text).toContain(
       "Ciao Mario, la tua prenotazione da Felice Polese Barber Shop è confermata! 💈",
     );
     expect(mail.text).toContain("📅 Data e Ora: martedì 1 settembre 2026 alle 09:30");
     expect(mail.text).toContain("✂️ Servizio: Taglio completo");
+    expect(mail.text).toContain("💶 Prezzo: 50 €");
+    expect(mail.text).toContain("⏱ Durata: 25 min");
     expect(mail.text).toContain("👤 Barber: Felice");
     expect(mail.text).toContain("📍 Dove siamo: Corso Dante 45");
+    expect(mail.text).toContain("📞 Telefono salone: +39 327 015 6225");
     expect(mail.text).toContain(`almeno ${CANCEL_NOTICE_IT} di anticipo`);
     expect(mail.text).toContain("Ti aspettiamo! 🔥");
     expect(mail.text).toContain("Gestisci o disdici: https://polesebarbershop.vercel.app/appuntamento/abc");
@@ -106,6 +111,7 @@ describe("booking email copy", () => {
       priceLabel: "65 €",
       notes: "Allergia al nichel",
       manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
+      customerWhatsAppUrl: "https://wa.me/393331112233?text=Ciao",
     });
     expect(mail.subject).toMatch(/^NUOVA PRENOTAZIONE/);
     expect(mail.text).toContain("Nome: Mario");
@@ -120,6 +126,8 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("Ora: 09:30");
     expect(mail.text).toContain("Note: Allergia al nichel");
     expect(mail.text).toContain("Gestisci: https://polesebarbershop.vercel.app/appuntamento/abc");
+    expect(mail.text).not.toContain("Scrivi al cliente su WhatsApp");
+    expect(mail.html).not.toContain("wa.me/393331112233");
   });
 
   it("mentions 30 minuti on cancel emails", () => {

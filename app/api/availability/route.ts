@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import {
-  getAvailableSlots,
+  formatItalianDate,
   getFirstBookableDate,
+  getScheduleSlots,
   isClosedDay,
+  summarizeSchedule,
+  type ScheduleSlot,
 } from "@/lib/availability";
 import {
   ANYONE_BARBER_ID,
@@ -10,14 +13,37 @@ import {
   resolveServices,
   totalsForServices,
 } from "@/lib/catalog";
-import { loadDayAppointments } from "@/lib/appointments";
-import { formatItalianDate } from "@/lib/availability";
-import { SITE } from "@/lib/site-config";
+import { loadAppointmentsBetween, loadDayAppointments } from "@/lib/appointments";
+import { BOOKING_UI_DAYS, SITE } from "@/lib/site-config";
 import { availabilityQuerySchema, flattenZodError } from "@/lib/validations";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function serializeSlot(s: ScheduleSlot) {
+  return {
+    start: s.startIso,
+    end: s.endIso,
+    startIso: s.startIso,
+    endIso: s.endIso,
+    label: s.label,
+    barberId: s.barberId,
+    available: s.available,
+    booked: s.booked,
+  };
+}
+
+function parseSummaryDates(raw: string | null, selectedDate: string): string[] {
+  const fromQuery = (raw || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => DATE_RE.test(value));
+  const unique = [...new Set([selectedDate, ...fromQuery])];
+  return unique.slice(0, BOOKING_UI_DAYS + 1);
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -61,7 +87,7 @@ export async function GET(request: Request) {
     );
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  if (!DATE_RE.test(date)) {
     return NextResponse.json(
       { error: "Parametro date non valido (YYYY-MM-DD)." },
       { status: 400 },
@@ -76,6 +102,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       date,
       slots: [],
+      days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
       firstBookableDate: first,
       shopOpen: false,
       warning: `Le prenotazioni aprono dal ${formatItalianDate(SITE.openingDate)}.`,
@@ -86,6 +113,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       date,
       slots: [],
+      days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
       firstBookableDate: first,
       shopOpen: false,
       warning: "Il salone è chiuso in questo giorno (lunedì e domenica).",
@@ -97,12 +125,35 @@ export async function GET(request: Request) {
       "Calendario in modalità locale: il database non è configurato. Gli orari mostrati potrebbero non riflettere le prenotazioni reali.";
   }
 
-  const appointments = await loadDayAppointments(date);
-  const slots = getAvailableSlots({
+  const summaryDates = parseSummaryDates(searchParams.get("summaryDates"), date);
+  const rangeStart = summaryDates.reduce((min, d) => (d < min ? d : min), date);
+  const rangeEnd = summaryDates.reduce((max, d) => (d > max ? d : max), date);
+  const appointments =
+    summaryDates.length > 1
+      ? await loadAppointmentsBetween(rangeStart, rangeEnd)
+      : await loadDayAppointments(date);
+
+  const slots = getScheduleSlots({
     date,
     barberId,
     durationMinutes,
     appointments,
+  });
+  const occupancy = summarizeSchedule(date, slots);
+  const days = summaryDates.map((iso) => {
+    if (iso === date) return occupancy;
+    if (iso < first || isClosedDay(iso)) {
+      return { date: iso, availableCount: 0, bookedCount: 0, full: false };
+    }
+    return summarizeSchedule(
+      iso,
+      getScheduleSlots({
+        date: iso,
+        barberId,
+        durationMinutes,
+        appointments,
+      }),
+    );
   });
 
   return NextResponse.json({
@@ -111,13 +162,10 @@ export async function GET(request: Request) {
     shopOpen: true,
     durationMinutes,
     warning,
-    slots: slots.map((s) => ({
-      start: s.startIso,
-      end: s.endIso,
-      startIso: s.startIso,
-      endIso: s.endIso,
-      label: s.label,
-      barberId: s.barberId,
-    })),
+    availableCount: occupancy.availableCount,
+    bookedCount: occupancy.bookedCount,
+    full: occupancy.full,
+    days,
+    slots: slots.map(serializeSlot),
   });
 }

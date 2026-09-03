@@ -1,42 +1,32 @@
 # DECISIONS — Felice Polese infrastructure
 
-**Updated:** 2026-09-01 (final deploy attempt — commit `559fb41`)
+**Updated:** 2026-09-02 (overwrite admitted; marble restored)
 
-## D1 — Canonical Vercel project: `polesebarbershop` (NEW)
+## What went wrong
 
-**Decision:** All new deploys go to the Vercel project **`polesebarbershop`**.
+A GitHub production deploy of **current main** (scissors intro, title `Felice Polese Barber Shop — MODERN BARBERING…`) was aliased onto **https://felicepolesebarbershop.vercel.app**. That overwrote the marble page the client liked.
 
-- Project ID: `prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf`
-- Production URL: `https://polesebarbershop.vercel.app`
-- Serves the premium rebuild with **Felice Polese Barber Shop** branding
-- `NEXT_PUBLIC_SITE_URL` in Vercel production env should be `https://polesebarbershop.vercel.app` (or eventually the custom domain)
+Hobby Vercel cannot `vercel rollback` past the previous production (402). The live domain was pointed back to the oldest remaining production on `temporary-prompt-quasar-rndxhgh`:
 
-**Rationale:** This project is linked to the current GitHub repo and CI workflow. It already shows the correct site.
+`temporary-prompt-quasar-rndxhgh-6ve62mbnk-anon-phi-vert.vercel.app`
 
-## D2 — Legacy domain: `felicepolesebarbershop.vercel.app` (OLD project)
+That deploy is July-3 / “Polese Barbershop — L'Arte della Barberia d'Élite” (hero-bg, Dante Alighieri 44, WhatsApp 327, `#prenota` already present). It is **marble**, but **not** the exact Plus Jakarta page (`Felice Polese | Modern Barbering & Fade Studio`). That exact HTML was never in this git repo; the deleted `polesebarbershop` project (410) had hosted it.
 
-**Decision:** `felicepolesebarbershop.vercel.app` belongs to a **separate, older Vercel project** (internally "felicepolese") that still serves **Polese Barbershop** branding.
+## What we restored in git
 
-**Action required:** Reassign the alias so `felicepolesebarbershop.vercel.app` points to the latest `polesebarbershop` production deployment:
+Closest in-repo visual: commit `0da4547` (Plus Jakarta, `hero-media-cell`, white marble canvas), plus Google Fonts, `/video/` rewrites, booking wizard, Maps **Corso Dante 45**, WhatsApp **327 015 6225**. Document title: `Felice Polese | Modern Barbering & Fade Studio`. No scissors intro on the homepage.
 
-```bash
-npx vercel alias set <polesebarbershop-deploy-url> felicepolesebarbershop.vercel.app
-```
+## D1 — One public URL
 
-**Do NOT** rebuild the old project. **Do NOT** change application code for this — it is purely a Vercel alias/routing fix.
+**https://felicepolesebarbershop.vercel.app** on Vercel project **`temporary-prompt-quasar-rndxhgh`**.
 
-## D3 — Cloud vs local Vercel authentication
+Do not deploy current scissors `main` onto this project until the client agrees the marble look is back.
 
-**Decision:** Vercel deploy and alias operations require an authenticated Vercel account. Two paths:
+## D2 — Do not delete more Vercel projects
 
-| Path | Works? | Notes |
-|------|--------|-------|
-| **Cloud agent `vercel login`** | Blocked | `npx vercel whoami` → Logged out (2026-09-01). OAuth device flow needs a human to visit `vercel.com/oauth/device` and approve. |
-| **Cloud `VERCEL_TOKEN` env** | Not available | No token injected in cloud VM. |
-| **GitHub Actions secrets** | Not configured | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` all empty → CI deploy fails. |
-| **User local PC** | **Preferred** | User runs `vercel login` interactively, then `link`, `deploy`, `alias`. |
+Do not recreate deleted `polesebarbershop`.
 
-**Rationale:** Vercel CLI auth is account-bound. Cloud agents cannot complete browser OAuth without user action. Local terminal is the reliable path until GitHub secrets are set.
+## D3 — Product copy on the restored look
 
 ## D4 — GitHub CI for production deploys
 

@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import {
   ALL_SITE_VIDEOS,
   COLORAZIONE_VIDEOS,
+  CUTTING_TECHNIQUE_VIDEOS,
+  SALON_WORK_VIDEOS,
   FELICE_WORKING_FILENAME,
   FELICE_WORKING_VIDEO,
   GALLERY_VIDEOS,
@@ -12,22 +14,29 @@ import {
   SALONE_GENERALE_VIDEO,
   TAGLIO_VIDEOS,
   VIDEO_BASE,
-  VIDEO_HERO_BASE,
   VIDEO_REELS,
 } from "./site-videos";
 
 const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
-const HERO_VIDEO_DIR = join(process.cwd(), "public", "assets", "videos");
 
 describe("site-videos", () => {
-  it("defines six service reels plus general salon video under /assets/video/", () => {
+  it("defines six service reels plus general salon video under /video/", () => {
     expect(TAGLIO_VIDEOS).toHaveLength(3);
     expect(COLORAZIONE_VIDEOS).toHaveLength(3);
     expect(VIDEO_REELS).toHaveLength(6);
     expect(ALL_SITE_VIDEOS).toHaveLength(8);
 
+    expect(VIDEO_REELS.map((v) => v.id)).toEqual([
+      "taglio-01",
+      "taglio-02",
+      "taglio-03",
+      "colorazione-01",
+      "colorazione-02",
+      "colorazione-03",
+    ]);
+
     for (const video of VIDEO_REELS) {
-      expect(video.src).toMatch(/^\/assets\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
+      expect(video.src).toMatch(/^\/video\/(taglio|colorazione)-\d{2}\.mp4$/);
       expect(video.alt.length).toBeGreaterThan(5);
     }
 
@@ -59,9 +68,31 @@ describe("site-videos", () => {
     ]);
   });
 
-  it("wires felice-working.mp4 from public/assets/videos/", () => {
-    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_HERO_BASE}/${FELICE_WORKING_FILENAME}`);
-    const diskPath = join(HERO_VIDEO_DIR, FELICE_WORKING_FILENAME);
-    expect(existsSync(diskPath), `missing ${diskPath}`).toBe(true);
+  it("keeps fade techniques as dedicated clips, not priced services", () => {
+    expect(CUTTING_TECHNIQUE_VIDEOS).toHaveLength(3);
+    expect(CUTTING_TECHNIQUE_VIDEOS.map((v) => v.id)).toEqual([
+      "razor-fade-technique",
+      "taper-fade-technique",
+      "burst-fade-technique",
+    ]);
+    expect(CUTTING_TECHNIQUE_VIDEOS[0]?.label).toBe("Razor Fade — Tecnica di sfumatura");
+    expect(CUTTING_TECHNIQUE_VIDEOS[1]?.label).toBe("Taper Fade — Tecnica di sfumatura");
+    expect(CUTTING_TECHNIQUE_VIDEOS[2]?.label).toBe("Burst Fade — Tecnica di sfumatura");
+    for (const video of CUTTING_TECHNIQUE_VIDEOS) {
+      expect(video.src).toMatch(/^\/video\/(razor-fade|taper-fade|burst-fade)\.mp4$/);
+      expect(video.label).not.toMatch(/€/);
+    }
+    expect(SALON_WORK_VIDEOS.map((v) => v.id)).toEqual([
+      "taglio-03",
+      "colorazione-01",
+      "colorazione-02",
+      "colorazione-03",
+    ]);
+  });
+
+  it("points the bio clip at public/assets/video/video-felice-polese-bio.mp4", () => {
+    expect(FELICE_WORKING_VIDEO.src).toBe(`${VIDEO_BASE}/video-felice-polese-bio.mp4`);
+    expect(FELICE_WORKING_FILENAME).toBe("video-felice-polese-bio.mp4");
+    expect(existsSync(VIDEO_DIR), `missing folder ${VIDEO_DIR}`).toBe(true);
   });
 });

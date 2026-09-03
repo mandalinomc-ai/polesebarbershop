@@ -2,9 +2,9 @@ import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
-import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@/lib/email";
+import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
-import { SITE, getSiteUrl } from "@/lib/site-config";
+import { SITE, getAdminEmail, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
 import { loadDayAppointments, publicAppointment, servicesSnapshot } from "@/lib/appointments";
@@ -128,6 +128,8 @@ export async function POST(request: Request) {
       date: dateLabel,
       time: timeLabel,
       manageUrl,
+      priceLabel: totals.priceLabel,
+      durationLabel: totals.durationLabel,
     }),
     owner: ownerNewBookingEmail({
       firstName: body.firstName,
@@ -145,11 +147,17 @@ export async function POST(request: Request) {
     }),
     ics: { filename, content: icsContent },
   });
-  if (!emails.customer.ok) warnings.push(emails.customer.error);
-  for (const { to, result } of emails.owner.results) {
-    if (!result.ok && "error" in result) {
-      warnings.push(`Avviso salone (${to}): ${result.error}`);
-    }
+  if (!emails.customer.ok) {
+    warnings.push(publicCustomerMailError(
+      emails.customer.error,
+      Boolean(body.phone),
+    ));
+  }
+  const ownerFailed = emails.owner.results.filter((r) => !r.result.ok);
+  if (ownerFailed.length && !emails.owner.ok) {
+    warnings.push(
+      `Avviso email al salone non recapitato a ${getAdminEmail()}.`,
+    );
   }
 
   return NextResponse.json({
@@ -157,6 +165,30 @@ export async function POST(request: Request) {
     persisted,
     emailSent: Boolean(emails.customer.ok),
     ownerNotified: Boolean(emails.owner.ok),
+    ownerWhatsAppSent: false,
+    customerEmailFailed: !emails.customer.ok,
+    confirmViaWhatsApp: false,
+    customerWhatsAppSent: false,
+    salonWhatsAppSent: false,
+    customerWhatsAppUrl: null,
+    salonRelay: emails.owner.ok
+      ? null
+      : {
+          to: getAdminEmail(),
+          subject: `NUOVA PRENOTAZIONE — ${body.firstName} ${body.lastName}`,
+          message: [
+            "NUOVA PRENOTAZIONE",
+            `Nome: ${body.firstName} ${body.lastName}`,
+            `Telefono: ${body.phone}`,
+            `Email: ${body.email}`,
+            `Servizio: ${totals.names}`,
+            `Prezzo: ${totals.priceLabel}`,
+            `Durata: ${totals.durationLabel}`,
+            `Barbiere: ${barberName}`,
+            `Quando: ${dateLabel} alle ${timeLabel}`,
+            `Gestisci: ${manageUrl}`,
+          ].filter(Boolean).join("\n"),
+        },
     appointmentId,
     manageToken,
     manageUrl,

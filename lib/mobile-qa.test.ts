@@ -21,7 +21,7 @@ describe("mobile QA (390px)", () => {
   it("keeps Prenota sticky on mobile and does not hide the header", () => {
     expect(css).toMatch(/\.site-header\.header-hidden \{ transform: none; \}/);
     expect(chrome).toMatch(/max-width: 899px/);
-    expect(chrome).toMatch(/Prenota/);
+    expect(chrome).toMatch(/HERO_SLOT_CTA/);
     expect(chrome).toMatch(/nav-toggle/);
     expect(chrome).toMatch(/Chiudi menu/);
   });
@@ -29,20 +29,26 @@ describe("mobile QA (390px)", () => {
   it("does not invent booked slots when the API returns none", () => {
     expect(wizard).toMatch(/setSlots\(Array\.isArray\(json\.slots\) \? json\.slots : \[\]\)/);
     expect(wizard).not.toMatch(/incoming\.length \? incoming : localSlots\(\)/);
+    expect(wizard).toMatch(/aria-disabled=\{taken\}/);
+    expect(wizard).toMatch(/non disponibile/);
+    expect(css).toMatch(/\.slot-btn\.booked/);
+    expect(css).toMatch(/\.cal-day \{[\s\S]*?min-height:\s*44px/);
   });
 
   it("keeps /gestionale usable on a phone (bottom nav + logout + walk-in taps)", () => {
     expect(crm).toMatch(/crm-bottom/);
     expect(crm).toMatch(/crm-mobile-logout/);
     expect(crm).toMatch(/walkin-service/);
+    expect(crm).toMatch(/occupancy-table/);
     expect(css).toMatch(/\.crm-mobile-logout \{ display: inline-flex; \}/);
+    expect(css).toMatch(/\.occupancy-table td\.taken/);
   });
 
   it("keeps July 3 hero and booking CTA usable at 390px", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/hero--soon/);
+    expect(hero).toMatch(/hero-editorial/);
     expect(hero).toMatch(/getHeroHeadline/);
-    expect(css).toMatch(/\.hero--soon/);
+    expect(css).toMatch(/\.hero-media-cell/);
     expect(css).toMatch(/\.day-chip \{[\s\S]*?min-height:\s*44px/);
   });
 
@@ -54,21 +60,23 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.wa-fab, \.maps-fab \{[\s\S]*?min-width:\s*44px[\s\S]*?min-height:\s*44px/);
   });
 
-  it("uses white marble theme with stable media and Felice bio video", () => {
+  it("uses white marble theme with video grid after hero, no leftover about block", () => {
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(layout).not.toMatch(/site-white-canvas/);
+    expect(layout).toMatch(/site-white-canvas/);
     expect(css).toMatch(/marble\.png/);
     expect(css).toMatch(/bg-marble-light/);
     expect(css).toMatch(/video-reel-grid/);
     expect(css).toMatch(/backface-visibility:\s*hidden/);
-    expect(hero).toMatch(/bg-marble-light/);
+    expect(hero).toMatch(/hero-editorial/);
     expect(landing).not.toMatch(/gallery-grid/);
     expect(landing).not.toMatch(/fresha-/);
-    expect(landing).toMatch(/VideoReelGrid/);
+    expect(landing).toMatch(/id="about"/);
     expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
-    expect(hero).not.toMatch(/HERO_VIDEOS/);
+    expect(landing).toMatch(/VideoReelGrid/);
+    expect(landing).toMatch(/ServiceListino/);
+    expect(hero).toMatch(/HERO_VIDEOS/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
     expect(scissors).toMatch(/viewBox="0 0 100 110"/);

@@ -7,11 +7,15 @@ import {
   SALON_CONTACT_MESSAGE,
   ADMIN_EMAIL_FALLBACK,
   HERO_CTA,
+  HERO_SLOT_CTA,
+  HERO_SENTENCE,
   HERO_BEFORE_OPENING,
   getWhatsAppUrl,
   getMailtoUrl,
   getHeroHeadline,
   getBookingConfirmWhatsAppUrl,
+  getCustomerConfirmMessage,
+  getSalonToCustomerWhatsAppUrl,
   getSocialChannels,
   getWhatsAppChatUrl,
   getPrenotaUrl,
@@ -23,6 +27,8 @@ import {
   HERO_CALENDAR_DAYS,
   IS_COMING_SOON,
   NOTIFY_WHATSAPP_MESSAGE,
+  getSalonNotifyWhatsApp,
+  SALON_NOTIFY_WHATSAPP_FALLBACK,
 } from "./site-config";
 
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "out", ".vercel"]);
@@ -50,28 +56,32 @@ describe("public copy vs official identity", () => {
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/Felice Polese Barber Shop/);
   });
 
-  it("uses MODERN BARBERING tagline and premium listino with PRENOTA links", () => {
+  it("uses MODERN BARBERING tagline and compact listino that opens booking", () => {
     const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
-    expect(listino).toMatch(/listino-card/);
+    expect(listino).toMatch(/listino-row/);
     expect(listino).toMatch(/serviceBookingHref/);
-    expect(listino).toMatch(/Prenota/);
-    const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
-    expect(intro).not.toMatch(/OpeningCountdown/);
-    expect(intro).toMatch(/scissors-intro-brand/);
-    expect(intro).toMatch(/Clicca per entrare/);
-    expect(intro).toMatch(/finishIntro\(\)/);
-    expect(intro).not.toMatch(/phase !== "dark"/);
+    expect(listino).toMatch(/formatDuration/);
+    expect(listino).not.toMatch(/btn-listino-prenota/);
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
+    const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
+    expect(layout).toMatch(/Plus_Jakarta_Sans/);
+    expect(layout).toMatch(/fonts\.googleapis\.com/);
+    expect(layout).toMatch(/SITE_DOCUMENT_TITLE/);
   });
 
   it("uses the official phone, address, CF and P.IVA", () => {
-    expect(SITE.phone).toBe("+39 351 252 3087");
+    expect(SITE.phone).toBe("+39 327 015 6225");
+    expect(SITE.whatsapp).toBe("393270156225");
     expect(SITE.address).toBe("Corso Dante 45");
     expect(SITE.openingDate).toBe("2026-09-07");
     expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
     expect(SITE.vatNumber).toBe("01894030624");
     expect(SITE.previousAddress).toBe("ex Via Ungaretti 6");
     expect(SITE.pricesIncludeVat).toMatch(/IVA inclusa/);
+    expect(getSalonNotifyWhatsApp()).toBe(SALON_NOTIFY_WHATSAPP_FALLBACK);
+    expect(getSalonNotifyWhatsApp()).toBe("+393270156225");
+    expect(getSalonNotifyWhatsApp()).not.toBe("+393512523087");
+    expect(getSalonNotifyWhatsApp()).not.toMatch(/351/);
   });
 
   it("uses Felice Polese Gmail as salon email, not the GitHub Gmail", () => {
@@ -84,7 +94,6 @@ describe("public copy vs official identity", () => {
   it("has no leftover old phone, wrong address, or banned copy in source", () => {
     const files = walk(process.cwd());
     const banned = [
-      /327\s*015\s*6225/,
       /Corso Dante Alighieri, 44/,
       /Corso Dante Alighieri 44/,
       /Combo premium/,
@@ -96,7 +105,9 @@ describe("public copy vs official identity", () => {
       /200\s+prenotazioni/i,
       /limite\s+di\s+200/i,
       /hero--marble/,
-      /hero-bg\.webp/,
+      /393512523087/,
+      /351\s*252\s*3087/,
+      /\+39\s*351/,
       /Menu grooming/i,
       /grooming premium/i,
     ];
@@ -110,6 +121,14 @@ describe("public copy vs official identity", () => {
       }
     }
     expect(hits).toEqual([]);
+    const publicUi = files.filter((file) =>
+      /\/(components\/site|components\/booking\/FreshaBookingFlow)/.test(file),
+    );
+    const publicHits: string[] = [];
+    for (const file of publicUi) {
+      if (/351\s*252\s*3087|393512523087/.test(readFileSync(file, "utf8"))) publicHits.push(file);
+    }
+    expect(publicHits).toEqual([]);
   });
 
   it("uses a generic salon contact message without specialist consult language", () => {
@@ -143,10 +162,10 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/href="\/gestionale"/);
   });
 
-  it("keeps shop WhatsApp on wa.me/393512523087 without Twilio", () => {
-    expect(SITE.whatsapp).toBe("393512523087");
-    expect(SITE.phone).toBe("+39 351 252 3087");
-    expect(getWhatsAppUrl()).toMatch(/^https:\/\/wa\.me\/393512523087\?text=/);
+  it("keeps shop WhatsApp on wa.me/393270156225 without Twilio", () => {
+    expect(SITE.whatsapp).toBe("393270156225");
+    expect(SITE.phone).toBe("+39 327 015 6225");
+    expect(getWhatsAppUrl()).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
     const confirm = getBookingConfirmWhatsAppUrl({
       firstName: "Mario",
       service: "Taglio classico",
@@ -154,12 +173,30 @@ describe("public copy vs official identity", () => {
       timeLabel: "09:30",
       barberName: "Felice",
     });
-    expect(confirm).toMatch(/^https:\/\/wa\.me\/393512523087\?text=/);
+    expect(confirm).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
     expect(confirm).toContain(encodeURIComponent("ho prenotato"));
+    const toClient = getSalonToCustomerWhatsAppUrl("+39 333 111 2233", {
+      firstName: "Mario",
+      service: "Taglio classico",
+      dateLabel: "martedì 1 settembre 2026",
+      timeLabel: "09:30",
+      barberName: "Felice",
+    });
+    expect(toClient).toMatch(/^https:\/\/wa\.me\/393331112233\?text=/);
+    expect(toClient).toContain(encodeURIComponent("la tua prenotazione"));
+    expect(getCustomerConfirmMessage({
+      firstName: "Mario",
+      service: "Taglio classico",
+      dateLabel: "martedì 1 settembre 2026",
+      timeLabel: "09:30",
+      barberName: "Felice",
+    })).toMatch(/Ciao Mario, la tua prenotazione/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/getWhatsAppUrl/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
-    expect(wizard).toMatch(/getBookingConfirmWhatsAppUrl/);
+    expect(wizard).toMatch(/postSalonBookingRelay/);
+    expect(wizard).not.toMatch(/Conferma su WhatsApp/);
+    expect(wizard).toMatch(/Prenotazione confermata/);
     expect(wizard).not.toMatch(/twilio/i);
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);
@@ -181,9 +218,10 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/ComingSoon/);
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
-    expect(page).toMatch(/ScissorsIntro/);
+    expect(page).not.toMatch(/ScissorsIntro/);
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(landing).toMatch(/id="about"/);
+    expect(landing).not.toMatch(/Tradizione/);
     expect(landing).not.toMatch(/id="services"/);
     expect(landing).toMatch(/id="prenota"/);
     expect(landing).toMatch(/I nostri servizi/);
@@ -196,37 +234,90 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/section-dark/);
   });
 
-  it("keeps July 3 section order without Marcel rebuild extras", () => {
+  it("keeps bio+Felice video, then reels, then one listino and contact", () => {
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(landing).not.toMatch(/Consulenza in sede/);
     expect(landing).not.toMatch(/id="consulenza"/);
+    expect(landing).toMatch(/id="about"/);
     expect(landing).toMatch(/Barber Match 2023/);
+    expect(landing).toMatch(/giovane talento/i);
+    expect(landing).not.toMatch(/Tradizione/);
+    expect(landing).not.toMatch(/Santa Maria degli Angeli/);
     const catalog = readFileSync(join(process.cwd(), "lib/catalog.ts"), "utf8");
-    expect(catalog).toMatch(/Consulenza Tricologica/i);
+    expect(catalog).not.toMatch(/Consulenza Tricologica/i);
+    expect(catalog).not.toMatch(/name: "Razor Taper"/);
+    expect(catalog).not.toMatch(/name: "Skin Fade"/);
+    expect(catalog).not.toMatch(/id: "combo-classico"/);
     expect(landing).toMatch(/VideoReelGrid/);
     expect(landing).toMatch(/FELICE_WORKING_VIDEO/);
     expect(landing).toMatch(/about-video/);
+    expect(landing).toMatch(/felice-video-hero/);
     expect(landing).not.toMatch(/gallery-grid/);
     expect(landing).not.toMatch(/fresha-/);
     expect(landing).toMatch(/ServiceListino/);
+    expect((landing.match(/<ServiceListino/g) || []).length).toBe(1);
+    expect(landing).toMatch(/listinoBeside/);
+    expect(landing).not.toMatch(/id="listino"/);
+    expect(landing).not.toMatch(/id="services"/);
     expect(landing).not.toMatch(/hero-bg\.jpg/);
     expect(landing).not.toMatch(/brand-products\.jpg/);
+    const aboutIdx = landing.indexOf('id="about"');
+    const videoIdx = landing.indexOf("<VideoReelGrid");
+    const prenotaIdx = landing.indexOf('id="prenota"');
+    const contactIdx = landing.indexOf('id="contact"');
+    expect(aboutIdx).toBeGreaterThan(-1);
+    expect(videoIdx).toBeGreaterThan(aboutIdx);
+    expect(prenotaIdx).toBeGreaterThan(videoIdx);
+    expect(contactIdx).toBeGreaterThan(prenotaIdx);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/appointment-sidebar/);
     expect(wizard).toMatch(/Il tuo appuntamento/);
+    expect(wizard).toMatch(/listinoBeside/);
+    expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
+    expect(wizard).toMatch(/Tocca un servizio nel listino/);
+    expect(wizard).toMatch(/Qualsiasi disponibilità/);
+    expect(wizard).toMatch(/non disponibile/);
+    expect(wizard).toMatch(/Scegli la data/);
+    expect(wizard).toMatch(/Scegli l&apos;orario/);
+    expect(wizard).toMatch(/getScheduleSlots/);
+    expect(wizard).toMatch(/setStep\(2\)/);
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
+    expect(reel).toMatch(/CUTTING_TECHNIQUE_VIDEOS/);
+    expect(reel).toMatch(/Tecniche di taglio/);
+    expect(reel).toMatch(/Scopri alcune delle tecniche che utilizziamo nei nostri tagli/);
+    expect(reel).toMatch(/Prenota il tuo taglio/);
+    expect(reel).not.toMatch(/€/);
     expect(reel).not.toMatch(/<img/);
     expect(reel).not.toMatch(/reveal/);
-    const landingVideo = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
-    expect(landingVideo).toMatch(/FELICE_WORKING_VIDEO/);
-    expect(landingVideo).toMatch(/felice-video-hero/);
+    const videos = readFileSync(join(process.cwd(), "lib/site-videos.ts"), "utf8");
+    expect(videos).toMatch(/Razor Fade — Tecnica di sfumatura/);
+    expect(videos).toMatch(/Taper Fade — Tecnica di sfumatura/);
+    expect(videos).toMatch(/Burst Fade — Tecnica di sfumatura/);
+    expect(videos).not.toMatch(/id: "razor-taper"/);
+    expect(videos).not.toMatch(/id: "skin-fade"/);
+    const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
+    expect(chrome).toMatch(/href: "\/#gallery", label: "Tecniche"/);
+    expect(chrome).toMatch(/href: "\/#listino", label: "Listino"/);
+    expect(chrome).not.toMatch(/label: "Fade"/);
+    expect(chrome).not.toMatch(/label: "Consulenza"/);
+    expect(chrome).not.toMatch(/\/#about/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/hero--soon/);
+    expect(hero).toMatch(/hero-editorial/);
     expect(hero).toMatch(/bg-marble-light/);
-    expect(hero).not.toMatch(/hero-editorial/);
+    expect(hero).toMatch(/HERO_VIDEOS/);
+    expect(hero).toMatch(/getHeroHeadline/);
     expect(hero).not.toMatch(/ScissorsIntro/);
+    expect(hero).not.toMatch(/hero-media reveal/);
+    const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
+    expect(listino).toMatch(/id="listino"/);
+    expect((listino.match(/id="listino"/g) || []).length).toBe(1);
+    expect(listino).toMatch(/Listino/);
+    expect(listino).toMatch(/BOOKING_SERVICE_EVENT/);
+    expect(listino).toMatch(/formatPriceRange/);
+    expect(listino).toMatch(/listino-row/);
+    expect(listino).not.toMatch(/listino-card/);
   });
 
   it("shows live hero with booking CTA before and after opening", () => {
@@ -234,22 +325,23 @@ describe("public copy vs official identity", () => {
     expect(HERO_BEFORE_OPENING).toBe("Prenota il tuo appuntamento per l'apertura");
     expect(getHeroHeadline(new Date("2026-08-31T18:00:00+02:00"))).toBe(HERO_BEFORE_OPENING);
     expect(getHeroHeadline(new Date("2026-09-08T10:00:00+02:00"))).toBe(HERO_CTA);
+    expect(HERO_SLOT_CTA).toBe("Prenota il tuo slot");
+    expect(HERO_SENTENCE).toBe("Precisione tecnica, stile contemporaneo.");
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/getHeroHeadline/);
     expect(hero).toMatch(/HERO_PRE_OPENING_EYEBROW/);
-    expect(hero).toMatch(/Raggiungimi ora su Google Maps/);
+    expect(hero).toMatch(/HERO_SENTENCE/);
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/mode-coming-soon|mode-live/);
+    expect(layout).toMatch(/site-white-canvas/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/marble\.png/);
     expect(css).toMatch(/marble-texture/);
     expect(css).toMatch(/bg-marble-light/);
-    expect(css).toMatch(/scissors-intro/);
-    expect(css).toMatch(/bg-marble-light \.countdown-value/);
-    expect(css).not.toMatch(/scissors-intro-split[\s\S]*marble\.png/);
-    const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
-    expect(scissors).toMatch(/viewBox="0 0 100 110"/);
-    expect(scissors).not.toMatch(/#C9A962|#F4E4BC/);
+    expect(css).toMatch(/marble-accent/);
+    expect(css).toMatch(/glass-card/);
+    expect(css).toMatch(/hero-media-cell/);
+    expect(css).toMatch(/Plus Jakarta Sans/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
   });
 
@@ -259,11 +351,11 @@ describe("public copy vs official identity", () => {
     expect(SITE.hours.sunday).toMatch(/Chiuso/);
     expect(SITE.instagramHandle).toBe("@felicepolese_barber");
     expect(SITE.instagram).toBe("https://instagram.com/felicepolese_barber");
-    expect(getWhatsAppChatUrl()).toBe("https://wa.me/393512523087");
+    expect(getWhatsAppChatUrl()).toBe("https://wa.me/393270156225");
     expect(getPrenotaUrl()).toMatch(/\/#prenota$/);
     const channels = getSocialChannels();
     expect(channels.map((c) => c.id)).toEqual(["instagram", "whatsapp", "prenota"]);
-    expect(channels[1]?.qrPayload).toBe("https://wa.me/393512523087");
+    expect(channels[1]?.qrPayload).toBe("https://wa.me/393270156225");
     expect(channels[2]?.label).toBe(HERO_CTA);
     for (const ch of channels) {
       const file = join(process.cwd(), "public", ch.qr.replace(/^\//, ""));
@@ -313,8 +405,7 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/SiteFabs/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.maps-fab \{/);
-    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
-    expect(hero).toMatch(/Raggiungimi ora su Google Maps/);
+    expect(chrome).toMatch(/Raggiungimi ora su Google Maps/);
     const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8");
     expect(terms).toMatch(/CANCEL_NOTICE_IT/);
     expect(terms).not.toMatch(/24h|24 ore/);

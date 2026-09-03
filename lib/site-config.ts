@@ -1,3 +1,5 @@
+import { normalizeWhatsAppNumber } from "./phone";
+
 export const TIMEZONE = "Europe/Rome";
 
 /** When true, homepage shows coming-soon gate only. Default false — full live site with countdown + booking. */
@@ -11,7 +13,8 @@ export const SITE = {
   tagline: "MODERN BARBERING & FADE STUDIO",
   heroHeadline: "MODERN BARBERING & FADE STUDIO",
   siteUrl:
-    process.env.NEXT_PUBLIC_SITE_URL || "https://polesebarbershop.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://felicepolesebarbershop.vercel.app",
   address: "Corso Dante 45",
   addressFull: "Corso Dante 45 – 82100 Benevento (BN)",
   streetAddress: "Corso Dante 45",
@@ -24,10 +27,10 @@ export const SITE = {
   latitude: 41.1298,
   longitude: 14.7825,
   openingDate: "2026-09-07",
-  phone: "+39 351 252 3087",
-  phoneDisplay: "351 252 3087",
-  phoneTel: "+393512523087",
-  whatsapp: "393512523087",
+  phone: "+39 327 015 6225",
+  phoneDisplay: "327 015 6225",
+  phoneTel: "+393270156225",
+  whatsapp: "393270156225",
   email: "felicepolese550@gmail.com",
   instagram: "https://instagram.com/felicepolese_barber",
   instagramHandle: "@felicepolese_barber",
@@ -46,6 +49,20 @@ export const SITE = {
       "Felice Polese Barber Shop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante 45. Prenota online.",
   },
 } as const;
+
+/** Liked-page document title (pre-overwrite marble HTML). */
+export const SITE_DOCUMENT_TITLE = "Felice Polese | Modern Barbering & Fade Studio";
+
+/** Public FAB / disdette on the website (customers write here). Not salon booking alerts. */
+export const PUBLIC_CONTACT_WHATSAPP = "+393270156225";
+/** Official salon WhatsApp for automatic booking alerts. */
+export const SALON_NOTIFY_WHATSAPP_FALLBACK = "+393270156225";
+
+export function getSalonNotifyWhatsApp(): string {
+  const fromEnv = normalizeWhatsAppNumber(process.env.SALON_NOTIFY_WHATSAPP || "");
+  if (fromEnv && fromEnv !== PUBLIC_CONTACT_WHATSAPP) return fromEnv;
+  return SALON_NOTIFY_WHATSAPP_FALLBACK;
+}
 
 export const SLOT_STEP_MINUTES = 5;
 /** Open days shown in the booking wizard day scroller (no cap on total bookings). */
@@ -82,6 +99,11 @@ export const NOTIFY_WHATSAPP_MESSAGE =
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
 export const HERO_CTA = "Prenota il tuo appuntamento";
+export const HERO_SLOT_CTA = "Prenota il tuo slot";
+export const HERO_MENU_CTA = "Vedi il menu";
+export const HERO_SENTENCE = "Precisione tecnica, stile contemporaneo.";
+export const HERO_LEAD =
+  "Fade ad alta definizione, grooming e skincare. Studio pulito, ritmo veloce, risultato netto. Benevento.";
 export const HERO_PRE_OPENING_EYEBROW = "Prenotazioni già aperte";
 export const HERO_BEFORE_OPENING =
   "Prenota il tuo appuntamento per l'apertura";
@@ -89,6 +111,7 @@ export const BOOKING_DATE_PARAM = "data";
 export const BOOKING_SERVICE_PARAM = "servizio";
 export const BOOKING_DATE_STORAGE_KEY = "polese-booking-date";
 export const BOOKING_DATE_EVENT = "polese-booking-date";
+export const BOOKING_SERVICE_EVENT = "polese-booking-service";
 
 export function wallDateRome(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -143,11 +166,16 @@ export function readBookingServiceFromLocation(): string | null {
 
 export type BookingConfirmCopy = {
   firstName?: string;
+  lastName?: string;
   phone?: string;
+  email?: string;
   service: string;
   dateLabel: string;
   timeLabel: string;
   barberName?: string;
+  priceLabel?: string;
+  durationLabel?: string;
+  manageUrl?: string;
 };
 
 export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
@@ -156,8 +184,53 @@ export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
   return `Ciao Felice, ho prenotato su ${SITE.name}: ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}. Nome: ${name} - Tel: ${tel}`;
 }
 
+/** Cliente → salone (wa.me 327). Il cliente apre la chat con Felice. */
 export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
   return getWhatsAppUrl(getBookingConfirmMessage(opts));
+}
+
+/** Testo automatico WhatsApp al cliente. */
+export function getCustomerConfirmMessage(opts: BookingConfirmCopy): string {
+  const name = opts.firstName?.trim() || "";
+  const barber = opts.barberName?.trim() ? ` con ${opts.barberName.trim()}` : "";
+  const hello = name ? `Ciao ${name}` : "Ciao";
+  const price = opts.priceLabel?.trim() ? ` · ${opts.priceLabel.trim()}` : "";
+  const duration = opts.durationLabel?.trim() ? ` · ${opts.durationLabel.trim()}` : "";
+  return `${hello}, la tua prenotazione da ${SITE.name} è confermata: ${opts.service}${price}${duration} il ${opts.dateLabel} alle ${opts.timeLabel}${barber}. Ti aspettiamo in ${SITE.streetAddress}. Per modifiche o disdette chiama o scrivi al ${SITE.phone}.`;
+}
+
+/** Testo automatico WhatsApp al salone (numero ufficiale 327). */
+export function getSalonNewBookingMessage(opts: BookingConfirmCopy): string {
+  const name = [opts.firstName, opts.lastName].filter(Boolean).join(" ").trim() || "Cliente";
+  const price = opts.priceLabel?.trim() ? ` · ${opts.priceLabel.trim()}` : "";
+  const duration = opts.durationLabel?.trim() ? ` · ${opts.durationLabel.trim()}` : "";
+  const manage = opts.manageUrl?.trim() ? `\nGestisci: ${opts.manageUrl.trim()}` : "";
+  return [
+    `NUOVA PRENOTAZIONE — ${SITE.name}`,
+    `Cliente: ${name}`,
+    `Tel: ${opts.phone?.trim() || "—"}`,
+    `Email: ${opts.email?.trim() || "—"}`,
+    `Servizio: ${opts.service}${price}${duration}`,
+    `Barbiere: ${opts.barberName?.trim() || "—"}`,
+    `Quando: ${opts.dateLabel} alle ${opts.timeLabel}`,
+    manage.trim(),
+  ].filter(Boolean).join("\n");
+}
+
+/** Salone → cliente. Felice clicca e apre la chat WhatsApp con il numero del cliente. */
+export function getSalonToCustomerWhatsAppUrl(
+  customerPhone: string,
+  opts: BookingConfirmCopy,
+): string | null {
+  return whatsAppMeUrl(customerPhone, getCustomerConfirmMessage(opts));
+}
+
+export function whatsAppMeUrl(phone: string, message: string): string | null {
+  const e164 = normalizeWhatsAppNumber(phone);
+  if (!e164) return null;
+  const digits = e164.replace(/\D/g, "");
+  if (digits.length < 8) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 
 export function bookingWizardHref(date?: string): string {

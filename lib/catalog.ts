@@ -11,14 +11,12 @@ export const SHOP_HOURS: Record<number, DayHours> = {
   6: { open: "09:30", close: "20:00" },
 };
 
-export type ServiceCategory = "taglio" | "barba" | "combo" | "tecnici" | "consulenza";
+export type ServiceCategory = "capelli" | "barba" | "colore";
 
 export const SERVICE_CATEGORY_LABEL: Record<ServiceCategory, string> = {
-  taglio: "Taglio Normale / Sartoriale",
+  capelli: "Capelli",
   barba: "Barba",
-  combo: "Combo",
-  tecnici: "Trattamenti Tecnici",
-  consulenza: "Consulenza Tricologica",
+  colore: "Colore & trattamenti",
 };
 
 export type Service = {
@@ -28,30 +26,50 @@ export type Service = {
   priceEuro: number;
   priceMaxEuro: number | null;
   isVariablePrice: boolean;
+  /** Reserved chair time for the calendar. Always > 0 so overlap math works. */
   durationMin: number;
+  /** False = official listino shows "durata n/d"; durationMin is only a booking buffer. */
+  durationKnown: boolean;
   description: string;
 };
 
+/**
+ * Official listino — exactly these 9 bookable services.
+ * Razor Taper / Skin Fade / other rasature are techniques, not services.
+ */
 export const SERVICES: Service[] = [
   {
-    id: "taglio-standard",
-    name: "Taglio Normale",
-    category: "taglio",
-    priceEuro: 15,
-    priceMaxEuro: null,
-    isVariablePrice: false,
-    durationMin: 30,
-    description: "Taglio capelli classico",
-  },
-  {
     id: "taglio-pro",
-    name: "Taglio Sartoriale",
-    category: "taglio",
+    name: "Taglio Pro",
+    category: "capelli",
     priceEuro: 50,
     priceMaxEuro: null,
     isVariablePrice: false,
     durationMin: 25,
-    description: "Taglio con shampoo e maschera",
+    durationKnown: true,
+    description: "Shampoo specifico per tipo di capello + Black Mask",
+  },
+  {
+    id: "taglio-standard",
+    name: "Taglio Standard",
+    category: "capelli",
+    priceEuro: 15,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 30,
+    durationKnown: true,
+    description: "Taglio classico",
+  },
+  {
+    id: "acconciatura",
+    name: "Acconciatura",
+    category: "capelli",
+    priceEuro: 5,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 15,
+    durationKnown: false,
+    description: "Solo styling",
   },
   {
     id: "taglio-bambino",
@@ -65,103 +83,85 @@ export const SERVICES: Service[] = [
   },
   {
     id: "barba-pro",
-    name: "Barba",
+    name: "Barba Pro",
     category: "barba",
     priceEuro: 15,
     priceMaxEuro: null,
     isVariablePrice: false,
     durationMin: 20,
-    description: "Barba con panno caldo",
+    durationKnown: true,
+    description: "Panno caldo con vaporizzatore + Oli con fragranze",
   },
   {
     id: "barba-standard",
-    name: "Rifinitura barba",
+    name: "Barba Standard",
     category: "barba",
     priceEuro: 5,
     priceMaxEuro: null,
     isVariablePrice: false,
     durationMin: 15,
-    description: "Rifinitura e modellatura",
-  },
-  {
-    id: "combo-classico",
-    name: "Combo Taglio + Barba",
-    category: "combo",
-    priceEuro: 30,
-    priceMaxEuro: null,
-    isVariablePrice: false,
-    durationMin: 45,
-    description: "Taglio normale e barba completa",
-  },
-  {
-    id: "combo-sartoriale",
-    name: "Combo Sartoriale + Barba",
-    category: "combo",
-    priceEuro: 60,
-    priceMaxEuro: null,
-    isVariablePrice: false,
-    durationMin: 40,
-    description: "Taglio sartoriale e barba completa",
+    durationKnown: false,
+    description: "Rifinitura / Modellatura classica",
   },
   {
     id: "decolorazione-meches",
-    name: "Meches",
-    category: "tecnici",
+    name: "Decolorazione Meches",
+    category: "colore",
     priceEuro: 40,
     priceMaxEuro: 100,
     isVariablePrice: true,
     durationMin: 45,
-    description: "Colpi di sole e schiariture. Prezzo in salone.",
+    durationKnown: false,
+    description: "In base a lunghezza, tipo di capello e tempo",
   },
   {
     id: "decolorazione-cutanea",
-    name: "Decolorazione",
-    category: "tecnici",
+    name: "Decolorazione Cutanea",
+    category: "colore",
     priceEuro: 50,
     priceMaxEuro: 120,
     isVariablePrice: true,
     durationMin: 45,
-    description: "Decolorazione completa. Prezzo in salone.",
+    durationKnown: false,
+    description: "In base a lunghezza e tipo di capello",
   },
   {
     id: "tintura-capelli",
-    name: "Tintura capelli",
-    category: "tecnici",
+    name: "Tintura Capelli",
+    category: "colore",
     priceEuro: 10,
     priceMaxEuro: 30,
     isVariablePrice: true,
     durationMin: 30,
-    description: "Colore capelli. Prezzo in salone.",
+    durationKnown: false,
+    description: "Colore capelli",
   },
   {
     id: "tintura-barba",
-    name: "Tintura barba",
-    category: "tecnici",
+    name: "Tintura Barba",
+    category: "colore",
     priceEuro: 5,
     priceMaxEuro: 15,
     isVariablePrice: true,
     durationMin: 20,
-    description: "Colore barba. Prezzo in salone.",
-  },
-  {
-    id: "consulenza-sede",
-    name: "Consulenza Tricologica",
-    category: "consulenza",
-    priceEuro: 0,
-    priceMaxEuro: null,
-    isVariablePrice: false,
-    durationMin: 30,
-    description: "Valutazione capelli e cuoio capelluto in salone.",
+    durationKnown: false,
+    description: "Colore barba",
   },
 ];
 
-export const SERVICE_CATEGORIES: ServiceCategory[] = [
-  "taglio",
-  "barba",
-  "combo",
-  "tecnici",
-  "consulenza",
-];
+export const SERVICE_CATEGORIES: ServiceCategory[] = ["capelli", "barba", "colore"];
+
+/** IDs that must never be offered as bookable catalog rows. */
+export const UNOFFICIAL_SERVICE_IDS = [
+  "razor-taper",
+  "skin-fade",
+  "combo-classico",
+  "combo-sartoriale",
+  "consulenza-sede",
+  "taglio-sartoriale",
+] as const;
+
+export const BOOKABLE_SERVICE_IDS = SERVICES.map((s) => s.id);
 
 export type Barber = {
   id: string;
@@ -174,7 +174,13 @@ export type Barber = {
 export const ANYONE_BARBER_ID = "anyone";
 
 export const BARBERS: Barber[] = [
-  { id: ANYONE_BARBER_ID, name: "Chiunque sia disponibile", title: "Assegniamo la poltrona libera tra Felice e Davide", virtual: true, hours: SHOP_HOURS },
+  {
+    id: ANYONE_BARBER_ID,
+    name: "Qualsiasi disponibilità",
+    title: "Assegniamo la poltrona libera tra Felice e Davide",
+    virtual: true,
+    hours: SHOP_HOURS,
+  },
   { id: "felice", name: "Felice", title: "Master barber · " + SITE.name, virtual: false, hours: SHOP_HOURS },
   { id: "davide", name: "Davide", title: "Barber · poltrona indipendente", virtual: false, hours: SHOP_HOURS },
 ];
@@ -182,6 +188,10 @@ export const BARBERS: Barber[] = [
 export function getService(id: string) { return SERVICES.find((s) => s.id === id); }
 export function getBarber(id: string) { return BARBERS.find((b) => b.id === id); }
 export function getRealBarbers(barbers: Barber[] = BARBERS) { return barbers.filter((b) => !b.virtual); }
+
+export function isBookableServiceId(id: string): boolean {
+  return SERVICES.some((s) => s.id === id);
+}
 
 export function resolveServices(ids: string[]): Service[] | null {
   const unique = [...new Set(ids)];
@@ -192,15 +202,19 @@ export function resolveServices(ids: string[]): Service[] | null {
 }
 
 export function formatPrice(service: Service): string {
-  if (service.isVariablePrice) return `da ${service.priceEuro} €`;
+  if (service.isVariablePrice && service.priceMaxEuro != null) {
+    return `${service.priceEuro}–${service.priceMaxEuro} €`;
+  }
+  if (service.priceEuro === 0) return "Gratuita";
   return `${service.priceEuro} €`;
 }
 
 export function formatPriceRange(service: Service): string {
-  if (service.isVariablePrice && service.priceMaxEuro != null) {
-    return `da ${service.priceEuro} € a ${service.priceMaxEuro} €`;
-  }
   return formatPrice(service);
+}
+
+export function formatDuration(service: Service): string {
+  return service.durationKnown ? `${service.durationMin} min` : "durata n/d";
 }
 
 export function totalsForServices(services: Service[]) {
@@ -209,10 +223,14 @@ export function totalsForServices(services: Service[]) {
   const priceMaxEuro = services.reduce((sum, s) => sum + (s.priceMaxEuro ?? s.priceEuro), 0);
   const isVariable = services.some((s) => s.isVariablePrice);
   const names = services.map((s) => s.name).join(" + ");
+  const durationKnown = services.every((s) => s.durationKnown);
+  const durationLabel = durationKnown ? `${durationMin} min` : "durata n/d";
   const priceLabel = isVariable
     ? priceMaxEuro > priceEuro
-      ? `da ${priceEuro} € a ${priceMaxEuro} €`
-      : `da ${priceEuro} €`
-    : `${priceEuro} €`;
-  return { durationMin, priceEuro, priceMaxEuro, isVariable, names, priceLabel };
+      ? `${priceEuro}–${priceMaxEuro} €`
+      : `${priceEuro} €`
+    : priceEuro === 0
+      ? "Gratuita"
+      : `${priceEuro} €`;
+  return { durationMin, priceEuro, priceMaxEuro, isVariable, names, priceLabel, durationLabel };
 }

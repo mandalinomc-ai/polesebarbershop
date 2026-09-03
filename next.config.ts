@@ -7,7 +7,7 @@ const csp = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob:",
   "media-src 'self' blob:",
   "font-src 'self' data:",
@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   async redirects() {
     return [{ source: "/admin", destination: "/gestionale", permanent: false }];
+  },
+  async rewrites() {
+    return [{ source: "/video/:path*", destination: "/assets/video/:path*" }];
   },
   async headers() {
     return [

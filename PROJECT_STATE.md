@@ -1,27 +1,20 @@
 # PROJECT_STATE — Felice Polese Barber Shop
 
-**Updated:** 2026-09-01 (final deploy attempt — commit `559fb41`)  
-**Repo:** [mandalinomc-ai/polesebarbershop](https://github.com/mandalinomc-ai/polesebarbershop)
+**Updated:** 2026-09-02  
+**Public URL:** https://felicepolesebarbershop.vercel.app  
+**Vercel project:** `temporary-prompt-quasar-rndxhgh` (GitHub connected)
 
-## GitHub `main`
+## Overwrite (admitted)
 
-| Field | Value |
-|-------|-------|
-| HEAD | `559fb41` — *docs: add continuity docs for Vercel deploy and domain alias* |
-| Branch | `main` (clean working tree) |
-| Verified | ✓ `git status` clean, on `main`, at `559fb41` |
+Live was briefly the scissors GitHub rebuild. That is **not** the site the client liked.
 
-### Recent commits (newest first)
+## Restore
 
-```
-559fb41 docs: add continuity docs for Vercel deploy and domain alias
-1a29103 fix: enforce 30-minute cancellation window server-side
-f02f76c chore: remove dead CSS and unused hero/product images
-b5cef50 ci: run Vercel production deploy on every main push (was skipped)
-a5fe950 fix: intro dark reveal, visible countdown numbers, silver scissors deploy
-```
+- Domain aliased to oldest remaining quasar production (`6ve62mbnk`, marble July-3).
+- Git branch reconstructs Jakarta marble (`0da4547` + Google Fonts + `/video/`) **with** booking, Maps Dante 45, WhatsApp 327.
+- Exact pre-overwrite HTML (`Felice Polese | Modern Barbering & Fade Studio` with `marble-accent` / `glass-card` from Google Fonts static page) was **not** in the repo.
 
-## Vercel projects
+## Do not
 
 | Project | Role | Project ID (known) | Default URL | Live branding |
 |---------|------|-------------------|-------------|---------------|
