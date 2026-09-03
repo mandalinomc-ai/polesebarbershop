@@ -76,7 +76,12 @@ export const SALONE_GENERALE_VIDEO: SiteVideo = {
   alt: "Tour del salone Felice Polese Barber Shop — Corso Dante, Benevento",
 };
 
-/** Felice beside bio — public/assets/videos/felice-working.mp4 (restored from git). */
+/**
+ * Felice beside bio — same Drive clip as midnight `video-felice-polese-bio.mp4`,
+ * also published at the committed `/assets/videos/felice-working.mp4` URL.
+ */
+export const FELICE_BIO_SOURCE_BASENAME = "video felice polese bio" as const;
+
 export const FELICE_WORKING_VIDEO: SiteVideo = {
   id: "felice-working",
   src: `${VIDEO_HERO_BASE}/felice-working.mp4`,
@@ -245,6 +250,7 @@ export const REQUIRED_VIDEO_FILES = [
   "colorazione-03.mp4",
   "meches.mp4",
   "decolorazione-cutanea.mp4",
+  "video-felice-polese-bio.mp4",
 ] as const;
 
 /** Bio clip filename under public/assets/videos/ */
