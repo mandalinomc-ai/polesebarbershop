@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { buildNotifyCopy, RESEND_CRM_MISSING_IT } from "@/lib/crm-notify";
-import { isResendConfigured, sendEmail, staffCrmEmail } from "@/lib/email";
+import { buildNotifyCopy, GMAIL_CRM_MISSING_IT } from "@/lib/crm-notify";
+import { isGmailConfigured, sendEmail, staffCrmEmail } from "@/lib/email";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { crmNotifySchema, flattenZodError } from "@/lib/validations";
 
@@ -49,8 +49,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isResendConfigured()) {
-    return NextResponse.json({ error: RESEND_CRM_MISSING_IT }, { status: 503 });
+  if (!isGmailConfigured()) {
+    return NextResponse.json({ error: GMAIL_CRM_MISSING_IT }, { status: 503 });
   }
 
   const copy = buildNotifyCopy(body.template, {

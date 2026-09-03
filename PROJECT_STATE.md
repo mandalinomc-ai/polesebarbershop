@@ -70,7 +70,7 @@ Workflow: `.github/workflows/vercel-production.yml` — runs on every `main` pus
 
 | Component | Status |
 |-----------|--------|
-| Stack | Next.js 15 App Router + Supabase + Resend (.ics attachments) |
+| Stack | Next.js 15 App Router + Supabase + Gmail SMTP (.ics attachments) |
 | Supabase project | `dbbncprluqjrofjemfbg.supabase.co` |
 | Migrations | `001_schema.sql`, `002_crm_indexes.sql`, `002_cancel_30_min.sql`, `003_service_display_names.sql` |
 | Cancellation policy | **30 minutes** — enforced in app (`CANCEL_MINUTES_BEFORE`), API, and DB function `cancel_appointment_by_token` |
@@ -79,12 +79,12 @@ Workflow: `.github/workflows/vercel-production.yml` — runs on every `main` pus
 | Admin | `/gestionale` (cookie session) |
 | Public booking | `/prenota` |
 
-### Email (Resend)
+### Email (Gmail SMTP)
 
-- From (test mode): `Felice Polese Barber Shop <onboarding@resend.dev>`
+- From: `Felice Polese Barber Shop <felicepolese550@gmail.com>`
 - Admin/owner: `felicepolese550@gmail.com`
-- NOTIFY_EMAIL (Resend account inbox until domain verified): `mandalinomc@gmail.com`
-- Custom domain `polesebarbershop.it` **not yet verified** in Resend
+- BOOKING_NOTIFICATION_EMAIL: `felicepolese550@gmail.com`
+- Email sent via Gmail SMTP (nodemailer)
 
 ## Site config highlights
 
@@ -100,7 +100,7 @@ Workflow: `.github/workflows/vercel-production.yml` — runs on every `main` pus
 1. `felicepolesebarbershop.vercel.app` still serves the **old** Polese Barbershop project
 2. Vercel CLI auth blocked cloud deploy (logged out)
 3. GitHub → Vercel CI secrets missing — auto-deploy on push broken
-4. Resend custom domain not verified (emails to felicepolese550@gmail.com blocked until then)
+4. Gmail App Password must be configured on Vercel (GMAIL_USER, GMAIL_APP_PASSWORD)
 
 ## Related branches (context)
 

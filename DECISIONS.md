@@ -54,14 +54,14 @@ npx vercel alias set <polesebarbershop-deploy-url> felicepolesebarbershop.vercel
 
 - Booking logic or Supabase schema
 - Site design, copy, or assets
-- Resend/Supabase env configuration in code
+- Gmail SMTP/Supabase env configuration in code
 
 Continuity docs and Vercel routing are the scope.
 
-## D6 — Supabase & Resend (unchanged)
+## D6 — Supabase & Gmail SMTP
 
 - Supabase: single project `dbbncprluqjrofjemfbg` — appointments, barbers, services, CRM
-- Resend: test-mode from address until `polesebarbershop.it` domain verified
+- Gmail SMTP via nodemailer (App Password auth) — replaces Resend
 - 30-minute online cancellation enforced at all layers (app + API + DB)
 
 ## D7 — URL strategy (target state)
@@ -70,4 +70,4 @@ Continuity docs and Vercel routing are the scope.
 |-----|--------|
 | `polesebarbershop.vercel.app` | Primary Vercel production URL |
 | `felicepolesebarbershop.vercel.app` | Alias → same deployment as above |
-| `polesebarbershop.it` (future) | Custom domain after DNS + Resend verification |
+| `polesebarbershop.it` (future) | Custom domain after DNS verification |

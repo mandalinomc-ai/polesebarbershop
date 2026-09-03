@@ -7,7 +7,8 @@ const ENV_KEYS = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
   "SUPABASE_SECRET_KEY",
-  "RESEND_API_KEY",
+  "GMAIL_USER",
+  "GMAIL_APP_PASSWORD",
 ];
 
 function withoutCloud() {

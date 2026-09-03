@@ -73,6 +73,7 @@ on conflict (id) do update set name = excluded.name, title = excluded.title, act
 insert into public.services (id, name, description, category, duration_min, price_cents, price_max_cents, is_variable_price, sort_order) values
   ('taglio-pro','Taglio completo','Taglio con shampoo e maschera','capelli',25,5000,null,false,10),
   ('taglio-standard','Taglio classico','Taglio capelli','capelli',30,1500,null,false,20),
+  ('taglio-bambino','Taglio Bambino','Taglio per bambini','capelli',20,1000,null,false,25),
   ('acconciatura','Acconciatura','Piega e styling','capelli',15,500,null,false,30),
   ('barba-pro','Barba completa','Barba con panno caldo','barba',20,1500,null,false,40),
   ('barba-standard','Rifinitura barba','Rifinitura e modellatura','barba',15,500,null,false,50),

@@ -13,3 +13,4 @@ out
 coverage
 *.log
 tsconfig.tsbuildinfo
+.env*

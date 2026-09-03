@@ -60,8 +60,11 @@ export function waMeUrl(phone: string, text: string): string | null {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-export const RESEND_CRM_MISSING_IT =
-  "Invio email non configurato: manca RESEND_API_KEY. Imposta la chiave Resend (piano gratuito) per mandare email dal gestionale.";
+export const GMAIL_CRM_MISSING_IT =
+  "Invio email non configurato: manca GMAIL_USER / GMAIL_APP_PASSWORD. Imposta le credenziali Gmail SMTP per mandare email dal gestionale.";
+
+/** @deprecated alias */
+export const RESEND_CRM_MISSING_IT = GMAIL_CRM_MISSING_IT;
 
 export const WHATSAPP_MISSING_IT =
   "Numero WhatsApp non disponibile per questo cliente.";

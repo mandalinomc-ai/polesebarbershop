@@ -822,8 +822,8 @@ function NotifyModal({ client, onClose }: { client: ClientRecord; onClose: () =>
           )}
         </div>
         <p className="crm-hint">
-          WhatsApp si apre su wa.me con il tuo account: zero costi, niente Twilio. L&apos;email usa Resend se la chiave è
-          impostata.
+          WhatsApp si apre su wa.me con il tuo account: zero costi, niente Twilio. L&apos;email usa Gmail SMTP se le
+          credenziali sono impostate.
         </p>
         {msg ? <p className={msg.startsWith("Email") ? "crm-ok" : "field-error"}>{msg}</p> : null}
       </div>

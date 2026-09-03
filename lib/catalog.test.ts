@@ -22,6 +22,7 @@ describe("catalog", () => {
     ).toEqual([
       { id: "taglio-standard", name: "Taglio Normale", category: "taglio", priceEuro: 15, priceMaxEuro: null, durationMin: 30 },
       { id: "taglio-pro", name: "Taglio Sartoriale", category: "taglio", priceEuro: 50, priceMaxEuro: null, durationMin: 25 },
+      { id: "taglio-bambino", name: "Taglio Bambino", category: "taglio", priceEuro: 10, priceMaxEuro: null, durationMin: 20 },
       { id: "barba-pro", name: "Barba", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20 },
       { id: "barba-standard", name: "Rifinitura barba", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15 },
       { id: "combo-classico", name: "Combo Taglio + Barba", category: "combo", priceEuro: 30, priceMaxEuro: null, durationMin: 45 },

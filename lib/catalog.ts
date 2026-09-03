@@ -54,6 +54,16 @@ export const SERVICES: Service[] = [
     description: "Taglio con shampoo e maschera",
   },
   {
+    id: "taglio-bambino",
+    name: "Taglio Bambino",
+    category: "taglio",
+    priceEuro: 10,
+    priceMaxEuro: null,
+    isVariablePrice: false,
+    durationMin: 20,
+    description: "Taglio per bambini",
+  },
+  {
     id: "barba-pro",
     name: "Barba",
     category: "barba",

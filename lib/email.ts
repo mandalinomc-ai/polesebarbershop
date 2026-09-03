@@ -1,43 +1,47 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import {
   CANCEL_NOTICE_IT,
   SITE,
   getAdminEmail,
-  getOwnerNotifyEmails,
-  isResendTestFrom,
+  getBookingNotificationEmail,
 } from "./site-config";
 
 export type EmailSendResult =
   | { ok: true; skipped?: boolean; id?: string }
   | { ok: false; skipped?: boolean; error: string };
 
-export const RESEND_MISSING_IT =
+export const GMAIL_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
-const RESEND_TEST_DOMAIN = ["resend", "dev"].join(".");
-const DEFAULT_FROM = `Felice Polese Barber Shop <onboarding@${RESEND_TEST_DOMAIN}>`;
+/** @deprecated kept as alias for compatibility */
+export const RESEND_MISSING_IT = GMAIL_MISSING_IT;
 
-function fromAddress() {
-  const from = process.env.RESEND_FROM?.trim() || "";
-  const domain = from.match(/@([^>\s]+)/)?.[1]?.toLowerCase() || "";
-  if (!from || domain === "example.com" || domain.endsWith(".example.com") || domain === "localhost") {
-    if (from && domain && domain !== RESEND_TEST_DOMAIN) {
-      console.warn("[email] RESEND_FROM dominio non inviabile; uso il From di test Resend", { domain });
-    }
-    return DEFAULT_FROM;
-  }
-  return from;
+/** True when Gmail SMTP credentials are configured. */
+export function isGmailConfigured() {
+  return Boolean(getGmailUser() && getGmailAppPassword());
 }
 
-/** True only when a real Resend key (`re_…`) is set. Placeholders do not count. */
-export function isResendConfigured() {
-  return Boolean(getResendApiKey());
+/** @deprecated alias — use isGmailConfigured */
+export const isResendConfigured = isGmailConfigured;
+
+function getGmailUser(): string | null {
+  const u = process.env.GMAIL_USER?.trim();
+  return u && u.includes("@") ? u : null;
 }
 
-function getResendApiKey(): string | null {
-  const key = process.env.RESEND_API_KEY?.trim() || "";
-  if (!key || !key.startsWith("re_")) return null;
-  return key;
+function getGmailAppPassword(): string | null {
+  const p = process.env.GMAIL_APP_PASSWORD?.trim();
+  return p && p.length >= 8 ? p : null;
+}
+
+function getTransporter() {
+  const user = getGmailUser();
+  const pass = getGmailAppPassword();
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: { user, pass },
+  });
 }
 
 function logEmailError(message: string, extra: Record<string, unknown>) {
@@ -51,46 +55,40 @@ export async function sendEmail(opts: {
   text?: string;
   ics?: { filename: string; content: string };
 }): Promise<EmailSendResult> {
-  const key = getResendApiKey();
-  if (!key) {
-    console.warn("[email] RESEND_API_KEY assente: invio saltato", {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn("[email] GMAIL_USER / GMAIL_APP_PASSWORD assente: invio saltato", {
       to: opts.to,
       subject: opts.subject,
     });
-    return { ok: false, skipped: true, error: RESEND_MISSING_IT };
+    return { ok: false, skipped: true, error: GMAIL_MISSING_IT };
   }
   try {
-    const resend = new Resend(key);
+    const gmailUser = getGmailUser()!;
+    const from = `Felice Polese Barber Shop <${gmailUser}>`;
     const cancelled = Boolean(opts.ics && /METHOD:CANCEL/.test(opts.ics.content));
-    const { data, error } = await resend.emails.send({
-      from: fromAddress(),
+    const attachments = opts.ics
+      ? [{
+          filename: opts.ics.filename,
+          content: Buffer.from(opts.ics.content, "utf8"),
+          contentType: cancelled
+            ? "text/calendar; charset=utf-8; method=CANCEL"
+            : "text/calendar; charset=utf-8; method=PUBLISH",
+        }]
+      : undefined;
+
+    const info = await transporter.sendMail({
+      from,
       to: opts.to,
       replyTo: getAdminEmail(),
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
-      attachments: opts.ics
-        ? [{
-            filename: opts.ics.filename,
-            // Base64 string: JSON.stringify(Buffer) is not valid for the Resend API.
-            content: Buffer.from(opts.ics.content, "utf8").toString("base64"),
-            contentType: cancelled
-              ? "text/calendar; charset=utf-8; method=CANCEL"
-              : "text/calendar; charset=utf-8; method=PUBLISH",
-          }]
-        : undefined,
+      attachments,
     });
-    if (error) {
-      logEmailError("Resend ha rifiutato l'invio", {
-        to: opts.to,
-        subject: opts.subject,
-        name: error.name,
-        error: error.message,
-      });
-      return { ok: false, error: error.message };
-    }
-    console.info("[email] inviata", { to: opts.to, subject: opts.subject, id: data?.id });
-    return { ok: true, id: data?.id };
+    const id = info.messageId || undefined;
+    console.info("[email] inviata", { to: opts.to, subject: opts.subject, id });
+    return { ok: true, id };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invio email fallito";
     logEmailError("eccezione durante l'invio", { to: opts.to, subject: opts.subject, error: message });
@@ -265,34 +263,19 @@ async function sendOwnerEmails(opts: {
   owner: { subject: string; html: string; text: string };
   ics: { filename: string; content: string };
 }): Promise<OwnerNotifyResult> {
-  const targets = getOwnerNotifyEmails();
+  const target = getBookingNotificationEmail();
   const results: { to: string; result: EmailSendResult }[] = [];
-  let anyOk = false;
 
-  for (const to of targets) {
-    try {
-      const result = await sendEmail({ to, ...opts.owner, ics: opts.ics });
-      results.push({ to, result });
-      if (result.ok) anyOk = true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Invio email admin fallito";
-      logEmailError("avviso salone non inviato", { to, error: message });
-      results.push({ to, result: { ok: false, error: message } });
-    }
+  try {
+    const result = await sendEmail({ to: target, ...opts.owner, ics: opts.ics });
+    results.push({ to: target, result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invio email admin fallito";
+    logEmailError("avviso salone non inviato", { to: target, error: message });
+    results.push({ to: target, result: { ok: false, error: message } });
   }
 
-  if (!anyOk && isResendTestFrom()) {
-    logEmailError(
-      "Resend in modalità test: imposta NOTIFY_EMAIL all'indirizzo dell'account Resend oppure verifica il dominio",
-      {
-        targets,
-        adminEmail: getAdminEmail(),
-        hint: "https://resend.com/domains — finché il dominio non è verificato, felicepolese550@gmail.com viene rifiutato",
-      },
-    );
-  }
-
-  return { results, ok: anyOk };
+  return { results, ok: results.some((r) => r.result.ok) };
 }
 
 export async function sendBookingEmails(opts: {

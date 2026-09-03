@@ -42,7 +42,7 @@ export default function PrivacyPage() {
           <h2>Destinatari</h2>
           <p>
             I dati sono trattati su infrastrutture nell&apos;UE (hosting e database).
-            L&apos;email di conferma è inviata tramite il fornitore Resend. Non
+            L&apos;email di conferma è inviata tramite Gmail SMTP. Non
             vendiamo i dati a terzi.
           </p>
           <h2>Diritti</h2>
