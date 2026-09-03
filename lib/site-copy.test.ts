@@ -351,9 +351,16 @@ describe("public copy vs official identity", () => {
   });
 
   it("puts contact info and maps link in July 3 contact section", () => {
-    expect(SITE.hours.weekdays).toBe("Mar — Sab · 09:30 — 20:00");
-    expect(SITE.hours.monday).toMatch(/Chiuso/);
+    expect(SITE.hours.monday).toBe("Lun · 15:00 — 19:00");
+    expect(SITE.hours.tuesday).toBe("Mar · 08:30 — 19:00");
+    expect(SITE.hours.wednesday).toBe("Mer · 08:30 — 19:00");
+    expect(SITE.hours.thursday).toBe("Gio · 08:30 — 20:00");
+    expect(SITE.hours.friday).toBe("Ven · 08:00 — 21:00");
+    expect(SITE.hours.saturday).toBe("Sab · 08:00 — 21:00");
     expect(SITE.hours.sunday).toMatch(/Chiuso/);
+    expect(SITE.hours.weekdays).toMatch(/15:00/);
+    expect(SITE.hours.weekdays).toMatch(/08:30/);
+    expect(SITE.hours.weekdays).toMatch(/08:00—21:00/);
     expect(SITE.instagramHandle).toBe("@felicepolese_barber");
     expect(SITE.instagram).toBe("https://instagram.com/felicepolese_barber");
     expect(getWhatsAppChatUrl()).toBe("https://wa.me/393270156225");

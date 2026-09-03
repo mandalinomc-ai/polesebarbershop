@@ -127,9 +127,17 @@ export function LandingSections() {
             <p>
               <strong>Orari</strong>
               <br />
-              {SITE.hours.weekdays}
-              <br />
               {SITE.hours.monday}
+              <br />
+              {SITE.hours.tuesday}
+              <br />
+              {SITE.hours.wednesday}
+              <br />
+              {SITE.hours.thursday}
+              <br />
+              {SITE.hours.friday}
+              <br />
+              {SITE.hours.saturday}
               <br />
               {SITE.hours.sunday}
             </p>

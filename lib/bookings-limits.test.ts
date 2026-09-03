@@ -19,7 +19,8 @@ describe("booking capacity policy", () => {
       barberId: "felice",
       durationMinutes: 25,
     });
+    // Tue 08:30–19:00, 25-min services, 5-min step → 122 starts
     expect(slots.length).toBeGreaterThan(100);
-    expect(slots.length).toBeLessThan(140);
+    expect(slots.length).toBeLessThan(130);
   });
 });

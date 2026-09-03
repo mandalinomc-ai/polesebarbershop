@@ -38,7 +38,9 @@ export default function TermsPage() {
           </p>
           <h2>Orari</h2>
           <p>
-            {SITE.hours.weekdays}. {SITE.hours.monday}. {SITE.hours.sunday}.
+            {SITE.hours.monday}. {SITE.hours.tuesday}. {SITE.hours.wednesday}.{" "}
+            {SITE.hours.thursday}. {SITE.hours.friday}. {SITE.hours.saturday}.{" "}
+            {SITE.hours.sunday}.
             Fuso orario Europe/Rome. Le prenotazioni partono dal{" "}
             {SITE.openingDate.split("-").reverse().join("/")}.
           </p>

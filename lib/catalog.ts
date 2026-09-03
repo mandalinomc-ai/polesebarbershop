@@ -2,13 +2,15 @@ import { SITE } from "./site-config";
 
 export type DayHours = { open: string; close: string } | null;
 
+/** JS weekday: 0 Sunday … 6 Saturday. Sunday closed (hours not provided). */
 export const SHOP_HOURS: Record<number, DayHours> = {
-  0: null, 1: null,
-  2: { open: "09:30", close: "20:00" },
-  3: { open: "09:30", close: "20:00" },
-  4: { open: "09:30", close: "20:00" },
-  5: { open: "09:30", close: "20:00" },
-  6: { open: "09:30", close: "20:00" },
+  0: null,
+  1: { open: "15:00", close: "19:00" },
+  2: { open: "08:30", close: "19:00" },
+  3: { open: "08:30", close: "19:00" },
+  4: { open: "08:30", close: "20:00" },
+  5: { open: "08:00", close: "21:00" },
+  6: { open: "08:00", close: "21:00" },
 };
 
 export type ServiceCategory = "capelli" | "barba" | "colore";

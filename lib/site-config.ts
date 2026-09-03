@@ -38,9 +38,15 @@ export const SITE = {
   vatNumber: "01894030624",
   pricesIncludeVat: "Tutti i prezzi sono da intendersi IVA inclusa.",
   hours: {
-    weekdays: "Mar — Sab · 09:30 — 20:00",
-    monday: "Lun · Chiuso",
+    monday: "Lun · 15:00 — 19:00",
+    tuesday: "Mar · 08:30 — 19:00",
+    wednesday: "Mer · 08:30 — 19:00",
+    thursday: "Gio · 08:30 — 20:00",
+    friday: "Ven · 08:00 — 21:00",
+    saturday: "Sab · 08:00 — 21:00",
     sunday: "Dom · Chiuso",
+    weekdays:
+      "Lun 15:00—19:00 · Mar–Mer 08:30—19:00 · Gio 08:30—20:00 · Ven–Sab 08:00—21:00",
   },
   seo: {
     keywords:
