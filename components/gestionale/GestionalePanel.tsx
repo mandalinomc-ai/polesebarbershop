@@ -14,6 +14,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
 import {
   formatItalianDate,
@@ -120,6 +121,7 @@ export function GestionalePanel() {
   const [statsPeriod, setStatsPeriod] = useState<StatsPeriod>("month");
   const [history, setHistory] = useState<HistoryAppt[]>([]);
   const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
+  const [bellTick, setBellTick] = useState(0);
 
   const loadAgenda = useCallback(async () => {
     try {
@@ -193,6 +195,7 @@ export function GestionalePanel() {
     if (ok) {
       await loadCrm();
       await loadHistory();
+      setBellTick((n) => n + 1);
     }
   }, [loadAgenda, loadCrm, loadHistory]);
 
@@ -328,6 +331,13 @@ export function GestionalePanel() {
             <h1 className="font-serif">{SITE.name}</h1>
           </div>
           <div className="crm-top-actions">
+            <CrmNotificationBell
+              reloadToken={bellTick}
+              onOpenAppointment={(d) => {
+                setDate(d);
+                setTab("agenda");
+              }}
+            />
             <input
               className="input-lux"
               type="date"

@@ -1038,6 +1038,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   grid-template-columns: 15rem 1fr;
   background: var(--surface);
   color: var(--ink);
+  overflow: visible;
 }
 .crm-sidebar {
   border-right: 1px solid var(--line);
@@ -1067,10 +1068,115 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .crm-sidebar nav button.active, .crm-bottom button.active { color: #fff; background: rgba(255, 255, 255, 0.1); }
 .crm-logout { margin-top: auto; }
-.crm-main { padding: 1.25rem var(--pad-x) 5rem; min-width: 0; }
-.crm-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; align-items: flex-end; }
+.crm-main { padding: 1.25rem var(--pad-x) 5rem; min-width: 0; overflow: visible; }
+.crm-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; align-items: flex-end; overflow: visible; position: relative; z-index: 500; }
 .crm-top h1 { margin: 0; font-size: 1.65rem; font-weight: 500; }
-.crm-top-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.crm-top-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; overflow: visible; position: relative; z-index: 61; pointer-events: auto; }
+.crm-bell-wrap { position: relative; z-index: 420; pointer-events: auto; }
+.crm-bell-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 421;
+}
+.crm-bell-btn.has-unread {
+  color: #1a1408;
+  border-color: var(--gold);
+  background: #fff8e8;
+  box-shadow: 0 0 0 2px rgba(201, 169, 98, 0.35), 0 0 16px rgba(201, 169, 98, 0.7);
+  animation: crm-bell-glow 1.6s ease-in-out infinite;
+}
+.crm-bell-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.22rem;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #111;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.05rem;
+  text-align: center;
+  pointer-events: none;
+}
+.crm-bell-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 430;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: rgba(8, 14, 26, 0.45);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.crm-bell-panel {
+  position: fixed;
+  z-index: 440;
+  top: calc(0.75rem + var(--safe-top));
+  left: 0.75rem;
+  right: 0.75rem;
+  width: auto;
+  max-width: none;
+  max-height: min(70dvh, calc(100dvh - 5.5rem - var(--safe-bottom)));
+  overflow: auto;
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  padding: 0.85rem 0.9rem 1rem;
+  pointer-events: auto;
+}
+@media (min-width: 800px) {
+  .crm-bell-panel {
+    top: 5.25rem;
+    left: auto;
+    right: 1.25rem;
+    width: min(24rem, calc(100vw - 2rem));
+  }
+}
+.crm-bell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+.crm-bell-head strong { font-size: 1.05rem; }
+.crm-bell-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.crm-bell-list button {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--white);
+  padding: 0.7rem 0.75rem;
+  min-height: 44px;
+  cursor: pointer;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.crm-bell-list button strong { font-size: 0.88rem; }
+.crm-bell-list button span { color: var(--muted); font-size: 0.78rem; }
+.crm-bell-list button.is-unread {
+  border-color: var(--gold);
+  background: #fff8e8;
+}
+@keyframes crm-bell-glow {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(201, 169, 98, 0.35), 0 0 12px rgba(201, 169, 98, 0.55); }
+  50% { box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.55), 0 0 22px rgba(201, 169, 98, 0.95); }
+}
 .crm-warning { border: 1px solid var(--line); padding: 0.65rem; margin-bottom: 1rem; font-size: 0.85rem; }
 .crm-stack { display: flex; flex-direction: column; gap: 1rem; }
 .crm-kpis { display: grid; gap: 0.65rem; grid-template-columns: repeat(2, 1fr); }

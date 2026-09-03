@@ -44,6 +44,21 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.occupancy-table td\.taken/);
   });
 
+  it("opens the gestionale notification bell on tap and illuminates unread", () => {
+    const bell = readFileSync(join(process.cwd(), "components/gestionale/CrmNotificationBell.tsx"), "utf8");
+    expect(crm).toMatch(/CrmNotificationBell/);
+    expect(bell).toMatch(/aria-expanded=\{open\}/);
+    expect(bell).toMatch(/onClick=\{toggle\}/);
+    expect(bell).toMatch(/has-unread/);
+    expect(bell).toMatch(/crm-bell-overlay/);
+    expect(bell).toMatch(/\/api\/admin\/notifications/);
+    expect(css).toMatch(/\.crm-bell-btn \{[\s\S]*?min-height:\s*44px/);
+    expect(css).toMatch(/\.crm-bell-btn\.has-unread/);
+    expect(css).toMatch(/\.crm-bell-overlay \{[\s\S]*?position:\s*fixed/);
+    expect(css).toMatch(/\.crm-bell-panel \{[\s\S]*?position:\s*fixed/);
+    expect(css).toMatch(/z-index:\s*440/);
+  });
+
   it("keeps July 3 hero and booking CTA usable at 390px", () => {
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/hero-editorial/);
