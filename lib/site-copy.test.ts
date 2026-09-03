@@ -285,12 +285,13 @@ describe("public copy vs official identity", () => {
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
-    expect(reel).toMatch(/VIDEO_REELS/);
+    expect(reel).toMatch(/SERVICE_SHOWCASE_VIDEOS/);
+    expect(reel).toMatch(/Ogni trattamento con il suo media/);
+    expect(reel).toMatch(/CUTTING_TECHNIQUE_VIDEOS/);
     expect(reel).toMatch(/Sfumature/);
-    expect(reel).toMatch(/Le nostre sfumature/);
     expect(reel).toMatch(/Prenota il tuo taglio/);
-    expect(reel).not.toMatch(/€/);
-    expect(reel).not.toMatch(/<img/);
+    expect(reel).toMatch(/formatPriceRange/);
+    expect(reel).toMatch(/serviceBookingHref/);
     expect(reel).not.toMatch(/reveal/);
     const videos = readFileSync(join(process.cwd(), "lib/site-videos.ts"), "utf8");
     expect(videos).toMatch(/Razor Fade — Tecnica di sfumatura/);

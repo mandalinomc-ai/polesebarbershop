@@ -5,13 +5,16 @@ import {
   ALL_SITE_VIDEOS,
   COLORAZIONE_VIDEOS,
   CUTTING_TECHNIQUE_VIDEOS,
+  DECOLORAZIONE_CUTANEA_VIDEO,
   SALON_WORK_VIDEOS,
   FELICE_WORKING_FILENAME,
   FELICE_WORKING_VIDEO,
   GALLERY_VIDEOS,
   HERO_VIDEOS,
+  MECHES_VIDEO,
   REQUIRED_VIDEO_FILES,
   SALONE_GENERALE_VIDEO,
+  SERVICE_SHOWCASE_VIDEOS,
   TAGLIO_VIDEOS,
   VIDEO_BASE,
   VIDEO_REELS,
@@ -20,11 +23,11 @@ import {
 const VIDEO_DIR = join(process.cwd(), "public", "assets", "video");
 
 describe("site-videos", () => {
-  it("defines six service reels plus general salon video under /video/", () => {
+  it("defines service reels plus general salon video under /video/", () => {
     expect(TAGLIO_VIDEOS).toHaveLength(3);
     expect(COLORAZIONE_VIDEOS).toHaveLength(3);
     expect(VIDEO_REELS).toHaveLength(6);
-    expect(ALL_SITE_VIDEOS).toHaveLength(8);
+    expect(ALL_SITE_VIDEOS).toHaveLength(10);
 
     expect(VIDEO_REELS.map((v) => v.id)).toEqual([
       "taglio-01",
@@ -41,6 +44,10 @@ describe("site-videos", () => {
     }
 
     expect(SALONE_GENERALE_VIDEO.src).toBe(`${VIDEO_BASE}/salone-generale.mp4`);
+    expect(MECHES_VIDEO.src).toBe(`${VIDEO_BASE}/meches.mp4`);
+    expect(DECOLORAZIONE_CUTANEA_VIDEO.src).toBe(
+      `${VIDEO_BASE}/decolorazione-cutanea.mp4`,
+    );
   });
 
   it("has all required mp4 files committed on disk in public/assets/video/", () => {
@@ -48,6 +55,34 @@ describe("site-videos", () => {
       const diskPath = join(VIDEO_DIR, filename);
       expect(existsSync(diskPath), `missing ${diskPath}`).toBe(true);
     }
+  });
+
+  it("maps every bookable service to real local media", () => {
+    expect(SERVICE_SHOWCASE_VIDEOS).toHaveLength(10);
+    expect(SERVICE_SHOWCASE_VIDEOS.map((v) => v.serviceId)).toEqual([
+      "taglio-pro",
+      "taglio-standard",
+      "acconciatura",
+      "taglio-bambino",
+      "barba-pro",
+      "barba-standard",
+      "decolorazione-meches",
+      "decolorazione-cutanea",
+      "tintura-capelli",
+      "tintura-barba",
+    ]);
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "decolorazione-meches")?.src,
+    ).toBe(`${VIDEO_BASE}/meches.mp4`);
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "decolorazione-cutanea")?.src,
+    ).toBe(`${VIDEO_BASE}/decolorazione-cutanea.mp4`);
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-pro")?.posterSrc,
+    ).toBe("/assets/images/services/barba-pro.jpg");
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "tintura-barba")?.posterSrc,
+    ).toBe("/assets/images/services/tintura-barba.jpg");
   });
 
   it("uses taglio + colorazione in the hero asymmetric grid", () => {

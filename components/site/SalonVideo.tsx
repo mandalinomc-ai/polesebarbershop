@@ -16,6 +16,7 @@ export function SalonVideo({ video, className = "salon-video-player" }: SalonVid
       playsInline
       preload="auto"
       disablePictureInPicture
+      poster={video.posterSrc}
       aria-label={video.alt}
     >
       <source src={video.src} type="video/mp4" />
