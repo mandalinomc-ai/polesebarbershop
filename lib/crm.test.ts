@@ -59,7 +59,7 @@ describe("CRM stats aggregation", () => {
     expect(mario!.cancelledCount).toBe(1);
     expect(mario!.spendCents).toBe(1500);
     expect(mario!.history.some((h) => h.cancelled)).toBe(true);
-    expect(mario!.services.map((s) => s.name).sort()).toEqual(["Taglio classico", "Taglio completo"]);
+    expect(mario!.services.map((s) => s.name).sort()).toEqual(["Taglio Pro", "Taglio classico"]);
     expect(mario!.lastVisitStatus).toBe("cancelled");
   });
 
