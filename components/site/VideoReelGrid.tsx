@@ -19,10 +19,10 @@ function TechniqueCard({
 export function VideoReelGrid() {
   return (
     <section id="gallery" className="section-pad section-marble marble-accent">
-      <div className="eyebrow">Tecniche</div>
-      <h2 className="section-title font-serif">Tecniche di taglio</h2>
+      <div className="eyebrow">Sfumature</div>
+      <h2 className="section-title font-serif">Le nostre sfumature</h2>
       <p className="prose technique-lead">
-        Scopri alcune delle tecniche che utilizziamo nei nostri tagli.
+        Scopri alcune delle sfumature e tecniche che utilizziamo nei nostri tagli.
       </p>
       <div className="video-reel-grid technique-grid">
         {CUTTING_TECHNIQUE_VIDEOS.map((reel) => (
