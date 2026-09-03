@@ -287,6 +287,7 @@ export async function PATCH(request: Request) {
         customerWhatsAppUrl: null,
         cancelMessage: "",
         emailError: "Avviso cliente non inviato.",
+        whatsappError: undefined,
       };
     }
   }
