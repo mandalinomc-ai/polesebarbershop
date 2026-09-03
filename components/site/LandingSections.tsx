@@ -26,7 +26,7 @@ export function LandingSections() {
             <p className="prose">
               Felice Polese, giovane talento della barberia italiana, porta la
               tecnica del fade e il taglio sartoriale nel nuovo salone in{" "}
-              <strong>Corso Dante 45</strong>, {SITE.city}.
+              <strong>{SITE.address}</strong>, {SITE.city}.
             </p>
             <p className="prose">
               In salone lavorano <strong>Felice</strong> e <strong>Davide</strong>{" "}

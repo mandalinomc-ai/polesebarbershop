@@ -73,7 +73,7 @@ describe("public copy vs official identity", () => {
   it("uses the official phone, address, CF and P.IVA", () => {
     expect(SITE.phone).toBe("+39 327 015 6225");
     expect(SITE.whatsapp).toBe("393270156225");
-    expect(SITE.address).toBe("Corso Dante 45");
+    expect(SITE.address).toBe("Corso Dante Alighieri, 44");
     expect(SITE.openingDate).toBe("2026-09-07");
     expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
     expect(SITE.vatNumber).toBe("01894030624");
@@ -95,8 +95,9 @@ describe("public copy vs official identity", () => {
   it("has no leftover old phone, wrong address, or banned copy in source", () => {
     const files = walk(process.cwd());
     const banned = [
-      /Corso Dante Alighieri, 44/,
-      /Corso Dante Alighieri 44/,
+      /Corso Dante 45/,
+      /Alighieri, 45/,
+      /Dante 45/,
       /Combo premium/,
       /dermatolog/i,
       /caduta capelli/i,
@@ -403,17 +404,19 @@ describe("public copy vs official identity", () => {
     expect(crm).not.toMatch(/\.limit\(4000\)/);
   });
 
-  it("stacks a Maps FAB Raggiungimi ora to Corso Dante 45", () => {
+  it("stacks a Maps FAB Raggiungimi ora to Corso Dante Alighieri, 44", () => {
     expect(CANCEL_MINUTES_BEFORE).toBe(30);
-    expect(MAPS_DESTINATION).toBe("Corso Dante 45, 82100 Benevento");
-    expect(getMapsUrl()).toContain("maps.google.com");
-    expect(getMapsUrl()).toContain("destination=");
-    expect(getMapsUrl()).toContain(encodeURIComponent("Corso Dante 45"));
+    expect(MAPS_DESTINATION).toBe("Corso Dante Alighieri, 44, 82100 Benevento");
+    expect(getMapsUrl()).toBe(
+      "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent("Corso Dante Alighieri, 44, 82100 Benevento"),
+    );
+    expect(getMapsUrl()).toContain(encodeURIComponent("Corso Dante Alighieri, 44"));
     expect(CANCEL_NOTICE_IT).toBe("30 minuti");
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/id="maps-fab"/);
     expect(chrome).toMatch(/aria-label="Raggiungimi ora su Google Maps"/);
-    expect(chrome).toMatch(/Raggiungimi ora su Google Maps — Corso Dante 45/);
+    expect(chrome).toMatch(/Raggiungimi ora su Google Maps — \$\{SITE\.address\}/);
     expect(chrome).toMatch(/fab-stack/);
     expect(chrome).toMatch(/<MapsFab \/>/);
     expect(chrome).toMatch(/<WhatsAppFab \/>/);

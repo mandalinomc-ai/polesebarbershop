@@ -15,9 +15,9 @@ export const SITE = {
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL ||
     "https://felicepolesebarbershop.vercel.app",
-  address: "Corso Dante 45",
-  addressFull: "Corso Dante 45 – 82100 Benevento (BN)",
-  streetAddress: "Corso Dante 45",
+  address: "Corso Dante Alighieri, 44",
+  addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
+  streetAddress: "Corso Dante Alighieri, 44",
   previousAddress: "ex Via Ungaretti 6",
   city: "Benevento",
   province: "BN",
@@ -50,9 +50,9 @@ export const SITE = {
   },
   seo: {
     keywords:
-      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Davide, Corso Dante 45",
+      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Davide, Corso Dante Alighieri 44",
     description:
-      "Felice Polese Barber Shop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante 45. Prenota online.",
+      "Felice Polese Barber Shop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante Alighieri, 44. Prenota online.",
   },
 } as const;
 
@@ -93,7 +93,8 @@ export function canCancelAppointment(
     (new Date(startsAt).getTime() - now.getTime()) / 60_000;
   return minutesLeft >= CANCEL_MINUTES_BEFORE;
 }
-export const MAPS_DESTINATION = "Corso Dante 45, 82100 Benevento";
+export const MAPS_DESTINATION =
+  "Corso Dante Alighieri, 44, 82100 Benevento";
 
 /** Generic salon contact — info, hours, prices or a quick tip. */
 export const SALON_CONTACT_MESSAGE =
@@ -267,7 +268,7 @@ export const SALON_CONTACT = {
 } as const;
 
 export function getMapsUrl(): string {
-  return `https://maps.google.com/?destination=${encodeURIComponent(MAPS_DESTINATION)}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(MAPS_DESTINATION)}`;
 }
 
 export function getWhatsAppUrl(message?: string): string {

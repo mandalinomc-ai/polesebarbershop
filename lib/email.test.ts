@@ -78,7 +78,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("💶 Prezzo: 50 €");
     expect(mail.text).toContain("⏱ Durata: 25 min");
     expect(mail.text).toContain("👤 Barber: Felice");
-    expect(mail.text).toContain("📍 Dove siamo: Corso Dante 45");
+    expect(mail.text).toContain("📍 Dove siamo: Corso Dante Alighieri, 44");
     expect(mail.text).toContain("📞 Telefono salone: +39 327 015 6225");
     expect(mail.text).toContain(`almeno ${CANCEL_NOTICE_IT} di anticipo`);
     expect(mail.text).toContain("Ti aspettiamo! 🔥");
@@ -163,7 +163,7 @@ describe("booking email copy", () => {
     });
     expect(mail.text).toMatch(/^Ciao Mario,/);
     expect(mail.text).toMatch(/Felice Polese Barber Shop è confermata/);
-    expect(mail.text).toMatch(/Corso Dante 45/);
+    expect(mail.text).toMatch(/Corso Dante Alighieri, 44/);
     expect(mail.text).toMatch(/30 minuti di anticipo/);
     expect(mail.text).toMatch(/Taglio completo/);
     expect(mail.text).toMatch(/Felice/);
