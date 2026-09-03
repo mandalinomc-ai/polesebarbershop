@@ -9,7 +9,21 @@ function pad(n: number) {
 }
 
 function openingTargetMs(): number {
+  // Official opening 7 Sept 2026, 10:00 Europe/Rome (CEST = UTC+2)
   return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
+}
+
+function DigitPair({ value }: { value: string }) {
+  const chars = value.padStart(2, "0").slice(-2).split("");
+  return (
+    <span className="countdown-value" aria-hidden={false}>
+      {chars.map((ch, i) => (
+        <span key={`${i}-${ch}`} className="countdown-digit">
+          {ch}
+        </span>
+      ))}
+    </span>
+  );
 }
 
 export function OpeningCountdown() {
@@ -43,19 +57,19 @@ export function OpeningCountdown() {
       </p>
       <div id="countdown" className="countdown" aria-live="polite">
         <div className="countdown-item">
-          <span className="countdown-value">{remain.d}</span>
+          <DigitPair value={remain.d} />
           <span className="countdown-label">Giorni</span>
         </div>
         <div className="countdown-item">
-          <span className="countdown-value">{remain.h}</span>
+          <DigitPair value={remain.h} />
           <span className="countdown-label">Ore</span>
         </div>
         <div className="countdown-item">
-          <span className="countdown-value">{remain.m}</span>
+          <DigitPair value={remain.m} />
           <span className="countdown-label">Min</span>
         </div>
         <div className="countdown-item">
-          <span className="countdown-value">{remain.s}</span>
+          <DigitPair value={remain.s} />
           <span className="countdown-label">Sec</span>
         </div>
         {remain.done ? <p className="countdown-done">Apertura imminente.</p> : null}

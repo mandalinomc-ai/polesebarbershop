@@ -67,16 +67,16 @@ describe("booking email copy", () => {
       date: "martedì 1 settembre 2026",
       time: "09:30",
       manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
-      priceLabel: "50 €",
-      durationLabel: "25 min",
+      priceLabel: "25 €",
+      durationLabel: "50 min",
     });
     expect(mail.text).toContain(
       "Ciao Mario, la tua prenotazione da Felice Polese Barber Shop è confermata! 💈",
     );
     expect(mail.text).toContain("📅 Data e Ora: martedì 1 settembre 2026 alle 09:30");
     expect(mail.text).toContain("✂️ Servizio: Taglio completo");
-    expect(mail.text).toContain("💶 Prezzo: 50 €");
-    expect(mail.text).toContain("⏱ Durata: 25 min");
+    expect(mail.text).toContain("💶 Prezzo: 25 €");
+    expect(mail.text).toContain("⏱ Durata: 50 min");
     expect(mail.text).toContain("👤 Barber: Felice");
     expect(mail.text).toContain("📍 Dove siamo: Corso Dante Alighieri, 44");
     expect(mail.text).toContain("📞 Telefono salone: +39 327 015 6225");

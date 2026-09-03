@@ -71,7 +71,7 @@ insert into public.barbers (id, name, title, sort_order) values
 on conflict (id) do update set name = excluded.name, title = excluded.title, active = true;
 
 insert into public.services (id, name, description, category, duration_min, price_cents, price_max_cents, is_variable_price, sort_order) values
-  ('taglio-pro','Taglio completo','Taglio con shampoo e maschera','capelli',25,5000,null,false,10),
+  ('taglio-pro','Taglio completo','Taglio con shampoo e maschera','capelli',50,2500,null,false,10),
   ('taglio-standard','Taglio classico','Taglio capelli','capelli',30,1500,null,false,20),
   ('taglio-bambino','Taglio Bambino','Taglio per bambini','capelli',20,1000,null,false,25),
   ('acconciatura','Acconciatura','Piega e styling','capelli',15,500,null,false,30),

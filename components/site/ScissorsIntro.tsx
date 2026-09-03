@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
 import { SITE } from "@/lib/site-config";
 
-const INTRO_KEY = "polese-scissors-intro-seen";
+const INTRO_KEY = "felice-polese-scissors-intro-seen";
 const TENSION_MS = 500;
 const SCISSORS_MS = 1200;
 const CUT_MS = 700;

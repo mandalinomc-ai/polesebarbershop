@@ -28,9 +28,9 @@ describe("CRM stats aggregation", () => {
       id: "2",
       startsAt: "2026-09-02T08:00:00.000Z",
       status: "cancelled",
-      priceCents: 5000,
+      priceCents: 2500,
       serviceIds: ["taglio-pro"],
-      serviceNames: "Taglio completo",
+      serviceNames: "Taglio Pro",
       dateLabel: "2026-09-02",
     }),
     appt({

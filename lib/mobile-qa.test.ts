@@ -72,7 +72,12 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.countdown-item \{[\s\S]*?align-items:\s*center/);
     expect(css).toMatch(/\.countdown-value \{[\s\S]*?tabular-nums/);
     expect(css).toMatch(/\.countdown-value \{[\s\S]*?text-align:\s*center/);
+    expect(css).toMatch(/\.countdown-digit \{[\s\S]*?width:\s*1ch/);
+    expect(css).toMatch(/\.countdown-digit \{[\s\S]*?transform:\s*none/);
     expect(css).toMatch(/\.countdown-label \{[\s\S]*?text-align:\s*center/);
+    const countdown = readFileSync(join(process.cwd(), "components/site/OpeningCountdown.tsx"), "utf8");
+    expect(countdown).toMatch(/countdown-digit/);
+    expect(countdown).toMatch(/DigitPair/);
   });
 
   it("keeps listino Prenota taps at 44px and treatment reels single-column on phones", () => {
@@ -109,5 +114,16 @@ describe("mobile QA (390px)", () => {
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
     expect(scissors).toMatch(/viewBox="0 0 100 110"/);
+    expect(scissors).not.toMatch(/#C9A962|#F4E4BC|#FFD700/);
+    expect(css).toMatch(/\.scissors-intro \{/);
+    expect(css).toMatch(/scissors-intro-split/);
+    expect(css).not.toMatch(/\.scissors-intro \{ display: none; \}/);
+    expect(css).toMatch(/prefers-reduced-motion: reduce[\s\S]*?\.scissors-intro \{ display: none !important; \}/);
+    const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
+    expect(intro).toMatch(/SITE\.brand/);
+    expect(intro).toMatch(/Clicca per entrare/);
+    expect(intro).toMatch(/prefers-reduced-motion/);
+    const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
+    expect(page).toMatch(/ScissorsIntro/);
   });
 });

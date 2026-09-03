@@ -36,7 +36,7 @@ describe("catalog", () => {
         durationKnown: s.durationKnown,
       })),
     ).toEqual([
-      { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 50, priceMaxEuro: null, durationMin: 25, durationKnown: true },
+      { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 25, priceMaxEuro: null, durationMin: 50, durationKnown: true },
       { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30, durationKnown: true },
       { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: false },
       { id: "taglio-bambino", name: "Taglio Bambino", category: "capelli", priceEuro: 10, priceMaxEuro: null, durationMin: 20, durationKnown: true },
@@ -60,24 +60,25 @@ describe("catalog", () => {
     expect(SERVICES.some((s) => s.category === ("sfumature" as never))).toBe(false);
   });
 
-  it("shows official ranges as 40–100 € and fixed prices as 50 €", () => {
+  it("shows official ranges as 40–100 € and Taglio Pro as 25 € / 50 min", () => {
     const meches = SERVICES.find((s) => s.id === "decolorazione-meches")!;
     expect(formatPrice(meches)).toBe("40–100 €");
     expect(formatPriceRange(meches)).toBe("40–100 €");
     const pro = SERVICES.find((s) => s.id === "taglio-pro")!;
-    expect(formatPrice(pro)).toBe("50 €");
-    expect(formatDuration(pro)).toBe("25 min");
+    expect(formatPrice(pro)).toBe("25 €");
+    expect(formatDuration(pro)).toBe("50 min");
     expect(formatDuration(SERVICES.find((s) => s.id === "acconciatura")!)).toBe("durata n/d");
     expect(formatDuration(SERVICES.find((s) => s.id === "barba-standard")!)).toBe("durata n/d");
+    expect(SERVICES.find((s) => s.id === "taglio-bambino")!.priceEuro).toBe(10);
   });
 
   it("sums duration buffers and uses an en-dash range when any service is variable", () => {
     const totals = totalsForServices(resolveServices(["taglio-pro", "decolorazione-meches"])!);
-    expect(totals.durationMin).toBe(70);
-    expect(totals.priceEuro).toBe(90);
-    expect(totals.priceMaxEuro).toBe(150);
+    expect(totals.durationMin).toBe(95);
+    expect(totals.priceEuro).toBe(65);
+    expect(totals.priceMaxEuro).toBe(125);
     expect(totals.isVariable).toBe(true);
-    expect(totals.priceLabel).toBe("90–150 €");
+    expect(totals.priceLabel).toBe("65–125 €");
     expect(totals.durationLabel).toBe("durata n/d");
   });
 });

@@ -11,52 +11,22 @@
 |------|--------|
 | Production site | **READY** — homepage 200, Felice branding, Maps Dante 44, listino, videos |
 | Gmail SMTP | **READY** — `GMAIL_USER` + `GMAIL_APP_PASSWORD` on Production; live booking email verified |
-| Supabase bookings | **READY** — test booking persisted |
-| Next step | User review of inbox + later cleanup of unused Vercel projects |
+| Supabase bookings | **READY** — test rows cleaned; real Ludovica booking kept |
+| Taglio Pro | **25 € / 50 min** (user correction) |
+| Scissors intro | Restored (silver/black, skippable, reduced-motion safe) |
+| Next step | Final polish deploy on this branch |
 
 ## Deploy (2026-09-03)
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
 - Force prod: `npx vercel --prod --yes --force`
-- Deployment: `temporary-prompt-quasar-rndxhgh-k05uygvc8.vercel.app`
 - Aliased: https://felicepolesebarbershop.vercel.app
-- Inspect: https://vercel.com/mandalinomc-8144s-projects/temporary-prompt-quasar-rndxhgh/Fdi2MnFoUaZcw2Uz4UAbXSTTXRzE
-
-## Env (names only — never log secret values)
-
-Confirmed via `npx vercel env ls` on `temporary-prompt-quasar-rndxhgh`:
-
-| Name | Production |
-|------|------------|
-| `GMAIL_APP_PASSWORD` | present (Secret) |
-| `GMAIL_USER` | present |
-| `BOOKING_NOTIFICATION_EMAIL` | present |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | present |
-| `OWNER_EMAIL` / `ADMIN_EMAIL` | present (`felicepolese550@gmail.com`) |
 
 ## Email verification (2026-09-03)
 
-Safe live POST to `/api/bookings` with customer email = owner only (`felicepolese550@gmail.com`):
-
-- HTTP 200
-- `ok: true`
-- `persisted: true`
-- `emailSent: true`
-- `ownerNotified: true`
-- `customerEmailFailed: false`
-- `warnings: []`
-- No GMAIL missing / skip errors
-
-Service: Taglio Pro · Felice · 2026-09-09 08:30 (test row may remain in CRM — cancel from gestionale if desired).
-
-## Site health checks (2026-09-03)
-
-- Homepage HTTP **200**
-- Brand: Felice Polese present
-- Maps: Corso Dante Alighieri, **44** (Benevento)
-- Listino / prices present (e.g. 50 €)
-- Videos: `/video/*.mp4` returning 200
-- `/prenota` HTTP 200
+Safe live POST to `/api/bookings` with customer email = owner only (`felicepolese550@gmail.com`) was verified earlier.
+Owner/test appointments (`felicepolese550@gmail.com`, junk `polesegay@sega.it`) were **deleted** from Supabase.
+Confirmed customer booking **Ludovica Covino** kept.
 
 ## Booking system
 

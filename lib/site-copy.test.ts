@@ -220,7 +220,7 @@ describe("public copy vs official identity", () => {
     expect(page).toMatch(/ComingSoon/);
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
-    expect(page).not.toMatch(/ScissorsIntro/);
+    expect(page).toMatch(/ScissorsIntro/);
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(landing).toMatch(/id="about"/);
     expect(landing).not.toMatch(/Tradizione/);
