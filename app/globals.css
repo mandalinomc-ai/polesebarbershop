@@ -339,47 +339,74 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .coming-soon-social a:hover { color: var(--ink); }
 
-/* Countdown */
-.opening-countdown-block { width: 100%; margin: 0 auto 1.25rem; }
+/* Countdown — equal columns, centered digits (no baseline drift) */
+.opening-countdown-block { width: 100%; max-width: 22rem; margin: 0 auto 1.25rem; }
 .opening-countdown-label {
   font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
   margin: 0 0 0.85rem;
+  text-align: center;
 }
 .countdown {
-  display: flex;
-  gap: clamp(0.5rem, 2vw, 0.85rem);
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.35rem, 1.8vw, 0.7rem);
+  align-items: stretch;
+  justify-items: stretch;
+  width: 100%;
 }
 .countdown-item {
-  min-width: 4rem;
-  padding: 0.75rem 0.45rem;
+  min-width: 0;
+  width: 100%;
+  padding: 0.7rem 0.25rem 0.55rem;
   border: 1px solid var(--line);
   background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 .countdown-value {
-  display: block;
-  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(1.5rem, 4vw, 2rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 1.35em;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: clamp(1.35rem, 5.2vw, 1.85rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.04em;
   line-height: 1;
+  text-align: center;
+  font-optical-sizing: none;
 }
 .countdown-label {
   display: block;
-  margin-top: 0.3rem;
-  font-size: 0.58rem;
-  letter-spacing: 0.18em;
+  width: 100%;
+  margin-top: 0.35rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
+  text-align: center;
+  line-height: 1.2;
 }
 .countdown-done {
+  grid-column: 1 / -1;
   width: 100%;
+  margin: 0.35rem 0 0;
   font-size: 0.82rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
+  text-align: center;
 }
 /* Hero editorial */
 .hero-editorial {
@@ -1273,15 +1300,31 @@ img { max-width: 100%; }
 
 @media (max-width: 899px) {
   :root { --pad-x: 1rem; --header-h: 64px; }
-  .hero-media { grid-template-columns: 1fr; grid-template-rows: auto; min-height: auto; }
-  .hero-media-cell--primary { grid-row: auto; aspect-ratio: 9/16; max-height: 420px; }
-  .hero-media-cell--secondary { aspect-ratio: 4/3; }
-  .fab-stack { bottom: calc(5rem + var(--safe-bottom)); }
+  .hero-media { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto; min-height: auto; gap: 0.45rem; }
+  .hero-media-cell { aspect-ratio: 3 / 4; border-radius: 12px; }
+  .hero-media-cell--primary { grid-row: auto; aspect-ratio: 3 / 4; max-height: none; }
+  .hero-media-cell--secondary { aspect-ratio: 3 / 4; }
+  .fab-stack { bottom: calc(5.25rem + var(--safe-bottom)); right: calc(0.85rem + var(--safe-right)); }
+  .wa-fab, .maps-fab { width: 48px; height: 48px; }
+  .opening-countdown-block { max-width: 100%; }
+  .countdown { gap: 0.35rem; }
+  .countdown-item { padding: 0.65rem 0.15rem 0.5rem; }
+  .listino-box-head { flex-wrap: wrap; }
+  .listino-box-foot { flex-wrap: wrap; gap: 0.55rem; }
+  .btn-listino-prenota { min-height: 44px; padding: 0.65rem 1.15rem; }
+  .service-reel-head { flex-wrap: wrap; }
+  .service-reel-foot { flex-wrap: wrap; gap: 0.55rem; }
+  .fresha-option { align-items: flex-start; }
+  .fresha-option .meta { white-space: normal; }
 }
 
 @media (max-width: 720px) {
   .fresha-footer { flex-direction: column; align-items: stretch; }
   .fresha-footer .btn { width: 100%; }
+  .technique-grid.video-reel-grid,
+  .video-reel-grid.technique-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Restored Jakarta marble markers + product booking surfaces */
@@ -1426,7 +1469,12 @@ img { max-width: 100%; }
   grid-template-columns: 1fr;
   max-width: 56rem;
 }
-@media (min-width: 640px) {
+@media (min-width: 721px) and (max-width: 1023px) {
+  .video-reel-grid.technique-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
   .video-reel-grid.technique-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1807,14 +1855,21 @@ img, video { backface-visibility: hidden; }
   .hero-editorial {
     min-height: auto;
     padding-top: calc(var(--header-h) + 1.25rem + var(--safe-top));
+    padding-bottom: 2.5rem;
   }
-  .hero-editorial .hero-title { max-width: none; }
+  .hero-editorial .hero-title { max-width: none; font-size: clamp(2.1rem, 9vw, 2.85rem); }
+  .hero-editorial .hero-text { font-size: 0.92rem; margin-bottom: 1.15rem; }
+  .hero-actions { flex-wrap: wrap; }
+  .hero-actions .btn { flex: 1 1 auto; min-width: min(100%, 11rem); }
   .hero-media {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: auto;
     min-height: 0;
+    gap: 0.45rem;
   }
   .hero-media-cell--primary { grid-row: auto; }
+  .section-pad { padding-top: 3.25rem; padding-bottom: 3.25rem; }
+  .crm-bell-btn { min-width: 44px; min-height: 44px; }
 }
 
 /* Kept for unused intro component + tests */

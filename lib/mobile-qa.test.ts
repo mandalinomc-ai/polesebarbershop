@@ -67,6 +67,20 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.day-chip \{[\s\S]*?min-height:\s*44px/);
   });
 
+  it("keeps countdown digits centered with tabular numbers on mobile", () => {
+    expect(css).toMatch(/\.countdown \{[\s\S]*?grid-template-columns:\s*repeat\(4/);
+    expect(css).toMatch(/\.countdown-item \{[\s\S]*?align-items:\s*center/);
+    expect(css).toMatch(/\.countdown-value \{[\s\S]*?tabular-nums/);
+    expect(css).toMatch(/\.countdown-value \{[\s\S]*?text-align:\s*center/);
+    expect(css).toMatch(/\.countdown-label \{[\s\S]*?text-align:\s*center/);
+  });
+
+  it("keeps listino Prenota taps at 44px and treatment reels single-column on phones", () => {
+    expect(css).toMatch(/@media \(max-width: 899px\)[\s\S]*?\.btn-listino-prenota \{[\s\S]*?min-height:\s*44px/);
+    expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*?\.video-reel-grid\.technique-grid[\s\S]*?grid-template-columns:\s*1fr/);
+    expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
+  });
+
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
     expect(chrome).toMatch(/fab-stack/);
     expect(chrome).toMatch(/aria-label="Raggiungimi ora su Google Maps"/);
