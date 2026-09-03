@@ -52,3 +52,11 @@ Confirmed customer booking **Ludovica Covino** kept.
 1. User reviews Gmail inbox for the test confirmation + owner alert
 2. Cleanup unused / duplicate Vercel projects (e.g. polesebarbershop) when Felice confirms
 3. Optional: cancel leftover test appointment from gestionale
+
+## Final polish deploy (2026-09-03 evening)
+
+- Branch: `cursor/final-polish-deploy-c959`
+- Force prod: `npx vercel --prod --yes --force` → **temporary-prompt-quasar-rndxhgh**
+- Aliased: https://felicepolesebarbershop.vercel.app
+- Inspect: https://vercel.com/mandalinomc-8144s-projects/temporary-prompt-quasar-rndxhgh/JAUPBiJNe6qBnEtwh7ZavKYiaL3T
+- Verified live: Taglio Pro **25 € / 50 min**, scissors intro JS+CSS, countdown-digit 1ch, Maps Dante 44, WhatsApp
