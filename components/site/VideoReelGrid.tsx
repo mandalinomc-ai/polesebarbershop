@@ -1,17 +1,51 @@
 import { formatDuration, formatPriceRange, SERVICES } from "@/lib/catalog";
 import { serviceBookingHref } from "@/lib/site-config";
 import { SalonVideo } from "@/components/site/SalonVideo";
-import { CUTTING_TECHNIQUE_VIDEOS, SERVICE_SHOWCASE_VIDEOS } from "@/lib/site-videos";
+import {
+  CUTTING_TECHNIQUE_VIDEOS,
+  SERVICE_SHOWCASE_VIDEOS,
+  VIDEO_REELS,
+} from "@/lib/site-videos";
 
 export function VideoReelGrid() {
   return (
     <section id="gallery" className="section-pad section-marble marble-accent">
-      <div className="eyebrow">Servizi reali</div>
-      <h2 className="section-title font-serif">Ogni trattamento con il suo media</h2>
+      <div className="eyebrow">Sfumature</div>
+      <h2 className="section-title font-serif">Le nostre sfumature</h2>
       <p className="prose technique-lead">
-        Clip reali dal salone per taglio, barba e trattamenti colore. Dove il
-        Drive condivide solo una foto beard, usiamo quella come poster e
-        manteniamo in riproduzione solo footage reale del salone.
+        Taglio e colorazione dal salone — sfumature e finiture in azione.
+      </p>
+      <div className="video-reel-grid">
+        {VIDEO_REELS.map((reel) => (
+          <article key={reel.id} className="video-reel-box">
+            <div className="video-reel-media">
+              <SalonVideo video={reel} className="video-reel-player" />
+              {reel.label ? (
+                <span className="video-reel-label">{reel.label}</span>
+              ) : null}
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <h3 className="section-title font-serif technique-subtitle">Tecniche di taglio</h3>
+      <p className="prose technique-lead">
+        Razor fade, taper fade e burst fade restano tecniche di salone, non listino.
+      </p>
+      <div className="video-reel-grid technique-grid">
+        {CUTTING_TECHNIQUE_VIDEOS.map((reel) => (
+          <article key={reel.id} className="video-reel-box technique-card">
+            <div className="video-reel-media">
+              <SalonVideo video={reel} className="video-reel-player" />
+            </div>
+            {reel.label ? <p className="technique-caption">{reel.label}</p> : null}
+          </article>
+        ))}
+      </div>
+
+      <h3 className="section-title font-serif technique-subtitle">Ogni trattamento</h3>
+      <p className="prose technique-lead">
+        Clip reali dal salone per taglio, barba e trattamenti colore.
       </p>
       <div className="video-reel-grid">
         {SERVICES.map((service) => {
@@ -46,22 +80,7 @@ export function VideoReelGrid() {
           );
         })}
       </div>
-      <h3 className="section-title font-serif technique-subtitle">Sfumature</h3>
-      <p className="prose technique-lead">
-        Razor fade, taper fade e burst fade restano tecniche di salone, non listino.
-      </p>
-      <div className="video-reel-grid technique-grid">
-        {CUTTING_TECHNIQUE_VIDEOS.map((reel) => (
-          <article key={reel.id} className="video-reel-box">
-            <div className="video-reel-media">
-              <SalonVideo video={reel} className="video-reel-player" />
-              {reel.label ? (
-                <span className="video-reel-label">{reel.label}</span>
-              ) : null}
-            </div>
-          </article>
-        ))}
-      </div>
+
       <p className="technique-cta-wrap">
         <a className="btn btn-ink" href="/#prenota">
           Prenota il tuo taglio
