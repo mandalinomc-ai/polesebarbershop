@@ -340,14 +340,14 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .coming-soon-social a:hover { color: var(--ink); }
 
 /* Countdown — equal columns, centered digits (no baseline drift) */
-.opening-countdown-block { width: 100%; max-width: 22rem; margin: 0 auto 1.25rem; }
+.opening-countdown-block { width: 100%; max-width: 22rem; margin: 0 0 1.25rem; }
 .opening-countdown-label {
   font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 0 0 0.85rem;
-  text-align: center;
+  margin: 0 0 0.75rem;
+  text-align: left;
 }
 .countdown {
   display: grid;
@@ -360,13 +360,15 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .countdown-item {
   min-width: 0;
   width: 100%;
-  padding: 0.7rem 0.25rem 0.55rem;
+  min-height: 4.6rem;
+  padding: 0.55rem 0.2rem 0.5rem;
   border: 1px solid var(--line);
   background: var(--surface);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.35rem;
   text-align: center;
 }
 .countdown-value {
@@ -374,29 +376,32 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 1.35em;
+  height: 1.7rem;
   margin: 0;
   padding: 0;
   font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
-  font-size: clamp(1.35rem, 5.2vw, 1.85rem);
+  font-size: clamp(1.4rem, 5vw, 1.8rem);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: 0.06em;
   line-height: 1;
   text-align: center;
   font-optical-sizing: none;
 }
 .countdown-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  margin-top: 0.35rem;
+  height: 1rem;
+  margin: 0;
   font-size: 0.55rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
   text-align: center;
-  line-height: 1.2;
+  line-height: 1;
 }
 .countdown-done {
   grid-column: 1 / -1;
