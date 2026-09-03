@@ -86,10 +86,13 @@ describe("site-videos", () => {
     expect(SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-pro")?.src).toBeUndefined();
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-standard")?.imageSrc,
-    ).toBe("/assets/images/services/barba-pro.jpg");
+    ).toBe("/assets/images/services/barba-standard.jpg");
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-standard")?.src,
     ).toBeUndefined();
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-standard")?.posterSrc,
+    ).toBe("/assets/images/services/barba-standard.jpg");
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "tintura-barba")?.posterSrc,
     ).toBe("/assets/images/services/tintura-barba.jpg");
@@ -99,6 +102,14 @@ describe("site-videos", () => {
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "tintura-barba")?.src,
     ).toBeUndefined();
+    for (const still of [
+      "barba-pro.jpg",
+      "barba-standard.jpg",
+      "tintura-barba.jpg",
+    ] as const) {
+      const diskPath = join(process.cwd(), "public/assets/images/services", still);
+      expect(existsSync(diskPath), `missing ${diskPath}`).toBe(true);
+    }
   });
 
   it("uses taglio + colorazione in the hero asymmetric grid", () => {

@@ -5,6 +5,7 @@ import {
 } from "@/components/booking/FreshaBookingFlow";
 import { ServiceListino } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
+import { ProductVetrina } from "@/components/site/ProductVetrina";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 
@@ -53,6 +54,8 @@ export function LandingSections() {
       </section>
 
       <VideoReelGrid />
+
+      <ProductVetrina />
 
       <section id="prenota" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow">Listino &amp; prenotazione</div>

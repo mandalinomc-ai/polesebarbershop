@@ -266,11 +266,13 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/brand-products\.jpg/);
     const aboutIdx = landing.indexOf('id="about"');
     const videoIdx = landing.indexOf("<VideoReelGrid");
+    const prodottiIdx = landing.indexOf("<ProductVetrina");
     const prenotaIdx = landing.indexOf('id="prenota"');
     const contactIdx = landing.indexOf('id="contact"');
     expect(aboutIdx).toBeGreaterThan(-1);
     expect(videoIdx).toBeGreaterThan(aboutIdx);
-    expect(prenotaIdx).toBeGreaterThan(videoIdx);
+    expect(prodottiIdx).toBeGreaterThan(videoIdx);
+    expect(prenotaIdx).toBeGreaterThan(prodottiIdx);
     expect(contactIdx).toBeGreaterThan(prenotaIdx);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/appointment-sidebar/);
@@ -288,7 +290,11 @@ describe("public copy vs official identity", () => {
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
     expect(reel).toMatch(/SERVICE_SHOWCASE_VIDEOS/);
-    expect(reel).toMatch(/Ogni trattamento con il suo media/);
+    expect(reel).toMatch(/Il tuo stile\. La nostra precisione/);
+    expect(reel).toMatch(/Precisione geometrica/);
+    expect(reel).not.toMatch(/Servizi reali/);
+    expect(reel).not.toMatch(/Ogni trattamento con il suo media/);
+    expect(reel).not.toMatch(/foto generate/);
     expect(reel).toMatch(/service-price-on-media/);
     expect(reel).toMatch(/FillCoverImage/);
     expect(reel).not.toMatch(/Tintura Nero/);

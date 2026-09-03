@@ -1346,11 +1346,20 @@ img { max-width: 100%; }
 }
 .video-reel-player,
 .salon-video-player {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 30%;
   display: block;
   background: var(--surface);
+}
+.video-reel-media .treatment-still {
+  object-position: center 28%;
+}
+.technique-card .video-reel-player {
+  object-position: center center;
 }
 .video-reel-media::after {
   content: "";
@@ -1418,6 +1427,60 @@ img { max-width: 100%; }
   max-width: 36rem;
   margin: 0.35rem 0 0;
   color: var(--muted);
+}
+.technique-lead-follow {
+  margin-top: 0.85rem;
+}
+
+/* Vetrina prodotti Felice Polese */
+.products-vetrina-grid {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 2rem;
+  max-width: 52rem;
+}
+@media (min-width: 700px) {
+  .products-vetrina-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+.product-vetrina-card {
+  border: 1px solid var(--line);
+  background: var(--white);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.product-vetrina-media {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #0c0c0c;
+}
+.product-vetrina-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1rem 1.1rem 1.15rem;
+}
+.product-vetrina-copy h3 {
+  margin: 0;
+  font-family: var(--font-cormorant), serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+.product-vetrina-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 0.92rem;
+}
+.product-vetrina-cta {
+  margin-top: auto;
+  align-self: flex-start;
+  font-size: 0.68rem;
 }
 .technique-subtitle {
   margin-top: 2.5rem;

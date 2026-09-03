@@ -1,57 +1,26 @@
-/** Felice Polese linea cura capelli — ordine via WhatsApp in salone. */
+/** Felice Polese linea styling — foto ufficiali Drive, senza prezzi inventati. */
 export type Product = {
   id: string;
   name: string;
   description: string;
   image: string;
-  priceLabel: string;
 };
 
 export const PRODUCTS: Product[] = [
   {
-    id: "shampoo",
-    name: "Shampoo Felice Polese",
-    description: "Detergenza delicata per cuoio capelluto e capelli.",
-    image: "",
-    priceLabel: "Su ordinazione",
+    id: "cera-lucida",
+    name: "Cera Lucida",
+    description: "Lucentezza naturale, controllo totale.",
+    image: "/assets/images/products/cera-lucida.jpg",
   },
   {
-    id: "balsamo",
-    name: "Balsamo Nutriente",
-    description: "Idratazione e pettinabilità senza appesantire.",
-    image: "",
-    priceLabel: "Su ordinazione",
-  },
-  {
-    id: "pomata",
-    name: "Pomata Styling",
-    description: "Tenuta modulabile, finitura naturale e opaca.",
-    image: "",
-    priceLabel: "Su ordinazione",
-  },
-  {
-    id: "olio-barba",
-    name: "Olio Barba",
-    description: "Ammorbidisce e profuma barba e baffi.",
-    image: "",
-    priceLabel: "Su ordinazione",
-  },
-  {
-    id: "cera",
-    name: "Cera Modellante",
-    description: "Definizione e volume per look strutturati.",
-    image: "",
-    priceLabel: "Su ordinazione",
-  },
-  {
-    id: "spray",
-    name: "Spray Finish",
-    description: "Fissaggio leggero per acconciature editoriali.",
-    image: "",
-    priceLabel: "Su ordinazione",
+    id: "lacca-professionale",
+    name: "Lacca Professionale",
+    description: "Tenuta forte, risultato perfetto.",
+    image: "/assets/images/products/lacca-professionale.jpg",
   },
 ];
 
 export function productOrderMessage(name: string): string {
-  return `Ciao, vorrei ordinare ${name} della linea Felice Polese.`;
+  return `Ciao, vorrei informazioni su ${name} della linea Felice Polese.`;
 }

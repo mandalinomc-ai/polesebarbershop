@@ -27,10 +27,11 @@ function TreatmentMedia({ media }: { media: ServiceShowcaseVideo }) {
   if (media.imageSrc && !media.src) {
     return (
       <FillCoverImage
-        className="video-reel-player"
+        className="video-reel-player treatment-still"
         src={media.imageSrc}
         alt={media.alt}
         sizes="(max-width: 768px) 100vw, 33vw"
+        style={{ objectFit: "cover", objectPosition: "center 28%" }}
       />
     );
   }
@@ -71,12 +72,18 @@ export function VideoReelGrid() {
       </section>
 
       <section id="trattamenti" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow">Servizi reali</div>
-        <h2 className="section-title font-serif">Ogni trattamento con il suo media</h2>
+        <div className="eyebrow">Il metodo</div>
+        <h2 className="section-title font-serif">
+          Il tuo stile. La nostra precisione.
+        </h2>
         <p className="prose technique-lead">
-          Ogni trattamento con il video Drive corrispondente. Barba Pro, Barba
-          Standard e Tintura Barba usano le foto generate: non c&apos;è un clip
-          dedicato.
+          Precisione geometrica. Sfumature ad alta definizione. Analizziamo
+          struttura del volto, densità e direzione del capello per costruire un
+          look netto, contemporaneo e su misura.
+        </p>
+        <p className="prose technique-lead technique-lead-follow">
+          Non crediamo nei tagli standard: ogni intervento nasce da tecnica,
+          equilibrio e attenzione al dettaglio. Nessun compromesso sulla forma.
         </p>
         <div className="video-reel-grid">
           {SERVICES.map((service) => {

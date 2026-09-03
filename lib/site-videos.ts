@@ -204,9 +204,9 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
     id: "service-barba-standard",
     alt: "Barba Standard — foto servizio Felice Polese",
     label: "Barba Standard",
-    posterSrc: "/assets/images/services/barba-pro.jpg",
-    imageSrc: "/assets/images/services/barba-pro.jpg",
-    sourceFile: "barba-pro.jpg",
+    posterSrc: "/assets/images/services/barba-standard.jpg",
+    imageSrc: "/assets/images/services/barba-standard.jpg",
+    sourceFile: "barba-standard.jpg",
   },
   {
     serviceId: "decolorazione-meches",
