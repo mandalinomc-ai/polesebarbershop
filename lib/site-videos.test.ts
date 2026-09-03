@@ -68,6 +68,17 @@ describe("site-videos", () => {
     ]);
   });
 
+  it("has fade technique mp4 files on disk under public/assets/video/", () => {
+    for (const filename of [
+      "razor-fade.mp4",
+      "taper-fade.mp4",
+      "burst-fade.mp4",
+    ] as const) {
+      const diskPath = join(VIDEO_DIR, filename);
+      expect(existsSync(diskPath), `missing ${diskPath}`).toBe(true);
+    }
+  });
+
   it("keeps fade techniques as dedicated clips, not priced services", () => {
     expect(CUTTING_TECHNIQUE_VIDEOS).toHaveLength(3);
     expect(CUTTING_TECHNIQUE_VIDEOS.map((v) => v.id)).toEqual([
