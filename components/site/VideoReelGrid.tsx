@@ -1,9 +1,11 @@
 import { formatDuration, formatPriceRange, SERVICES } from "@/lib/catalog";
 import { serviceBookingHref } from "@/lib/site-config";
+import { FillCoverImage } from "@/components/site/SiteImage";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import {
   CUTTING_TECHNIQUE_VIDEOS,
   SERVICE_SHOWCASE_VIDEOS,
+  type ServiceShowcaseVideo,
 } from "@/lib/site-videos";
 
 function TechniqueCard({
@@ -18,6 +20,32 @@ function TechniqueCard({
       </div>
       {video.label ? <p className="technique-caption">{video.label}</p> : null}
     </article>
+  );
+}
+
+function TreatmentMedia({ media }: { media: ServiceShowcaseVideo }) {
+  if (media.imageSrc && !media.src) {
+    return (
+      <FillCoverImage
+        className="video-reel-player"
+        src={media.imageSrc}
+        alt={media.alt}
+        sizes="(max-width: 768px) 100vw, 33vw"
+      />
+    );
+  }
+  if (!media.src) return null;
+  return (
+    <SalonVideo
+      video={{
+        id: media.id,
+        src: media.src,
+        alt: media.alt,
+        label: media.label,
+        posterSrc: media.posterSrc,
+      }}
+      className="video-reel-player"
+    />
   );
 }
 
@@ -46,8 +74,9 @@ export function VideoReelGrid() {
         <div className="eyebrow">Servizi reali</div>
         <h2 className="section-title font-serif">Ogni trattamento con il suo media</h2>
         <p className="prose technique-lead">
-          Clip reali dal Drive del salone, una per trattamento. Le foto beard
-          restano solo poster; in riproduzione c&apos;è solo footage video.
+          Ogni trattamento con il video Drive corrispondente. Barba Pro, Barba
+          Standard e Tintura Barba usano le foto generate: non c&apos;è un clip
+          dedicato.
         </p>
         <div className="video-reel-grid">
           {SERVICES.map((service) => {
@@ -58,10 +87,13 @@ export function VideoReelGrid() {
             return (
               <article key={service.id} className="video-reel-box service-reel-box">
                 <div className="video-reel-media">
-                  <SalonVideo video={media} className="video-reel-player" />
+                  <TreatmentMedia media={media} />
                   {media.label ? (
                     <span className="video-reel-label">{media.label}</span>
                   ) : null}
+                  <span className="service-price service-price-on-media">
+                    {formatPriceRange(service)}
+                  </span>
                 </div>
                 <div className="service-reel-copy">
                   <div className="service-reel-head">

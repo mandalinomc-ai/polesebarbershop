@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { addDays, formatWallDate, formatWallTime, mondayOfWeek, wallTimeToUtc } from "@/lib/availability";
+import { addDays, formatItalianDate, formatWallDate, formatWallTime, mondayOfWeek, wallTimeToUtc } from "@/lib/availability";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { namesFromSnapshot, publicAppointment } from "@/lib/appointments";
 import { isPaidStatus } from "@/lib/crm";
+import { buildStaffCancelCopy, waMeUrl } from "@/lib/crm-notify";
 import { getBarber } from "@/lib/catalog";
+import { sendEmail, staffCancelCustomerEmail } from "@/lib/email";
+import { buildIcs, icsFilename } from "@/lib/ics";
+import { SITE, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
+import { sendCustomerWhatsApp, isWhatsAppConfigured } from "@/lib/whatsapp-outbound";
 import { adminAppointmentsQuerySchema, flattenZodError } from "@/lib/validations";
 
 export const runtime = "nodejs";
@@ -138,6 +143,79 @@ const patchSchema = z.object({
   notes: z.string().max(500).nullable().optional(),
 });
 
+async function notifyClientOfStaffCancel(row: AppointmentRow) {
+  const start = new Date(row.starts_at);
+  const dateLabel = formatItalianDate(formatWallDate(start));
+  const timeLabel = formatWallTime(start);
+  const serviceNames = namesFromSnapshot(row.services_snapshot);
+  const barberName = getBarber(row.barber_id)?.name || row.barber_id;
+  const copy = buildStaffCancelCopy({
+    firstName: row.customer_first_name,
+    serviceNames,
+    dateLabel,
+    timeLabel,
+    barberName,
+  });
+  const manageUrl = `${getSiteUrl()}/appuntamento/${row.manage_token}`;
+  const cancelIcs = buildIcs({
+    uid: `${row.manage_token}@polesebarbershop.it`,
+    startsAt: new Date(row.starts_at),
+    endsAt: new Date(row.ends_at),
+    summary: `${SITE.name} — ${serviceNames}`,
+    description: `Prenotazione annullata dal salone. ${serviceNames}`,
+    location: SITE.addressFull,
+    url: manageUrl,
+    cancelled: true,
+  });
+  const customerWhatsAppUrl = row.customer_phone
+    ? waMeUrl(row.customer_phone, copy.text)
+    : null;
+
+  let emailSent = false;
+  let emailError: string | undefined;
+  if (row.customer_email) {
+    const mail = staffCancelCustomerEmail({
+      firstName: row.customer_first_name,
+      service: serviceNames,
+      date: dateLabel,
+      time: timeLabel,
+      barber: barberName,
+      bodyText: copy.text,
+    });
+    const result = await sendEmail({
+      to: row.customer_email,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      ics: {
+        filename: icsFilename(formatWallDate(start), formatWallTime(start)),
+        content: cancelIcs,
+      },
+    });
+    emailSent = Boolean(result.ok);
+    if (!result.ok) emailError = result.error;
+  }
+
+  let whatsappSent = false;
+  let whatsappError: string | undefined;
+  if (row.customer_phone && isWhatsAppConfigured()) {
+    const wa = await sendCustomerWhatsApp(row.customer_phone, copy.text);
+    whatsappSent = Boolean(wa.ok);
+    if (!wa.ok && !wa.skipped) whatsappError = wa.error;
+  }
+
+  const notified = emailSent || whatsappSent;
+  return {
+    notified,
+    emailSent,
+    emailError,
+    whatsappSent,
+    whatsappError,
+    customerWhatsAppUrl,
+    cancelMessage: copy.text,
+  };
+}
+
 export async function PATCH(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
   if (!isSupabaseConfigured()) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
@@ -161,6 +239,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Appuntamento non trovato." }, { status: 404 });
   }
   const row = existing as AppointmentRow;
+  const becomingCancelled =
+    parsed.data.status === "cancelled" && row.status !== "cancelled";
   const patch: Record<string, unknown> = {};
 
   if (parsed.data.status) {
@@ -193,5 +273,27 @@ export async function PATCH(request: Request) {
     }
     return NextResponse.json({ error: "Impossibile aggiornare l'appuntamento." }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, appointment: publicAppointment(data as AppointmentRow) });
+
+  let clientNotify: Awaited<ReturnType<typeof notifyClientOfStaffCancel>> | null = null;
+  if (becomingCancelled) {
+    try {
+      clientNotify = await notifyClientOfStaffCancel(data as AppointmentRow);
+    } catch (err) {
+      console.error("[admin/appointments] staff cancel notify failed", err);
+      clientNotify = {
+        notified: false,
+        emailSent: false,
+        whatsappSent: false,
+        customerWhatsAppUrl: null,
+        cancelMessage: "",
+        emailError: "Avviso cliente non inviato.",
+      };
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    appointment: publicAppointment(data as AppointmentRow),
+    clientNotify,
+  });
 }

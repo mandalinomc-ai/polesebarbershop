@@ -144,9 +144,13 @@ export const ALL_SITE_VIDEOS: SiteVideo[] = [
   DECOLORAZIONE_CUTANEA_VIDEO,
 ];
 
-export type ServiceShowcaseVideo = SiteVideo & {
+export type ServiceShowcaseVideo = Omit<SiteVideo, "src"> & {
   serviceId: string;
   sourceFile: string;
+  /** Dedicated salon clip. Omitted when the treatment has no Drive video. */
+  src?: string;
+  /** Generated still used when there is no dedicated clip. */
+  imageSrc?: string;
 };
 
 /**
@@ -189,20 +193,20 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
   {
     serviceId: "barba-pro",
     id: "service-barba-pro",
-    src: `${VIDEO_BASE}/taglio-03.mp4`,
-    alt: "Barba Pro — footage reale del salone Felice Polese",
+    alt: "Barba Pro — foto servizio Felice Polese",
     label: "Barba Pro",
     posterSrc: "/assets/images/services/barba-pro.jpg",
-    sourceFile: "barba-pro.jpg + taglio-03.mp4",
+    imageSrc: "/assets/images/services/barba-pro.jpg",
+    sourceFile: "barba-pro.jpg",
   },
   {
     serviceId: "barba-standard",
     id: "service-barba-standard",
-    src: `${VIDEO_BASE}/taglio-02.mp4`,
-    alt: "Barba Standard — footage reale del salone Felice Polese",
+    alt: "Barba Standard — foto servizio Felice Polese",
     label: "Barba Standard",
     posterSrc: "/assets/images/services/barba-pro.jpg",
-    sourceFile: "barba-pro.jpg + taglio-02.mp4",
+    imageSrc: "/assets/images/services/barba-pro.jpg",
+    sourceFile: "barba-pro.jpg",
   },
   {
     serviceId: "decolorazione-meches",
@@ -231,11 +235,11 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
   {
     serviceId: "tintura-barba",
     id: "service-tintura-barba",
-    src: `${VIDEO_BASE}/colorazione-03.mp4`,
-    alt: "Tintura Barba — footage reale del salone Felice Polese",
+    alt: "Tintura Barba — foto servizio Felice Polese",
     label: "Tintura Barba",
     posterSrc: "/assets/images/services/tintura-barba.jpg",
-    sourceFile: "tintura-barba.jpg + colorazione-03.mp4",
+    imageSrc: "/assets/images/services/tintura-barba.jpg",
+    sourceFile: "tintura-barba.jpg",
   },
 ] as const;
 

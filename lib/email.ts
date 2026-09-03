@@ -222,6 +222,31 @@ export function customerCancelEmail(opts: { firstName: string; service: string; 
   };
 }
 
+/** Client notice when staff cancels from the gestionale (not a self-cancel). */
+export function staffCancelCustomerEmail(opts: {
+  firstName: string;
+  service: string;
+  date: string;
+  time: string;
+  barber?: string;
+  bodyText: string;
+}) {
+  const barber = opts.barber?.trim()
+    ? `<br/>👤 Barber: <strong>${escapeHtml(opts.barber)}</strong>`
+    : "";
+  return {
+    subject: `Appuntamento annullato dal salone — ${SITE.name}`,
+    text: opts.bodyText,
+    html: wrap(`
+      <p>Ciao ${escapeHtml(opts.firstName)},</p>
+      <p>il tuo appuntamento per <strong>${escapeHtml(opts.service)}</strong> del
+      <strong>${escapeHtml(opts.date)}</strong> alle <strong>${escapeHtml(opts.time)}</strong>
+      è stato <strong>annullato dal salone</strong>.${barber}</p>
+      <p>Lo slot è di nuovo libero. Puoi riprenotare online o su WhatsApp al ${SITE.phone}.</p>
+      <p style="font-size:13px;color:#B5B5B5;">Apri l'allegato .ics di disdetta per rimuovere l'evento dal calendario.</p>`),
+  };
+}
+
 export function ownerCancelEmail(opts: {
   firstName: string; lastName: string; email: string; service: string; date: string; time: string;
 }) {

@@ -1225,7 +1225,6 @@ img { max-width: 100%; }
 }
 @media (min-width: 1180px) {
   .video-reel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .technique-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 36rem; }
 }
 .video-reel-box {
   position: relative;
@@ -1317,9 +1316,27 @@ img { max-width: 100%; }
 .technique-subtitle {
   margin-top: 2.5rem;
 }
-.technique-grid {
-  grid-template-columns: 1fr 1fr;
-  max-width: 36rem;
+.video-reel-grid.technique-grid {
+  grid-template-columns: 1fr;
+  max-width: 56rem;
+}
+@media (min-width: 640px) {
+  .video-reel-grid.technique-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.service-price-on-media {
+  position: absolute;
+  right: 0.65rem;
+  top: 0.65rem;
+  z-index: 1;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--white);
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(10, 10, 10, 0.62);
 }
 .technique-card { background: var(--white); }
 .technique-caption {

@@ -21,6 +21,7 @@ function HeroMediaCell({
   return (
     <div className="hero-media-cell">
       <video
+        src={video.src}
         autoPlay
         muted
         loop
