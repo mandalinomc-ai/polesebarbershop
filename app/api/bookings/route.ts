@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
-import { resolveEffectiveServiceDuration } from "@/lib/booking";
+import { resolveEffectiveServiceDuration, CALENDAR_UNAVAILABLE_IT, publicBookingWarnings } from "@/lib/booking";
 import { getBarber, onlineBookingBlockReason, totalsForServices } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import { getClientIp } from "@/lib/client-ip";
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   if (!services) return NextResponse.json({ error: "Seleziona almeno un servizio valido." }, { status: 400 });
   const blockReason = onlineBookingBlockReason(services);
   if (blockReason) {
-    return NextResponse.json({ error: blockReason, durationUnknown: true }, { status: 400 });
+    return NextResponse.json({ error: blockReason }, { status: 400 });
   }
   if (!getBarber(body.barberId)) return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
 
@@ -76,8 +76,9 @@ export async function POST(request: Request) {
   if (!resolved.ok || resolved.durationMin == null || !resolved.onlineBookable) {
     return NextResponse.json(
       {
-        error: resolved.reason || "Durata non definita per prenotazione online.",
-        durationUnknown: true,
+        error:
+          onlineBookingBlockReason(services) ||
+          "Uno o più servizi non sono prenotabili online.",
       },
       { status: 400 },
     );
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
     const message =
       err instanceof AppointmentsUnavailableError
         ? err.message
-        : "Calendario non disponibile. Riprova tra poco.";
+        : CALENDAR_UNAVAILABLE_IT;
     return NextResponse.json({ error: message }, { status: 503 });
   }
 
@@ -268,6 +269,8 @@ export async function POST(request: Request) {
     blockEndsAt: slot.blockEndIso,
     durationMinutes: occupancyDuration, totalPrice: totals.priceEuro, priceLabel: totals.priceLabel,
     serviceNames: totals.names, dateLabel, timeLabel, ics: icsContent, icsFilename: filename,
-    googleCalendarUrl: gcal, warnings, appointment: row ? publicAppointment(row) : null,
+    googleCalendarUrl: gcal,
+    warnings: publicBookingWarnings(warnings),
+    appointment: row ? publicAppointment(row) : null,
   });
 }

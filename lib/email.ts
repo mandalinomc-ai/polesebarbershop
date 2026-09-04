@@ -304,8 +304,10 @@ export async function sendBookingEmails(opts: {
 }
 
 export function publicCustomerMailError(error: string | undefined, hasPhone: boolean): string {
-  const base = `Email di conferma non inviata al cliente: ${error ?? "errore sconosciuto"}.`;
-  return hasPhone ? `${base} Il cliente riceverà conferma via WhatsApp.` : base;
+  void error;
+  return hasPhone
+    ? "L'email di conferma non è partita in automatico — usa i pulsanti calendario o WhatsApp."
+    : "L'email di conferma non è partita in automatico — usa i pulsanti calendario qui sotto.";
 }
 
 export async function sendCancelEmails(opts: {

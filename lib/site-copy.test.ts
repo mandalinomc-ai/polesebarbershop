@@ -287,11 +287,13 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/booking-note-blocks/);
     expect(wizard).toMatch(/booking-note-block/);
     expect(wizard).toMatch(/Illimitate/);
-    expect(wizard).toMatch(/non disponibile/);
+    expect(wizard).toMatch(/durata prevista si (aggiorna|somma)/i);
+    expect(wizard).not.toMatch(/Durata non definita|niente durata inventata|senza durata nota|durationUnknown/i);
     expect(wizard).toMatch(/Scegli la data/);
     expect(wizard).toMatch(/Scegli l&apos;orario/);
     expect(wizard).toMatch(/\/api\/availability/);
     expect(wizard).toMatch(/Riprova/);
+    expect(wizard).toMatch(/publicAvailabilityMessage|CALENDAR_UNAVAILABLE_IT/);
     expect(wizard).toMatch(/setStep\(1\)/);
     const reel = readFileSync(join(process.cwd(), "components/site/VideoReelGrid.tsx"), "utf8");
     expect(reel).toMatch(/id="gallery"/);

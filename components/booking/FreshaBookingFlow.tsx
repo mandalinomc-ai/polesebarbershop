@@ -36,6 +36,12 @@ import {
 import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
 import { postSalonBookingRelay, type SalonRelayPayload } from "@/lib/salon-relay-client";
+import {
+  CALENDAR_UNAVAILABLE_IT,
+  NO_SLOTS_IT,
+  publicAvailabilityMessage,
+  publicBookingWarnings,
+} from "@/lib/booking";
 
 const STEPS = ["Servizio", "Barbiere", "Data", "Orario", "I tuoi dati", "Conferma"] as const;
 
@@ -190,16 +196,14 @@ export function FreshaBookingFlow({
         error?: string;
         warning?: string;
         sourceUnavailable?: boolean;
-        durationUnknown?: boolean;
       };
       if (!res.ok || json.sourceUnavailable) {
         setSlots([]);
         setSlot(null);
         setSlotsState("error");
         setSlotsWarning(
-          json.warning ||
-            json.error ||
-            "Calendario non disponibile. Riprova tra poco.",
+          publicAvailabilityMessage(json.warning || json.error) ||
+            CALENDAR_UNAVAILABLE_IT,
         );
         return;
       }
@@ -220,13 +224,13 @@ export function FreshaBookingFlow({
         }
         setDayOccupancy(next);
       }
-      setSlotsWarning(json.warning || "");
+      setSlotsWarning(publicAvailabilityMessage(json.warning) || "");
       setSlotsState("ready");
     } catch {
       setSlots([]);
       setSlot(null);
       setSlotsState("error");
-      setSlotsWarning("Calendario non disponibile. Riprova tra poco.");
+      setSlotsWarning(CALENDAR_UNAVAILABLE_IT);
     }
   }, [date, barberId, totals.durationMin, selectedIds, days, onlineBlockedReason]);
 
@@ -304,7 +308,10 @@ export function FreshaBookingFlow({
         salonRelay?: SalonRelayPayload | null;
       };
       if (!res.ok && !json.ics) {
-        setSubmitError(json.error || "Prenotazione non riuscita.");
+        setSubmitError(
+          publicAvailabilityMessage(json.error) ||
+            "Prenotazione non riuscita.",
+        );
         if (res.status === 409) void loadSlots();
         return;
       }
@@ -315,7 +322,9 @@ export function FreshaBookingFlow({
         ics: json.ics || "",
         icsFilename: json.icsFilename || "polese-barbershop.ics",
         googleCalendarUrl: json.googleCalendarUrl || "",
-        warnings: json.warnings || (json.error ? [json.error] : []),
+        warnings: publicBookingWarnings(
+          json.warnings || (json.error ? [json.error] : []),
+        ),
         emailSent: Boolean(json.emailSent),
         persisted: Boolean(json.persisted),
         ownerNotified: Boolean(json.ownerNotified),
@@ -325,7 +334,7 @@ export function FreshaBookingFlow({
         void postSalonBookingRelay(salonRelay);
       }
     } catch {
-      setSubmitError("Connessione non disponibile. Riprova.");
+      setSubmitError(CALENDAR_UNAVAILABLE_IT);
     } finally {
       setSubmitting(false);
     }
@@ -401,9 +410,7 @@ export function FreshaBookingFlow({
               calendario.
             </p>
           </div>
-          {success.warnings
-            .filter((w) => !/testing emails|invalid_access|403/i.test(w))
-            .map((w) => (
+          {success.warnings.map((w) => (
             <p key={w} className="field-error">
               {w}
             </p>
@@ -455,8 +462,8 @@ export function FreshaBookingFlow({
           <>
             <h3>Servizi scelti</h3>
             <p className="booking-open-note">
-              Tocca i servizi nel listino per aggiungerli o toglierli. Servizi senza
-              durata nota non sono prenotabili online.
+              Tocca i servizi nel listino per aggiungerli o toglierli. Puoi
+              combinare più servizi: la durata prevista si aggiorna da sola.
             </p>
             {onlineBlockedReason ? (
               <p className="field-error">{onlineBlockedReason}</p>
@@ -490,8 +497,8 @@ export function FreshaBookingFlow({
           <>
             <h3>Scegli il servizio</h3>
             <p className="booking-open-note">
-              Seleziona uno o più servizi. La durata indicata è prevista (non una garanzia).
-              I prezzi a fascia si definiscono in salone.
+              Seleziona uno o più servizi. La durata prevista si somma in
+              automatico. I prezzi a fascia si definiscono in salone.
             </p>
             {onlineBlockedReason ? (
               <p className="field-error">{onlineBlockedReason}</p>
@@ -500,15 +507,13 @@ export function FreshaBookingFlow({
               <div key={cat}>
                 <p className="fresha-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
                 {SERVICES.filter((s) => s.category === cat && s.active !== false).map((s) => {
-                  const onlineOk = s.durationKnown;
                   return (
                   <button
                     key={s.id}
                     type="button"
-                    className={`fresha-option${selectedIds.includes(s.id) ? " selected" : ""}${!onlineOk ? " muted" : ""}`}
+                    className={`fresha-option${selectedIds.includes(s.id) ? " selected" : ""}`}
                     onClick={() => toggleService(s.id)}
                     aria-pressed={selectedIds.includes(s.id)}
-                    title={!onlineOk ? "Durata non disponibile online" : undefined}
                   >
                     <span>
                       <strong>{s.name}</strong>
@@ -629,9 +634,7 @@ export function FreshaBookingFlow({
               </button>
             ) : null}
             {slotsState === "ready" && slots.length === 0 && !slotsWarning && (
-              <p className="slot-status">
-                Nessuno slot disponibile per questo giorno.
-              </p>
+              <p className="slot-status">{NO_SLOTS_IT}</p>
             )}
             {slots.length > 0 && (
               <div className="slot-grid" role="list" aria-label="Orari disponibili">
@@ -786,9 +789,7 @@ export function FreshaBookingFlow({
       <div className="fresha-footer" aria-label="Riepilogo ordine">
         <div className="fresha-totals">
           <span>
-            {totals.durationMin
-              ? `Totale ${totals.durationLabel}`
-              : "Nessun servizio"}
+            {totals.durationMin ? totals.durationLabel : "Nessun servizio"}
             {selectedIds.length
               ? ` · ${selectedIds.length} selezionat${selectedIds.length === 1 ? "o" : "i"}`
               : ""}

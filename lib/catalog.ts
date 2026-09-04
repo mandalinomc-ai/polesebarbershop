@@ -262,7 +262,7 @@ export function formatPriceRange(service: Service): string {
 
 /** Public listino / booking label — expected duration, not a guarantee. */
 export function formatDuration(service: Service): string {
-  if (!service.durationKnown || !(service.durationMin > 0)) return "Durata non disponibile";
+  if (!service.durationKnown || !(service.durationMin > 0)) return "—";
   return `Durata prevista: ${service.durationMin} min`;
 }
 
@@ -281,7 +281,7 @@ export function totalsForServices(services: Service[]) {
   const durationKnown = services.every((s) => s.durationKnown);
   const durationLabel = durationKnown
     ? `Durata prevista: ${durationMin} min`
-    : "Durata non disponibile";
+    : "—";
   const priceLabel = isVariable
     ? priceMaxEuro > priceEuro
       ? `${priceEuro}–${priceMaxEuro} €`
@@ -297,14 +297,19 @@ export function servicesAreOnlineBookable(services: Service[]): boolean {
   return services.length > 0 && services.every((s) => s.durationKnown && s.active !== false);
 }
 
+/**
+ * Block reason for online booking when a selection cannot proceed.
+ * Empty selection → null (UI stays silent; Continua stays disabled).
+ * Never uses engine jargon (n/d, inventata, durationUnknown).
+ */
 export function onlineBookingBlockReason(services: Service[]): string | null {
-  if (!services.length) return "Seleziona almeno un servizio.";
+  if (!services.length) return null;
   const inactive = services.filter((s) => s.active === false);
   if (inactive.length) {
     return `Servizio non disponibile: ${inactive.map((s) => s.name).join(", ")}.`;
   }
   const unknown = services.filter((s) => !s.durationKnown);
   if (!unknown.length) return null;
-  const names = unknown.map((s) => s.name).join(", ");
-  return `Durata non definita per: ${names}. Prenota in salone o al telefono — niente durata inventata online.`;
+  // Official catalog always has known durations — edge case only (stale overlay).
+  return "Uno o più servizi non sono prenotabili online. Scegline altri o chiama il salone.";
 }

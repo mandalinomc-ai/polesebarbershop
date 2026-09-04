@@ -8,10 +8,15 @@ import {
   ONLINE_DISPLAY_INTERVAL_MINUTES,
   type ScheduleSlot,
 } from "@/lib/availability";
-import { resolveEffectiveServiceDuration } from "@/lib/booking";
+import {
+  CALENDAR_UNAVAILABLE_IT,
+  CLOSED_DAY_IT,
+  resolveEffectiveServiceDuration,
+} from "@/lib/booking";
 import {
   ANYONE_BARBER_ID,
   getBarber,
+  onlineBookingBlockReason,
   servicesAreOnlineBookable,
 } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
@@ -29,8 +34,7 @@ export const dynamic = "force-dynamic";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-const RETRY_MESSAGE =
-  "Calendario non disponibile in questo momento. Riprova tra poco.";
+const RETRY_MESSAGE = CALENDAR_UNAVAILABLE_IT;
 
 function serializeSlot(s: ScheduleSlot) {
   return {
@@ -111,11 +115,11 @@ export async function GET(request: Request) {
     );
   }
   if (!servicesAreOnlineBookable(services)) {
-    const unknown = services.filter((s) => !s.durationKnown).map((s) => s.name).join(", ");
     return NextResponse.json(
       {
-        error: `Durata non definita per: ${unknown}. Prenota in salone — nessuna durata inventata online.`,
-        durationUnknown: true,
+        error:
+          onlineBookingBlockReason(services) ||
+          "Uno o più servizi non sono prenotabili online.",
       },
       { status: 400 },
     );
@@ -124,8 +128,9 @@ export async function GET(request: Request) {
   if (!resolved.ok || resolved.durationMin == null || !resolved.onlineBookable) {
     return NextResponse.json(
       {
-        error: resolved.reason || "Durata non definita per prenotazione online.",
-        durationUnknown: true,
+        error:
+          onlineBookingBlockReason(services) ||
+          "Uno o più servizi non sono prenotabili online.",
       },
       { status: 400 },
     );
@@ -163,7 +168,7 @@ export async function GET(request: Request) {
       firstBookableDate: first,
       shopOpen: false,
       durationMinutes,
-      warning: "Il salone è chiuso in questo giorno (domenica).",
+      warning: CLOSED_DAY_IT,
     });
   }
 

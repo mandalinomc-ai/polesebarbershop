@@ -1,6 +1,6 @@
 import { formatItalianDate, formatWallDate, formatWallTime, wallTimeToUtc } from "@/lib/availability";
 import { getBarber, type Service } from "@/lib/catalog";
-import { effectiveServiceDurationMin } from "@/lib/booking";
+import { effectiveServiceDurationMin, CALENDAR_UNAVAILABLE_IT } from "@/lib/booking";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/supabase-query";
 
@@ -16,7 +16,7 @@ const BLOCKING = ["pending", "confirmed", "walk_in", "completed"] as const;
 
 /** Raised when appointments cannot be loaded — callers must not invent free slots. */
 export class AppointmentsUnavailableError extends Error {
-  constructor(message = "Calendario non disponibile. Riprova tra poco.") {
+  constructor(message = CALENDAR_UNAVAILABLE_IT) {
     super(message);
     this.name = "AppointmentsUnavailableError";
   }
@@ -46,15 +46,11 @@ export async function loadAppointmentsBetween(
   toDate: string,
 ): Promise<DayBusy[]> {
   if (!isSupabaseConfigured()) {
-    throw new AppointmentsUnavailableError(
-      "Database non configurato. Non possiamo mostrare orari verificati. Riprova più tardi.",
-    );
+    throw new AppointmentsUnavailableError(CALENDAR_UNAVAILABLE_IT);
   }
   const db = getSupabaseAdmin();
   if (!db) {
-    throw new AppointmentsUnavailableError(
-      "Calendario non raggiungibile. Riprova tra poco.",
-    );
+    throw new AppointmentsUnavailableError(CALENDAR_UNAVAILABLE_IT);
   }
   const start = fromDate <= toDate ? fromDate : toDate;
   const end = fromDate <= toDate ? toDate : fromDate;
@@ -88,9 +84,7 @@ export async function loadAppointmentsBetween(
         .range(from, to),
     );
     if (fallback.error) {
-      throw new AppointmentsUnavailableError(
-        "Impossibile leggere le prenotazioni. Riprova tra poco.",
-      );
+      throw new AppointmentsUnavailableError(CALENDAR_UNAVAILABLE_IT);
     }
     return fallback.data
       .filter((row) => occupiesSlot(row.status))
