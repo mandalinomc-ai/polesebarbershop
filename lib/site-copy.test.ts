@@ -282,6 +282,7 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/listinoBeside/);
     expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
     expect(wizard).toMatch(/Tocca i servizi nel listino/);
+    expect(wizard).not.toMatch(/nel wizard/i);
     expect(wizard).toMatch(/Qualsiasi disponibilità/);
     expect(wizard).toMatch(/booking-note-headline/);
     expect(wizard).toMatch(/booking-note-blocks/);
@@ -333,6 +334,8 @@ describe("public copy vs official identity", () => {
     expect((listino.match(/id="listino"/g) || []).length).toBe(1);
     expect(listino).toMatch(/Listino/);
     expect(listino).toMatch(/BOOKING_SERVICE_EVENT/);
+    expect(listino).toMatch(/BOOKING_SELECTION_SYNC_EVENT/);
+    expect(listino).toMatch(/listino-box--selected/);
     expect(listino).toMatch(/formatPriceRange/);
     expect(listino).toMatch(/listino-box/);
     expect(listino).toMatch(/btn-listino-prenota/);
@@ -397,8 +400,10 @@ describe("public copy vs official identity", () => {
     expect(contact).toMatch(/getWhatsAppUrl/);
     expect(contact).toMatch(/SITE\.hours/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
-    expect(chrome).toMatch(/SITE_PDFS\.logo/);
-    expect(chrome).toMatch(/SITE_PDFS\.hoursPanel/);
+    expect(chrome).not.toMatch(/SITE_PDFS\.logo/);
+    expect(chrome).not.toMatch(/SITE_PDFS\.hoursPanel/);
+    expect(chrome).not.toMatch(/Logo \(PDF\)/);
+    expect(chrome).not.toMatch(/Orari \(PDF\)/);
     expect(chrome).toMatch(/href="\/gestionale"/);
     expect(chrome).toMatch(/Powered by Genio Digital/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
@@ -412,6 +417,11 @@ describe("public copy vs official identity", () => {
     expect(intro).toMatch(/OpeningCountdown/);
     expect(intro).toMatch(/HERO_SLOT_CTA/);
     expect(intro).toMatch(/prefers-reduced-motion/);
+    expect(intro).toMatch(/snip/);
+    expect(intro).toMatch(/scissors-intro-shears/);
+    expect(css).toMatch(/scissors-photo-snip/);
+    expect(css).toMatch(/listino-box--selected/);
+    expect(css).not.toMatch(/\.section-title\.reveal \{[\s\S]*?clip-path:\s*inset/);
   });
 
   it("does not cap total bookings — wizard shows many open days", () => {

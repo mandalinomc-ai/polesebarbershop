@@ -119,6 +119,8 @@ export const BOOKING_SERVICE_PARAM = "servizio";
 export const BOOKING_DATE_STORAGE_KEY = "polese-booking-date";
 export const BOOKING_DATE_EVENT = "polese-booking-date";
 export const BOOKING_SERVICE_EVENT = "polese-booking-service";
+/** Broadcast full selected service ids so the listino can highlight the order. */
+export const BOOKING_SELECTION_SYNC_EVENT = "polese-booking-selection-sync";
 
 export function wallDateRome(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {

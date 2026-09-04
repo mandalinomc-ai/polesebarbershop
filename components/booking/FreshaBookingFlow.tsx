@@ -26,6 +26,7 @@ import {
 import {
   BOOKING_DATE_EVENT,
   BOOKING_SERVICE_EVENT,
+  BOOKING_SELECTION_SYNC_EVENT,
   BOOKING_UI_DAYS,
   CANCEL_NOTICE_IT,
   SITE,
@@ -133,6 +134,12 @@ export function FreshaBookingFlow({
         .filter(Boolean) as Service[],
     [selectedIds],
   );
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(BOOKING_SELECTION_SYNC_EVENT, { detail: selectedIds }),
+    );
+  }, [selectedIds]);
   const totals = useMemo(
     () => totalsForServices(selectedServices),
     [selectedServices],
@@ -815,7 +822,7 @@ export function FreshaBookingFlow({
         <h3 className="appointment-sidebar-title font-serif">Il tuo appuntamento</h3>
         {selectedIds.length === 0 ? (
           <p className="appointment-sidebar-empty">
-            Seleziona i servizi nel wizard per vedere il riepilogo.
+            Tocca i servizi nel listino qui a fianco: qui vedi subito cosa hai scelto.
           </p>
         ) : (
           <ul className="appointment-sidebar-list">

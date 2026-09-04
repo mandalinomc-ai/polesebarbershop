@@ -6,14 +6,15 @@ import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 import { HERO_SLOT_CTA, SITE, isBeforeOfficialOpening } from "@/lib/site-config";
 
 const INTRO_KEY = "felice-polese-scissors-intro-seen";
-const TENSION_MS = 500;
-const SCISSORS_MS = 1300;
-const CUT_MS = 750;
-const REVEAL_HOLD_MS = 4200;
+const TENSION_MS = 420;
+const SCISSORS_MS = 1100;
+const SNIP_MS = 320;
+const CUT_MS = 980;
+const REVEAL_HOLD_MS = 3800;
 
-type Phase = "hidden" | "dark" | "tension" | "scissors" | "cutting" | "reveal";
+type Phase = "hidden" | "dark" | "tension" | "scissors" | "snip" | "cutting" | "reveal";
 
-/** Brief full-screen intro: dark → tension → chrome scissors → cut → brand + CTA. */
+/** Brief full-screen intro: dark → tension → chrome scissors snip → panels cut open → brand. */
 export function ScissorsIntro() {
   const [phase, setPhase] = useState<Phase>("hidden");
   const timersRef = useRef<number[]>([]);
@@ -68,19 +69,22 @@ export function ScissorsIntro() {
     }, TENSION_MS);
     schedule(() => {
       if (!finishedRef.current) setPhase("scissors");
-    }, TENSION_MS + 300);
+    }, TENSION_MS + 280);
     schedule(() => {
-      if (!finishedRef.current) setPhase("cutting");
+      if (!finishedRef.current) setPhase("snip");
     }, TENSION_MS + SCISSORS_MS);
     schedule(() => {
+      if (!finishedRef.current) setPhase("cutting");
+    }, TENSION_MS + SCISSORS_MS + SNIP_MS);
+    schedule(() => {
       if (!finishedRef.current) setPhase("reveal");
-    }, TENSION_MS + SCISSORS_MS + CUT_MS);
+    }, TENSION_MS + SCISSORS_MS + SNIP_MS + CUT_MS);
     schedule(
       () => finishIntro(),
-      TENSION_MS + SCISSORS_MS + CUT_MS + REVEAL_HOLD_MS,
+      TENSION_MS + SCISSORS_MS + SNIP_MS + CUT_MS + REVEAL_HOLD_MS,
     );
     /* Hard failsafe — never leave the intro blocking the site */
-    schedule(() => finishIntro(), 9000);
+    schedule(() => finishIntro(), 10000);
 
     return () => {
       clearIntroTimers();
@@ -89,6 +93,9 @@ export function ScissorsIntro() {
   }, []);
 
   if (phase === "hidden") return null;
+
+  const showShears =
+    phase === "scissors" || phase === "snip" || phase === "cutting";
 
   return (
     <div
@@ -107,6 +114,14 @@ export function ScissorsIntro() {
     >
       <div className="scissors-intro-split scissors-intro-split--left" />
       <div className="scissors-intro-split scissors-intro-split--right" />
+      <div className="scissors-intro-cutline" aria-hidden="true" />
+      {showShears ? (
+        <div className="scissors-intro-shears" aria-hidden="true">
+          <div className="scissors-intro-stage">
+            <ScissorsIcon variant="intro" />
+          </div>
+        </div>
+      ) : null}
       <div className="scissors-intro-content">
         {phase === "reveal" ? (
           <div className="scissors-intro-brand">
@@ -134,13 +149,8 @@ export function ScissorsIntro() {
             </a>
           </div>
         ) : null}
-        {phase === "scissors" || phase === "cutting" ? (
-          <>
-            <div className="scissors-intro-stage">
-              <ScissorsIcon variant="intro" />
-            </div>
-            <p className="scissors-intro-skip">Tocca per entrare</p>
-          </>
+        {phase === "scissors" || phase === "snip" ? (
+          <p className="scissors-intro-skip">Tocca per entrare</p>
         ) : null}
         {phase === "reveal" ? (
           <p className="scissors-intro-skip">Tocca per entrare</p>

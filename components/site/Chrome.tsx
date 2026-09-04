@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { CookieBanner, ManageCookiesButton } from "@/components/site/CookieBanner";
 import { HERO_SLOT_CTA, SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-config";
-import { SITE_PDFS } from "@/lib/site-pdf";
 
 const LINKS = [
   { href: "/#about", label: "Servizi" },
@@ -185,14 +184,6 @@ export function Footer() {
         <p>{SITE.previousAddress}</p>
       </div>
       <span className="footer-links">
-        <a href={SITE_PDFS.logo} target="_blank" rel="noopener noreferrer">
-          Logo (PDF)
-        </a>
-        {" · "}
-        <a href={SITE_PDFS.hoursPanel} target="_blank" rel="noopener noreferrer">
-          Orari (PDF)
-        </a>
-        {" · "}
         <a href="/privacy-policy">Privacy</a>
         {" · "}
         <a href="/cookie-policy">Cookie</a>
