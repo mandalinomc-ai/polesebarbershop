@@ -2,7 +2,33 @@
 
 import { useEffect, useState } from "react";
 import { CookieBanner, ManageCookiesButton } from "@/components/site/CookieBanner";
-import { HERO_SLOT_CTA, SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-config";
+import {
+  HERO_SLOT_CTA,
+  SCISSORS_INTRO_FINISHED_EVENT,
+  SITE,
+  getWhatsAppUrl,
+  getMapsUrl,
+} from "@/lib/site-config";
+
+function waitForScissorsIntro(): Promise<void> {
+  if (!document.body.classList.contains("scissors-intro-active")) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    const done = () => {
+      observer.disconnect();
+      window.removeEventListener(SCISSORS_INTRO_FINISHED_EVENT, done);
+      window.clearTimeout(fallback);
+      resolve();
+    };
+    const observer = new MutationObserver(() => {
+      if (!document.body.classList.contains("scissors-intro-active")) done();
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    window.addEventListener(SCISSORS_INTRO_FINISHED_EVENT, done, { once: true });
+    const fallback = window.setTimeout(done, 13000);
+  });
+}
 
 const LINKS = [
   { href: "/#about", label: "Servizi" },
@@ -202,6 +228,12 @@ export function Footer() {
 
 export function ClientEffects() {
   useEffect(() => {
+    let cancelled = false;
+    let teardown: (() => void) | undefined;
+
+    waitForScissorsIntro().then(() => {
+      if (cancelled) return;
+
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const revealEls = Array.from(
@@ -298,9 +330,15 @@ export function ClientEffects() {
         .forEach((card) => centerObserver?.observe(card));
     }
 
-    return () => {
+    teardown = () => {
       revealObserver?.disconnect();
       centerObserver?.disconnect();
+    };
+    });
+
+    return () => {
+      cancelled = true;
+      teardown?.();
     };
   }, []);
 

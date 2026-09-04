@@ -433,13 +433,15 @@ describe("public copy vs official identity", () => {
     expect(effects).toMatch(/fx-media--curtain/);
     expect(effects).toMatch(/service-reel-box/);
     expect(effects).toMatch(/hero-float/);
+    expect(effects).toMatch(/waitForScissorsIntro/);
     const countdownSrc = readFileSync(join(process.cwd(), "components/site/OpeningCountdown.tsx"), "utf8");
     expect(countdownSrc).toMatch(/countdown-digit--tick/);
     const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
     expect(page).toMatch(/MicroMotion/);
     const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
-    expect(intro).toMatch(/OpeningCountdown/);
-    expect(intro).toMatch(/HERO_SLOT_CTA/);
+    expect(intro).not.toMatch(/OpeningCountdown/);
+    expect(intro).not.toMatch(/HERO_SLOT_CTA/);
+    expect(intro).toMatch(/SCISSORS_INTRO_FINISHED_EVENT/);
     expect(intro).toMatch(/prefers-reduced-motion/);
     expect(intro).toMatch(/snip/);
     expect(intro).toMatch(/scissors-intro-shears/);

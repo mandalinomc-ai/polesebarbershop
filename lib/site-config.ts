@@ -108,6 +108,8 @@ export const NOTIFY_WHATSAPP_MESSAGE =
 export const HERO_CTA = "Prenota il tuo appuntamento";
 export const HERO_SLOT_CTA = "Prenota il tuo posto";
 export const HERO_MENU_CTA = "Vedi il menu";
+/** Dispatched when the scissors intro overlay fully dismisses. */
+export const SCISSORS_INTRO_FINISHED_EVENT = "polese-scissors-intro-finished";
 export const HERO_SENTENCE = "Precisione tecnica, stile contemporaneo.";
 export const HERO_LEAD =
   "Fade ad alta definizione, grooming e skincare. Studio pulito, ritmo veloce, risultato netto. Benevento.";

@@ -162,7 +162,7 @@ describe("mobile QA (390px)", () => {
     expect(css).not.toMatch(/\.scissors-intro \{ display: none; \}/);
     expect(css).toMatch(/prefers-reduced-motion: reduce[\s\S]*?\.scissors-intro \{ display: none !important; \}/);
     const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
-    expect(intro).toMatch(/SITE\.brand/);
+    expect(intro).not.toMatch(/OpeningCountdown/);
     expect(intro).toMatch(/Tocca per entrare/);
     expect(intro).toMatch(/prefers-reduced-motion/);
     const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");

@@ -2,8 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
-import { OpeningCountdown } from "@/components/site/OpeningCountdown";
-import { HERO_SLOT_CTA, SITE, isPreOpeningCountdownVisible } from "@/lib/site-config";
+import { SCISSORS_INTRO_FINISHED_EVENT } from "@/lib/site-config";
 
 const INTRO_KEY = "felice-polese-scissors-intro-seen";
 const TENSION_MS = 420;
@@ -23,7 +22,7 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-/** Brief full-screen intro: dark → tension → chrome scissors snip → panels cut open → brand. */
+/** Brief full-screen intro: dark → tension → chrome scissors snip → panels cut open → hero. */
 export function ScissorsIntro() {
   const [active, setActive] = useState(false);
   const [phase, setPhase] = useState<Phase>("hidden");
@@ -63,6 +62,7 @@ export function ScissorsIntro() {
     setActive(false);
     phaseRef.current = "hidden";
     setPhase("hidden");
+    window.dispatchEvent(new CustomEvent(SCISSORS_INTRO_FINISHED_EVENT));
   }
 
   function requestDismiss() {
@@ -181,32 +181,6 @@ export function ScissorsIntro() {
         </div>
       ) : null}
       <div className="scissors-intro-content">
-        {phase === "reveal" ? (
-          <div className="scissors-intro-brand">
-            <p className="scissors-intro-brand-name">{SITE.brand}</p>
-            <p className="scissors-intro-brand-tag">{SITE.tagline}</p>
-            <p className="scissors-intro-brand-city">{SITE.city} · Italy</p>
-            {isPreOpeningCountdownVisible() ? (
-              <div
-                className="scissors-intro-countdown"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                <OpeningCountdown />
-              </div>
-            ) : null}
-            <a
-              href="/#prenota"
-              className="btn btn-ink scissors-intro-cta"
-              onClick={(e) => {
-                e.stopPropagation();
-                finishIntro();
-              }}
-            >
-              {HERO_SLOT_CTA}
-            </a>
-          </div>
-        ) : null}
         {phase === "reveal" ? (
           <p className="scissors-intro-skip">Tocca per entrare</p>
         ) : null}
