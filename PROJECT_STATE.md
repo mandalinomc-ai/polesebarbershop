@@ -49,4 +49,5 @@ Public label: **Durata prevista: X min** (sums on multi-select). Variable **pric
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
 - Alias: https://felicepolesebarbershop.vercel.app
-- Latest tip: `cursor/fix-preview-bugs-56a6`
+- Latest prod: `dpl_58GJocqXEKBqiKwVkUU3ZCobCtk1` (fix-preview-bugs via alias) — **GO**
+- Branch tip: `cursor/fix-preview-bugs-56a6`
