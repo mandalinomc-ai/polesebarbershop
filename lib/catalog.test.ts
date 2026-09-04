@@ -41,26 +41,26 @@ describe("catalog", () => {
     ).toEqual([
       { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 25, priceMaxEuro: null, durationMin: 50, durationKnown: true },
       { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30, durationKnown: true },
-      { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: true },
+      { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 10, durationKnown: true },
       { id: "taglio-bambino", name: "Taglio Bambino", category: "capelli", priceEuro: 10, priceMaxEuro: null, durationMin: 20, durationKnown: true },
       { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20, durationKnown: true },
       { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: true },
-      { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 90, durationKnown: true },
-      { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 120, durationKnown: true },
-      { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 60, durationKnown: true },
-      { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, durationMin: 15, durationKnown: true },
+      { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 150, durationKnown: true },
+      { id: "decolorazione-cutanea", name: "Decolorazione Cutanea", category: "colore", priceEuro: 50, priceMaxEuro: 120, durationMin: 180, durationKnown: true },
+      { id: "tintura-capelli", name: "Tintura Capelli", category: "colore", priceEuro: 10, priceMaxEuro: 30, durationMin: 30, durationKnown: true },
+      { id: "tintura-barba", name: "Tintura Barba", category: "colore", priceEuro: 5, priceMaxEuro: 15, durationMin: 20, durationKnown: true },
     ]);
     expect(OFFICIAL_DURATION_MIN).toEqual({
       "taglio-pro": 50,
       "taglio-standard": 30,
-      acconciatura: 15,
+      acconciatura: 10,
       "taglio-bambino": 20,
       "barba-pro": 20,
       "barba-standard": 15,
-      "decolorazione-meches": 90,
-      "decolorazione-cutanea": 120,
-      "tintura-capelli": 60,
-      "tintura-barba": 15,
+      "decolorazione-meches": 150,
+      "decolorazione-cutanea": 180,
+      "tintura-capelli": 30,
+      "tintura-barba": 20,
     });
     expect(SERVICES.every((s) => s.durationKnown && s.active !== false)).toBe(true);
     expect(servicesAreOnlineBookable(SERVICES)).toBe(true);
@@ -85,23 +85,30 @@ describe("catalog", () => {
     expect(formatPrice(pro)).toBe("25 €");
     expect(formatDuration(pro)).toBe("Durata prevista: 50 min");
     expect(formatDurationShort(pro)).toBe("50 min");
-    expect(formatDuration(SERVICES.find((s) => s.id === "acconciatura")!)).toBe("Durata prevista: 15 min");
+    expect(formatDuration(SERVICES.find((s) => s.id === "acconciatura")!)).toBe("Durata prevista: 10 min");
     expect(formatDuration(SERVICES.find((s) => s.id === "barba-standard")!)).toBe("Durata prevista: 15 min");
-    expect(formatDuration(meches)).toBe("Durata prevista: 90 min");
+    expect(formatDuration(meches)).toBe("Durata prevista: 150 min");
+    expect(formatDuration(SERVICES.find((s) => s.id === "tintura-barba")!)).toBe("Durata prevista: 20 min");
     expect(SERVICES.find((s) => s.id === "taglio-bambino")!.priceEuro).toBe(10);
     for (const s of SERVICES) {
       expect(formatDuration(s)).not.toMatch(/n\/d|undefined|non definita/i);
     }
   });
 
-  it("sums multi-service durations including meches 90 and keeps variable price ranges", () => {
+  it("sums multi-service durations including meches 150 and keeps variable price ranges", () => {
     const totals = totalsForServices(resolveServices(["taglio-pro", "decolorazione-meches"])!);
-    expect(totals.durationMin).toBe(140);
+    expect(totals.durationMin).toBe(200);
     expect(totals.priceEuro).toBe(65);
     expect(totals.priceMaxEuro).toBe(125);
     expect(totals.isVariable).toBe(true);
     expect(totals.priceLabel).toBe("65–125 €");
     expect(totals.durationKnown).toBe(true);
-    expect(totals.durationLabel).toBe("Durata prevista: 140 min");
+    expect(totals.durationLabel).toBe("Durata prevista: 200 min");
+  });
+
+  it("sums Taglio Pro + Tintura Barba to 70 min", () => {
+    const totals = totalsForServices(resolveServices(["taglio-pro", "tintura-barba"])!);
+    expect(totals.durationMin).toBe(70);
+    expect(totals.durationLabel).toBe("Durata prevista: 70 min");
   });
 });

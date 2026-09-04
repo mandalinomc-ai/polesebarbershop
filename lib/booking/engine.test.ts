@@ -485,7 +485,7 @@ describe("resolveEffectiveServiceDuration", () => {
     });
     expect(r).toMatchObject({
       ok: true,
-      durationMin: 60,
+      durationMin: 30,
       source: "catalog",
       onlineBookable: true,
     });
@@ -500,11 +500,11 @@ describe("resolveEffectiveServiceDuration", () => {
     expect(r).toMatchObject({ ok: true, durationMin: 55, source: "override" });
   });
 
-  it("sums meches 90 with taglio pro for multi-service slots", () => {
+  it("sums meches 150 with taglio pro for multi-service slots", () => {
     const r = resolveEffectiveServiceDuration({
       services: [getService("taglio-pro")!, getService("decolorazione-meches")!],
     });
-    expect(r).toMatchObject({ ok: true, durationMin: 140, onlineBookable: true });
+    expect(r).toMatchObject({ ok: true, durationMin: 200, onlineBookable: true });
   });
 
   it("uses processing config when present", () => {

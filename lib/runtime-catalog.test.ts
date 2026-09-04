@@ -13,19 +13,21 @@ describe("runtime catalog", () => {
     expect(list).toHaveLength(10);
     expect(list.every((s) => s.durationKnown)).toBe(true);
     const meches = list.find((s) => s.id === "decolorazione-meches");
-    expect(meches?.durationMin).toBe(90);
+    expect(meches?.durationMin).toBe(150);
   });
 
   it("resolves active services and rejects unknown ids", async () => {
     invalidateRuntimeCatalogCache();
     const ok = await resolveRuntimeServices(["taglio-pro", "tintura-barba"]);
-    expect(ok?.map((s) => s.durationMin)).toEqual([50, 15]);
+    expect(ok?.map((s) => s.durationMin)).toEqual([50, 20]);
     expect(await resolveRuntimeServices(["razor-taper"])).toBeNull();
     expect(await resolveRuntimeServices([])).toBeNull();
   });
 
   it("seed services stay the single structural source of truth", () => {
     expect(SERVICES.map((s) => s.id)).toContain("decolorazione-meches");
-    expect(SERVICES.find((s) => s.id === "decolorazione-cutanea")?.durationMin).toBe(120);
+    expect(SERVICES.find((s) => s.id === "decolorazione-cutanea")?.durationMin).toBe(180);
+    expect(SERVICES.find((s) => s.id === "tintura-capelli")?.durationMin).toBe(30);
+    expect(SERVICES.find((s) => s.id === "acconciatura")?.durationMin).toBe(10);
   });
 });

@@ -25,7 +25,7 @@ describe("multi-service booking combos (silent UX)", () => {
   const combos: { ids: string[]; minutes: number; label: string }[] = [
     {
       ids: ["taglio-standard", "acconciatura"],
-      minutes: 45,
+      minutes: 40,
       label: "Taglio Standard + Acconciatura",
     },
     {
@@ -40,8 +40,18 @@ describe("multi-service booking combos (silent UX)", () => {
     },
     {
       ids: ["taglio-pro", "decolorazione-meches"],
-      minutes: 140,
+      minutes: 200,
       label: "Taglio Pro + Decolorazione Meches",
+    },
+    {
+      ids: ["taglio-pro", "tintura-barba"],
+      minutes: 70,
+      label: "Taglio Pro + Tintura Barba",
+    },
+    {
+      ids: ["taglio-pro", "tintura-capelli"],
+      minutes: 80,
+      label: "Taglio Pro + Tintura Capelli",
     },
   ];
 
