@@ -133,7 +133,7 @@ describe("mobile QA (390px)", () => {
     expect(hero).toMatch(/HERO_VIDEOS/);
     expect(css).not.toMatch(/\.video-reel-box:hover[\s\S]*transform:/);
     const scissors = readFileSync(join(process.cwd(), "components/site/ScissorsIcon.tsx"), "utf8");
-    expect(scissors).toMatch(/viewBox="0 0 100 118"/);
+    expect(scissors).toMatch(/viewBox="0 0 100 110"/);
     expect(scissors).not.toMatch(/#C9A962|#F4E4BC|#FFD700/);
     expect(css).toMatch(/\.scissors-intro \{/);
     expect(css).toMatch(/scissors-intro-split/);
