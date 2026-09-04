@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
 import { OpeningCountdown } from "@/components/site/OpeningCountdown";
-import { HERO_SLOT_CTA, SITE, isBeforeOfficialOpening } from "@/lib/site-config";
+import { HERO_SLOT_CTA, SITE, isPreOpeningCountdownVisible } from "@/lib/site-config";
 
 const INTRO_KEY = "felice-polese-scissors-intro-seen";
 const TENSION_MS = 420;
@@ -128,7 +128,7 @@ export function ScissorsIntro() {
             <p className="scissors-intro-brand-name">{SITE.brand}</p>
             <p className="scissors-intro-brand-tag">{SITE.tagline}</p>
             <p className="scissors-intro-brand-city">{SITE.city} · Italy</p>
-            {isBeforeOfficialOpening() ? (
+            {isPreOpeningCountdownVisible() ? (
               <div
                 className="scissors-intro-countdown"
                 onClick={(e) => e.stopPropagation()}

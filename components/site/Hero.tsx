@@ -8,7 +8,7 @@ import {
   HERO_SLOT_CTA,
   SITE,
   getHeroHeadline,
-  isBeforeOfficialOpening,
+  isPreOpeningCountdownVisible,
 } from "@/lib/site-config";
 import { HERO_VIDEOS } from "@/lib/site-videos";
 import { OpeningCountdown } from "@/components/site/OpeningCountdown";
@@ -27,7 +27,7 @@ function HeroMediaCell({
 }
 
 export function Hero() {
-  const beforeOpening = isBeforeOfficialOpening();
+  const beforeOpening = isPreOpeningCountdownVisible();
 
   return (
     <section id="hero" className="hero hero-editorial bg-marble-light marble-accent">

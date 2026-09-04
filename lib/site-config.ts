@@ -131,17 +131,22 @@ export function wallDateRome(now: Date = new Date()): string {
   }).format(now);
 }
 
-/** Opening instant at 10:00 Europe/Rome on the official opening civil date. */
+/** Opening instant at 19:00 Europe/Rome (CEST) on the official opening civil date. */
 export function openingTargetMs(): number {
-  return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
+  return Date.parse(`${SITE.openingDate}T19:00:00+02:00`);
 }
 
 export function isBeforeOfficialOpening(now: Date = new Date()): boolean {
   return now.getTime() < openingTargetMs();
 }
 
+/** Pre-opening countdown / inauguration copy — hidden from opening civil date (Rome). */
+export function isPreOpeningCountdownVisible(now: Date = new Date()): boolean {
+  return wallDateRome(now) < SITE.openingDate;
+}
+
 export function getHeroHeadline(now: Date = new Date()): string {
-  return isBeforeOfficialOpening(now) ? HERO_BEFORE_OPENING : HERO_CTA;
+  return isPreOpeningCountdownVisible(now) ? HERO_BEFORE_OPENING : HERO_CTA;
 }
 
 /** Countdown label — e.g. "APERTURA 7 SETTEMBRE". */

@@ -7,11 +7,11 @@ import {
   SITE,
   NOTIFY_WHATSAPP_MESSAGE,
   getWhatsAppUrl,
-  isBeforeOfficialOpening,
+  isPreOpeningCountdownVisible,
 } from "@/lib/site-config";
 
 export function ComingSoon() {
-  const beforeOpening = isBeforeOfficialOpening();
+  const beforeOpening = isPreOpeningCountdownVisible();
 
   return (
     <>

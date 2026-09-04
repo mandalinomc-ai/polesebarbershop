@@ -1,16 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SITE } from "@/lib/site-config";
+import { SITE, openingTargetMs } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 
 function pad(n: number) {
   return String(Math.max(0, n)).padStart(2, "0");
-}
-
-function openingTargetMs(): number {
-  // Official opening 7 Sept 2026, 10:00 Europe/Rome (CEST = UTC+2)
-  return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
 }
 
 /** Stable two-digit slots — keys are positions only so digits don't remount crookedly. */

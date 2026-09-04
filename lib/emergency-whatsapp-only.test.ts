@@ -5,6 +5,8 @@ import { BOOKING_EMAIL_DISABLED, sendBookingEmails } from "./email";
 import {
   getBookingConfirmWhatsAppUrl,
   getBookingWhatsAppSummaryMessage,
+  isPreOpeningCountdownVisible,
+  openingTargetMs,
   SITE,
 } from "./site-config";
 
@@ -36,6 +38,15 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(result.customer.ok).toBe(true);
     expect(result.customer.skipped).toBe(true);
     expect(result.owner.ok).toBe(true);
+  });
+
+  it("counts down to 19:00 Europe/Rome on opening day", () => {
+    expect(openingTargetMs()).toBe(Date.parse("2026-09-07T19:00:00+02:00"));
+  });
+
+  it("hides pre-opening countdown from 7 Sept 2026 (Rome)", () => {
+    expect(isPreOpeningCountdownVisible(new Date("2026-09-06T23:59:00+02:00"))).toBe(true);
+    expect(isPreOpeningCountdownVisible(new Date("2026-09-07T00:00:00+02:00"))).toBe(false);
   });
 
   it("builds wa.me URL with owner-email summary fields", () => {
