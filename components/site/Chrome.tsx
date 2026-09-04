@@ -197,6 +197,7 @@ export function Footer() {
         {" · "}
         <a href="/gestionale">Gestionale</a>
       </span>
+      <p className="footer-powered">Powered by Genio Digital</p>
     </footer>
   );
 }
