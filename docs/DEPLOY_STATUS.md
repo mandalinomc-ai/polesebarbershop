@@ -1,28 +1,49 @@
-# DEPLOY_STATUS — security-compliance branch
+# DEPLOY_STATUS — security + UI merge
 
-**Branch:** `cursor/security-compliance-56a6`  
+**Branch:** `cursor/security-ui-merge-deploy-854b`  
+(merge of `cursor/security-compliance-56a6` + `cursor/ui-fx-polish-deploy-490f`)  
 **Target:** Vercel project `temporary-prompt-quasar-rndxhgh` → https://felicepolesebarbershop.vercel.app  
 **Do not deploy to:** `polesebarbershop`
 
+## Merge (done)
+
+- UI tip brought in: Genio footer, scissors intro, polish/motion
+- Security kept: CookieBanner, `/cookie-policy`, hardened gestionale/booking, CSP middleware
+- Conflict resolved in `components/site/Chrome.tsx` (both Genio + CookieBanner)
+
 ## Local verification (green)
 
-- `npx tsc --noEmit` — pass
 - `npm test` — 197/197 pass
-- `npm run build` — pass (includes `/cookie-policy`, middleware)
-- `npm audit --omit=dev` — postcss via Next 15 (known; force-fix → Next 16 breaking)
+- `npm run build` — pass (routes include `/cookie-policy`, `/privacy-policy`, `/gestionale`)
 
-## Deploy attempt (2026-09-04)
+## Deploy attempt (2026-09-04 ~01:34 UTC)
 
 ```
-Resource is limited - try again in 24 hours
-(code: api-deployments-free-per-day)
+npx vercel --prod --yes --force
+→ Project: temporary-prompt-quasar-rndxhgh (correct)
+→ Error: Resource is limited - try again in 24 hours
+  (code: api-deployments-free-per-day)
 ```
 
-Hobby plan daily deployment quota exhausted. Code is committed and pushed; redeploy when quota resets:
+Hobby daily deployment quota still exhausted (many prod/preview deploys in the last ~2h on this project).  
+Code is committed + pushed; **live site not updated** with cookie compliance yet.
+
+### Live snapshot at fail time
+
+| Check | Status |
+|-------|--------|
+| `/` Genio Digital | present |
+| `/` ScissorsIntro | present |
+| `/cookie-policy` | **404** (compliance not live) |
+| `/privacy-policy` | 200 |
+| `/gestionale` | 200 |
+| Cookie banner | not live |
+
+Redeploy when quota resets:
 
 ```bash
-bash scripts/deploy-with-env-local.sh
-# or: npx vercel deploy --prod --yes
+npx vercel --prod --yes --force
+# or: bash scripts/deploy-with-env-local.sh
 ```
 
-Confirm after deploy: `/`, `/prenota`, `/cookie-policy`, `/privacy-policy`, `/gestionale`, cookie banner Accetta/Rifiuta/Personalizza.
+Confirm after deploy: `/`, `/prenota`, `/cookie-policy`, `/privacy-policy`, `/gestionale`, cookie banner Accetta/Rifiuta/Personalizza, Genio footer, scissors intro.
