@@ -8,6 +8,7 @@ export {
   TIME_SLOT_INTERVAL_MINUTES,
   ONLINE_DISPLAY_INTERVAL_MINUTES,
   DEFAULT_OPTIMIZATION_MODE,
+  normalizeOptimizationMode,
   type OptimizationMode,
   type SlotRank,
 } from "./constants";
@@ -34,7 +35,35 @@ export {
   subtractBusyFromWindows,
   candidateStartsInWindows,
   freeWindowStarts,
-  effectiveServiceDurationMin,
   type FreeWindow,
   type RankedStart,
 } from "./free-windows";
+export {
+  effectiveServiceDurationMin,
+  resolveEffectiveServiceDuration,
+  type DurationSource,
+  type DurationKind,
+  type EffectiveDurationResult,
+} from "./duration";
+export {
+  clientDurationFromProcessing,
+  barberBusySegments,
+  processingBlockEnd,
+  hasProcessingConfig,
+  type BusySegment,
+} from "./processing";
+export type { ServiceProcessing } from "@/lib/catalog";
+export {
+  CONFIG_CALENDAR_BLOCKS,
+  blocksForDate,
+  busyMinutesFromBlocks,
+  utcBusyFromBlocks,
+  type CalendarBlock,
+} from "./calendar-blocks";
+export {
+  sortByBest,
+  pickBestStart,
+  suggestFillGaps,
+  freeWindowsFromBusyLabels,
+  type FillGapSuggestion,
+} from "./optimize";

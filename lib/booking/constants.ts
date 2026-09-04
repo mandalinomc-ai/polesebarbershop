@@ -17,13 +17,21 @@ export const ONLINE_DISPLAY_INTERVAL_MINUTES = 15;
 
 /**
  * Gap optimization — internal default for Felice (no confusing UI toggle).
- * - REGULAR: all interval steps inside free windows
+ * - FLEXIBLE: all search-interval starts inside free windows
  * - REDUCE_GAPS (default): prefer packing from free-window start; online shows smart subset
  * - ELIMINATE_GAPS: only starts that leave no unusable leftover (left-aligned / perfect fit)
+ *
+ * `REGULAR` is a deprecated alias of `FLEXIBLE` (kept for older tests/callers).
  */
-export type OptimizationMode = "REGULAR" | "REDUCE_GAPS" | "ELIMINATE_GAPS";
+export type OptimizationMode = "FLEXIBLE" | "REDUCE_GAPS" | "ELIMINATE_GAPS" | "REGULAR";
 
 export const DEFAULT_OPTIMIZATION_MODE: OptimizationMode = "REDUCE_GAPS";
+
+/** Normalize legacy REGULAR → FLEXIBLE. */
+export function normalizeOptimizationMode(mode: OptimizationMode | undefined | null): Exclude<OptimizationMode, "REGULAR"> {
+  if (!mode || mode === "REGULAR" || mode === "FLEXIBLE") return "FLEXIBLE";
+  return mode;
+}
 
 /** Ranking tiers for candidates. */
 export type SlotRank = "POSSIBLE" | "VALID" | "OPTIMAL";
