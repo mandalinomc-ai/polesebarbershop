@@ -195,22 +195,6 @@ export function GestionalePanel() {
     }
   }, []);
 
-  const loadHistory = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/history");
-      if (res.status === 401) {
-        setAuth("needed");
-        return;
-      }
-      const json = (await res.json()) as { appointments?: HistoryAppt[]; warning?: string };
-      if (!res.ok) return;
-      setHistory(json.appointments || []);
-      if (json.warning) setCrmWarning(json.warning);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   const load = useCallback(async () => {
     setError("");
     const ok = await loadAgenda();
