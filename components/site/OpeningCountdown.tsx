@@ -1,25 +1,13 @@
 "use client";
 
-<<<<<<< HEAD
-import { useEffect, useState } from "react";
-import { SITE, openingTargetMs } from "@/lib/site-config";
-=======
 import { useEffect, useRef, useState } from "react";
-import { SITE } from "@/lib/site-config";
->>>>>>> origin/cursor/premium-motion-pass-56a6
+import { SITE, openingTargetMs } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 
 function pad(n: number) {
   return String(Math.max(0, n)).padStart(2, "0");
 }
 
-<<<<<<< HEAD
-=======
-function openingTargetMs(): number {
-  return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
-}
-
->>>>>>> origin/cursor/premium-motion-pass-56a6
 /** Stable two-digit slots — keys are positions only so digits don't remount crookedly. */
 function DigitPair({ value }: { value: string }) {
   const chars = value.padStart(2, "0").slice(-2).split("");
