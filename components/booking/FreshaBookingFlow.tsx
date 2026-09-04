@@ -843,25 +843,34 @@ export function BookingSectionNote() {
   return (
     <div className="booking-open-note booking-open-note--stack">
       <p className="booking-note-headline">Prenota già ora</p>
-      <ul className="booking-note-list">
-        <li>Prima dell&apos;apertura ufficiale: scegli servizio, barbiere, data e orario.</li>
-        <li>
+      <p className="booking-note-lead">
+        Scegli servizio, barbiere, data e orario — anche prima dell&apos;apertura
+        ufficiale.
+      </p>
+      <div className="booking-note-blocks" role="list">
+        <div className="booking-note-block" role="listitem">
           <span className="booking-note-label">Orari</span>
-          {SITE.hours.weekdays} · Dom chiuso
-        </li>
-        <li>
+          <p>{SITE.hours.weekdays}</p>
+          <p className="booking-note-sub">Domenica chiuso</p>
+        </div>
+        <div className="booking-note-block" role="listitem">
           <span className="booking-note-label">Primo giorno</span>
-          {formatItalianDate(getFirstBookableDate())}
-        </li>
-        <li>
+          <p>{formatItalianDate(getFirstBookableDate())}</p>
+          <p className="booking-note-sub">Apertura ufficiale</p>
+        </div>
+        <div className="booking-note-block" role="listitem">
           <span className="booking-note-label">Barbieri</span>
-          Felice, Davide o Qualsiasi disponibilità
-        </li>
-        <li>
-          Non c&apos;è alcun limite al numero totale di prenotazioni: ogni orario
-          libero resta prenotabile.
-        </li>
-      </ul>
+          <p>Felice · Davide</p>
+          <p className="booking-note-sub">o Qualsiasi disponibilità</p>
+        </div>
+        <div className="booking-note-block" role="listitem">
+          <span className="booking-note-label">Prenotazioni</span>
+          <p>Illimitate</p>
+          <p className="booking-note-sub">
+            Ogni orario libero resta prenotabile — nessun tetto totale.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

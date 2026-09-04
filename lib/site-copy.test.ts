@@ -284,7 +284,9 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/Tocca i servizi nel listino/);
     expect(wizard).toMatch(/Qualsiasi disponibilità/);
     expect(wizard).toMatch(/booking-note-headline/);
-    expect(wizard).toMatch(/booking-note-list/);
+    expect(wizard).toMatch(/booking-note-blocks/);
+    expect(wizard).toMatch(/booking-note-block/);
+    expect(wizard).toMatch(/Illimitate/);
     expect(wizard).toMatch(/non disponibile/);
     expect(wizard).toMatch(/Scegli la data/);
     expect(wizard).toMatch(/Scegli l&apos;orario/);
