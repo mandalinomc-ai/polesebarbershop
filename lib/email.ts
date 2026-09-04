@@ -16,6 +16,18 @@ export type EmailSendResult =
 export const GMAIL_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
+/**
+ * EMERGENCY OFF (2026-09-04) — booking confirmation emails disabled on production.
+ *
+ * ROOT CAUSE: Vercel env `GMAIL_APP_PASSWORD` is empty (secret present but no value).
+ * Gmail SMTP auth therefore fails for every outbound message. Customer confirmation
+ * and salon alert to felicepolese550@gmail.com never leave the server.
+ *
+ * Re-enable after setting a 16-char Google App Password on Vercel Production + Preview.
+ * Until then: WhatsApp (wa.me/393270156225) + .ics calendar replace email on success.
+ */
+export const BOOKING_EMAIL_DISABLED = true;
+
 /** @deprecated kept as alias for compatibility */
 export const RESEND_MISSING_IT = GMAIL_MISSING_IT;
 
@@ -297,6 +309,14 @@ export async function sendBookingEmails(opts: {
   owner: ReturnType<typeof ownerNewBookingEmail>;
   ics: { filename: string; content: string };
 }) {
+  if (BOOKING_EMAIL_DISABLED) {
+    console.info("[email] prenotazione: invio disattivato (BOOKING_EMAIL_DISABLED)", {
+      customer: opts.customerEmail,
+      salon: getBookingNotificationEmail(),
+    });
+    const skipped = { ok: true as const, skipped: true };
+    return { customer: skipped, admin: skipped, owner: { results: [], ok: true } };
+  }
   const customer = await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics });
   const owner = await sendOwnerEmails({ owner: opts.owner, ics: opts.ics });
   const admin = owner.results[0]?.result ?? { ok: false, error: "Nessun destinatario salone configurato." };

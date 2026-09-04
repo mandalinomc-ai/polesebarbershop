@@ -36,7 +36,6 @@ import {
 } from "@/lib/site-config";
 import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
 import { icsDataUri } from "@/lib/ics";
-import { postSalonBookingRelay, type SalonRelayPayload } from "@/lib/salon-relay-client";
 import {
   CALENDAR_UNAVAILABLE_IT,
   NO_SLOTS_IT,
@@ -120,11 +119,9 @@ export function FreshaBookingFlow({
     ics: string;
     icsFilename: string;
     googleCalendarUrl: string;
+    whatsappUrl: string;
     warnings: string[];
-    emailSent: boolean;
     persisted: boolean;
-    ownerNotified: boolean;
-    salonRelay: SalonRelayPayload | null;
   } | null>(null);
 
   const selectedServices = useMemo(
@@ -309,10 +306,9 @@ export function FreshaBookingFlow({
         icsFilename?: string;
         googleCalendarUrl?: string;
         warnings?: string[];
-        emailSent?: boolean;
         persisted?: boolean;
-        ownerNotified?: boolean;
-        salonRelay?: SalonRelayPayload | null;
+        customerWhatsAppUrl?: string | null;
+        salonWhatsAppUrl?: string | null;
       };
       if (!res.ok && !json.ics) {
         setSubmitError(
@@ -322,24 +318,21 @@ export function FreshaBookingFlow({
         if (res.status === 409) void loadSlots();
         return;
       }
-      const salonRelay = json.salonRelay || null;
       setSuccess({
         manageUrl: json.manageUrl || "#",
         barberName: json.barberName || barber?.name || "",
         ics: json.ics || "",
         icsFilename: json.icsFilename || "polese-barbershop.ics",
         googleCalendarUrl: json.googleCalendarUrl || "",
+        whatsappUrl:
+          json.customerWhatsAppUrl ||
+          json.salonWhatsAppUrl ||
+          getWhatsAppUrl(),
         warnings: publicBookingWarnings(
           json.warnings || (json.error ? [json.error] : []),
         ),
-        emailSent: Boolean(json.emailSent),
         persisted: Boolean(json.persisted),
-        ownerNotified: Boolean(json.ownerNotified),
-        salonRelay,
       });
-      if (salonRelay && !json.ownerNotified) {
-        void postSalonBookingRelay(salonRelay);
-      }
     } catch {
       setSubmitError(CALENDAR_UNAVAILABLE_IT);
     } finally {
@@ -367,15 +360,9 @@ export function FreshaBookingFlow({
             <strong>{success.barberName}</strong> il {formatItalianDate(date)}{" "}
             alle {slot?.label} · {totals.priceLabel}.
           </p>
-          <p className="prose">
-            {success.emailSent
-              ? "Ti abbiamo inviato l'email di conferma con file calendario allegato."
-              : "L'email di conferma non è partita in automatico — usa i pulsanti calendario qui sotto."}
-          </p>
           <p className="prose success-calendar-label">
             Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file
-            .ics ha un solo promemoria: 30 minuti prima. Questi pulsanti sono
-            separati da WhatsApp.
+            .ics ha un solo promemoria: 30 minuti prima.
           </p>
           <div className="success-actions" aria-label="Aggiungi al calendario">
             {success.ics ? (
@@ -406,19 +393,18 @@ export function FreshaBookingFlow({
           <div className="success-whatsapp-row">
             <a
               className="btn btn-whatsapp"
-              href={getWhatsAppUrl()}
+              href={success.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
               Scrivi su WhatsApp
             </a>
             <p className="booking-open-note">
-              WhatsApp è solo per messaggi al salone — non sostituisce il
-              calendario.
+              Invia al salone il riepilogo della prenotazione con un tap.
             </p>
           </div>
           {success.warnings.map((w) => (
-            <p key={w} className="field-error">
+            <p key={w} className="booking-open-note">
               {w}
             </p>
           ))}
@@ -785,8 +771,9 @@ export function FreshaBookingFlow({
             </ul>
             {submitError ? <p className="field-error">{submitError}</p> : null}
             <p className="booking-open-note" style={{ marginTop: "1rem" }}>
-              Riceverai una email di conferma con file .ics (un solo
-              promemoria, 30 minuti prima). Puoi disdire dal link in email.
+              Dopo la conferma aggiungi l&apos;appuntamento al calendario (.ics)
+              e invia il riepilogo al salone su WhatsApp. Promemoria unico: 30
+              minuti prima. Puoi disdire dal link di gestione.
               {" "}{SITE.pricesIncludeVat}
             </p>
           </>

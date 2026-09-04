@@ -170,13 +170,19 @@ describe("public copy vs official identity", () => {
     expect(getWhatsAppUrl()).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
     const confirm = getBookingConfirmWhatsAppUrl({
       firstName: "Mario",
+      lastName: "Rossi",
+      phone: "+393331112233",
+      email: "mario@example.com",
       service: "Taglio classico",
       dateLabel: "martedì 1 settembre 2026",
       timeLabel: "09:30",
       barberName: "Felice",
+      durationMin: 50,
+      priceLabel: "25 €",
     });
     expect(confirm).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
-    expect(confirm).toContain(encodeURIComponent("ho prenotato"));
+    expect(confirm).toContain(encodeURIComponent("NUOVA PRENOTAZIONE"));
+    expect(confirm).toContain(encodeURIComponent("Nome: Mario"));
     const toClient = getSalonToCustomerWhatsAppUrl("+39 333 111 2233", {
       firstName: "Mario",
       service: "Taglio classico",
@@ -196,7 +202,7 @@ describe("public copy vs official identity", () => {
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/getWhatsAppUrl/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
-    expect(wizard).toMatch(/postSalonBookingRelay/);
+    expect(wizard).not.toMatch(/postSalonBookingRelay/);
     expect(wizard).not.toMatch(/Conferma su WhatsApp/);
     expect(wizard).toMatch(/Prenotazione confermata/);
     expect(wizard).not.toMatch(/twilio/i);

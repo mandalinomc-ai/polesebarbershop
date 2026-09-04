@@ -49,6 +49,7 @@ export function publicBookingWarnings(warnings: string[]): string[] {
     const text = (w || "").trim();
     if (!text) continue;
     if (/testing emails|invalid_access|403|honeypot/i.test(text)) continue;
+    if (/email di conferma|avviso email|conferma email|email non|non recapitato/i.test(text)) continue;
     if (isTechnicalBookingMessage(text)) {
       // Persistence / mail infra failures → one gentle line max.
       if (/database|supabase|salvata|schema/i.test(text)) {

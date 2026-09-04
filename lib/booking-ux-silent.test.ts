@@ -129,16 +129,17 @@ describe("public booking messages (no engine jargon)", () => {
     ).toMatch(/prenotazioni aprono/);
   });
 
-  it("strips jargon from post-booking warnings", () => {
+  it("strips jargon and email failure warnings from post-booking warnings", () => {
     const cleaned = publicBookingWarnings([
       "Database non configurato. La prenotazione non è stata salvata.",
       "testing emails restricted",
       "L'email di conferma non è partita in automatico — usa i pulsanti calendario qui sotto.",
+      "Avviso email al salone non recapitato a felicepolese550@gmail.com.",
     ]);
     expect(cleaned.some((w) => /database|supabase|inventat|durationUnknown/i.test(w))).toBe(
       false,
     );
     expect(cleaned.some((w) => /agenda|confermare/i.test(w))).toBe(true);
-    expect(cleaned.some((w) => /email di conferma/i.test(w))).toBe(true);
+    expect(cleaned.some((w) => /email di conferma|avviso email/i.test(w))).toBe(false);
   });
 });

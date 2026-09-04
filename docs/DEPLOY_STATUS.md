@@ -1,3 +1,11 @@
+# DEPLOY_STATUS — emergency WhatsApp-only (2026-09-04)
+
+**Branch:** `cursor/emergency-whatsapp-only-56a6`  
+**Root cause:** Vercel `GMAIL_APP_PASSWORD` empty → Gmail SMTP auth fails; customer + salon booking emails never send.  
+**Mitigation:** `BOOKING_EMAIL_DISABLED=true` in `lib/email.ts` — success flow uses WhatsApp (`wa.me/393270156225`) + `.ics` only.
+
+---
+
 # DEPLOY_STATUS — client UX polish
 
 **Branch:** `cursor/client-ux-polish-56a6`  

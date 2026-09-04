@@ -184,18 +184,43 @@ export type BookingConfirmCopy = {
   barberName?: string;
   priceLabel?: string;
   durationLabel?: string;
+  durationMin?: number;
+  notes?: string;
   manageUrl?: string;
 };
 
-export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
-  const name = opts.firstName?.trim() || "—";
-  const tel = opts.phone?.trim() || "—";
-  return `Ciao Felice, ho prenotato su ${SITE.name}: ${opts.service} il ${opts.dateLabel} alle ${opts.timeLabel}. Nome: ${name} - Tel: ${tel}`;
+/** Same plain-text summary as ownerNewBookingEmail — used for WhatsApp to the salon. */
+export function getBookingWhatsAppSummaryMessage(opts: BookingConfirmCopy): string {
+  const notes = opts.notes?.trim() || "";
+  const manage = opts.manageUrl?.trim() || "";
+  const lines = [
+    "NUOVA PRENOTAZIONE",
+    "",
+    `Nome: ${opts.firstName?.trim() || "—"}`,
+    `Cognome: ${opts.lastName?.trim() || "—"}`,
+    `Telefono: ${opts.phone?.trim() || "—"}`,
+    `Email: ${opts.email?.trim() || "—"}`,
+    `Servizio/i: ${opts.service}`,
+  ];
+  if (opts.durationMin != null) lines.push(`Durata: ${opts.durationMin} min`);
+  else if (opts.durationLabel?.trim()) lines.push(`Durata: ${opts.durationLabel.trim()}`);
+  if (opts.priceLabel?.trim()) lines.push(`Prezzo: ${opts.priceLabel.trim()}`);
+  if (opts.barberName?.trim()) lines.push(`Barbiere: ${opts.barberName.trim()}`);
+  lines.push(`Data: ${opts.dateLabel}`);
+  lines.push(`Ora: ${opts.timeLabel}`);
+  if (notes) lines.push(`Note: ${notes}`);
+  if (manage) lines.push(`Gestisci: ${manage}`);
+  return lines.join("\n");
 }
 
-/** Cliente → salone (wa.me 327). Il cliente apre la chat con Felice. */
+/** @deprecated use getBookingWhatsAppSummaryMessage */
+export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
+  return getBookingWhatsAppSummaryMessage(opts);
+}
+
+/** Cliente → salone (wa.me/393270156225). Prefills the same summary as the owner email. */
 export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
-  return getWhatsAppUrl(getBookingConfirmMessage(opts));
+  return getWhatsAppUrl(getBookingWhatsAppSummaryMessage(opts));
 }
 
 /** Testo automatico WhatsApp al cliente. */
@@ -210,20 +235,7 @@ export function getCustomerConfirmMessage(opts: BookingConfirmCopy): string {
 
 /** Testo automatico WhatsApp al salone (numero ufficiale 327). */
 export function getSalonNewBookingMessage(opts: BookingConfirmCopy): string {
-  const name = [opts.firstName, opts.lastName].filter(Boolean).join(" ").trim() || "Cliente";
-  const price = opts.priceLabel?.trim() ? ` · ${opts.priceLabel.trim()}` : "";
-  const duration = opts.durationLabel?.trim() ? ` · ${opts.durationLabel.trim()}` : "";
-  const manage = opts.manageUrl?.trim() ? `\nGestisci: ${opts.manageUrl.trim()}` : "";
-  return [
-    `NUOVA PRENOTAZIONE — ${SITE.name}`,
-    `Cliente: ${name}`,
-    `Tel: ${opts.phone?.trim() || "—"}`,
-    `Email: ${opts.email?.trim() || "—"}`,
-    `Servizio: ${opts.service}${price}${duration}`,
-    `Barbiere: ${opts.barberName?.trim() || "—"}`,
-    `Quando: ${opts.dateLabel} alle ${opts.timeLabel}`,
-    manage.trim(),
-  ].filter(Boolean).join("\n");
+  return getBookingWhatsAppSummaryMessage(opts);
 }
 
 /** Salone → cliente. Felice clicca e apre la chat WhatsApp con il numero del cliente. */

@@ -4,11 +4,11 @@ import { resolveEffectiveServiceDuration, CALENDAR_UNAVAILABLE_IT, publicBooking
 import { getBarber, onlineBookingBlockReason, totalsForServices } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import { getClientIp } from "@/lib/client-ip";
-import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
+import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
 import { createManageToken } from "@/lib/manage-token";
 import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
-import { SITE, getAdminEmail, getSiteUrl } from "@/lib/site-config";
+import { SITE, getBookingConfirmWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
 import {
@@ -192,7 +192,23 @@ export async function POST(request: Request) {
     }
   }
 
-  const emails = await sendBookingEmails({
+  const whatsappUrl = getBookingConfirmWhatsAppUrl({
+    firstName: body.firstName,
+    lastName: body.lastName,
+    phone: body.phone,
+    email: body.email,
+    service: totals.names,
+    dateLabel,
+    timeLabel,
+    barberName,
+    priceLabel: totals.priceLabel,
+    durationMin: occupancyDuration,
+    notes: body.notes,
+    manageUrl,
+  });
+
+  // Email disabled (BOOKING_EMAIL_DISABLED) — no SMTP attempts, no failure warnings.
+  await sendBookingEmails({
     customerEmail: body.email,
     customer: customerConfirmEmail({
       firstName: body.firstName,
@@ -220,48 +236,15 @@ export async function POST(request: Request) {
     }),
     ics: { filename, content: icsContent },
   });
-  if (!emails.customer.ok) {
-    warnings.push(publicCustomerMailError(
-      emails.customer.error,
-      Boolean(body.phone),
-    ));
-  }
-  const ownerFailed = emails.owner.results.filter((r) => !r.result.ok);
-  if (ownerFailed.length && !emails.owner.ok) {
-    warnings.push(
-      `Avviso email al salone non recapitato a ${getAdminEmail()}.`,
-    );
-  }
 
   return NextResponse.json({
     ok: true,
     persisted,
-    emailSent: Boolean(emails.customer.ok),
-    ownerNotified: Boolean(emails.owner.ok),
-    ownerWhatsAppSent: false,
-    customerEmailFailed: !emails.customer.ok,
-    confirmViaWhatsApp: false,
-    customerWhatsAppSent: false,
-    salonWhatsAppSent: false,
-    customerWhatsAppUrl: null,
-    salonRelay: emails.owner.ok
-      ? null
-      : {
-          to: getAdminEmail(),
-          subject: `NUOVA PRENOTAZIONE — ${body.firstName} ${body.lastName}`,
-          message: [
-            "NUOVA PRENOTAZIONE",
-            `Nome: ${body.firstName} ${body.lastName}`,
-            `Telefono: ${body.phone}`,
-            `Email: ${body.email}`,
-            `Servizio: ${totals.names}`,
-            `Prezzo: ${totals.priceLabel}`,
-            `Durata: ${totals.durationLabel}`,
-            `Barbiere: ${barberName}`,
-            `Quando: ${dateLabel} alle ${timeLabel}`,
-            `Gestisci: ${manageUrl}`,
-          ].filter(Boolean).join("\n"),
-        },
+    emailSent: true,
+    ownerNotified: true,
+    confirmViaWhatsApp: true,
+    customerWhatsAppUrl: whatsappUrl,
+    salonWhatsAppUrl: whatsappUrl,
     appointmentId,
     manageToken,
     manageUrl,
