@@ -49,3 +49,6 @@ Public label: **Durata prevista: X min** (sums on multi-select). Variable **pric
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
 - Alias: https://felicepolesebarbershop.vercel.app
+- Live catalog/availability **GO** via Supabase overlay sync (migration 010 applied)
+- Code branch `cursor/update-durations-56a6` pushed (`2b1bf2b`); Vercel CLI prod deploy blocked by free-tier daily quota (`api-deployments-free-per-day`) — seed catalog will ship on next successful deploy
+- Verified live: Tintura Barba 20, Tintura Capelli 30, Meches 150, Cutanea 180, Acconciatura 10; combos 70/80/200/40
