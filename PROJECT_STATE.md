@@ -3,15 +3,17 @@
 **Updated:** 2026-09-04  
 **Public URL:** https://felicepolesebarbershop.vercel.app  
 **Vercel project:** `temporary-prompt-quasar-rndxhgh` (alias: felicepolesebarbershop)  
-**Branch:** `cursor/booking-ux-silent-56a6`
+**Branch:** `cursor/fix-preview-bugs-56a6`
 
 ## Status summary
 
 | Area | Status |
 |------|--------|
 | Production site | **LIVE** — homepage Felice branding, Maps Dante 44, listino, videos |
-| Code tip | **READY** on `cursor/booking-ux-silent-56a6` — multi-service silent UX |
+| Code tip | **READY** on `cursor/fix-preview-bugs-56a6` — intro dismiss + booking service list |
+| Preview bugs | **FIXED** — scissors intro no longer resurrects; Continua no longer covers services |
 | Multi-service booking | **READY** — combos sum silently (45/70/65/140), no engine jargon warnings |
+| Official durations (DB) | **SYNCED** to catalog (Acconciatura 15, Meches 90, Cutanea 120, Tintura 60/15) |
 | Gmail SMTP | **READY** |
 | Supabase bookings | **READY** — durations synced |
 | Smart booking | **READY** — all 10 services fixed durations, buffer internal |
@@ -47,4 +49,4 @@ Public label: **Durata prevista: X min** (sums on multi-select). Variable **pric
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
 - Alias: https://felicepolesebarbershop.vercel.app
-- Latest prod: `dpl_8K1548J1QTv28AvN8XrZXG3kzSJJ` (booking-ux-silent) — GO
+- Latest tip: `cursor/fix-preview-bugs-56a6`
