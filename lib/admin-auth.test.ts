@@ -81,6 +81,13 @@ describe("admin /gestionale credentials", () => {
     expect(verifyAdminCredentials("felice", "segreto12")).toBe(true);
     expect(verifyAdminCredentials("admin", "admin")).toBe(false);
   });
+
+  it("treats explicit admin/admin env as configured, not insecure defaults", () => {
+    process.env.ADMIN_USER = "admin";
+    process.env.ADMIN_PASSWORD = "admin";
+    expect(isUsingDefaultAdminCredentials()).toBe(false);
+    expect(verifyAdminCredentials("admin", "admin")).toBe(true);
+  });
 });
 
 describe("POST /api/admin/login", () => {
@@ -151,6 +158,16 @@ describe("POST /api/admin/login", () => {
     process.env.VERCEL_ENV = "production";
     const res = await login({ username: "admin", password: "admin" });
     expect(res.status).toBe(503);
+  });
+
+  it("accepts explicit admin/admin env in Vercel production", async () => {
+    process.env.ADMIN_USER = "admin";
+    process.env.ADMIN_PASSWORD = "admin";
+    process.env.VERCEL_ENV = "production";
+    const res = await login({ username: "admin", password: "admin" });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { ok: boolean };
+    expect(json.ok).toBe(true);
   });
 
   it("rate-limits repeated login failures", async () => {
