@@ -138,7 +138,7 @@ describe("public copy vs official identity", () => {
     expect(SALON_CONTACT.id).toBe("scrivici");
     expect(SALON_CONTACT.prefill).toBe(SALON_CONTACT_MESSAGE);
     expect(SALON_CONTACT_MESSAGE).toBe(
-      "Ciao, vorrei un'informazione su orari, prezzi o servizi.",
+      "Ciao, vorrei informazioni su orari, prezzi o servizi.",
     );
     expect(SALON_CONTACT.body).toMatch(/info, orari, prezzi/i);
     expect(getWhatsAppUrl()).toContain(encodeURIComponent(SALON_CONTACT_MESSAGE));

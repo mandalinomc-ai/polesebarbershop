@@ -88,6 +88,25 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/\.fab-stack \{[\s\S]*?safe-bottom/);
   });
 
+  it("avoids sticky hover and FAB overlap on touch phones", () => {
+    expect(css).toMatch(/@media \(hover:\s*hover\) and \(pointer:\s*fine\)/);
+    expect(css).toMatch(/body:has\(\.fresha-footer\) \.fab-stack/);
+    expect(css).toMatch(/\.site-footer \{[\s\S]*?safe-bottom/);
+    expect(css).toMatch(/overflow-x:\s*(clip|hidden)/);
+    expect(css).toMatch(/min-height:\s*100vh;\s*min-height:\s*100dvh|min-height:\s*100dvh/);
+  });
+
+  it("keeps iOS video autoplay attributes and play() fallback", () => {
+    const salon = readFileSync(join(process.cwd(), "components/site/SalonVideo.tsx"), "utf8");
+    expect(salon).toMatch(/"use client"/);
+    expect(salon).toMatch(/playsInline/);
+    expect(salon).toMatch(/webkit-playsinline/);
+    expect(salon).toMatch(/\.play\(\)/);
+    expect(salon).toMatch(/el\.muted = true/);
+    const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
+    expect(hero).toMatch(/SalonVideo/);
+  });
+
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {
     expect(chrome).toMatch(/fab-stack/);
     expect(chrome).toMatch(/aria-label="Raggiungimi ora su Google Maps"/);
@@ -123,7 +142,7 @@ describe("mobile QA (390px)", () => {
     expect(css).toMatch(/prefers-reduced-motion: reduce[\s\S]*?\.scissors-intro \{ display: none !important; \}/);
     const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
     expect(intro).toMatch(/SITE\.brand/);
-    expect(intro).toMatch(/Clicca per entrare/);
+    expect(intro).toMatch(/Tocca per entrare/);
     expect(intro).toMatch(/prefers-reduced-motion/);
     const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
     expect(page).toMatch(/ScissorsIntro/);

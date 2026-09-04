@@ -12,6 +12,7 @@ import {
 } from "@/lib/site-config";
 import { HERO_VIDEOS } from "@/lib/site-videos";
 import { OpeningCountdown } from "@/components/site/OpeningCountdown";
+import { SalonVideo } from "@/components/site/SalonVideo";
 
 function HeroMediaCell({
   video,
@@ -20,17 +21,7 @@ function HeroMediaCell({
 }) {
   return (
     <div className="hero-media-cell">
-      <video
-        src={video.src}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-label={video.alt}
-      >
-        <source src={video.src} type="video/mp4" />
-      </video>
+      <SalonVideo video={video} />
     </div>
   );
 }

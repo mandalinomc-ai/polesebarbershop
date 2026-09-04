@@ -98,7 +98,7 @@ export const MAPS_DESTINATION =
 
 /** Generic salon contact — info, hours, prices or a quick tip. */
 export const SALON_CONTACT_MESSAGE =
-  "Ciao, vorrei un'informazione su orari, prezzi o servizi.";
+  "Ciao, vorrei informazioni su orari, prezzi o servizi.";
 
 /** Coming-soon WhatsApp CTA — notify me at opening. */
 export const NOTIFY_WHATSAPP_MESSAGE =

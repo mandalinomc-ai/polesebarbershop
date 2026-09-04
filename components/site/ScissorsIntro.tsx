@@ -35,6 +35,8 @@ export function ScissorsIntro() {
       window.setTimeout(() => setPhase("cutting"), TENSION_MS + SCISSORS_MS),
       window.setTimeout(() => setPhase("reveal"), TENSION_MS + SCISSORS_MS + CUT_MS),
       window.setTimeout(() => finishIntro(), TENSION_MS + SCISSORS_MS + CUT_MS + REVEAL_MS),
+      /* Hard failsafe — never leave the intro blocking the site */
+      window.setTimeout(() => finishIntro(), 6000),
     ];
 
     return () => {
@@ -77,11 +79,11 @@ export function ScissorsIntro() {
             <div className="scissors-intro-stage">
               <ScissorsIcon variant="intro" />
             </div>
-            <p className="scissors-intro-skip">Clicca per entrare</p>
+            <p className="scissors-intro-skip">Tocca per entrare</p>
           </>
         ) : null}
         {phase === "reveal" ? (
-          <p className="scissors-intro-skip">Clicca per entrare</p>
+          <p className="scissors-intro-skip">Tocca per entrare</p>
         ) : null}
         {phase === "tension" ? (
           <div className="scissors-intro-tension" aria-hidden="true" />
