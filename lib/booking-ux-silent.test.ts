@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   SERVICES,
   resolveServices,
@@ -16,12 +18,15 @@ import {
   CALENDAR_UNAVAILABLE_IT,
 } from "./booking";
 
+const BAD_UX =
+  /n\/d|non definita|inventat|assistent|stima assistita|durata nota|durationUnknown|attenzione/i;
+
 describe("multi-service booking combos (silent UX)", () => {
   const combos: { ids: string[]; minutes: number; label: string }[] = [
     {
-      ids: ["taglio-standard", "barba-standard"],
+      ids: ["taglio-standard", "acconciatura"],
       minutes: 45,
-      label: "Taglio Standard + Barba Standard",
+      label: "Taglio Standard + Acconciatura",
     },
     {
       ids: ["taglio-pro", "barba-pro"],
@@ -29,14 +34,14 @@ describe("multi-service booking combos (silent UX)", () => {
       label: "Taglio Pro + Barba Pro",
     },
     {
-      ids: ["taglio-pro", "tintura-barba"],
+      ids: ["taglio-pro", "barba-standard"],
       minutes: 65,
-      label: "Taglio Pro + Tintura Barba",
+      label: "Taglio Pro + Barba Standard",
     },
     {
       ids: ["taglio-pro", "decolorazione-meches"],
       minutes: 140,
-      label: "Taglio Pro + Meches",
+      label: "Taglio Pro + Decolorazione Meches",
     },
   ];
 
@@ -51,11 +56,12 @@ describe("multi-service booking combos (silent UX)", () => {
     expect(totals.durationMin).toBe(minutes);
     expect(totals.durationKnown).toBe(true);
     expect(totals.durationLabel).toBe(`Durata prevista: ${minutes} min`);
-    expect(totals.durationLabel).not.toMatch(/n\/d|non definita|inventat|assistent/i);
+    expect(totals.durationLabel).not.toMatch(BAD_UX);
 
     const resolved = resolveEffectiveServiceDuration({ services });
     expect(resolved.ok).toBe(true);
     expect(resolved.onlineBookable).toBe(true);
+    expect(resolved.kind).toBe("fixed");
     expect(resolved.durationMin).toBe(minutes);
     expect(resolved.reason).toBeUndefined();
   });
@@ -69,8 +75,18 @@ describe("multi-service booking combos (silent UX)", () => {
     for (const s of SERVICES) {
       expect(s.durationKnown).toBe(true);
       expect(formatDuration(s)).toMatch(/^Durata prevista: \d+ min$/);
-      expect(formatDuration(s)).not.toMatch(/n\/d|non definita|non disponibile/i);
+      expect(formatDuration(s)).not.toMatch(BAD_UX);
     }
+  });
+
+  it("FreshaBookingFlow has no weird advisory / engine jargon copy", () => {
+    const src = readFileSync(
+      join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"),
+      "utf8",
+    );
+    expect(src).not.toMatch(
+      /Durata non definita|niente durata inventata|durata nota|non una garanzia|Durata non disponibile online|durationUnknown|stima assistita|Durata assistita/i,
+    );
   });
 });
 
@@ -78,7 +94,11 @@ describe("public booking messages (no engine jargon)", () => {
   it("flags technical / engine strings", () => {
     expect(isTechnicalBookingMessage("Durata non definita per: Meches")).toBe(true);
     expect(isTechnicalBookingMessage("niente durata inventata online")).toBe(true);
-    expect(isTechnicalBookingMessage("Database non configurato. Non possiamo mostrare orari verificati.")).toBe(true);
+    expect(
+      isTechnicalBookingMessage(
+        "Database non configurato. Non possiamo mostrare orari verificati.",
+      ),
+    ).toBe(true);
     expect(isTechnicalBookingMessage("durationUnknown")).toBe(true);
     expect(isTechnicalBookingMessage("Imposta override in gestionale")).toBe(true);
     expect(isTechnicalBookingMessage(CLOSED_DAY_IT)).toBe(false);
@@ -90,7 +110,9 @@ describe("public booking messages (no engine jargon)", () => {
       CLOSED_DAY_IT,
     );
     expect(
-      publicAvailabilityMessage("Durata non definita per: Tintura. Prenota in salone — inventata."),
+      publicAvailabilityMessage(
+        "Durata non definita per: Tintura. Prenota in salone — inventata.",
+      ),
     ).toBe(CALENDAR_UNAVAILABLE_IT);
     expect(
       publicAvailabilityMessage("Le prenotazioni aprono dal lunedì 7 settembre 2026."),

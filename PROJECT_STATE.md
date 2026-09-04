@@ -38,10 +38,10 @@ Public label: **Durata prevista: X min** (sums on multi-select). Variable **pric
 
 | Combo | Min |
 |-------|-----|
-| Taglio Standard + Barba Standard | 45 |
+| Taglio Standard + Acconciatura | 45 |
 | Taglio Pro + Barba Pro | 70 |
-| Taglio Pro + Tintura Barba | 65 |
-| Taglio Pro + Meches | 140 |
+| Taglio Pro + Barba Standard | 65 |
+| Taglio Pro + Decolorazione Meches | 140 |
 
 ## Deploy
 

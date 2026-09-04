@@ -24,12 +24,11 @@ export type EffectiveDurationResult = {
 
 function kindForServices(services: Service[]): DurationKind {
   if (!services.length) return "unknown";
-  if (services.some((s) => !s.durationKnown)) {
-    if (services.some((s) => s.isVariablePrice)) return "variable";
-    return "unknown";
-  }
+  // Price ranges (isVariablePrice) do not make duration unknown — official
+  // catalog minutes are fixed and online-bookable when durationKnown.
+  if (services.every((s) => s.durationKnown)) return "fixed";
   if (services.some((s) => s.isVariablePrice)) return "variable";
-  return "fixed";
+  return "unknown";
 }
 
 /**
