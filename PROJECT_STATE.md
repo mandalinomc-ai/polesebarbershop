@@ -47,3 +47,4 @@ Public label: **Durata prevista: X min** (sums on multi-select). Variable **pric
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
 - Alias: https://felicepolesebarbershop.vercel.app
+- Latest prod: `dpl_8K1548J1QTv28AvN8XrZXG3kzSJJ` (booking-ux-silent) — GO
