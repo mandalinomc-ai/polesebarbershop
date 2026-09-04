@@ -2639,6 +2639,12 @@ img, video { backface-visibility: hidden; }
 }
 
 body.scissors-intro-active { overflow: hidden; }
+body:not(.scissors-intro-active) .scissors-intro {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
 .scissors-intro {
   position: fixed;
   inset: 0;
@@ -2647,7 +2653,7 @@ body.scissors-intro-active { overflow: hidden; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  overflow: visible;
+  overflow: hidden;
 }
 .scissors-intro-content {
   position: relative;
@@ -2836,6 +2842,20 @@ body.scissors-intro-active { overflow: hidden; }
 .scissors-intro--cutting,
 .scissors-intro--reveal {
   background: transparent;
+}
+.scissors-intro--reveal .scissors-intro-content,
+.scissors-intro--reveal .scissors-intro-brand,
+.scissors-intro--reveal .scissors-intro-countdown,
+.scissors-intro--reveal .scissors-intro-skip {
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+body:not(.scissors-intro-active) .scissors-intro-split,
+body:not(.scissors-intro-active) .scissors-intro-content,
+body:not(.scissors-intro-active) .scissors-intro-shears,
+body:not(.scissors-intro-active) .scissors-intro-cutline {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 .tilt-3d {
   transform-style: preserve-3d;

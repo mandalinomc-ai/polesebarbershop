@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
 import { OpeningCountdown } from "@/components/site/OpeningCountdown";
 import { HERO_SLOT_CTA, SITE, isPreOpeningCountdownVisible } from "@/lib/site-config";
@@ -16,9 +16,11 @@ type Phase = "hidden" | "dark" | "tension" | "scissors" | "snip" | "cutting" | "
 
 /** Brief full-screen intro: dark → tension → chrome scissors snip → panels cut open → brand. */
 export function ScissorsIntro() {
+  const [active, setActive] = useState(false);
   const [phase, setPhase] = useState<Phase>("hidden");
   const timersRef = useRef<number[]>([]);
   const finishedRef = useRef(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   function clearIntroTimers() {
     timersRef.current.forEach((id) => window.clearTimeout(id));
@@ -29,13 +31,15 @@ export function ScissorsIntro() {
     if (finishedRef.current) return;
     finishedRef.current = true;
     clearIntroTimers();
+    overlayRef.current?.style.setProperty("display", "none");
+    document.body.classList.remove("scissors-intro-active");
     try {
       sessionStorage.setItem(INTRO_KEY, "1");
     } catch {
       /* private mode */
     }
+    setActive(false);
     setPhase("hidden");
-    document.body.classList.remove("scissors-intro-active");
   }
 
   useEffect(() => {
@@ -57,6 +61,7 @@ export function ScissorsIntro() {
     }
 
     finishedRef.current = false;
+    setActive(true);
     setPhase("dark");
     document.body.classList.add("scissors-intro-active");
 
@@ -92,13 +97,20 @@ export function ScissorsIntro() {
     };
   }, []);
 
-  if (phase === "hidden") return null;
+  useLayoutEffect(() => {
+    if (!active || phase === "hidden") {
+      document.body.classList.remove("scissors-intro-active");
+    }
+  }, [active, phase]);
+
+  if (!active || phase === "hidden") return null;
 
   const showShears =
     phase === "scissors" || phase === "snip" || phase === "cutting";
 
   return (
     <div
+      ref={overlayRef}
       className={`scissors-intro scissors-intro--${phase}`}
       role="dialog"
       aria-label="Felice Polese Barber Shop"
