@@ -417,7 +417,8 @@ describe("public copy vs official identity", () => {
     expect(HERO_CALENDAR_DAYS).toBeGreaterThanOrEqual(12);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/BOOKING_UI_DAYS/);
-    expect(wizard).toMatch(/alcun limite al numero totale/i);
+    expect(wizard).toMatch(/Illimitate/);
+    expect(wizard).toMatch(/nessun tetto totale/i);
     const crm = readFileSync(join(process.cwd(), "app/api/admin/crm/route.ts"), "utf8");
     expect(crm).toMatch(/fetchAllPages/);
     expect(crm).not.toMatch(/\.limit\(4000\)/);
