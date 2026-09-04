@@ -49,9 +49,9 @@ describe("mail providers", () => {
 
   it("defaults the salon form relay off in tests and on in production", () => {
     delete process.env.SALON_FORM_RELAY;
-    process.env.NODE_ENV = "test";
+    (process.env as { NODE_ENV?: string }).NODE_ENV = "test";
     expect(isSalonFormRelayEnabled()).toBe(false);
-    process.env.NODE_ENV = "production";
+    (process.env as { NODE_ENV?: string }).NODE_ENV = "production";
     expect(isSalonFormRelayEnabled()).toBe(true);
     process.env.SALON_FORM_RELAY = "off";
     expect(isSalonFormRelayEnabled()).toBe(false);

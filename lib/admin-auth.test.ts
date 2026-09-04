@@ -18,7 +18,8 @@ describe("admin /gestionale credentials", () => {
   const origUser = process.env.ADMIN_USER;
   const origPass = process.env.ADMIN_PASSWORD;
   const origSecret = process.env.ADMIN_SESSION_SECRET;
-  const origNode = process.env.NODE_ENV;
+  const origVercel = process.env.VERCEL;
+  const origVercelEnv = process.env.VERCEL_ENV;
 
   afterEach(() => {
     if (origUser === undefined) delete process.env.ADMIN_USER;
@@ -27,8 +28,10 @@ describe("admin /gestionale credentials", () => {
     else process.env.ADMIN_PASSWORD = origPass;
     if (origSecret === undefined) delete process.env.ADMIN_SESSION_SECRET;
     else process.env.ADMIN_SESSION_SECRET = origSecret;
-    if (origNode === undefined) delete process.env.NODE_ENV;
-    else process.env.NODE_ENV = origNode;
+    if (origVercel === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = origVercel;
+    if (origVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = origVercelEnv;
     resetRateLimitStore();
   });
 
@@ -62,8 +65,8 @@ describe("admin /gestionale credentials", () => {
     expect(isAdminTokenValid(token, pastExpiry)).toBe(false);
   });
 
-  it("sets HttpOnly Secure cookie options in production", () => {
-    process.env.NODE_ENV = "production";
+  it("sets HttpOnly Secure cookie options on Vercel", () => {
+    process.env.VERCEL = "1";
     const opts = adminCookieOptions();
     expect(opts.httpOnly).toBe(true);
     expect(opts.secure).toBe(true);
@@ -83,32 +86,35 @@ describe("admin /gestionale credentials", () => {
 describe("POST /api/admin/login", () => {
   const origUser = process.env.ADMIN_USER;
   const origPass = process.env.ADMIN_PASSWORD;
-  const origNode = process.env.NODE_ENV;
+  const origVercelEnv = process.env.VERCEL_ENV;
 
   afterEach(() => {
     if (origUser === undefined) delete process.env.ADMIN_USER;
     else process.env.ADMIN_USER = origUser;
     if (origPass === undefined) delete process.env.ADMIN_PASSWORD;
     else process.env.ADMIN_PASSWORD = origPass;
-    if (origNode === undefined) delete process.env.NODE_ENV;
-    else process.env.NODE_ENV = origNode;
+    if (origVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = origVercelEnv;
     resetRateLimitStore();
   });
 
-  async function login(body: unknown) {
+  async function login(body: unknown, ip = "203.0.113.10") {
     return POST(
       new Request("http://localhost/api/admin/login", {
         method: "POST",
-        headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.10" },
+        headers: {
+          "content-type": "application/json",
+          "x-forwarded-for": ip,
+        },
         body: JSON.stringify(body),
       }),
     );
   }
 
-  it("accepts username admin and password admin by default in non-production", async () => {
+  it("accepts username admin and password admin by default outside Vercel production", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
-    process.env.NODE_ENV = "test";
+    delete process.env.VERCEL_ENV;
     const res = await login({ username: "admin", password: "admin" });
     expect(res.status).toBe(200);
     const json = (await res.json()) as { ok: boolean };
@@ -120,7 +126,7 @@ describe("POST /api/admin/login", () => {
   it("accepts id as alias of username", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
-    process.env.NODE_ENV = "test";
+    delete process.env.VERCEL_ENV;
     const res = await login({ id: "admin", password: "admin" });
     expect(res.status).toBe(200);
   });
@@ -128,7 +134,6 @@ describe("POST /api/admin/login", () => {
   it("rejects missing username", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
-    process.env.NODE_ENV = "test";
     const res = await login({ password: "admin" });
     expect(res.status).toBe(400);
   });
@@ -136,15 +141,14 @@ describe("POST /api/admin/login", () => {
   it("rejects wrong password", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
-    process.env.NODE_ENV = "test";
     const res = await login({ username: "admin", password: "nope" });
     expect(res.status).toBe(401);
   });
 
-  it("blocks default credentials in production", async () => {
+  it("blocks default credentials in Vercel production", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
-    process.env.NODE_ENV = "production";
+    process.env.VERCEL_ENV = "production";
     const res = await login({ username: "admin", password: "admin" });
     expect(res.status).toBe(503);
   });
@@ -152,10 +156,10 @@ describe("POST /api/admin/login", () => {
   it("rate-limits repeated login failures", async () => {
     process.env.ADMIN_USER = "felice";
     process.env.ADMIN_PASSWORD = "segreto12";
-    process.env.NODE_ENV = "test";
+    delete process.env.VERCEL_ENV;
     let last = 401;
     for (let i = 0; i < 6; i++) {
-      const res = await login({ username: "felice", password: "wrong" });
+      const res = await login({ username: "felice", password: "wrong" }, "198.51.100.50");
       last = res.status;
     }
     expect(last).toBe(429);

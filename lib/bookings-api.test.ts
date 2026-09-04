@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { POST } from "@/app/api/bookings/route";
 import { DELETE, GET } from "@/app/api/bookings/[token]/route";
+import { resetRateLimitStore } from "./rate-limit";
 
 const ENV_KEYS = [
   "SUPABASE_URL",
@@ -11,9 +12,12 @@ const ENV_KEYS = [
   "GMAIL_APP_PASSWORD",
 ];
 
+let ipCounter = 0;
+
 function withoutCloud() {
   const saved: Record<string, string | undefined> = {};
   beforeEach(() => {
+    resetRateLimitStore();
     for (const key of ENV_KEYS) {
       saved[key] = process.env[key];
       delete process.env[key];
@@ -24,6 +28,7 @@ function withoutCloud() {
       if (saved[key] === undefined) delete process.env[key];
       else process.env[key] = saved[key];
     }
+    resetRateLimitStore();
   });
 }
 
@@ -43,10 +48,14 @@ function payload(overrides: Record<string, unknown> = {}) {
 }
 
 async function postBooking(body: unknown) {
+  ipCounter += 1;
   return POST(
     new Request("http://localhost/api/bookings", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": `203.0.113.${ipCounter % 200}`,
+      },
       body: JSON.stringify(body),
     }),
   );
@@ -118,11 +127,12 @@ describe("POST /api/bookings — validation (no calendar)", () => {
 describe("GET/DELETE /api/bookings/[token]", () => {
   withoutCloud();
   it("exposes Italian manage/cancel endpoints even without Supabase", async () => {
-    const ctx = { params: Promise.resolve({ token: "a".repeat(24) }) };
-    const getRes = await GET(new Request("http://localhost/api/bookings/token"), ctx);
+    const token = "a".repeat(48);
+    const ctx = { params: Promise.resolve({ token }) };
+    const getRes = await GET(new Request(`http://localhost/api/bookings/${token}`), ctx);
     expect(getRes.status).toBe(503);
     const delRes = await DELETE(
-      new Request("http://localhost/api/bookings/token", { method: "DELETE" }),
+      new Request(`http://localhost/api/bookings/${token}`, { method: "DELETE" }),
       ctx,
     );
     expect(delRes.status).toBe(503);

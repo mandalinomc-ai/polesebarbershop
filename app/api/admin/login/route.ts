@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: ADMIN_MISSING_IT }, { status: 503 });
   }
   if (
-    process.env.NODE_ENV === "production" &&
+    process.env.VERCEL_ENV === "production" &&
     isUsingDefaultAdminCredentials()
   ) {
     return NextResponse.json({ error: ADMIN_WEAK_DEFAULTS_IT }, { status: 503 });
