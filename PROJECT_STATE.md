@@ -3,19 +3,20 @@
 **Updated:** 2026-09-04  
 **Public URL:** https://felicepolesebarbershop.vercel.app  
 **Vercel project:** `temporary-prompt-quasar-rndxhgh` (alias: felicepolesebarbershop)  
-**Branch:** `cursor/update-durations-56a6`
+**Branch:** `cursor/client-ux-polish-56a6` (`ac5749c`)
 
 ## Status summary
 
 | Area | Status |
 |------|--------|
-| Production site | **LIVE** — homepage Felice branding, Maps Dante 44, listino, videos |
-| Code tip | **READY** on `cursor/update-durations-56a6` — new official durations |
-| Multi-service booking | **READY** — combos sum silently (40/70/65/200/70/80), no engine jargon warnings |
+| Production site | **LIVE** on alias `0aa116c` (preview-bug fix) — not client UX polish tip |
+| Client UX polish tip | **READY** code / **NO-GO** deploy — Hobby `api-deployments-free-per-day`; no build of `ac5749c` exists |
+| Official durations | **LIVE** via Supabase catalog overlay |
+| Multi-service booking | **READY** — silent Italian UX on tip; combos sum |
 | Gmail SMTP | **READY** |
 | Supabase bookings | **READY** — migration `010_new_official_durations.sql` |
 | Smart booking | **READY** — all 10 services fixed durations, buffer internal |
-| Security | **READY** — cookies, honeypot, rate limits (no CAPTCHA) |
+| Security | **LIVE** enough for `/cookie-policy` 200 on current alias |
 
 ## Official durations (booking)
 
@@ -48,7 +49,7 @@ Public label: **Durata prevista: X min** (sums on multi-select). Variable **pric
 ## Deploy
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
-- Alias: https://felicepolesebarbershop.vercel.app
-- Live catalog/availability **GO** via Supabase overlay sync (migration 010 applied)
-- Code branch `cursor/update-durations-56a6` pushed (`2b1bf2b`); Vercel CLI prod deploy blocked by free-tier daily quota (`api-deployments-free-per-day`) — seed catalog will ship on next successful deploy
-- Verified live: Tintura Barba 20, Tintura Capelli 30, Meches 150, Cutanea 180, Acconciatura 10; combos 70/80/200/40
+- Alias: https://felicepolesebarbershop.vercel.app → currently `dpl_58…` / `0aa116c`
+- Live catalog/availability **GO** via Supabase (migration 010)
+- Client UX polish (`ac5749c`, PR #27): **NO-GO until quota resets** — alias alone cannot ship (no deployment of tip SHA). One timer set for single retry. See `docs/DEPLOY_STATUS.md`.
+- Verified live durations: Tintura Barba 20, Tintura Capelli 30, Meches 150, Cutanea 180, Acconciatura 10
