@@ -29,10 +29,10 @@ describe("production official durations (all 10)", () => {
     }
   });
 
-  it("books decolorazione-meches at 90 min (+ buffer) respecting Tuesday close", () => {
+  it("books decolorazione-meches at 150 min (+ buffer) respecting Tuesday close", () => {
     const services = resolveServices(["decolorazione-meches"])!;
     const resolved = resolveEffectiveServiceDuration({ services });
-    expect(resolved.durationMin).toBe(90);
+    expect(resolved.durationMin).toBe(150);
     expect(resolved.onlineBookable).toBe(true);
     const slots = getAvailableSlots({
       date: TUESDAY,
@@ -42,10 +42,10 @@ describe("production official durations (all 10)", () => {
       fullSearch: true,
     });
     expect(slots[0]?.label).toBe("08:30");
-    // 90 + 5 buffer = 95 → last start that fits before 19:00 is 17:25
+    // 150 + 5 buffer = 155 → last start that fits before 19:00 is 16:25
     const last = slots.at(-1)!;
-    expect(last.label <= "17:25").toBe(true);
-    const endMs = last.start.getTime() + (90 + BOOKING_BUFFER_MINUTES) * 60_000;
+    expect(last.label <= "16:25").toBe(true);
+    const endMs = last.start.getTime() + (150 + BOOKING_BUFFER_MINUTES) * 60_000;
     const close = wallTimeToUtc(TUESDAY, "19:00").getTime();
     expect(endMs).toBeLessThanOrEqual(close);
   });
