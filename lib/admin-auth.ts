@@ -41,8 +41,16 @@ export function isAdminConfigured() {
   return getAdminPassword().length >= 4;
 }
 
-/** True when credentials are the insecure local defaults. */
+/** True when ADMIN_USER and ADMIN_PASSWORD are both set in the environment. */
+export function hasExplicitAdminCredentials() {
+  const userFromEnv = process.env.ADMIN_USER?.trim();
+  const passFromEnv = process.env.ADMIN_PASSWORD;
+  return Boolean(userFromEnv && passFromEnv != null && passFromEnv.length > 0);
+}
+
+/** True when credentials are the insecure local defaults (env unset, falling back). */
 export function isUsingDefaultAdminCredentials() {
+  if (hasExplicitAdminCredentials()) return false;
   return (
     getAdminUser().toLowerCase() === DEFAULT_ADMIN_USER &&
     getAdminPassword() === DEFAULT_ADMIN_PASSWORD
