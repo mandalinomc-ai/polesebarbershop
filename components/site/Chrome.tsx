@@ -214,8 +214,11 @@ export function ClientEffects() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const revealEls = Array.from(
-      document.querySelectorAll(".reveal, .section-title, .eyebrow"),
-    );
+      document.querySelectorAll(".reveal, .section-title, .eyebrow, .fx-copy"),
+    ).filter((el) => {
+      const ancestor = el.parentElement?.closest(".reveal");
+      return !ancestor || ancestor === el;
+    });
     const mediaEls = Array.from(
       document.querySelectorAll(
         ".video-reel-box, .about-video, .hero-media-cell, .qr-card",
