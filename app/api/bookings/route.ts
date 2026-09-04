@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
-import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
+import { getBarber, onlineBookingBlockReason, resolveServices, totalsForServices } from "@/lib/catalog";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
 import { SITE, getAdminEmail, getSiteUrl } from "@/lib/site-config";
@@ -29,6 +29,10 @@ export async function POST(request: Request) {
   const body = parsed.data;
   const services = resolveServices(body.serviceIds);
   if (!services) return NextResponse.json({ error: "Seleziona almeno un servizio valido." }, { status: 400 });
+  const blockReason = onlineBookingBlockReason(services);
+  if (blockReason) {
+    return NextResponse.json({ error: blockReason, durationUnknown: true }, { status: 400 });
+  }
   if (!getBarber(body.barberId)) return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
 
   const totals = totalsForServices(services);

@@ -1346,6 +1346,8 @@ body:has(.fresha-footer) .fab-stack {
 .walkin-services { display: flex; flex-direction: column; gap: 0.35rem; }
 .walkin-service { display: flex; align-items: center; gap: 0.55rem; min-height: 44px; padding: 0.4rem 0.65rem; border: 1px solid var(--line); cursor: pointer; }
 .walkin-service.selected { border-color: var(--ink); }
+.duration-unknown-flag { color: #8a5a00; font-style: italic; font-size: 0.85em; }
+.fresha-option.muted { opacity: 0.72; }
 @media (max-width: 800px) {
   .crm-app { grid-template-columns: 1fr; }
   .crm-sidebar { display: none; }

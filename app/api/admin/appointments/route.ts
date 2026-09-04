@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { addDays, formatItalianDate, formatWallDate, formatWallTime, mondayOfWeek, wallTimeToUtc } from "@/lib/availability";
-import { blockEndFromStart } from "@/lib/booking";
+import {
+  addDays,
+  findSlot,
+  formatItalianDate,
+  formatWallDate,
+  formatWallTime,
+  getAvailableSlots,
+  mondayOfWeek,
+  wallTimeToUtc,
+} from "@/lib/availability";
+import { blockEndFromStart, effectiveServiceDurationMin } from "@/lib/booking";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { namesFromSnapshot, publicAppointment } from "@/lib/appointments";
+import {
+  AppointmentsUnavailableError,
+  loadDayAppointments,
+  namesFromSnapshot,
+  publicAppointment,
+} from "@/lib/appointments";
 import { isPaidStatus } from "@/lib/crm";
 import { buildStaffCancelCopy, waMeUrl } from "@/lib/crm-notify";
 import { getBarber } from "@/lib/catalog";
@@ -22,6 +36,7 @@ const AGENDA_EMPTY_IT =
 
 function serialize(row: AppointmentRow) {
   const start = new Date(row.starts_at);
+  const override = row.duration_override_min ?? null;
   return {
     id: row.id,
     status: row.status,
@@ -37,6 +52,8 @@ function serialize(row: AppointmentRow) {
     timeLabel: formatWallTime(start),
     dateLabel: formatWallDate(start),
     durationMin: row.duration_min,
+    durationOverrideMin: override,
+    effectiveDurationMin: override && override > 0 ? override : row.duration_min,
     priceCents: row.price_cents,
     isWalkIn: row.is_walk_in,
     notes: row.notes,
@@ -142,6 +159,10 @@ const patchSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   barberId: z.string().min(1).optional(),
   notes: z.string().max(500).nullable().optional(),
+  durationOverrideMin: z.number().int().min(1).max(480).nullable().optional(),
+  /** Admin-only: force move even on conflict (requires confirmForce). */
+  force: z.boolean().optional(),
+  confirmForce: z.boolean().optional(),
 });
 
 async function notifyClientOfStaffCancel(row: AppointmentRow) {
@@ -251,26 +272,127 @@ export async function PATCH(request: Request) {
   }
   if (parsed.data.priceEuro != null) patch.price_cents = Math.round(parsed.data.priceEuro * 100);
   if (parsed.data.notes !== undefined) patch.notes = parsed.data.notes;
+  if (parsed.data.durationOverrideMin !== undefined) {
+    patch.duration_override_min = parsed.data.durationOverrideMin;
+  }
 
   const moveDate = parsed.data.date;
   const moveTime = parsed.data.startTime;
   const moveBarber = parsed.data.barberId;
-  if (moveDate || moveTime || moveBarber) {
-    const start = moveDate && moveTime
-      ? wallTimeToUtc(moveDate, moveTime)
-      : new Date(row.starts_at);
-    const durationMin = row.duration_min;
-    const endsAt = blockEndFromStart(start, durationMin);
-    patch.starts_at = start.toISOString();
-    patch.ends_at = endsAt.toISOString();
-    if (moveBarber) patch.barber_id = moveBarber;
+  const force = Boolean(parsed.data.force && parsed.data.confirmForce);
+  if (moveDate || moveTime || moveBarber || parsed.data.durationOverrideMin !== undefined) {
+    const targetDate = moveDate || formatWallDate(new Date(row.starts_at));
+    const targetTime = moveTime || formatWallTime(new Date(row.starts_at));
+    const targetBarber = moveBarber || row.barber_id;
+    const start = wallTimeToUtc(targetDate, targetTime);
+    const occupancyDuration = effectiveServiceDurationMin(
+      row.duration_min,
+      parsed.data.durationOverrideMin !== undefined
+        ? parsed.data.durationOverrideMin
+        : row.duration_override_min,
+    );
+    const endsAt = blockEndFromStart(start, occupancyDuration);
+
+    if (moveDate || moveTime || moveBarber) {
+      // Exclude this appointment from busy set so move can re-occupy a freed slot.
+      let dayAppointments;
+      try {
+        dayAppointments = (await loadDayAppointments(targetDate)).filter((a) => a.id !== row.id);
+      } catch (err) {
+        const message =
+          err instanceof AppointmentsUnavailableError
+            ? err.message
+            : "Calendario non disponibile.";
+        return NextResponse.json({ error: message }, { status: 503 });
+      }
+      const slots = getAvailableSlots({
+        date: targetDate,
+        barberId: targetBarber,
+        durationMinutes: occupancyDuration,
+        appointments: dayAppointments,
+        minNoticeMinutes: 0,
+        now: new Date(0),
+        fullSearch: true,
+      });
+      const slot = findSlot(slots, start);
+      if (!slot && !force) {
+        const alternatives = slots.slice(0, 8).map((s) => ({
+          label: s.label,
+          startIso: s.startIso,
+          date: targetDate,
+          barberId: s.barberId,
+        }));
+        return NextResponse.json(
+          {
+            error: "Orario occupato per questo barbiere. Ecco alternative libere.",
+            conflict: true,
+            alternatives,
+          },
+          { status: 409 },
+        );
+      }
+      patch.starts_at = (slot?.startIso ?? start.toISOString());
+      patch.ends_at = (slot?.blockEndIso ?? endsAt.toISOString());
+      if (moveBarber) patch.barber_id = moveBarber;
+    } else if (parsed.data.durationOverrideMin !== undefined) {
+      // Duration-only edit: recompute ends_at from current start.
+      patch.ends_at = blockEndFromStart(new Date(row.starts_at), occupancyDuration).toISOString();
+    }
   }
 
   const { data, error } = await db.from("appointments").update(patch).eq("id", parsed.data.id).select("*").single();
   if (error) {
     const overlap = error.code === "23P01" || /overlap|exclusion/i.test(error.message);
     if (overlap) {
-      return NextResponse.json({ error: "Orario occupato per questo barbiere. Scegli un'altra fascia." }, { status: 409 });
+      // Even force can hit DB exclusion if another row overlaps — surface alternatives.
+      const targetDate = parsed.data.date || formatWallDate(new Date(row.starts_at));
+      const targetBarber = parsed.data.barberId || row.barber_id;
+      const occupancyDuration = effectiveServiceDurationMin(
+        row.duration_min,
+        parsed.data.durationOverrideMin !== undefined
+          ? parsed.data.durationOverrideMin
+          : row.duration_override_min,
+      );
+      try {
+        const dayAppointments = (await loadDayAppointments(targetDate)).filter((a) => a.id !== row.id);
+        const slots = getAvailableSlots({
+          date: targetDate,
+          barberId: targetBarber,
+          durationMinutes: occupancyDuration,
+          appointments: dayAppointments,
+          minNoticeMinutes: 0,
+          now: new Date(0),
+          fullSearch: true,
+        });
+        return NextResponse.json(
+          {
+            error: "Orario occupato per questo barbiere. Scegli un'altra fascia.",
+            conflict: true,
+            alternatives: slots.slice(0, 8).map((s) => ({
+              label: s.label,
+              startIso: s.startIso,
+              date: targetDate,
+              barberId: s.barberId,
+            })),
+          },
+          { status: 409 },
+        );
+      } catch {
+        return NextResponse.json({ error: "Orario occupato per questo barbiere. Scegli un'altra fascia." }, { status: 409 });
+      }
+    }
+    if (/duration_override_min/i.test(error.message || "")) {
+      // Column missing: retry without override field.
+      delete patch.duration_override_min;
+      const retry = await db.from("appointments").update(patch).eq("id", parsed.data.id).select("*").single();
+      if (!retry.error && retry.data) {
+        return NextResponse.json({
+          ok: true,
+          appointment: publicAppointment(retry.data as AppointmentRow),
+          clientNotify: null,
+          warning: "duration_override_min non in schema — esegui migration 007.",
+        });
+      }
     }
     return NextResponse.json({ error: "Impossibile aggiornare l'appuntamento." }, { status: 500 });
   }

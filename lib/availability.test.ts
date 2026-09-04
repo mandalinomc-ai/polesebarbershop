@@ -71,35 +71,38 @@ describe("getAvailableSlots", () => {
     expect(anyone.map((s) => s.label)).not.toContain("11:00");
   });
 
-  it("a 30 min booking at 10:00 blocks 10:15 on the same barber, not the other chair", () => {
+  it("a 30 min booking at 10:00 blocks overlapping starts on the same barber, not the other chair", () => {
     const busyStart = wallTimeToUtc(TUESDAY, "10:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "10:30");
     const appointments = [{ barberId: "felice" as const, startsAt: busyStart, endsAt: busyEnd }];
-    const felice = getScheduleSlots({
+    const felice = getAvailableSlots({
       date: TUESDAY,
       barberId: "felice",
       durationMinutes: 30,
       now: nowBeforeOpening,
       appointments,
-    });
-    expect(felice.find((s) => s.label === "10:00")).toMatchObject({ booked: true, available: false });
-    expect(felice.find((s) => s.label === "10:15")).toMatchObject({ booked: true, available: false });
-    expect(felice.find((s) => s.label === "10:30")).toMatchObject({ booked: false, available: true });
-    const davide = getScheduleSlots({
+      fullSearch: true,
+    }).map((s) => s.label);
+    expect(felice).not.toContain("10:00");
+    expect(felice).not.toContain("10:15");
+    expect(felice).toContain("10:30");
+    const davide = getAvailableSlots({
       date: TUESDAY,
       barberId: "davide",
       durationMinutes: 30,
       now: nowBeforeOpening,
       appointments,
-    });
-    expect(davide.find((s) => s.label === "10:00")).toMatchObject({ booked: false, available: true });
-    expect(davide.find((s) => s.label === "10:15")).toMatchObject({ booked: false, available: true });
-    const anyone = getScheduleSlots({
+      fullSearch: true,
+    }).map((s) => s.label);
+    expect(davide).toContain("10:00");
+    expect(davide).toContain("10:15");
+    const anyone = getAvailableSlots({
       date: TUESDAY,
       barberId: "anyone",
       durationMinutes: 30,
       now: nowBeforeOpening,
       appointments,
+      fullSearch: true,
     });
     expect(anyone.find((s) => s.label === "10:00")).toMatchObject({
       available: true,
@@ -131,29 +134,22 @@ describe("getAvailableSlots", () => {
 });
 
 describe("getScheduleSlots occupancy grid", () => {
-  it("keeps the taken hour visible and not bookable", () => {
+  it("omits taken starts (free-windows: no invented booked micro-slots)", () => {
     const busyStart = wallTimeToUtc(TUESDAY, "10:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "10:25");
-    const grid = getScheduleSlots({
+    const grid = getAvailableSlots({
       date: TUESDAY,
       barberId: "felice",
       durationMinutes: 25,
       now: nowBeforeOpening,
       appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
+      fullSearch: true,
     });
-    const taken = grid.find((s) => s.label === "10:00");
-    expect(taken).toMatchObject({ booked: true, available: false });
+    expect(grid.find((s) => s.label === "10:00")).toBeUndefined();
     expect(grid.find((s) => s.label === "10:25")).toMatchObject({
       booked: false,
       available: true,
     });
-    expect(getAvailableSlots({
-      date: TUESDAY,
-      barberId: "felice",
-      durationMinutes: 25,
-      now: nowBeforeOpening,
-      appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
-    }).map((s) => s.label)).not.toContain("10:00");
   });
 
   it("marks anyone-slot booked only when both chairs are busy", () => {
@@ -165,13 +161,14 @@ describe("getScheduleSlots occupancy grid", () => {
       durationMinutes: 25,
       now: nowBeforeOpening,
       appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
+      fullSearch: true,
     });
     expect(oneBusy.find((s) => s.label === "11:00")).toMatchObject({
       available: true,
       booked: false,
       barberId: "davide",
     });
-    const bothBusy = getScheduleSlots({
+    const bothBusy = getAvailableSlots({
       date: TUESDAY,
       barberId: "anyone",
       durationMinutes: 25,
@@ -180,11 +177,10 @@ describe("getScheduleSlots occupancy grid", () => {
         { barberId: "felice", startsAt: busyStart, endsAt: busyEnd },
         { barberId: "davide", startsAt: busyStart, endsAt: busyEnd },
       ],
+      fullSearch: true,
     });
-    expect(bothBusy.find((s) => s.label === "11:00")).toMatchObject({
-      available: false,
-      booked: true,
-    });
+    // Free-windows engine: no invented booked micro-slot — start simply absent.
+    expect(bothBusy.find((s) => s.label === "11:00")).toBeUndefined();
   });
 
   it("does not invent a booked grid on closed days or before opening", () => {

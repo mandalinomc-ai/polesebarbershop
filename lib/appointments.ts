@@ -1,9 +1,17 @@
 import { formatItalianDate, formatWallDate, formatWallTime, wallTimeToUtc } from "@/lib/availability";
 import { getBarber, type Service } from "@/lib/catalog";
+import { effectiveServiceDurationMin } from "@/lib/booking";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/supabase-query";
 
-export type DayBusy = { barberId: string; startsAt: string; endsAt: string };
+export type DayBusy = {
+  barberId: string;
+  startsAt: string;
+  endsAt: string;
+  id?: string;
+  durationMin?: number;
+  durationOverrideMin?: number | null;
+};
 const BLOCKING = ["pending", "confirmed", "walk_in", "completed"] as const;
 
 /** Raised when appointments cannot be loaded — callers must not invent free slots. */
@@ -24,10 +32,13 @@ export function shouldAttachCalendarReminder(status: string): boolean {
 }
 
 type DayRow = {
+  id: string;
   barber_id: string;
   starts_at: string;
   ends_at: string;
   status: string;
+  duration_min: number;
+  duration_override_min: number | null;
 };
 
 export async function loadAppointmentsBetween(
@@ -52,16 +63,45 @@ export async function loadAppointmentsBetween(
   const { data, error } = await fetchAllPages<DayRow>(async (from, to) =>
     db
       .from("appointments")
-      .select("barber_id, starts_at, ends_at, status")
+      .select("id, barber_id, starts_at, ends_at, status, duration_min, duration_override_min")
       .gte("starts_at", dayStart)
       .lte("starts_at", dayEnd)
       .order("starts_at", { ascending: true })
       .range(from, to),
   );
   if (error) {
-    throw new AppointmentsUnavailableError(
-      "Impossibile leggere le prenotazioni. Riprova tra poco.",
+    // Fallback without override column (pre-migration).
+    const fallback = await fetchAllPages<{
+      id: string;
+      barber_id: string;
+      starts_at: string;
+      ends_at: string;
+      status: string;
+      duration_min: number;
+    }>(async (from, to) =>
+      db
+        .from("appointments")
+        .select("id, barber_id, starts_at, ends_at, status, duration_min")
+        .gte("starts_at", dayStart)
+        .lte("starts_at", dayEnd)
+        .order("starts_at", { ascending: true })
+        .range(from, to),
     );
+    if (fallback.error) {
+      throw new AppointmentsUnavailableError(
+        "Impossibile leggere le prenotazioni. Riprova tra poco.",
+      );
+    }
+    return fallback.data
+      .filter((row) => occupiesSlot(row.status))
+      .map((row) => ({
+        barberId: row.barber_id,
+        startsAt: row.starts_at,
+        endsAt: row.ends_at,
+        id: row.id,
+        durationMin: row.duration_min,
+        durationOverrideMin: null,
+      }));
   }
   return data
     .filter((row) => occupiesSlot(row.status))
@@ -69,6 +109,9 @@ export async function loadAppointmentsBetween(
       barberId: row.barber_id,
       startsAt: row.starts_at,
       endsAt: row.ends_at,
+      id: row.id,
+      durationMin: row.duration_min,
+      durationOverrideMin: row.duration_override_min,
     }));
 }
 
@@ -99,6 +142,10 @@ export function namesFromSnapshot(snapshot: unknown, fallback = "") {
 
 export function publicAppointment(row: AppointmentRow) {
   const start = new Date(row.starts_at);
+  const effectiveDuration = effectiveServiceDurationMin(
+    row.duration_min,
+    row.duration_override_min,
+  );
   return {
     id: row.id,
     status: row.status,
@@ -110,6 +157,8 @@ export function publicAppointment(row: AppointmentRow) {
     barberName: getBarber(row.barber_id)?.name || row.barber_id,
     serviceNames: namesFromSnapshot(row.services_snapshot),
     durationMinutes: row.duration_min,
+    durationOverrideMin: row.duration_override_min ?? null,
+    effectiveDurationMin: effectiveDuration,
     totalPrice: row.price_cents / 100,
     priceCents: row.price_cents,
     isWalkIn: row.is_walk_in,

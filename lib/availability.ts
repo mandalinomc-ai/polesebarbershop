@@ -8,12 +8,17 @@ import {
 } from "./catalog";
 import {
   BOOKING_BUFFER_MINUTES,
+  DEFAULT_OPTIMIZATION_MODE,
+  ONLINE_DISPLAY_INTERVAL_MINUTES,
   SLOT_INTERVAL_MINUTES,
+  TIME_SLOT_INTERVAL_MINUTES,
   blockEndFromStart,
-  candidateStartLabels,
+  candidateStartsInWindows,
   clientEndFromStart,
   isIntervalFree,
   overlaps,
+  subtractBusyFromWindows,
+  workingWindowsFromHours,
   TIMEZONE,
   addMinutes as bookingAddMinutes,
   formatWallDate as bookingFormatWallDate,
@@ -21,6 +26,8 @@ import {
   minutesToTime as bookingMinutesToTime,
   timeToMinutes,
   wallTimeToUtc as bookingWallTimeToUtc,
+  type OptimizationMode,
+  type SlotRank,
 } from "./booking";
 import {
   BOOKING_HORIZON_DAYS,
@@ -28,9 +35,17 @@ import {
   SITE,
 } from "./site-config";
 
-export { TIMEZONE, BOOKING_BUFFER_MINUTES, SLOT_INTERVAL_MINUTES };
+export {
+  TIMEZONE,
+  BOOKING_BUFFER_MINUTES,
+  SLOT_INTERVAL_MINUTES,
+  TIME_SLOT_INTERVAL_MINUTES,
+  ONLINE_DISPLAY_INTERVAL_MINUTES,
+  DEFAULT_OPTIMIZATION_MODE,
+};
 /** @deprecated Prefer SLOT_INTERVAL_MINUTES — kept for existing imports. */
 export const SLOT_STEP_MINUTES = SLOT_INTERVAL_MINUTES;
+export type { OptimizationMode, SlotRank };
 
 export type ExistingAppointment = {
   barberId: string;
@@ -96,6 +111,15 @@ export type GetAvailableSlotsInput = {
   /** Internal chair buffer; default BOOKING_BUFFER_MINUTES. */
   bufferMinutes?: number;
   timeZone?: string;
+  /** Gap optimization mode; default REDUCE_GAPS. */
+  optimizationMode?: OptimizationMode;
+  /**
+   * Online thinning cadence. `null` = every search step (gestionale / tests / revalidation).
+   * Omit for online default (ONLINE_DISPLAY_INTERVAL_MINUTES).
+   */
+  displayIntervalMinutes?: number | null;
+  /** When true, omit display thinning (full search grid inside free windows). */
+  fullSearch?: boolean;
 };
 
 function parseDateParts(date: string): { y: number; m: number; d: number } {
@@ -276,17 +300,47 @@ export function pickLeastLoadedBarber(
   })[0];
 }
 
+function busyWallMinutesForBarber(
+  appointments: ExistingAppointment[],
+  barberId: string,
+  date: string,
+  timeZone: string,
+): { startMin: number; endMin: number }[] {
+  return appointments
+    .filter((a) => a.barberId === barberId)
+    .map((a) => {
+      const start = asDate(a.startsAt);
+      const end = asDate(a.endsAt);
+      // Only intervals that touch this civil date (wall clock).
+      if (formatWallDate(start, timeZone) !== date && formatWallDate(end, timeZone) !== date) {
+        return null;
+      }
+      return {
+        startMin: timeToMinutes(formatWallTime(start, timeZone)),
+        endMin: timeToMinutes(formatWallTime(end, timeZone)),
+      };
+    })
+    .filter((x): x is { startMin: number; endMin: number } => x != null && x.endMin > x.startMin);
+}
+
 function slotStartsForHours(
   hours: DayHours,
   durationMinutes: number,
   slotStepMinutes: number,
-  bufferMinutes: number = BOOKING_BUFFER_MINUTES,
+  bufferMinutes: number,
+  busyMinutes: { startMin: number; endMin: number }[],
+  optimizationMode: OptimizationMode,
+  displayIntervalMinutes: number | null,
 ): string[] {
   if (!hours || durationMinutes <= 0) return [];
-  return candidateStartLabels(hours.open, hours.close, durationMinutes, {
-    slotIntervalMinutes: slotStepMinutes,
+  const working = workingWindowsFromHours(hours.open, hours.close);
+  const free = subtractBusyFromWindows(working, busyMinutes);
+  return candidateStartsInWindows(free, durationMinutes, {
     bufferMinutes,
-  });
+    searchIntervalMinutes: slotStepMinutes,
+    mode: optimizationMode,
+    displayIntervalMinutes,
+  }).map((s) => s.label);
 }
 
 function evaluateBarberSlot(opts: {
@@ -332,13 +386,24 @@ function scheduleForBarber(opts: {
   slotStepMinutes: number;
   timeZone: string;
   bufferMinutes: number;
+  optimizationMode: OptimizationMode;
+  displayIntervalMinutes: number | null;
 }): ScheduleSlot[] {
   const hours = getHoursForDate(opts.barber, opts.date);
+  const busyMinutes = busyWallMinutesForBarber(
+    opts.appointments,
+    opts.barber.id,
+    opts.date,
+    opts.timeZone,
+  );
   const labels = slotStartsForHours(
     hours,
     opts.durationMinutes,
     opts.slotStepMinutes,
     opts.bufferMinutes,
+    busyMinutes,
+    opts.optimizationMode,
+    opts.displayIntervalMinutes,
   );
   const busy = appointmentsForBarber(opts.appointments, opts.barber.id);
   const earliest = addMinutes(opts.now, opts.minNoticeMinutes);
@@ -365,8 +430,9 @@ function sortSlots<T extends { start: Date }>(slots: T[]): T[] {
 }
 
 /**
- * Full slot grid for a civil date in Europe/Rome, including taken hours.
- * `anyone` stays bookable while at least one chair is free; both busy → booked.
+ * Free-window schedule for a civil date in Europe/Rome.
+ * Available starts come from free windows (continuous); optional display thinning for online.
+ * `anyone` stays bookable while at least one chair is free.
  */
 export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] {
   const {
@@ -380,7 +446,16 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
     slotStepMinutes = SLOT_INTERVAL_MINUTES,
     bufferMinutes = BOOKING_BUFFER_MINUTES,
     timeZone = TIMEZONE,
+    optimizationMode = DEFAULT_OPTIMIZATION_MODE,
+    fullSearch = false,
   } = input;
+
+  const displayIntervalMinutes =
+    input.displayIntervalMinutes !== undefined
+      ? input.displayIntervalMinutes
+      : fullSearch
+        ? null
+        : ONLINE_DISPLAY_INTERVAL_MINUTES;
 
   if (!date || durationMinutes <= 0) return [];
   if (date < getFirstBookableDate(now)) return [];
@@ -396,6 +471,8 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
     slotStepMinutes,
     bufferMinutes,
     timeZone,
+    optimizationMode,
+    displayIntervalMinutes,
   };
 
   if (barberId === ANYONE_BARBER_ID) {
@@ -444,23 +521,107 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
   return scheduleForBarber({ ...shared, barber });
 }
 
-export function summarizeSchedule(date: string, slots: ScheduleSlot[]): DayOccupancy {
+export function summarizeSchedule(
+  date: string,
+  slots: ScheduleSlot[],
+  opts?: { openDay?: boolean },
+): DayOccupancy {
   const availableCount = slots.filter((s) => s.available).length;
   const bookedCount = slots.filter((s) => s.booked).length;
+  const openDay = opts?.openDay ?? false;
   return {
     date,
     availableCount,
     bookedCount,
-    full: slots.length > 0 && availableCount === 0,
+    // Free-windows lists may be empty when the day is fully booked.
+    full: openDay ? availableCount === 0 : slots.length > 0 && availableCount === 0,
   };
 }
 
 /**
  * Return free slots for a civil date in Europe/Rome.
  * `anyone` merges real barbers and assigns the least-loaded free barber.
+ * Defaults to full search (no online thinning) so revalidation / gestionale
+ * can hit continuous free-window starts; pass displayInterval for online UI.
  */
 export function getAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
-  return getScheduleSlots(input).filter((s) => s.available);
+  const fullSearch = input.fullSearch ?? input.displayIntervalMinutes === undefined;
+  return getScheduleSlots({
+    ...input,
+    fullSearch,
+    displayIntervalMinutes:
+      input.displayIntervalMinutes !== undefined
+        ? input.displayIntervalMinutes
+        : fullSearch
+          ? null
+          : ONLINE_DISPLAY_INTERVAL_MINUTES,
+  }).filter((s) => s.available);
+}
+
+/** Online-facing smart starts (thinned). */
+export function getSmartAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
+  return getAvailableSlots({
+    ...input,
+    fullSearch: false,
+    displayIntervalMinutes:
+      input.displayIntervalMinutes === undefined
+        ? ONLINE_DISPLAY_INTERVAL_MINUTES
+        : input.displayIntervalMinutes,
+  });
+}
+
+/**
+ * First availability across upcoming open days (gestionale PRIMA DISPONIBILITÀ).
+ */
+export function findFirstAvailability(input: {
+  barberId: string;
+  durationMinutes: number;
+  appointments?: ExistingAppointment[];
+  barbers?: Barber[];
+  now?: Date;
+  fromDate?: string;
+  maxDays?: number;
+  minNoticeMinutes?: number;
+  bufferMinutes?: number;
+  optimizationMode?: OptimizationMode;
+}): Slot | null {
+  const now = input.now ?? new Date();
+  const startDate = input.fromDate ?? getFirstBookableDate(now);
+  const maxDays = Math.min(Math.max(input.maxDays ?? 21, 1), BOOKING_HORIZON_DAYS);
+  let cursor = startDate;
+  for (let i = 0; i < maxDays * 2; i += 1) {
+    if (!isClosedDay(cursor)) {
+      const slots = getAvailableSlots({
+        date: cursor,
+        barberId: input.barberId,
+        durationMinutes: input.durationMinutes,
+        appointments: input.appointments,
+        barbers: input.barbers,
+        now,
+        minNoticeMinutes: input.minNoticeMinutes ?? 0,
+        bufferMinutes: input.bufferMinutes,
+        optimizationMode: input.optimizationMode,
+        fullSearch: true,
+      });
+      if (slots[0]) return slots[0];
+    }
+    cursor = addDays(cursor, 1);
+    if (cursor > addDays(startDate, maxDays)) break;
+  }
+  return null;
+}
+
+/**
+ * Build a concrete Slot if start fits a free window (continuous), else undefined.
+ * Used for booking revalidation / gestionale move when the start may be off display grid.
+ */
+export function resolveBookableSlot(input: GetAvailableSlotsInput & { start: Date }): Slot | undefined {
+  const slots = getAvailableSlots({ ...input, fullSearch: true });
+  const hit = findSlot(slots, input.start);
+  if (hit) return hit;
+  // Exact label match via wall time (continuous free start may be 1-min precision)
+  const label = formatWallTime(input.start, input.timeZone ?? TIMEZONE);
+  return slots.find((s) => s.label === label && s.start.getTime() === input.start.getTime());
 }
 
 export function listDayHourStarts(

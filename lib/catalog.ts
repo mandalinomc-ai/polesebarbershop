@@ -235,5 +235,18 @@ export function totalsForServices(services: Service[]) {
     : priceEuro === 0
       ? "Gratuita"
       : `${priceEuro} €`;
-  return { durationMin, priceEuro, priceMaxEuro, isVariable, names, priceLabel, durationLabel };
+  return { durationMin, priceEuro, priceMaxEuro, isVariable, names, priceLabel, durationLabel, durationKnown };
+}
+
+/** Online booking requires every selected service to have a known catalog duration. */
+export function servicesAreOnlineBookable(services: Service[]): boolean {
+  return services.length > 0 && services.every((s) => s.durationKnown);
+}
+
+export function onlineBookingBlockReason(services: Service[]): string | null {
+  if (!services.length) return "Seleziona almeno un servizio.";
+  const unknown = services.filter((s) => !s.durationKnown);
+  if (!unknown.length) return null;
+  const names = unknown.map((s) => s.name).join(", ");
+  return `Durata non definita per: ${names}. Prenota in salone o al telefono — niente durata inventata online.`;
 }

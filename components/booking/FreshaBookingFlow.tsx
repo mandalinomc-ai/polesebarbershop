@@ -9,6 +9,8 @@ import {
   formatDuration,
   formatPriceRange,
   totalsForServices,
+  servicesAreOnlineBookable,
+  onlineBookingBlockReason,
   type Service,
 } from "@/lib/catalog";
 import {
@@ -127,6 +129,10 @@ export function FreshaBookingFlow({
     () => totalsForServices(selectedServices),
     [selectedServices],
   );
+  const onlineBlockedReason = useMemo(
+    () => onlineBookingBlockReason(selectedServices),
+    [selectedServices],
+  );
   const barber = BARBERS.find((b) => b.id === barberId);
 
   useEffect(() => {
@@ -164,7 +170,7 @@ export function FreshaBookingFlow({
   }, []);
 
   const loadSlots = useCallback(async () => {
-    if (!date || totals.durationMin <= 0) return;
+    if (!date || totals.durationMin <= 0 || onlineBlockedReason) return;
     setSlotsState("loading");
     setSlotsWarning("");
     try {
@@ -182,6 +188,7 @@ export function FreshaBookingFlow({
         error?: string;
         warning?: string;
         sourceUnavailable?: boolean;
+        durationUnknown?: boolean;
       };
       if (!res.ok || json.sourceUnavailable) {
         setSlots([]);
@@ -195,11 +202,13 @@ export function FreshaBookingFlow({
         return;
       }
       const incoming = Array.isArray(json.slots) ? json.slots : [];
-      setSlots(incoming);
+      // Smart available starts only — no endless booked micro-slots.
+      const availableOnly = incoming.filter((s) => !isSlotTaken(s));
+      setSlots(availableOnly);
       setSlot((curr) => {
         if (!curr) return curr;
-        const match = incoming.find((s) => s.start === curr.start);
-        if (!match || isSlotTaken(match)) return null;
+        const match = availableOnly.find((s) => s.start === curr.start);
+        if (!match) return null;
         return match;
       });
       if (Array.isArray(json.days)) {
@@ -217,13 +226,13 @@ export function FreshaBookingFlow({
       setSlotsState("error");
       setSlotsWarning("Calendario non disponibile. Riprova tra poco.");
     }
-  }, [date, barberId, totals.durationMin, selectedIds, days]);
+  }, [date, barberId, totals.durationMin, selectedIds, days, onlineBlockedReason]);
 
   useEffect(() => {
-    if (step >= 3 && totals.durationMin > 0) {
+    if (step >= 3 && totals.durationMin > 0 && !onlineBlockedReason) {
       void loadSlots();
     }
-  }, [step, loadSlots, totals.durationMin]);
+  }, [step, loadSlots, totals.durationMin, onlineBlockedReason]);
 
   useEffect(() => {
     setSlot(null);
@@ -240,7 +249,9 @@ export function FreshaBookingFlow({
   }
 
   function canContinue(): boolean {
-    if (step === 1) return selectedIds.length > 0;
+    if (step === 1) {
+      return selectedIds.length > 0 && servicesAreOnlineBookable(selectedServices);
+    }
     if (step === 2) return Boolean(barberId);
     if (step === 3) return Boolean(date);
     if (step === 4) return Boolean(slot && !isSlotTaken(slot));
@@ -441,9 +452,12 @@ export function FreshaBookingFlow({
           <>
             <h3>Servizi scelti</h3>
             <p className="booking-open-note">
-              Tocca i servizi nel listino per aggiungerli o toglierli. Puoi
-              selezionarne più di uno: i minuti si sommano in automatico.
+              Tocca i servizi nel listino per aggiungerli o toglierli. Servizi senza
+              durata nota non sono prenotabili online.
             </p>
+            {onlineBlockedReason ? (
+              <p className="field-error">{onlineBlockedReason}</p>
+            ) : null}
             {selectedServices.length === 0 ? (
               <p className="slot-status">Nessun servizio selezionato.</p>
             ) : (
@@ -457,7 +471,10 @@ export function FreshaBookingFlow({
                 >
                   <span>
                     <strong>{s.name}</strong>
-                    <small>{s.description}</small>
+                    <small>
+                      {s.description}
+                      {!s.durationKnown ? " · durata n/d" : ` · ${formatDuration(s)}`}
+                    </small>
                   </span>
                   <span className="meta">{formatPriceRange(s)}</span>
                 </button>
@@ -470,27 +487,37 @@ export function FreshaBookingFlow({
           <>
             <h3>Scegli il servizio</h3>
             <p className="booking-open-note">
-              Seleziona uno o più servizi. Sul listino vedi il prezzo; i minuti
-              totali si sommano nel riepilogo in basso.
+              Seleziona uno o più servizi con durata nota. I servizi &quot;durata n/d&quot;
+              si prenotano in salone (nessuna durata inventata online).
             </p>
+            {onlineBlockedReason ? (
+              <p className="field-error">{onlineBlockedReason}</p>
+            ) : null}
             {SERVICE_CATEGORIES.map((cat) => (
               <div key={cat}>
                 <p className="fresha-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
-                {SERVICES.filter((s) => s.category === cat).map((s) => (
+                {SERVICES.filter((s) => s.category === cat).map((s) => {
+                  const onlineOk = s.durationKnown;
+                  return (
                   <button
                     key={s.id}
                     type="button"
-                    className={`fresha-option${selectedIds.includes(s.id) ? " selected" : ""}`}
+                    className={`fresha-option${selectedIds.includes(s.id) ? " selected" : ""}${!onlineOk ? " muted" : ""}`}
                     onClick={() => toggleService(s.id)}
                     aria-pressed={selectedIds.includes(s.id)}
+                    title={!onlineOk ? "Durata non definita — prenota in salone" : undefined}
                   >
                     <span>
                       <strong>{s.name}</strong>
-                      <small>{s.description}</small>
+                      <small>
+                        {s.description}
+                        {!onlineOk ? " · Online non disponibile (durata n/d)" : ` · ${formatDuration(s)}`}
+                      </small>
                     </span>
                     <span className="meta">{formatPriceRange(s)}</span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </>
@@ -603,35 +630,19 @@ export function FreshaBookingFlow({
                 Nessuno slot disponibile per questo giorno.
               </p>
             )}
-            {slotsState === "ready" &&
-            slots.length > 0 &&
-            slots.every(isSlotTaken) ? (
-              <p className="slot-status">
-                Tutti gli orari di questo giorno sono non disponibili.
-              </p>
-            ) : null}
             {slots.length > 0 && (
-              <div className="slot-grid" role="list" aria-label="Orari del giorno">
+              <div className="slot-grid" role="list" aria-label="Orari disponibili">
                 {slots.map((s) => {
-                  const taken = isSlotTaken(s);
-                  const selected = !taken && slot?.start === s.start;
+                  const selected = slot?.start === s.start;
                   return (
                   <button
                     key={s.start}
                     type="button"
-                    className={`slot-btn${selected ? " selected" : ""}${taken ? " booked" : ""}`}
-                    disabled={taken}
-                    aria-disabled={taken}
-                    aria-label={taken ? `${s.label}, non disponibile` : s.label}
-                    onClick={() => {
-                      if (taken) return;
-                      setSlot(s);
-                    }}
+                    className={`slot-btn${selected ? " selected" : ""}`}
+                    aria-label={s.label}
+                    onClick={() => setSlot(s)}
                   >
                     {s.label}
-                    {taken ? (
-                      <span className="slot-booked-hint">non disponibile</span>
-                    ) : null}
                   </button>
                   );
                 })}

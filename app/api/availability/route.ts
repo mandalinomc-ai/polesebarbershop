@@ -5,6 +5,7 @@ import {
   getScheduleSlots,
   isClosedDay,
   summarizeSchedule,
+  ONLINE_DISPLAY_INTERVAL_MINUTES,
   type ScheduleSlot,
 } from "@/lib/availability";
 import {
@@ -12,6 +13,7 @@ import {
   getBarber,
   resolveServices,
   totalsForServices,
+  servicesAreOnlineBookable,
 } from "@/lib/catalog";
 import {
   AppointmentsUnavailableError,
@@ -105,6 +107,16 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
+    if (!servicesAreOnlineBookable(services)) {
+      const unknown = services.filter((s) => !s.durationKnown).map((s) => s.name).join(", ");
+      return NextResponse.json(
+        {
+          error: `Durata non definita per: ${unknown}. Prenota in salone — nessuna durata inventata online.`,
+          durationUnknown: true,
+        },
+        { status: 400 },
+      );
+    }
     durationMinutes = totalsForServices(services).durationMin;
   } else if (Number.isFinite(durationParam) && durationParam > 0) {
     durationMinutes = durationParam;
@@ -179,8 +191,10 @@ export async function GET(request: Request) {
     barberId,
     durationMinutes,
     appointments,
+    fullSearch: false,
+    displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
   });
-  const occupancy = summarizeSchedule(date, slots);
+  const occupancy = summarizeSchedule(date, slots, { openDay: true });
   const days = summaryDates.map((iso) => {
     if (iso === date) return occupancy;
     if (iso < first || isClosedDay(iso)) {
@@ -193,7 +207,10 @@ export async function GET(request: Request) {
         barberId,
         durationMinutes,
         appointments,
+        fullSearch: false,
+        displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
       }),
+      { openDay: true },
     );
   });
 

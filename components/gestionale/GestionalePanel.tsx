@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
-import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
+import { getRealBarbers, SERVICES, formatDuration, formatPrice, totalsForServices } from "@/lib/catalog";
 import {
   formatItalianDate,
   getFirstBookableDate,
@@ -47,9 +47,12 @@ type AdminAppt = {
   email?: string;
   timeLabel: string;
   durationMin: number;
+  durationOverrideMin?: number | null;
+  effectiveDurationMin?: number;
   priceCents: number;
   isWalkIn: boolean;
   startsAt?: string;
+  endsAt?: string;
 };
 
 type Agenda = {
@@ -649,7 +652,12 @@ function AgendaView({
           const start = a.startsAt
             ? new Date(a.startsAt)
             : wallTimeToUtc(date, a.timeLabel);
-          const end = new Date(start.getTime() + a.durationMin * 60_000);
+          const end = a.endsAt
+            ? new Date(a.endsAt)
+            : new Date(
+                start.getTime() +
+                  (a.effectiveDurationMin || a.durationOverrideMin || a.durationMin) * 60_000,
+              );
           return {
             barberId: a.barberId,
             startsAt: start,
@@ -1218,26 +1226,93 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [priceEuro, setPriceEuro] = useState(15);
+  const [durationOverride, setDurationOverride] = useState("");
   const [error, setError] = useState("");
+  const [alternatives, setAlternatives] = useState<{ label: string; startIso: string }[]>([]);
   const [saving, setSaving] = useState(false);
+  const [finding, setFinding] = useState(false);
   const totals = useMemo(() => totalsForServices(SERVICES.filter((s) => serviceIds.includes(s.id))), [serviceIds]);
+  const hasUnknownDuration = useMemo(
+    () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
+    [serviceIds],
+  );
   useEffect(() => {
     setPriceEuro(totals.priceEuro);
   }, [totals.priceEuro]);
 
-  async function save(e: FormEvent) {
+  async function findSlot(mode: "day" | "first") {
+    setFinding(true);
+    setError("");
+    const params = new URLSearchParams({
+      date,
+      barberId,
+      serviceIds: serviceIds.join(","),
+      mode,
+    });
+    if (durationOverride) params.set("durationOverrideMin", durationOverride);
+    try {
+      const res = await fetch(`/api/admin/find-slot?${params}`);
+      const json = (await res.json()) as {
+        error?: string;
+        first?: { label: string } | null;
+        slot?: { label: string; date?: string } | null;
+        message?: string;
+      };
+      if (!res.ok) {
+        setError(json.error || "Ricerca non riuscita.");
+        return;
+      }
+      if (mode === "first") {
+        if (!json.slot) {
+          setError(json.message || "Nessuna disponibilità.");
+          return;
+        }
+        setStartTime(json.slot.label);
+        if (json.slot.date && json.slot.date !== date) {
+          setError(`Prima disponibilità: ${json.slot.date} alle ${json.slot.label}`);
+        }
+      } else if (json.first) {
+        setStartTime(json.first.label);
+      } else {
+        setError("Nessun orario libero in questa data.");
+      }
+    } catch {
+      setError("Connessione non disponibile.");
+    } finally {
+      setFinding(false);
+    }
+  }
+
+  async function save(e: FormEvent, force = false) {
     e.preventDefault();
     setSaving(true);
     setError("");
+    setAlternatives([]);
     const res = await fetch("/api/admin/walk-in", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ serviceIds, barberId, date, startTime, firstName, phone, email, priceEuro }),
+      body: JSON.stringify({
+        serviceIds,
+        barberId,
+        date,
+        startTime,
+        firstName,
+        phone,
+        email,
+        priceEuro,
+        durationOverrideMin: durationOverride ? Number(durationOverride) : null,
+        force,
+      }),
     });
-    const json = (await res.json()) as { error?: string };
+    const json = (await res.json()) as {
+      error?: string;
+      conflict?: boolean;
+      alternatives?: { label: string; startIso: string }[];
+    };
     setSaving(false);
     if (!res.ok) {
       setError(json.error || "Impossibile salvare.");
+      if (json.alternatives?.length) setAlternatives(json.alternatives);
       return;
     }
     onSaved();
@@ -1245,7 +1320,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
 
   return (
     <div className="admin-modal-backdrop" onClick={onClose}>
-      <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={save}>
+      <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
         <p className="eyebrow">Walk-in</p>
         <h2 className="font-serif">Inserisci in agenda</h2>
         <label>
@@ -1274,15 +1349,45 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
                 />
                 <span>
                   {s.name} · {formatPrice(s)}
+                  {!s.durationKnown ? (
+                    <em className="duration-unknown-flag"> · durata n/d</em>
+                  ) : (
+                    ` · ${formatDuration(s)}`
+                  )}
                 </span>
               </label>
             ))}
           </div>
         </label>
+        {hasUnknownDuration ? (
+          <p className="slot-status">
+            Servizio senza durata catalogo: imposta una durata override (min) per l&apos;occupazione poltrona.
+          </p>
+        ) : null}
+        <label>
+          Durata override (min, opzionale)
+          <input
+            className="input-lux"
+            type="number"
+            min={1}
+            max={480}
+            placeholder={String(totals.durationMin || "")}
+            value={durationOverride}
+            onChange={(e) => setDurationOverride(e.target.value)}
+          />
+        </label>
         <label>
           Orario
           <input className="input-lux" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
         </label>
+        <div className="admin-head-actions" style={{ marginBottom: "0.5rem" }}>
+          <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("day")}>
+            {finding ? "…" : "Trova orario"}
+          </button>
+          <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("first")}>
+            Prima disponibilità
+          </button>
+        </div>
         <label>
           Nome
           <input className="input-lux" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -1300,10 +1405,43 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
           <input className="input-lux" type="number" min={0} value={priceEuro} onChange={(e) => setPriceEuro(Number(e.target.value))} />
         </label>
         {error ? <p className="field-error">{error}</p> : null}
+        {alternatives.length > 0 ? (
+          <div className="walkin-services">
+            <p className="slot-status">Alternative libere:</p>
+            {alternatives.map((a) => (
+              <button
+                key={a.startIso}
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setStartTime(a.label);
+                  setAlternatives([]);
+                  setError("");
+                }}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div className="admin-head-actions">
           <button type="button" className="btn btn-outline" onClick={onClose}>
             Chiudi
           </button>
+          {alternatives.length > 0 ? (
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={saving}
+              onClick={(e) => {
+                if (window.confirm("Forzare l'inserimento anche in conflitto? Solo se sei sicuro.")) {
+                  void save(e, true);
+                }
+              }}
+            >
+              Forza comunque
+            </button>
+          ) : null}
           <button type="submit" className="btn btn-gold" disabled={saving || serviceIds.length === 0}>
             {saving ? "Salvataggio…" : "Salva walk-in"}
           </button>
@@ -1370,8 +1508,15 @@ function MoveModal({
   const [moveDate, setMoveDate] = useState(date);
   const [startTime, setStartTime] = useState(appt.timeLabel);
   const [barberId, setBarberId] = useState(appt.barberId);
+  const [durationOverride, setDurationOverride] = useState(
+    appt.durationOverrideMin != null ? String(appt.durationOverrideMin) : "",
+  );
   const [error, setError] = useState("");
+  const [alternatives, setAlternatives] = useState<
+    { label: string; startIso: string; date?: string; barberId?: string }[]
+  >([]);
   const [saving, setSaving] = useState(false);
+  const [finding, setFinding] = useState(false);
 
   useEffect(() => {
     if (appt.startsAt) {
@@ -1382,21 +1527,75 @@ function MoveModal({
     }
     setStartTime(appt.timeLabel);
     setBarberId(appt.barberId);
+    setDurationOverride(appt.durationOverrideMin != null ? String(appt.durationOverrideMin) : "");
   }, [appt, date]);
 
-  async function save(e: FormEvent) {
+  async function findBest(mode: "day" | "first") {
+    setFinding(true);
+    setError("");
+    const params = new URLSearchParams({
+      date: moveDate,
+      barberId,
+      durationMin: String(appt.effectiveDurationMin || appt.durationMin),
+      mode,
+      excludeId: appt.id,
+    });
+    if (durationOverride) params.set("durationOverrideMin", durationOverride);
+    try {
+      const res = await fetch(`/api/admin/find-slot?${params}`);
+      const json = (await res.json()) as {
+        error?: string;
+        first?: { label: string } | null;
+        slot?: { label: string; date?: string; barberId?: string } | null;
+        message?: string;
+      };
+      if (!res.ok) {
+        setError(json.error || "Ricerca non riuscita.");
+        return;
+      }
+      if (mode === "first" && json.slot) {
+        if (json.slot.date) setMoveDate(json.slot.date);
+        setStartTime(json.slot.label);
+        if (json.slot.barberId) setBarberId(json.slot.barberId);
+      } else if (json.first) {
+        setStartTime(json.first.label);
+      } else {
+        setError(json.message || "Nessun orario libero.");
+      }
+    } catch {
+      setError("Connessione non disponibile.");
+    } finally {
+      setFinding(false);
+    }
+  }
+
+  async function save(e: FormEvent, force = false) {
     e.preventDefault();
     setSaving(true);
     setError("");
+    setAlternatives([]);
     const res = await fetch("/api/admin/appointments", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: appt.id, date: moveDate, startTime, barberId }),
+      body: JSON.stringify({
+        id: appt.id,
+        date: moveDate,
+        startTime,
+        barberId,
+        durationOverrideMin: durationOverride ? Number(durationOverride) : null,
+        force,
+        confirmForce: force,
+      }),
     });
-    const json = (await res.json()) as { error?: string };
+    const json = (await res.json()) as {
+      error?: string;
+      conflict?: boolean;
+      alternatives?: { label: string; startIso: string; date?: string; barberId?: string }[];
+    };
     setSaving(false);
     if (!res.ok) {
       setError(json.error || "Impossibile spostare.");
+      if (json.alternatives?.length) setAlternatives(json.alternatives);
       return;
     }
     onSaved();
@@ -1404,7 +1603,7 @@ function MoveModal({
 
   return (
     <div className="admin-modal-backdrop" onClick={onClose}>
-      <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={save}>
+      <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
         <p className="eyebrow">Sposta appuntamento</p>
         <h2 className="font-serif">
           {appt.firstName} {appt.lastName}
@@ -1428,11 +1627,71 @@ function MoveModal({
             ))}
           </select>
         </label>
+        <label>
+          Durata override (min)
+          <input
+            className="input-lux"
+            type="number"
+            min={1}
+            max={480}
+            placeholder={`Catalogo: ${appt.durationMin}`}
+            value={durationOverride}
+            onChange={(e) => setDurationOverride(e.target.value)}
+          />
+        </label>
+        <div className="admin-head-actions" style={{ marginBottom: "0.5rem" }}>
+          <button type="button" className="btn btn-outline" disabled={finding} onClick={() => void findBest("day")}>
+            {finding ? "…" : "Trova orario"}
+          </button>
+          <button type="button" className="btn btn-outline" disabled={finding} onClick={() => void findBest("first")}>
+            Smart move
+          </button>
+        </div>
         {error ? <p className="field-error">{error}</p> : null}
+        {alternatives.length > 0 ? (
+          <div className="walkin-services">
+            <p className="slot-status">Alternative:</p>
+            {alternatives.map((a) => (
+              <button
+                key={a.startIso}
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setStartTime(a.label);
+                  if (a.date) setMoveDate(a.date);
+                  if (a.barberId) setBarberId(a.barberId);
+                  setAlternatives([]);
+                  setError("");
+                }}
+              >
+                {a.date ? `${a.date} ` : ""}
+                {a.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div className="admin-head-actions">
           <button type="button" className="btn btn-outline" onClick={onClose}>
             Annulla
           </button>
+          {alternatives.length > 0 ? (
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={saving}
+              onClick={(e) => {
+                if (
+                  window.confirm(
+                    "Forzare lo spostamento in conflitto? Il database può comunque rifiutare se l'orario è davvero occupato.",
+                  )
+                ) {
+                  void save(e, true);
+                }
+              }}
+            >
+              Forza comunque
+            </button>
+          ) : null}
           <button type="submit" className="btn btn-gold" disabled={saving}>
             {saving ? "Salvataggio…" : "Sposta"}
           </button>

@@ -27,13 +27,12 @@ describe("mobile QA (390px)", () => {
   });
 
   it("does not invent booked slots when the API returns none", () => {
-    expect(wizard).toMatch(/setSlots\(incoming\)/);
+    expect(wizard).toMatch(/setSlots\(availableOnly\)/);
     expect(wizard).toMatch(/setSlots\(\[\]\)/);
     expect(wizard).toMatch(/sourceUnavailable/);
     expect(wizard).not.toMatch(/localSlots/);
-    expect(wizard).toMatch(/aria-disabled=\{taken\}/);
-    expect(wizard).toMatch(/non disponibile/);
-    expect(css).toMatch(/\.slot-btn\.booked/);
+    expect(wizard).toMatch(/Smart available starts|availableOnly/);
+    expect(css).toMatch(/\.slot-btn/);
     expect(css).toMatch(/\.cal-day \{[\s\S]*?min-height:\s*44px/);
   });
 

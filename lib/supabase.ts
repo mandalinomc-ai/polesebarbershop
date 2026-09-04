@@ -18,6 +18,8 @@ export type AppointmentRow = {
   starts_at: string;
   ends_at: string;
   duration_min: number;
+  /** Optional occupancy duration override; catalog duration_min unchanged. */
+  duration_override_min?: number | null;
   price_cents: number;
   is_walk_in: boolean;
   notes: string | null;

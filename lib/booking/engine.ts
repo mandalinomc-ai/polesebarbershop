@@ -1,6 +1,11 @@
 import { BOOKING_BUFFER_MINUTES, SLOT_INTERVAL_MINUTES } from "./constants";
 import { overlaps } from "./overlap";
 import { addMinutes, minutesToTime, timeToMinutes } from "./time-utils";
+import {
+  candidateStartsInWindows,
+  subtractBusyFromWindows,
+  workingWindowsFromHours,
+} from "./free-windows";
 
 export type BusyInterval = { start: Date; end: Date };
 
@@ -42,7 +47,8 @@ export function isIntervalFree(
 }
 
 /**
- * Candidate start labels (HH:MM) that fit chairBlockMinutes inside [open, close).
+ * Candidate start labels (HH:MM) that fit chairBlockMinutes inside free windows.
+ * Free windows = [open, close) minus busy; continuous (no forced grid snap).
  */
 export function candidateStartLabels(
   open: string,
@@ -51,21 +57,23 @@ export function candidateStartLabels(
   opts?: {
     slotIntervalMinutes?: number;
     bufferMinutes?: number;
+    busyLabels?: { start: string; end: string }[];
+    /** null = every search step (no online thinning). */
+    displayIntervalMinutes?: number | null;
   },
 ): string[] {
-  const block = chairBlockMinutes(
-    serviceDurationMin,
-    opts?.bufferMinutes ?? BOOKING_BUFFER_MINUTES,
-  );
-  if (block <= 0) return [];
-  const step = opts?.slotIntervalMinutes ?? SLOT_INTERVAL_MINUTES;
-  const openMin = timeToMinutes(open);
-  const closeMin = timeToMinutes(close);
-  const labels: string[] = [];
-  for (let t = openMin; t + block <= closeMin; t += step) {
-    labels.push(minutesToTime(t));
-  }
-  return labels;
+  const working = workingWindowsFromHours(open, close);
+  const busy = (opts?.busyLabels || []).map((b) => ({
+    startMin: timeToMinutes(b.start),
+    endMin: timeToMinutes(b.end),
+  }));
+  const free = subtractBusyFromWindows(working, busy);
+  return candidateStartsInWindows(free, serviceDurationMin, {
+    bufferMinutes: opts?.bufferMinutes ?? BOOKING_BUFFER_MINUTES,
+    searchIntervalMinutes: opts?.slotIntervalMinutes ?? SLOT_INTERVAL_MINUTES,
+    displayIntervalMinutes:
+      opts?.displayIntervalMinutes === undefined ? null : opts.displayIntervalMinutes,
+  }).map((s) => s.label);
 }
 
 export {
