@@ -831,7 +831,7 @@ export function FreshaBookingFlow({
           <span>
             {totals.durationMin ? totals.durationLabel : "—"}
             {selectedIds.length
-              ? ` · ${selectedIds.length} servizio${selectedIds.length === 1 ? "" : "i"}`
+              ? ` · ${selectedIds.length} ${selectedIds.length === 1 ? "servizio" : "servizi"}`
               : ""}
           </span>
           <strong>{selectedIds.length ? totals.priceLabel : "—"}</strong>
