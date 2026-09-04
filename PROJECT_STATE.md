@@ -3,54 +3,46 @@
 **Updated:** 2026-09-04  
 **Public URL:** https://felicepolesebarbershop.vercel.app  
 **Vercel project:** `temporary-prompt-quasar-rndxhgh` (alias: felicepolesebarbershop)  
-**Branch:** `cursor/smart-booking-v2-56a6`
+**Branch:** `cursor/production-ready-final-56a6`
 
 ## Status summary
 
 | Area | Status |
 |------|--------|
-| Production site | **READY** — homepage 200, Felice branding, Maps Dante 44, listino, videos |
-| Gmail SMTP | **READY** — `GMAIL_USER` + `GMAIL_APP_PASSWORD` on Production |
-| Supabase bookings | **READY** |
-| Smart booking engine | **LIVE** — free-windows + smart thinned slots on `/api/availability` |
-| Migration 007 | **APPLIED** (2026-09-04) — `appointments.duration_override_min` |
-| Taglio Pro | **25 € / 50 min** (catalog + DB + live site) |
-| Next step | User reviews inbox / gestionale as needed |
+| Production site | **LIVE** (prior deploy) — homepage Felice branding, Maps Dante 44, listino, videos |
+| Code tip | **READY** on `cursor/production-ready-final-56a6` — tests 209/209, build OK |
+| Prod deploy tip | **BLOCKED** — Vercel free daily deploy quota (`api-deployments-free-per-day`) |
+| Gmail SMTP | **READY** |
+| Supabase bookings | **READY** — durations synced (migration 009 applied via API) |
+| Smart booking | **READY** — all 10 services fixed durations, multi-service sum + buffer |
+| Security | **READY** — cookies, honeypot, rate limits, session HMAC (from prior merge) |
+| Intro scissors | **READY** — photoreal chrome PNG `/assets/3d/shear-intro.png` |
+| Countdown | **READY** — stable digit grid alignment |
 
-## Migration 007 (2026-09-04)
+## Official durations (booking)
 
-- File: `supabase/migrations/007_duration_override.sql`
-- Applied on production Supabase `dbbncprluqjrofjemfbg` via `psql` (pooler)
-- Column verified: `duration_override_min integer NULL` + check `> 0`
-- Write path verified: insert/read/patch/delete with override (test row removed)
-- Redeploy **not** required (DB-only)
+| Service | Min | Price |
+|---------|-----|-------|
+| Taglio Pro | 50 | 25€ |
+| Taglio Standard | 30 | 15€ |
+| Acconciatura | 15 | 5€ |
+| Taglio Bambino | 20 | 10€ |
+| Barba Pro | 20 | 15€ |
+| Barba Standard | 15 | 5€ |
+| Decolorazione Meches | 90 | 40–100€ |
+| Decolorazione Cutanea | 120 | 50–120€ |
+| Tintura Capelli | 60 | 10–30€ |
+| Tintura Barba | 15 | 5–15€ |
+
+Public label: **Durata prevista: X min** (not a guarantee). Variable **price** ranges unchanged.
 
 ## Deploy
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
-- Aliased: https://felicepolesebarbershop.vercel.app
+- Alias: https://felicepolesebarbershop.vercel.app
+- Next deploy: retry `vercel --prod --force` when quota resets
 
-## Booking system
+## Gestionale
 
-| Component | Status |
-|-----------|--------|
-| Stack | Next.js 15 + Supabase + Gmail SMTP (.ics) |
-| Supabase | `dbbncprluqjrofjemfbg.supabase.co` |
-| Cancellation | 30 minutes before |
-| Opening | 2026-09-07 |
-| Admin | `/gestionale` |
-| Public booking | `/prenota` |
-| Engine | Smart free-windows (`lib/booking/*`); online display interval 15 min |
-
-## Site config highlights
-
-- Official name: **Felice Polese Barber Shop**
-- Tagline: **Modern Barbering & Fade Studio**
-- Address: Corso Dante Alighieri, 44, 82100 Benevento
-- Phone/WhatsApp: +39 327 015 6225
-- Instagram: @felicepolese_barber
-
-## Still later (non-blocking)
-
-1. User reviews Gmail inbox for confirmation emails as needed
-2. Cleanup unused / duplicate Vercel projects (e.g. polesebarbershop) when Felice confirms
+- Tab **Listino** edits duration / price / active via `/api/admin/services` (HMAC session)
+- Booking/availability read `lib/catalog.ts` seed + DB overlays (`lib/runtime-catalog.ts`)
