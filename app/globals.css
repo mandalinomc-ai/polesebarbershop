@@ -505,6 +505,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   font-style: normal;
   transform: none;
   vertical-align: baseline;
+  color: var(--ink);
 }
 .countdown-digit {
   display: flex;
@@ -523,6 +524,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   text-align: center;
   transform: none;
   vertical-align: baseline;
+  color: var(--ink);
 }
 .countdown-label {
   display: flex;
@@ -1010,12 +1012,12 @@ a.btn-whatsapp.contact-wa,
 .footer-links { display: flex; flex-wrap: wrap; gap: 1rem; }
 .legal-footer p { margin: 0.2rem 0; }
 
-/* FABs — always visible on public pages; elevated so they clear sticky Continua */
+/* FABs — always visible on public pages (never body:has hide); above cookie banner */
 .fab-stack {
   position: fixed;
   right: calc(1rem + var(--safe-right));
   bottom: calc(5.5rem + var(--safe-bottom));
-  z-index: 90;
+  z-index: 130;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -2769,5 +2771,11 @@ body.scissors-intro-active { overflow: hidden; }
 }
 
 .hero--soon { min-height: 100dvh; }
+.opening-countdown-block .countdown-value,
+.opening-countdown-block .countdown-digit,
 .bg-marble-light .countdown-value,
-.bg-marble-light .countdown-digit { color: var(--ink); }
+.bg-marble-light .countdown-digit,
+.hero-editorial .countdown-value,
+.hero-editorial .countdown-digit {
+  color: var(--ink);
+}
