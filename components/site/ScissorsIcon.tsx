@@ -18,6 +18,7 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
         width={420}
         height={380}
         decoding="async"
+        fetchPriority="high"
         aria-hidden="true"
       />
     );

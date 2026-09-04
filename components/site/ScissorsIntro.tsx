@@ -14,6 +14,15 @@ const REVEAL_HOLD_MS = 3800;
 
 type Phase = "hidden" | "dark" | "tension" | "scissors" | "snip" | "cutting" | "reveal";
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+
 /** Brief full-screen intro: dark → tension → chrome scissors snip → panels cut open → brand. */
 export function ScissorsIntro() {
   const [active, setActive] = useState(false);
@@ -21,14 +30,27 @@ export function ScissorsIntro() {
   const timersRef = useRef<number[]>([]);
   const finishedRef = useRef(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const phaseRef = useRef<Phase>("hidden");
+  const cutDoneRef = useRef(false);
 
   function clearIntroTimers() {
     timersRef.current.forEach((id) => window.clearTimeout(id));
     timersRef.current = [];
   }
 
+  function setIntroPhase(next: Phase) {
+    phaseRef.current = next;
+    setPhase(next);
+    if (next === "reveal") cutDoneRef.current = true;
+  }
+
+  function canDismiss(): boolean {
+    return phaseRef.current === "reveal";
+  }
+
   function finishIntro() {
     if (finishedRef.current) return;
+    if (!canDismiss()) return;
     finishedRef.current = true;
     clearIntroTimers();
     overlayRef.current?.style.setProperty("display", "none");
@@ -39,19 +61,27 @@ export function ScissorsIntro() {
       /* private mode */
     }
     setActive(false);
+    phaseRef.current = "hidden";
     setPhase("hidden");
+  }
+
+  function requestDismiss() {
+    if (canDismiss()) finishIntro();
   }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    const img = new Image();
+    img.src = "/assets/3d/shear-intro.png";
+
     try {
       if (sessionStorage.getItem(INTRO_KEY) === "1") return;
     } catch {
       /* continue without persistence */
     }
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) {
+    if (prefersReducedMotion()) {
       try {
         sessionStorage.setItem(INTRO_KEY, "1");
       } catch {
@@ -61,8 +91,9 @@ export function ScissorsIntro() {
     }
 
     finishedRef.current = false;
+    cutDoneRef.current = false;
     setActive(true);
-    setPhase("dark");
+    setIntroPhase("dark");
     document.body.classList.add("scissors-intro-active");
 
     const schedule = (fn: () => void, ms: number) => {
@@ -70,26 +101,28 @@ export function ScissorsIntro() {
     };
 
     schedule(() => {
-      if (!finishedRef.current) setPhase("tension");
+      if (!finishedRef.current) setIntroPhase("tension");
     }, TENSION_MS);
     schedule(() => {
-      if (!finishedRef.current) setPhase("scissors");
+      if (!finishedRef.current) setIntroPhase("scissors");
     }, TENSION_MS + 280);
     schedule(() => {
-      if (!finishedRef.current) setPhase("snip");
+      if (!finishedRef.current) setIntroPhase("snip");
     }, TENSION_MS + SCISSORS_MS);
     schedule(() => {
-      if (!finishedRef.current) setPhase("cutting");
+      if (!finishedRef.current) setIntroPhase("cutting");
     }, TENSION_MS + SCISSORS_MS + SNIP_MS);
     schedule(() => {
-      if (!finishedRef.current) setPhase("reveal");
+      if (!finishedRef.current) {
+        cutDoneRef.current = true;
+        setIntroPhase("reveal");
+      }
     }, TENSION_MS + SCISSORS_MS + SNIP_MS + CUT_MS);
     schedule(
       () => finishIntro(),
       TENSION_MS + SCISSORS_MS + SNIP_MS + CUT_MS + REVEAL_HOLD_MS,
     );
-    /* Hard failsafe — never leave the intro blocking the site */
-    schedule(() => finishIntro(), 10000);
+    schedule(() => finishIntro(), 12000);
 
     return () => {
       clearIntroTimers();
@@ -115,17 +148,30 @@ export function ScissorsIntro() {
       role="dialog"
       aria-label="Felice Polese Barber Shop"
       tabIndex={0}
-      onClick={() => finishIntro()}
+      onPointerUp={(e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        requestDismiss();
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          finishIntro();
+          requestDismiss();
         }
-        if (e.key === "Escape") finishIntro();
+        if (e.key === "Escape" && canDismiss()) finishIntro();
       }}
     >
-      <div className="scissors-intro-split scissors-intro-split--left" />
-      <div className="scissors-intro-split scissors-intro-split--right" />
+      <div
+        className="scissors-intro-split scissors-intro-split--left"
+        onAnimationEnd={() => {
+          if (phaseRef.current === "cutting") cutDoneRef.current = true;
+        }}
+      />
+      <div
+        className="scissors-intro-split scissors-intro-split--right"
+        onAnimationEnd={() => {
+          if (phaseRef.current === "cutting") cutDoneRef.current = true;
+        }}
+      />
       <div className="scissors-intro-cutline" aria-hidden="true" />
       {showShears ? (
         <div className="scissors-intro-shears" aria-hidden="true">
@@ -160,9 +206,6 @@ export function ScissorsIntro() {
               {HERO_SLOT_CTA}
             </a>
           </div>
-        ) : null}
-        {phase === "scissors" || phase === "snip" ? (
-          <p className="scissors-intro-skip">Tocca per entrare</p>
         ) : null}
         {phase === "reveal" ? (
           <p className="scissors-intro-skip">Tocca per entrare</p>
