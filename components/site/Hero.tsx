@@ -43,15 +43,19 @@ export function Hero() {
           ) : null}
           {beforeOpening ? <OpeningCountdown /> : null}
           <div className="hero-actions">
-            <a href="/#prenota" className="btn btn-ink btn-dark" aria-label={getHeroHeadline()}>
+            <a
+              href="/#prenota"
+              className="btn btn-ink btn-dark tilt-3d"
+              aria-label={getHeroHeadline()}
+            >
               {HERO_SLOT_CTA}
             </a>
-            <a href="/#prenota" className="btn btn-ghost">
+            <a href="/#prenota" className="btn btn-ghost tilt-3d">
               {HERO_MENU_CTA}
             </a>
           </div>
         </div>
-        <div className="hero-media">
+        <div className="hero-media" data-parallax="0.08">
           {HERO_VIDEOS.map((video) => (
             <HeroMediaCell key={video.id} video={video} />
           ))}

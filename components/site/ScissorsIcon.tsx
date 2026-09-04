@@ -4,9 +4,9 @@ type ScissorsIconProps = {
 };
 
 const PIVOT_X = 50;
-const PIVOT_Y = 70;
+const PIVOT_Y = 72;
 
-/** Full barber scissors — silver/metal blades, both tips visible, no gold. */
+/** Full barber scissors — chrome/silver 3D metal, both tips visible, no gold. */
 export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconProps) {
   const rootClass = [
     "scissors-icon",
@@ -16,83 +16,105 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
     .filter(Boolean)
     .join(" ");
 
-  const gradId = variant === "intro" ? "scissors-metal-intro" : "scissors-metal-countdown";
-  const shineId = variant === "intro" ? "scissors-shine-intro" : "scissors-shine-countdown";
-  const shadowId = variant === "intro" ? "scissors-shadow-intro" : "scissors-shadow-countdown";
+  const metal = variant === "intro" ? "sc-metal-intro" : "sc-metal-cd";
+  const shine = variant === "intro" ? "sc-shine-intro" : "sc-shine-cd";
+  const edge = variant === "intro" ? "sc-edge-intro" : "sc-edge-cd";
+  const shadow = variant === "intro" ? "sc-shadow-intro" : "sc-shadow-cd";
 
   return (
     <svg
       className={rootClass}
-      viewBox="0 0 100 110"
+      viewBox="0 0 100 118"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       style={{ overflow: "visible" }}
     >
       <defs>
-        <linearGradient id={gradId} x1="20" y1="8" x2="80" y2="104" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#ECECEC" />
-          <stop offset="30%" stopColor="#B8B8B8" />
-          <stop offset="65%" stopColor="#8A8A8A" />
-          <stop offset="100%" stopColor="#3A3A3A" />
+        <linearGradient id={metal} x1="18" y1="4" x2="82" y2="112" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F7F7F7" />
+          <stop offset="18%" stopColor="#D8D8D8" />
+          <stop offset="42%" stopColor="#9E9E9E" />
+          <stop offset="68%" stopColor="#6E6E6E" />
+          <stop offset="100%" stopColor="#2C2C2C" />
         </linearGradient>
-        <linearGradient id={shineId} x1="50" y1="6" x2="50" y2="98" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.65" />
-          <stop offset="42%" stopColor="#FFFFFF" stopOpacity="0.1" />
-          <stop offset="100%" stopColor="#000000" stopOpacity="0.28" />
+        <linearGradient id={shine} x1="50" y1="2" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
+          <stop offset="35%" stopColor="#FFFFFF" stopOpacity="0.22" />
+          <stop offset="70%" stopColor="#FFFFFF" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.35" />
         </linearGradient>
-        <filter id={shadowId} x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#0B0B0B" floodOpacity="0.4" />
-          <feDropShadow dx="0" dy="1" stdDeviation="0.5" floodColor="#FFFFFF" floodOpacity="0.2" />
+        <linearGradient id={edge} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#1A1A1A" stopOpacity="0.45" />
+        </linearGradient>
+        <filter id={shadow} x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="8" stdDeviation="5" floodColor="#050505" floodOpacity="0.55" />
+          <feDropShadow dx="0" dy="1" stdDeviation="0.6" floodColor="#FFFFFF" floodOpacity="0.35" />
         </filter>
       </defs>
 
-      <g filter={`url(#${shadowId})`}>
+      <g filter={`url(#${shadow})`} className="scissors-float-group">
+        {/* Finger rings */}
         <circle
           className="scissors-ring scissors-ring--left"
-          cx="28"
-          cy="94"
-          r="9"
-          stroke={`url(#${gradId})`}
-          strokeWidth="2.4"
-          fill="none"
+          cx="27"
+          cy="102"
+          r="10"
+          stroke={`url(#${metal})`}
+          strokeWidth="2.6"
+          fill="rgba(20,20,20,0.35)"
         />
         <circle
           className="scissors-ring scissors-ring--right"
-          cx="72"
-          cy="94"
-          r="9"
-          stroke={`url(#${gradId})`}
-          strokeWidth="2.4"
-          fill="none"
+          cx="73"
+          cy="102"
+          r="10"
+          stroke={`url(#${metal})`}
+          strokeWidth="2.6"
+          fill="rgba(20,20,20,0.35)"
         />
+        <circle cx="27" cy="102" r="6.2" stroke={`url(#${shine})`} strokeWidth="1.1" fill="none" opacity="0.7" />
+        <circle cx="73" cy="102" r="6.2" stroke={`url(#${shine})`} strokeWidth="1.1" fill="none" opacity="0.7" />
 
+        {/* Blades — tips fully in viewBox */}
         <path
           className="scissors-blade scissors-blade--left"
-          d="M28 86 L40 18 L44 20 L32 90 Z"
-          fill={`url(#${gradId})`}
+          d="M28 92 L42 10 L46.5 13.5 L34 98 Z"
+          fill={`url(#${metal})`}
+          stroke={`url(#${edge})`}
+          strokeWidth="0.4"
         />
         <path
           className="scissors-blade scissors-blade--right"
-          d="M72 86 L60 18 L56 20 L68 90 Z"
-          fill={`url(#${gradId})`}
+          d="M72 92 L58 10 L53.5 13.5 L66 98 Z"
+          fill={`url(#${metal})`}
+          stroke={`url(#${edge})`}
+          strokeWidth="0.4"
         />
 
+        {/* Specular chrome strips */}
         <path
           className="scissors-blade-shine scissors-blade-shine--left"
-          d="M30 82 L39 24 L41 25 L33 86 Z"
-          fill={`url(#${shineId})`}
-          opacity="0.85"
+          d="M30.5 88 L42.5 16 L44.2 17.2 L33.2 92 Z"
+          fill={`url(#${shine})`}
+          opacity="0.92"
         />
         <path
           className="scissors-blade-shine scissors-blade-shine--right"
-          d="M70 82 L61 24 L59 25 L67 86 Z"
-          fill={`url(#${shineId})`}
-          opacity="0.85"
+          d="M69.5 88 L57.5 16 L55.8 17.2 L66.8 92 Z"
+          fill={`url(#${shine})`}
+          opacity="0.92"
         />
 
-        <circle cx={PIVOT_X} cy={PIVOT_Y} r="3.2" fill={`url(#${gradId})`} />
-        <circle cx={PIVOT_X} cy={PIVOT_Y} r="1.4" fill="#E8E8E8" opacity="0.9" />
+        {/* Tip highlights */}
+        <path d="M42 10 L44.2 11.2 L43.1 14 Z" fill="#F4F4F4" opacity="0.9" />
+        <path d="M58 10 L55.8 11.2 L56.9 14 Z" fill="#F4F4F4" opacity="0.9" />
+
+        {/* Pivot screw */}
+        <circle cx={PIVOT_X} cy={PIVOT_Y} r="4.1" fill={`url(#${metal})`} stroke="#EDEDED" strokeWidth="0.5" />
+        <circle cx={PIVOT_X} cy={PIVOT_Y} r="1.7" fill="#F2F2F2" opacity="0.95" />
+        <circle cx={PIVOT_X} cy={PIVOT_Y} r="0.7" fill="#3A3A3A" opacity="0.55" />
       </g>
     </svg>
   );

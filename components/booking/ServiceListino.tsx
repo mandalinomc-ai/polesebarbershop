@@ -31,7 +31,7 @@ export function ServiceListino() {
           <ul className="listino-boxes">
             {SERVICES.filter((s) => s.category === cat).map((s) => (
               <li key={s.id}>
-                <article className="listino-box">
+                <article className="listino-box tilt-3d">
                   <div className="listino-box-head">
                     <h4 className="listino-box-name">{s.name}</h4>
                     <span className="listino-box-price">{formatPriceRange(s)}</span>

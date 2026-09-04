@@ -6,6 +6,7 @@ import {
 import { ServiceListino } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
 import { SalonVideo } from "@/components/site/SalonVideo";
+import { SocialQrGrid } from "@/components/site/SocialQr";
 import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 
 export function LandingSections() {
@@ -55,8 +56,8 @@ export function LandingSections() {
       <VideoReelGrid />
 
       <section id="prenota" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow">Listino &amp; prenotazione</div>
-        <h2 className="section-title font-serif">I nostri servizi</h2>
+        <div className="eyebrow reveal">Listino &amp; prenotazione</div>
+        <h2 className="section-title font-serif reveal reveal-d1">I nostri servizi</h2>
         <div className="booking-layout-grid">
           <ServiceListino />
           <div className="booking-flow-wrap glass-card">
@@ -67,6 +68,15 @@ export function LandingSections() {
         <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>
           {SITE.pricesIncludeVat}
         </p>
+      </section>
+
+      <section id="social" className="section-pad bg-marble-light marble-accent">
+        <div className="eyebrow reveal">Social</div>
+        <h2 className="section-title font-serif reveal reveal-d1">Resta in contatto</h2>
+        <p className="social-lead reveal reveal-d2">
+          Instagram, WhatsApp e prenotazione online — scansiona i QR del pannello orari.
+        </p>
+        <SocialQrGrid variant="contact" />
       </section>
 
       <section id="contact" className="section-pad bg-marble-light marble-accent">

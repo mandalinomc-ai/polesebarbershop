@@ -197,13 +197,16 @@ export function Footer() {
         {" · "}
         <a href="/gestionale">Gestionale</a>
       </span>
+      <p className="footer-powered">Powered by Genio Digital</p>
     </footer>
   );
 }
 
 export function ClientEffects() {
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll(".reveal"));
+    const els = Array.from(
+      document.querySelectorAll(".reveal, .section-title"),
+    );
     if (!els.length) return;
     if (!("IntersectionObserver" in window)) {
       els.forEach((el) => el.classList.add("visible"));
@@ -220,7 +223,10 @@ export function ClientEffects() {
       },
       { threshold: 0.08, rootMargin: "0px 0px -24px 0px" },
     );
-    els.forEach((el) => observer.observe(el));
+    els.forEach((el) => {
+      if (!el.classList.contains("reveal")) el.classList.add("reveal");
+      observer.observe(el);
+    });
     return () => observer.disconnect();
   }, []);
 

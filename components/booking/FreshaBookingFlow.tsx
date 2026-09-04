@@ -841,13 +841,27 @@ export function FreshaBookingFlow({
 
 export function BookingSectionNote() {
   return (
-    <p className="booking-open-note">
-      Prenota già ora, prima dell&apos;apertura ufficiale. Servizio, barbiere,
-      data e orario. Orari {SITE.hours.weekdays}. Primo giorno disponibile:{" "}
-      {formatItalianDate(getFirstBookableDate())}. Barbieri: Felice, Davide o
-      Qualsiasi disponibilità.
-      {" "}Non c&apos;è alcun limite al numero totale di prenotazioni: ogni
-      orario libero resta prenotabile finché la poltrona è disponibile.
-    </p>
+    <div className="booking-open-note booking-open-note--stack">
+      <p className="booking-note-headline">Prenota già ora</p>
+      <ul className="booking-note-list">
+        <li>Prima dell&apos;apertura ufficiale: scegli servizio, barbiere, data e orario.</li>
+        <li>
+          <span className="booking-note-label">Orari</span>
+          {SITE.hours.weekdays} · Dom chiuso
+        </li>
+        <li>
+          <span className="booking-note-label">Primo giorno</span>
+          {formatItalianDate(getFirstBookableDate())}
+        </li>
+        <li>
+          <span className="booking-note-label">Barbieri</span>
+          Felice, Davide o Qualsiasi disponibilità
+        </li>
+        <li>
+          Non c&apos;è alcun limite al numero totale di prenotazioni: ogni orario
+          libero resta prenotabile.
+        </li>
+      </ul>
+    </div>
   );
 }
