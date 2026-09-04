@@ -267,11 +267,15 @@ describe("public copy vs official identity", () => {
     const aboutIdx = landing.indexOf('id="about"');
     const videoIdx = landing.indexOf("<VideoReelGrid");
     const prenotaIdx = landing.indexOf('id="prenota"');
+    const socialIdx = landing.indexOf('id="social"');
     const contactIdx = landing.indexOf('id="contact"');
     expect(aboutIdx).toBeGreaterThan(-1);
     expect(videoIdx).toBeGreaterThan(aboutIdx);
     expect(prenotaIdx).toBeGreaterThan(videoIdx);
-    expect(contactIdx).toBeGreaterThan(prenotaIdx);
+    expect(socialIdx).toBeGreaterThan(prenotaIdx);
+    expect(contactIdx).toBeGreaterThan(socialIdx);
+    expect(landing).toMatch(/SocialQrGrid/);
+    expect(landing).toMatch(/Resta in contatto/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/appointment-sidebar/);
     expect(wizard).toMatch(/Il tuo appuntamento/);
@@ -279,6 +283,8 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
     expect(wizard).toMatch(/Tocca i servizi nel listino/);
     expect(wizard).toMatch(/Qualsiasi disponibilità/);
+    expect(wizard).toMatch(/booking-note-headline/);
+    expect(wizard).toMatch(/booking-note-list/);
     expect(wizard).toMatch(/non disponibile/);
     expect(wizard).toMatch(/Scegli la data/);
     expect(wizard).toMatch(/Scegli l&apos;orario/);
@@ -390,8 +396,18 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/SITE_PDFS\.logo/);
     expect(chrome).toMatch(/SITE_PDFS\.hoursPanel/);
     expect(chrome).toMatch(/href="\/gestionale"/);
+    expect(chrome).toMatch(/Powered by Genio Digital/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.wa-fab/);
+    expect(css).toMatch(/\.tilt-3d/);
+    expect(css).toMatch(/\[data-parallax\]/);
+    expect(css).toMatch(/footer-powered/);
+    const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
+    expect(page).toMatch(/MicroMotion/);
+    const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
+    expect(intro).toMatch(/OpeningCountdown/);
+    expect(intro).toMatch(/HERO_SLOT_CTA/);
+    expect(intro).toMatch(/prefers-reduced-motion/);
   });
 
   it("does not cap total bookings — wizard shows many open days", () => {
