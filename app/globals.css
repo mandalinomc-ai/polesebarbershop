@@ -354,7 +354,16 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-.coming-soon-social a:hover { color: var(--ink); }
+.coming-soon-social a {
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+@media (hover: hover) and (pointer: fine) {
+  .coming-soon-social a:hover { color: var(--ink); }
+}
 
 /* Countdown — equal columns, fixed-width digit cells (no skew / baseline drift) */
 .opening-countdown-block { width: 100%; max-width: 22rem; margin: 0 0 1.25rem; }
