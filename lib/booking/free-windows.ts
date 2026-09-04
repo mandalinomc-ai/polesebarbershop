@@ -3,6 +3,7 @@ import {
   DEFAULT_OPTIMIZATION_MODE,
   ONLINE_DISPLAY_INTERVAL_MINUTES,
   TIME_SLOT_INTERVAL_MINUTES,
+  normalizeOptimizationMode,
   type OptimizationMode,
   type SlotRank,
 } from "./constants";
@@ -89,14 +90,15 @@ function rankStart(
   const leftover = window.endMin - (startMin + block);
   const gapFromWindowStart = startMin - window.startMin;
 
-  if (mode === "ELIMINATE_GAPS") {
+  const normalized = normalizeOptimizationMode(mode);
+  if (normalized === "ELIMINATE_GAPS") {
     return {
       leftoverMin: leftover,
       rank: leftover === 0 || leftover >= block ? "OPTIMAL" : "VALID",
       score: leftover,
     };
   }
-  if (mode === "REDUCE_GAPS") {
+  if (normalized === "REDUCE_GAPS") {
     const score = gapFromWindowStart * 10 + leftover;
     let rank: SlotRank = "POSSIBLE";
     if (startMin === window.startMin) {
@@ -106,7 +108,7 @@ function rankStart(
     }
     return { leftoverMin: leftover, rank, score };
   }
-  // REGULAR
+  // FLEXIBLE (ex REGULAR): all search steps; left-align / perfect fit still ranked higher
   let rank: SlotRank = startMin === window.startMin ? "VALID" : "POSSIBLE";
   if (leftover === 0) rank = "OPTIMAL";
   return { leftoverMin: leftover, rank, score: startMin };
@@ -130,7 +132,7 @@ export function candidateStartsInWindows(
   const buffer = opts?.bufferMinutes ?? BOOKING_BUFFER_MINUTES;
   const block = blockMinutes(serviceDurationMin, buffer);
   if (block <= 0) return [];
-  const mode = opts?.mode ?? DEFAULT_OPTIMIZATION_MODE;
+  const mode = normalizeOptimizationMode(opts?.mode ?? DEFAULT_OPTIMIZATION_MODE);
   const searchStep = Math.max(1, opts?.searchIntervalMinutes ?? TIME_SLOT_INTERVAL_MINUTES);
   const displayStep =
     opts?.displayIntervalMinutes === undefined
@@ -228,18 +230,4 @@ export function freeWindowStarts(input: {
     mode: input.mode,
     displayIntervalMinutes: input.displayIntervalMinutes,
   });
-}
-
-/**
- * Effective service duration for occupancy: override wins, else catalog duration.
- * Catalog rows are never mutated.
- */
-export function effectiveServiceDurationMin(
-  catalogDurationMin: number,
-  durationOverrideMin?: number | null,
-): number {
-  if (durationOverrideMin != null && durationOverrideMin > 0) {
-    return durationOverrideMin;
-  }
-  return catalogDurationMin;
 }

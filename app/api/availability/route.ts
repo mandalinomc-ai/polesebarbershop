@@ -8,11 +8,11 @@ import {
   ONLINE_DISPLAY_INTERVAL_MINUTES,
   type ScheduleSlot,
 } from "@/lib/availability";
+import { resolveEffectiveServiceDuration } from "@/lib/booking";
 import {
   ANYONE_BARBER_ID,
   getBarber,
   resolveServices,
-  totalsForServices,
   servicesAreOnlineBookable,
 } from "@/lib/catalog";
 import {
@@ -117,7 +117,17 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
-    durationMinutes = totalsForServices(services).durationMin;
+    const resolved = resolveEffectiveServiceDuration({ services });
+    if (!resolved.ok || resolved.durationMin == null || !resolved.onlineBookable) {
+      return NextResponse.json(
+        {
+          error: resolved.reason || "Durata non definita per prenotazione online.",
+          durationUnknown: true,
+        },
+        { status: 400 },
+      );
+    }
+    durationMinutes = resolved.durationMin;
   } else if (Number.isFinite(durationParam) && durationParam > 0) {
     durationMinutes = durationParam;
   } else {

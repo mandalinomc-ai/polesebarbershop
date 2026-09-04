@@ -1240,7 +1240,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
     setPriceEuro(totals.priceEuro);
   }, [totals.priceEuro]);
 
-  async function findSlot(mode: "day" | "first") {
+  async function findSlot(mode: "day" | "first" | "best") {
     setFinding(true);
     setError("");
     const params = new URLSearchParams({
@@ -1254,9 +1254,10 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
       const res = await fetch(`/api/admin/find-slot?${params}`);
       const json = (await res.json()) as {
         error?: string;
-        first?: { label: string } | null;
-        slot?: { label: string; date?: string } | null;
+        first?: { label: string; barberId?: string } | null;
+        slot?: { label: string; date?: string; barberId?: string; rank?: string } | null;
         message?: string;
+        rank?: string;
       };
       if (!res.ok) {
         setError(json.error || "Ricerca non riuscita.");
@@ -1271,6 +1272,15 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
         if (json.slot.date && json.slot.date !== date) {
           setError(`Prima disponibilità: ${json.slot.date} alle ${json.slot.label}`);
         }
+      } else if (mode === "best") {
+        if (!json.slot && !json.first) {
+          setError(json.message || "Nessun orario libero in questa data.");
+          return;
+        }
+        const label = json.slot?.label || json.first?.label;
+        if (label) setStartTime(label);
+        if (json.slot?.barberId) setBarberId(json.slot.barberId);
+        else if (json.first?.barberId) setBarberId(json.first.barberId);
       } else if (json.first) {
         setStartTime(json.first.label);
       } else {
@@ -1383,6 +1393,9 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
         <div className="admin-head-actions" style={{ marginBottom: "0.5rem" }}>
           <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("day")}>
             {finding ? "…" : "Trova orario"}
+          </button>
+          <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("best")}>
+            Trova migliore
           </button>
           <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("first")}>
             Prima disponibilità
@@ -1530,7 +1543,7 @@ function MoveModal({
     setDurationOverride(appt.durationOverrideMin != null ? String(appt.durationOverrideMin) : "");
   }, [appt, date]);
 
-  async function findBest(mode: "day" | "first") {
+  async function findBest(mode: "day" | "first" | "best") {
     setFinding(true);
     setError("");
     const params = new URLSearchParams({
@@ -1545,9 +1558,10 @@ function MoveModal({
       const res = await fetch(`/api/admin/find-slot?${params}`);
       const json = (await res.json()) as {
         error?: string;
-        first?: { label: string } | null;
-        slot?: { label: string; date?: string; barberId?: string } | null;
+        first?: { label: string; barberId?: string } | null;
+        slot?: { label: string; date?: string; barberId?: string; rank?: string } | null;
         message?: string;
+        rank?: string;
       };
       if (!res.ok) {
         setError(json.error || "Ricerca non riuscita.");
@@ -1557,6 +1571,11 @@ function MoveModal({
         if (json.slot.date) setMoveDate(json.slot.date);
         setStartTime(json.slot.label);
         if (json.slot.barberId) setBarberId(json.slot.barberId);
+      } else if (mode === "best" && (json.slot || json.first)) {
+        const label = json.slot?.label || json.first?.label;
+        if (label) setStartTime(label);
+        if (json.slot?.barberId) setBarberId(json.slot.barberId);
+        else if (json.first?.barberId) setBarberId(json.first.barberId);
       } else if (json.first) {
         setStartTime(json.first.label);
       } else {
@@ -1642,6 +1661,9 @@ function MoveModal({
         <div className="admin-head-actions" style={{ marginBottom: "0.5rem" }}>
           <button type="button" className="btn btn-outline" disabled={finding} onClick={() => void findBest("day")}>
             {finding ? "…" : "Trova orario"}
+          </button>
+          <button type="button" className="btn btn-outline" disabled={finding} onClick={() => void findBest("best")}>
+            Trova migliore
           </button>
           <button type="button" className="btn btn-outline" disabled={finding} onClick={() => void findBest("first")}>
             Smart move

@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
+import { resolveEffectiveServiceDuration } from "@/lib/booking";
 import { getBarber, onlineBookingBlockReason, resolveServices, totalsForServices } from "@/lib/catalog";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
@@ -36,6 +37,17 @@ export async function POST(request: Request) {
   if (!getBarber(body.barberId)) return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
 
   const totals = totalsForServices(services);
+  const resolved = resolveEffectiveServiceDuration({ services });
+  if (!resolved.ok || resolved.durationMin == null || !resolved.onlineBookable) {
+    return NextResponse.json(
+      {
+        error: resolved.reason || "Durata non definita per prenotazione online.",
+        durationUnknown: true,
+      },
+      { status: 400 },
+    );
+  }
+  const occupancyDuration = resolved.durationMin;
   if (body.date < getFirstBookableDate()) {
     return NextResponse.json({ error: `Le prenotazioni aprono dal ${formatItalianDate(SITE.openingDate)}.` }, { status: 400 });
   }
@@ -53,12 +65,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 503 });
   }
 
-  // Server-side revalidation: re-read appointments, recompute slots, reject if gone.
+  // Server-side revalidation: full-search free windows (not online thinning).
   const slots = getAvailableSlots({
     date: body.date,
     barberId: body.barberId,
-    durationMinutes: totals.durationMin,
+    durationMinutes: occupancyDuration,
     appointments: dayAppointments,
+    fullSearch: true,
   });
   const slot = findSlot(slots, startsAt);
   if (!slot) {
@@ -113,7 +126,7 @@ export async function POST(request: Request) {
         starts_at: slot.startIso,
         // Chair occupation includes internal BOOKING_BUFFER_MINUTES.
         ends_at: slot.blockEndIso,
-        duration_min: totals.durationMin,
+        duration_min: occupancyDuration,
         price_cents: totals.priceEuro * 100,
         is_walk_in: false,
         notes: body.notes || null,
@@ -161,7 +174,7 @@ export async function POST(request: Request) {
       phone: body.phone,
       email: body.email,
       service: totals.names,
-      durationMin: totals.durationMin,
+      durationMin: occupancyDuration,
       barber: barberName,
       date: dateLabel,
       time: timeLabel,
@@ -218,7 +231,7 @@ export async function POST(request: Request) {
     manageUrl,
     barberId: slot.barberId, barberName, startsAt: slot.startIso, endsAt: slot.endIso,
     blockEndsAt: slot.blockEndIso,
-    durationMinutes: totals.durationMin, totalPrice: totals.priceEuro, priceLabel: totals.priceLabel,
+    durationMinutes: occupancyDuration, totalPrice: totals.priceEuro, priceLabel: totals.priceLabel,
     serviceNames: totals.names, dateLabel, timeLabel, ics: icsContent, icsFilename: filename,
     googleCalendarUrl: gcal, warnings, appointment: row ? publicAppointment(row) : null,
   });

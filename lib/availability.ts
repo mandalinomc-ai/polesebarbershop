@@ -19,6 +19,11 @@ import {
   overlaps,
   subtractBusyFromWindows,
   workingWindowsFromHours,
+  busyMinutesFromBlocks,
+  CONFIG_CALENDAR_BLOCKS,
+  type CalendarBlock,
+  freeWindowStarts,
+  suggestFillGaps,
   TIMEZONE,
   addMinutes as bookingAddMinutes,
   formatWallDate as bookingFormatWallDate,
@@ -28,6 +33,8 @@ import {
   wallTimeToUtc as bookingWallTimeToUtc,
   type OptimizationMode,
   type SlotRank,
+  type RankedStart,
+  type FillGapSuggestion,
 } from "./booking";
 import {
   BOOKING_HORIZON_DAYS,
@@ -45,7 +52,7 @@ export {
 };
 /** @deprecated Prefer SLOT_INTERVAL_MINUTES — kept for existing imports. */
 export const SLOT_STEP_MINUTES = SLOT_INTERVAL_MINUTES;
-export type { OptimizationMode, SlotRank };
+export type { OptimizationMode, SlotRank, CalendarBlock, FillGapSuggestion };
 
 export type ExistingAppointment = {
   barberId: string;
@@ -120,6 +127,8 @@ export type GetAvailableSlotsInput = {
   displayIntervalMinutes?: number | null;
   /** When true, omit display thinning (full search grid inside free windows). */
   fullSearch?: boolean;
+  /** Optional calendar blocks (pause/lunch/custom). Defaults to CONFIG_CALENDAR_BLOCKS. */
+  calendarBlocks?: CalendarBlock[];
 };
 
 function parseDateParts(date: string): { y: number; m: number; d: number } {
@@ -331,10 +340,14 @@ function slotStartsForHours(
   busyMinutes: { startMin: number; endMin: number }[],
   optimizationMode: OptimizationMode,
   displayIntervalMinutes: number | null,
+  date: string,
+  barberId: string,
+  calendarBlocks: CalendarBlock[],
 ): string[] {
   if (!hours || durationMinutes <= 0) return [];
   const working = workingWindowsFromHours(hours.open, hours.close);
-  const free = subtractBusyFromWindows(working, busyMinutes);
+  const blockBusy = busyMinutesFromBlocks(date, calendarBlocks, barberId);
+  const free = subtractBusyFromWindows(working, [...busyMinutes, ...blockBusy]);
   return candidateStartsInWindows(free, durationMinutes, {
     bufferMinutes,
     searchIntervalMinutes: slotStepMinutes,
@@ -388,6 +401,7 @@ function scheduleForBarber(opts: {
   bufferMinutes: number;
   optimizationMode: OptimizationMode;
   displayIntervalMinutes: number | null;
+  calendarBlocks: CalendarBlock[];
 }): ScheduleSlot[] {
   const hours = getHoursForDate(opts.barber, opts.date);
   const busyMinutes = busyWallMinutesForBarber(
@@ -404,8 +418,19 @@ function scheduleForBarber(opts: {
     busyMinutes,
     opts.optimizationMode,
     opts.displayIntervalMinutes,
+    opts.date,
+    opts.barber.id,
+    opts.calendarBlocks,
   );
   const busy = appointmentsForBarber(opts.appointments, opts.barber.id);
+  // Calendar blocks also act as busy for exact overlap checks
+  const blockBusy = opts.calendarBlocks
+    ? busyMinutesFromBlocks(opts.date, opts.calendarBlocks, opts.barber.id).map((b) => ({
+        start: wallTimeToUtc(opts.date, minutesToTime(b.startMin), opts.timeZone),
+        end: wallTimeToUtc(opts.date, minutesToTime(b.endMin), opts.timeZone),
+      }))
+    : [];
+  const allBusy = [...busy, ...blockBusy];
   const earliest = addMinutes(opts.now, opts.minNoticeMinutes);
   const slots: ScheduleSlot[] = [];
 
@@ -415,7 +440,7 @@ function scheduleForBarber(opts: {
       barber: opts.barber,
       label,
       durationMinutes: opts.durationMinutes,
-      busy,
+      busy: allBusy,
       earliest,
       timeZone: opts.timeZone,
       bufferMinutes: opts.bufferMinutes,
@@ -448,6 +473,7 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
     timeZone = TIMEZONE,
     optimizationMode = DEFAULT_OPTIMIZATION_MODE,
     fullSearch = false,
+    calendarBlocks = CONFIG_CALENDAR_BLOCKS,
   } = input;
 
   const displayIntervalMinutes =
@@ -473,6 +499,7 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
     timeZone,
     optimizationMode,
     displayIntervalMinutes,
+    calendarBlocks,
   };
 
   if (barberId === ANYONE_BARBER_ID) {
@@ -584,6 +611,7 @@ export function findFirstAvailability(input: {
   minNoticeMinutes?: number;
   bufferMinutes?: number;
   optimizationMode?: OptimizationMode;
+  calendarBlocks?: CalendarBlock[];
 }): Slot | null {
   const now = input.now ?? new Date();
   const startDate = input.fromDate ?? getFirstBookableDate(now);
@@ -601,6 +629,7 @@ export function findFirstAvailability(input: {
         minNoticeMinutes: input.minNoticeMinutes ?? 0,
         bufferMinutes: input.bufferMinutes,
         optimizationMode: input.optimizationMode,
+        calendarBlocks: input.calendarBlocks,
         fullSearch: true,
       });
       if (slots[0]) return slots[0];
@@ -609,6 +638,118 @@ export function findFirstAvailability(input: {
     if (cursor > addDays(startDate, maxDays)) break;
   }
   return null;
+}
+
+/**
+ * TROVA MIGLIORE — free-window search ranked OPTIMAL → VALID → POSSIBLE.
+ */
+export function findBestAvailability(input: {
+  date: string;
+  barberId: string;
+  durationMinutes: number;
+  appointments?: ExistingAppointment[];
+  barbers?: Barber[];
+  now?: Date;
+  minNoticeMinutes?: number;
+  bufferMinutes?: number;
+  optimizationMode?: OptimizationMode;
+  calendarBlocks?: CalendarBlock[];
+}): { slot: Slot; rank: SlotRank } | null {
+  const now = input.now ?? new Date();
+  const mode = input.optimizationMode ?? DEFAULT_OPTIMIZATION_MODE;
+  const slots = getAvailableSlots({
+    date: input.date,
+    barberId: input.barberId,
+    durationMinutes: input.durationMinutes,
+    appointments: input.appointments,
+    barbers: input.barbers,
+    now,
+    minNoticeMinutes: input.minNoticeMinutes ?? 0,
+    bufferMinutes: input.bufferMinutes,
+    optimizationMode: mode,
+    calendarBlocks: input.calendarBlocks,
+    fullSearch: true,
+  });
+  if (!slots.length) return null;
+
+  // Rank using the assigned barber's free windows (anyone → per-slot barber).
+  let best: { slot: Slot; rank: SlotRank; score: number } | null = null;
+  for (const slot of slots) {
+    const hours = getHoursForDate(
+      (input.barbers ?? BARBERS).find((b) => b.id === slot.barberId) ??
+        BARBERS.find((b) => b.id === slot.barberId)!,
+      input.date,
+    );
+    if (!hours) continue;
+    const busyMinutes = busyWallMinutesForBarber(
+      input.appointments ?? [],
+      slot.barberId,
+      input.date,
+      TIMEZONE,
+    );
+    const blockBusy = busyMinutesFromBlocks(
+      input.date,
+      input.calendarBlocks ?? CONFIG_CALENDAR_BLOCKS,
+      slot.barberId,
+    );
+    const ranked = freeWindowStarts({
+      open: hours.open,
+      close: hours.close,
+      busyMinutes: [...busyMinutes, ...blockBusy],
+      serviceDurationMin: input.durationMinutes,
+      bufferMinutes: input.bufferMinutes,
+      mode,
+      displayIntervalMinutes: null,
+    });
+    const hit = ranked.find((r) => r.label === slot.label);
+    const rank: SlotRank = hit?.rank ?? "POSSIBLE";
+    const score =
+      (rank === "OPTIMAL" ? 0 : rank === "VALID" ? 1000 : 2000) +
+      (hit?.score ?? slot.start.getTime() / 60_000);
+    if (!best || score < best.score) {
+      best = { slot, rank, score };
+    }
+  }
+  return best ? { slot: best.slot, rank: best.rank } : { slot: slots[0]!, rank: "POSSIBLE" };
+}
+
+/**
+ * Internal RIEMPI BUCO suggestions for a day/barber (gestionale hint, not public UI).
+ */
+export function suggestFillGapsForDay(input: {
+  date: string;
+  barberId: string;
+  durationMinutes: number;
+  appointments?: ExistingAppointment[];
+  bufferMinutes?: number;
+  optimizationMode?: OptimizationMode;
+  calendarBlocks?: CalendarBlock[];
+}): FillGapSuggestion[] {
+  const barber = BARBERS.find((b) => b.id === input.barberId && !b.virtual);
+  if (!barber) return [];
+  const hours = getHoursForDate(barber, input.date);
+  if (!hours) return [];
+  const busyMinutes = busyWallMinutesForBarber(
+    input.appointments ?? [],
+    input.barberId,
+    input.date,
+    TIMEZONE,
+  );
+  const blockBusy = busyMinutesFromBlocks(
+    input.date,
+    input.calendarBlocks ?? CONFIG_CALENDAR_BLOCKS,
+    input.barberId,
+  );
+  const free = subtractBusyFromWindows(
+    workingWindowsFromHours(hours.open, hours.close),
+    [...busyMinutes, ...blockBusy],
+  );
+  return suggestFillGaps({
+    freeWindows: free,
+    serviceDurationMin: input.durationMinutes,
+    bufferMinutes: input.bufferMinutes,
+    mode: input.optimizationMode,
+  });
 }
 
 /**

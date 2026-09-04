@@ -21,6 +21,18 @@ export const SERVICE_CATEGORY_LABEL: Record<ServiceCategory, string> = {
   colore: "Colore & trattamenti",
 };
 
+/**
+ * Optional servicing → processing → servicing.
+ * Only set when real minutes exist — never invent tinture defaults.
+ */
+export type ServiceProcessing = {
+  servicingBeforeMin: number;
+  processingMin: number;
+  servicingAfterMin: number;
+  /** When true, barber is free during processingMin (another cut can fit). */
+  barberFreeDuringProcessing?: boolean;
+};
+
 export type Service = {
   id: string;
   name: string;
@@ -28,11 +40,20 @@ export type Service = {
   priceEuro: number;
   priceMaxEuro: number | null;
   isVariablePrice: boolean;
-  /** Reserved chair time for the calendar. Always > 0 so overlap math works. */
+  /**
+   * Catalog duration when durationKnown.
+   * When durationKnown is false this value is NOT used as an invented booking default
+   * (online blocked; gestionale requires override unless processing is configured).
+   */
   durationMin: number;
-  /** False = official listino shows "durata n/d"; durationMin is only a booking buffer. */
+  /** False = official listino shows "durata n/d"; do not invent online duration. */
   durationKnown: boolean;
   description: string;
+  /**
+   * Optional servicing→processing→servicing. Only set when real minutes exist.
+   * Tinture/colore stay without processing until Felice confirms durations.
+   */
+  processing?: ServiceProcessing | null;
 };
 
 /**

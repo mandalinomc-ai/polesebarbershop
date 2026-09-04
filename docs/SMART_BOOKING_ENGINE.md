@@ -1,4 +1,4 @@
-# Smart Booking Engine v2 — Felice Polese
+# Smart Booking Engine v3 — Felice Polese
 
 Single calendar for the public site and gestionale (same Supabase `appointments` table).
 **Scope:** Felice Polese only (`felicepolesebarbershop`). Do not deploy to `polesebarbershop` / Eugenio.
@@ -11,6 +11,7 @@ Single calendar for the public site and gestionale (same Supabase `appointments`
 | Shop hours | `lib/catalog.ts` → `SHOP_HOURS` (Sunday closed) |
 | Barbers | `lib/catalog.ts` → `BARBERS` (Felice, Davide, anyone) |
 | Existing bookings | Supabase `appointments` via `lib/appointments.ts` |
+| Optional calendar blocks | `lib/booking/calendar-blocks.ts` + migration `008` (empty until configured) |
 | Timezone | `Europe/Rome` |
 | Engine | `lib/booking/*` + `lib/availability.ts` |
 
@@ -18,7 +19,7 @@ Single calendar for the public site and gestionale (same Supabase `appointments`
 
 | Constant | Role |
 |----------|------|
-| **SERVICE_DURATION** | Catalog `durationMin` (client-visible). Multi-service = sum. |
+| **SERVICE_DURATION** | From `resolveEffectiveServiceDuration()` — override, processing config, or known catalog sum. Never invented. |
 | **BUFFER** (`BOOKING_BUFFER_MINUTES = 5`) | Internal chair occupancy after service. Hidden from client emails/ICS. |
 | **TIME_SLOT_INTERVAL** (`TIME_SLOT_INTERVAL_MINUTES = 5`) | Search/display step **inside** free windows only. Does **not** round free-window starts. |
 
@@ -28,6 +29,7 @@ Online UI also uses `ONLINE_DISPLAY_INTERVAL_MINUTES = 15` to thin candidates (a
 
 ```
 SHOP_HOURS → working windows
+  − calendar blocks (only when configured)
   − real appointments (ends_at already includes buffer occupancy)
   = free windows (continuous, minute-precise)
   → FIT (serviceDuration + buffer) into each free window
@@ -46,8 +48,8 @@ Configured as `DEFAULT_OPTIMIZATION_MODE = REDUCE_GAPS` (no confusing Felice UI 
 
 | Mode | Behavior |
 |------|----------|
-| `REGULAR` | All search-interval starts in free windows |
-| `REDUCE_GAPS` (default) | Prefer packing from free-window start; rank OPTIMAL/VALID higher |
+| `FLEXIBLE` | All search-interval starts in free windows (`REGULAR` is a deprecated alias) |
+| `REDUCE_GAPS` (default) | Prefer packing from free-window start; rank OPTIMAL/VALID higher; online hides weak POSSIBLE micro-slots |
 | `ELIMINATE_GAPS` | Only left-aligned starts that leave no unusable leftover |
 
 Modes **rank/filter** candidates; they never invent unavailability.
@@ -58,46 +60,71 @@ Modes **rank/filter** candidates; they never invent unavailability.
 - **VALID** — also packs reasonably (e.g. left-aligned or perfect fit)  
 - **OPTIMAL** — best under current mode (gap-reducing / eliminate)
 
-## 5. durationOverride
+**Trova migliore** (`findBestAvailability` / find-slot `mode=best`) picks OPTIMAL → VALID → POSSIBLE.
+**RIEMPI BUCO** (`suggestFillGaps`) is an internal gestionale hint for tight holes — not a public UI feature.
+
+## 5. resolveEffectiveServiceDuration
+
+Priority (no invented defaults):
+
+1. Positive `durationOverrideMin` (gestionale assisted)
+2. Configured `processing` on a **single** service (prep + process + finish)
+3. Sum of catalog `durationMin` when every service has `durationKnown`
+4. Otherwise not determinable → **block online**; gestionale needs override
+
+Kinds: `fixed` | `variable` | `assisted` | `unknown`.
+
+## 6. durationOverride
 
 - Column: `appointments.duration_override_min` (migration `007_duration_override.sql`)
 - Catalog listino **unchanged**
-- Occupancy / `ends_at` use `effectiveServiceDurationMin(catalog, override)`
-- Gestionale walk-in / move can set override
+- Occupancy / `ends_at` use effective duration (override wins)
+- Gestionale walk-in / move / Trova orario can set override
 
-## 6. Services without known duration
+## 7. Processing / blocked / extra servicing
+
+- Optional `Service.processing` (`servicingBeforeMin` → `processingMin` → `servicingAfterMin`)
+- Only when **real minutes are configured** — never invent tinture/colore defaults
+- `barberFreeDuringProcessing`: mid segment omitted from barber-busy segments (helpers in `lib/booking/processing.ts`)
+- Calendar blocks (pause/lunch/custom): config-first empty list; DB table `calendar_blocks` (008) ready when Felice defines pauses
+
+## 8. Services without known duration
 
 - `durationKnown: false` → **blocked online** (site + `/api/availability` + `/api/bookings`)
 - No invented defaults
 - Gestionale flags “durata n/d” and requires override for occupancy when needed
 
-## 7. Same engine: site + gestionale
+## 9. Same engine: site + gestionale
 
 | Surface | Entry |
 |---------|--------|
 | Online | `/api/availability` → smart thinned free-window starts |
-| Booking POST | revalidate with full-search free windows; 409 on conflict |
-| Gestionale | `/api/admin/find-slot` (TROVA ORARIO / PRIMA DISPONIBILITÀ), walk-in, move |
+| Booking POST | revalidate with **full-search** free windows; 409 on conflict |
+| Gestionale | `/api/admin/find-slot` — Trova orario / **Trova migliore** / Prima disponibilità; walk-in; move |
 
-## 8. Gestionale UX (familiar)
+Smart assignment for `anyone`: least-loaded real barber among free chairs at that label.
+
+## 10. Gestionale UX (familiar)
 
 - Keep existing GestionalePanel look
-- **Trova orario** / **Prima disponibilità** / **Smart move**
+- **Trova orario** / **Trova migliore** / **Prima disponibilità** / Smart move
 - Duration override on create/edit
 - Move conflict → message + clickable alternatives
 - Force conflict only with explicit `confirm` (`force` + `confirmForce`)
 - Mobile: tap + quick actions (no drag-drop)
 
-## 9. Tests
+## 11. Tests
 
-See `lib/booking/engine.test.ts` and free-windows coverage:
+See `lib/booking/engine.test.ts`:
 
 - NO 5-MINUTE BUG (continuous next start)
-- duration override occupancy
-- move frees old / occupies new
-- free windows fitting
+- `resolveEffectiveServiceDuration` (catalog / override / processing / unknown)
+- FLEXIBLE \| REDUCE_GAPS \| ELIMINATE_GAPS
+- Processing busy segments + calendar blocks
+- Trova migliore + RIEMPI BUCO
+- duration override occupancy, move frees old / occupies new
 - multi-service, buffer, barbers, cancelled, double booking
 
-## 10. Keep unchanged
+## 12. Keep unchanged
 
 Gmail SMTP, Maps Corso Dante **44**, WhatsApp, scissors intro, Taglio Pro **25€/50min**, Taglio Bambino **10€**, prices, videos.

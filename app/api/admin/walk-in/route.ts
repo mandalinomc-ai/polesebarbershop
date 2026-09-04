@@ -5,7 +5,7 @@ import {
   getAvailableSlots,
   wallTimeToUtc,
 } from "@/lib/availability";
-import { blockEndFromStart, effectiveServiceDurationMin } from "@/lib/booking";
+import { blockEndFromStart, resolveEffectiveServiceDuration } from "@/lib/booking";
 import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
 import {
   AppointmentsUnavailableError,
@@ -41,7 +41,18 @@ export async function POST(request: Request) {
   if (!barber || barber.virtual) return NextResponse.json({ error: "Seleziona Felice o Davide." }, { status: 400 });
   const totals = totalsForServices(services);
   const durationOverride = body.durationOverrideMin ?? null;
-  const occupancyDuration = effectiveServiceDurationMin(totals.durationMin, durationOverride);
+  const resolved = resolveEffectiveServiceDuration({
+    services,
+    durationOverrideMin: durationOverride,
+    assisted: true,
+  });
+  if (!resolved.ok || resolved.durationMin == null) {
+    return NextResponse.json(
+      { error: resolved.reason || "Imposta una durata override (min) per questo servizio." },
+      { status: 400 },
+    );
+  }
+  const occupancyDuration = resolved.durationMin;
   const startsAt = wallTimeToUtc(body.date, body.startTime);
   let dayAppointments;
   try {

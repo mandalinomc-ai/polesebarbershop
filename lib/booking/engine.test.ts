@@ -4,24 +4,35 @@ import {
   BOOKING_BUFFER_MINUTES,
   SLOT_INTERVAL_MINUTES,
   TIME_SLOT_INTERVAL_MINUTES,
+  DEFAULT_OPTIMIZATION_MODE,
+  barberBusySegments,
   blockEndFromStart,
+  busyMinutesFromBlocks,
   candidateStartLabels,
   chairBlockMinutes,
   clientEndFromStart,
+  clientDurationFromProcessing,
   effectiveServiceDurationMin,
   freeWindowStarts,
   isIntervalFree,
   overlaps,
+  pickBestStart,
+  resolveEffectiveServiceDuration,
   subtractBusyFromWindows,
+  suggestFillGaps,
   wallTimeToUtc,
   workingWindowsFromHours,
+  type CalendarBlock,
+  type ServiceProcessing,
 } from "@/lib/booking";
 import {
+  findBestAvailability,
   findFirstAvailability,
   getAvailableSlots,
   getScheduleSlots,
   getSmartAvailableSlots,
   isClosedDay,
+  suggestFillGapsForDay,
 } from "@/lib/availability";
 import { occupiesSlot } from "@/lib/appointments";
 
@@ -381,5 +392,268 @@ describe("smart engine integration", () => {
       minNoticeMinutes: 0,
     });
     expect(slot?.label).toBe("08:30");
+  });
+});
+
+describe("NO 5-MINUTE BUG — continuous free starts", () => {
+  const cases = [
+    { busyEnd: "09:42", next: "09:42" },
+    { busyEnd: "10:03", next: "10:03" },
+    { busyEnd: "11:17", next: "11:17" },
+    { busyEnd: "14:01", next: "14:01" },
+  ] as const;
+
+  for (const c of cases) {
+    it(`free-windows next start after ${c.busyEnd} is ${c.next} (not snapped +5)`, () => {
+      const starts = freeWindowStarts({
+        open: "08:30",
+        close: "19:00",
+        busyLabels: [{ start: "09:00", end: c.busyEnd }],
+        serviceDurationMin: 25,
+        displayIntervalMinutes: null,
+        mode: "FLEXIBLE",
+      });
+      const after = starts.map((s) => s.label).filter((l) => l >= c.busyEnd);
+      expect(after[0]).toBe(c.next);
+    });
+  }
+
+  it("getAvailableSlots keeps continuous 10:03", () => {
+    const labels = getAvailableSlots({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 25,
+      now: nowBefore,
+      appointments: [
+        {
+          barberId: "felice",
+          startsAt: wallTimeToUtc(TUESDAY, "09:00"),
+          endsAt: wallTimeToUtc(TUESDAY, "10:03"),
+        },
+      ],
+      fullSearch: true,
+    }).map((s) => s.label);
+    expect(labels).toContain("10:03");
+    const after = labels.filter((l) => l >= "10:03");
+    expect(after[0]).toBe("10:03");
+  });
+});
+
+describe("resolveEffectiveServiceDuration", () => {
+  it("uses catalog for known fixed services", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("taglio-pro")!],
+    });
+    expect(r).toMatchObject({ ok: true, durationMin: 50, source: "catalog", onlineBookable: true });
+  });
+
+  it("override wins without mutating catalog", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("taglio-pro")!],
+      durationOverrideMin: 40,
+      assisted: true,
+    });
+    expect(r.durationMin).toBe(40);
+    expect(r.source).toBe("override");
+    expect(getService("taglio-pro")!.durationMin).toBe(50);
+  });
+
+  it("blocks unknown duration without override (no invented default)", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("tintura-capelli")!],
+    });
+    expect(r.ok).toBe(false);
+    expect(r.durationMin).toBeNull();
+    expect(r.onlineBookable).toBe(false);
+    expect(r.reason).toMatch(/non determinabile/i);
+  });
+
+  it("allows gestionale override for unknown tinture", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("tintura-capelli")!],
+      durationOverrideMin: 55,
+      assisted: true,
+    });
+    expect(r).toMatchObject({ ok: true, durationMin: 55, source: "override", kind: "assisted" });
+  });
+
+  it("uses processing config when present", () => {
+    const fake = {
+      ...getService("tintura-capelli")!,
+      processing: {
+        servicingBeforeMin: 15,
+        processingMin: 30,
+        servicingAfterMin: 15,
+        barberFreeDuringProcessing: true,
+      } satisfies ServiceProcessing,
+    };
+    const r = resolveEffectiveServiceDuration({ services: [fake] });
+    expect(r).toMatchObject({ ok: true, durationMin: 60, source: "processing" });
+    expect(clientDurationFromProcessing(fake)).toBe(60);
+  });
+});
+
+describe("gap modes FLEXIBLE | REDUCE_GAPS | ELIMINATE_GAPS", () => {
+  it("default mode is REDUCE_GAPS", () => {
+    expect(DEFAULT_OPTIMIZATION_MODE).toBe("REDUCE_GAPS");
+  });
+
+  it("FLEXIBLE equals legacy REGULAR ranking behavior", () => {
+    const a = freeWindowStarts({
+      open: "08:30",
+      close: "12:00",
+      serviceDurationMin: 50,
+      displayIntervalMinutes: null,
+      mode: "FLEXIBLE",
+    });
+    const b = freeWindowStarts({
+      open: "08:30",
+      close: "12:00",
+      serviceDurationMin: 50,
+      displayIntervalMinutes: null,
+      mode: "REGULAR",
+    });
+    expect(a.map((s) => s.label)).toEqual(b.map((s) => s.label));
+  });
+
+  it("REDUCE_GAPS marks window start OPTIMAL", () => {
+    const starts = freeWindowStarts({
+      open: "08:30",
+      close: "19:00",
+      serviceDurationMin: 50,
+      displayIntervalMinutes: null,
+      mode: "REDUCE_GAPS",
+    });
+    expect(starts[0]?.rank).toBe("OPTIMAL");
+  });
+
+  it("ELIMINATE_GAPS skips unusable leftover windows", () => {
+    const starts = freeWindowStarts({
+      open: "09:00",
+      close: "10:00",
+      serviceDurationMin: 50,
+      displayIntervalMinutes: null,
+      mode: "ELIMINATE_GAPS",
+    });
+    expect(starts).toEqual([]);
+  });
+
+  it("pickBestStart prefers OPTIMAL", () => {
+    const starts = freeWindowStarts({
+      open: "08:30",
+      close: "19:00",
+      busyLabels: [{ start: "08:30", end: "09:00" }],
+      serviceDurationMin: 50,
+      displayIntervalMinutes: null,
+      mode: "REDUCE_GAPS",
+    });
+    const best = pickBestStart(starts);
+    expect(best?.label).toBe("09:00");
+    expect(best?.rank).toBe("OPTIMAL");
+  });
+});
+
+describe("processing occupancy", () => {
+  it("barber free during processing leaves a free gap; buffer stays after finish", () => {
+    const start = wallTimeToUtc(TUESDAY, "10:00");
+    const processing: ServiceProcessing = {
+      servicingBeforeMin: 15,
+      processingMin: 30,
+      servicingAfterMin: 15,
+      barberFreeDuringProcessing: true,
+    };
+    const segs = barberBusySegments({ start, processing, bufferMinutes: 5 });
+    expect(segs.map((s) => s.kind)).toEqual(["servicing", "servicing", "buffer"]);
+    expect(segs[0]!.end.toISOString()).toBe(wallTimeToUtc(TUESDAY, "10:15").toISOString());
+    expect(segs[1]!.start.toISOString()).toBe(wallTimeToUtc(TUESDAY, "10:45").toISOString());
+    expect(segs[2]!.end.toISOString()).toBe(wallTimeToUtc(TUESDAY, "11:05").toISOString());
+  });
+
+  it("without free-during-processing, mid segment is busy", () => {
+    const start = wallTimeToUtc(TUESDAY, "10:00");
+    const segs = barberBusySegments({
+      start,
+      processing: {
+        servicingBeforeMin: 10,
+        processingMin: 20,
+        servicingAfterMin: 10,
+        barberFreeDuringProcessing: false,
+      },
+    });
+    expect(segs.map((s) => s.kind)).toEqual(["servicing", "processing", "servicing", "buffer"]);
+  });
+});
+
+describe("calendar blocks", () => {
+  it("blocks pause/lunch time from free windows", () => {
+    const blocks: CalendarBlock[] = [
+      { id: "lunch", date: TUESDAY, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa" },
+    ];
+    const busy = busyMinutesFromBlocks(TUESDAY, blocks, "felice");
+    expect(busy).toEqual([{ startMin: 13 * 60, endMin: 14 * 60 }]);
+    const labels = getAvailableSlots({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 50,
+      now: nowBefore,
+      calendarBlocks: blocks,
+      fullSearch: true,
+    }).map((s) => s.label);
+    expect(labels).not.toContain("13:00");
+    expect(labels).not.toContain("13:30");
+    expect(labels).toContain("12:05");
+    expect(labels).toContain("14:00");
+  });
+});
+
+describe("trova migliore + riempi buco", () => {
+  it("findBestAvailability returns OPTIMAL at window start on empty day", () => {
+    const best = findBestAvailability({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 50,
+      now: nowBefore,
+      minNoticeMinutes: 0,
+    });
+    expect(best?.slot.label).toBe("08:30");
+    expect(best?.rank).toBe("OPTIMAL");
+  });
+
+  it("suggestFillGaps proposes left-align into a tight hole", () => {
+    const free = subtractBusyFromWindows(
+      [{ startMin: 8 * 60 + 30, endMin: 19 * 60 }],
+      [
+        { startMin: 8 * 60 + 30, endMin: 10 * 60 },
+        { startMin: 11 * 60, endMin: 19 * 60 },
+      ],
+    );
+    const tips = suggestFillGaps({
+      freeWindows: free,
+      serviceDurationMin: 50,
+      mode: "REDUCE_GAPS",
+    });
+    expect(tips[0]?.label).toBe("10:00");
+    expect(tips[0]?.reason).toMatch(/buco/i);
+  });
+
+  it("suggestFillGapsForDay returns suggestions around gaps", () => {
+    const tips = suggestFillGapsForDay({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 50,
+      appointments: [
+        {
+          barberId: "felice",
+          startsAt: wallTimeToUtc(TUESDAY, "08:30"),
+          endsAt: wallTimeToUtc(TUESDAY, "10:00"),
+        },
+        {
+          barberId: "felice",
+          startsAt: wallTimeToUtc(TUESDAY, "11:00"),
+          endsAt: wallTimeToUtc(TUESDAY, "19:00"),
+        },
+      ],
+    });
+    expect(tips.some((t) => t.label === "10:00")).toBe(true);
   });
 });
