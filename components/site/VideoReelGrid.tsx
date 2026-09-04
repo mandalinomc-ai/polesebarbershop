@@ -71,13 +71,8 @@ export function VideoReelGrid() {
       </section>
 
       <section id="trattamenti" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow">Servizi reali</div>
-        <h2 className="section-title font-serif">Ogni trattamento con il suo media</h2>
-        <p className="prose technique-lead fx-copy">
-          Ogni trattamento con il video Drive corrispondente. Barba Pro, Barba
-          Standard e Tintura Barba usano le foto generate: non c&apos;è un clip
-          dedicato.
-        </p>
+        <div className="eyebrow">I nostri servizi</div>
+        <h2 className="section-title font-serif">Scopri i trattamenti pensati per il tuo stile.</h2>
         <div className="video-reel-grid">
           {SERVICES.map((service) => {
             const media = SERVICE_SHOWCASE_VIDEOS.find(

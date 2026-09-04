@@ -13,10 +13,7 @@ export function LandingSections() {
   return (
     <>
       <section id="about" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow reveal">Felice Polese</div>
-        <h2 className="section-title font-serif reveal reveal-d1">
-          Felice Polese giovane talento
-        </h2>
+        <h2 className="section-title font-serif reveal reveal-d1">Felice Polese</h2>
         <div className="about-grid">
           <div className="about-copy">
             <p className="prose reveal reveal-d1">
@@ -74,7 +71,7 @@ export function LandingSections() {
         <div className="eyebrow reveal">Social</div>
         <h2 className="section-title font-serif reveal reveal-d1">Resta in contatto</h2>
         <p className="social-lead reveal reveal-d2">
-          Instagram, WhatsApp e prenotazione online — scansiona i QR del pannello orari.
+          Seguici su Instagram, scrivici su WhatsApp o prenota direttamente online.
         </p>
         <SocialQrGrid variant="contact" />
       </section>
@@ -104,7 +101,7 @@ export function LandingSections() {
                 rel="noopener noreferrer"
                 className="btn btn-whatsapp contact-wa"
               >
-                Consulenza su WhatsApp
+                Scrivici su WhatsApp
               </a>
             </p>
             <p>

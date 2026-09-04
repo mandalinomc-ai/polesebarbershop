@@ -249,6 +249,7 @@ describe("public copy vs official identity", () => {
     expect(landing).toMatch(/id="about"/);
     expect(landing).toMatch(/Barber Match 2023/);
     expect(landing).toMatch(/giovane talento/i);
+    expect(landing).not.toMatch(/Felice Polese giovane talento/);
     expect(landing).not.toMatch(/Tradizione/);
     expect(landing).not.toMatch(/Santa Maria degli Angeli/);
     const catalog = readFileSync(join(process.cwd(), "lib/catalog.ts"), "utf8");
@@ -287,13 +288,13 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/Il tuo appuntamento/);
     expect(wizard).toMatch(/listinoBeside/);
     expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
-    expect(wizard).toMatch(/Tocca i servizi nel listino/);
+    expect(wizard).toMatch(/Seleziona i servizi per aggiungerli o rimuoverli/);
     expect(wizard).not.toMatch(/nel wizard/i);
     expect(wizard).toMatch(/Qualsiasi disponibilità/);
     expect(wizard).toMatch(/booking-note-headline/);
     expect(wizard).toMatch(/booking-note-blocks/);
     expect(wizard).toMatch(/booking-note-block/);
-    expect(wizard).toMatch(/Illimitate/);
+    expect(wizard).toMatch(/in tempo reale/);
     expect(wizard).toMatch(/durata prevista si (aggiorna|somma)/i);
     expect(wizard).not.toMatch(/Durata non definita|niente durata inventata|senza durata nota|durationUnknown/i);
     expect(wizard).toMatch(/Scegli la data/);
@@ -306,7 +307,9 @@ describe("public copy vs official identity", () => {
     expect(reel).toMatch(/id="gallery"/);
     expect(reel).toMatch(/SalonVideo/);
     expect(reel).toMatch(/SERVICE_SHOWCASE_VIDEOS/);
-    expect(reel).toMatch(/Ogni trattamento con il suo media/);
+    expect(reel).toMatch(/Scopri i trattamenti pensati per il tuo stile/);
+    expect(reel).toMatch(/I nostri servizi/);
+    expect(reel).not.toMatch(/Drive|foto generate|clip dedicato/i);
     expect(reel).toMatch(/service-price-on-media/);
     expect(reel).toMatch(/FillCoverImage/);
     expect(reel).not.toMatch(/Tintura Nero/);
@@ -403,7 +406,7 @@ describe("public copy vs official identity", () => {
     const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(contact).toMatch(/id="contact"/);
     expect(contact).toMatch(/Raggiungimi ora su Google Maps/);
-    expect(contact).toMatch(/Consulenza su WhatsApp/);
+    expect(contact).toMatch(/Scrivici su WhatsApp/);
     expect(contact).toMatch(/getWhatsAppUrl/);
     expect(contact).toMatch(/SITE\.hours/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
@@ -455,8 +458,8 @@ describe("public copy vs official identity", () => {
     expect(HERO_CALENDAR_DAYS).toBeGreaterThanOrEqual(12);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/BOOKING_UI_DAYS/);
-    expect(wizard).toMatch(/Illimitate/);
-    expect(wizard).toMatch(/nessun tetto totale/i);
+    expect(wizard).toMatch(/in tempo reale/);
+    expect(wizard).toMatch(/aggiornati in tempo reale/i);
     const crm = readFileSync(join(process.cwd(), "app/api/admin/crm/route.ts"), "utf8");
     expect(crm).toMatch(/fetchAllPages/);
     expect(crm).not.toMatch(/\.limit\(4000\)/);

@@ -468,14 +468,13 @@ export function FreshaBookingFlow({
           <>
             <h3>Servizi scelti</h3>
             <p className="booking-open-note">
-              Tocca i servizi nel listino per aggiungerli o toglierli. Puoi
-              combinare più servizi: la durata prevista si aggiorna da sola.
+              Seleziona i servizi per aggiungerli o rimuoverli.
             </p>
             {onlineBlockedReason ? (
               <p className="field-error">{onlineBlockedReason}</p>
             ) : null}
             {selectedServices.length === 0 ? (
-              <p className="slot-status">Nessun servizio selezionato.</p>
+              <p className="slot-status">Seleziona un servizio per iniziare.</p>
             ) : (
               selectedServices.map((s) => (
                 <button
@@ -796,7 +795,7 @@ export function FreshaBookingFlow({
       <div className="fresha-footer" aria-label="Riepilogo ordine">
         <div className="fresha-totals">
           <span>
-            {totals.durationMin ? totals.durationLabel : "Nessun servizio"}
+            {totals.durationMin ? totals.durationLabel : "Seleziona un servizio per iniziare."}
             {selectedIds.length
               ? ` · ${selectedIds.length} selezionat${selectedIds.length === 1 ? "o" : "i"}`
               : ""}
@@ -822,7 +821,7 @@ export function FreshaBookingFlow({
         <h3 className="appointment-sidebar-title font-serif">Il tuo appuntamento</h3>
         {selectedIds.length === 0 ? (
           <p className="appointment-sidebar-empty">
-            Tocca i servizi nel listino qui a fianco: qui vedi subito cosa hai scelto.
+            Seleziona i servizi per aggiungerli o rimuoverli.
           </p>
         ) : (
           <ul className="appointment-sidebar-list">
@@ -855,7 +854,7 @@ export function FreshaBookingFlow({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Aiuto WhatsApp
+          Hai dubbi? Scrivici su WhatsApp
         </a>
       </aside>
     </div>
@@ -887,10 +886,10 @@ export function BookingSectionNote() {
           <p className="booking-note-sub">o Qualsiasi disponibilità</p>
         </div>
         <div className="booking-note-block" role="listitem">
-          <span className="booking-note-label">Prenotazioni</span>
-          <p>Illimitate</p>
+          <span className="booking-note-label">Disponibilità</span>
+          <p>in tempo reale</p>
           <p className="booking-note-sub">
-            Ogni orario libero resta prenotabile — nessun tetto totale.
+            Gli orari disponibili vengono aggiornati in tempo reale.
           </p>
         </div>
       </div>

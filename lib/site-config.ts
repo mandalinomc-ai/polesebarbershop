@@ -113,7 +113,7 @@ export const SCISSORS_INTRO_FINISHED_EVENT = "polese-scissors-intro-finished";
 export const HERO_SENTENCE = "Precisione tecnica, stile contemporaneo.";
 export const HERO_LEAD =
   "Fade ad alta definizione, grooming e skincare. Studio pulito, ritmo veloce, risultato netto. Benevento.";
-export const HERO_PRE_OPENING_EYEBROW = "Prenotazioni già aperte";
+export const HERO_PRE_OPENING_EYEBROW = "Prenotazioni online già aperte";
 export const HERO_BEFORE_OPENING =
   "Prenota il tuo appuntamento per l'apertura";
 export const BOOKING_DATE_PARAM = "data";
