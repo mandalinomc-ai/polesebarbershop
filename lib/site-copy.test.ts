@@ -411,6 +411,23 @@ describe("public copy vs official identity", () => {
     expect(css).toMatch(/\.tilt-3d/);
     expect(css).toMatch(/\[data-parallax\]/);
     expect(css).toMatch(/footer-powered/);
+
+    expect(css).toMatch(/fx-media--curtain/);
+    expect(css).toMatch(/fx-media--mask/);
+    expect(css).toMatch(/countdown-digit--tick/);
+    expect(css).toMatch(/fresha-step-in/);
+    expect(css).toMatch(/is-center/);
+    expect(css).toMatch(/fx-media-hover/);
+    expect(css).not.toMatch(/\.section-title\.reveal \{[^}]*clip-path/);
+    const motion = readFileSync(join(process.cwd(), "components/site/MicroMotion.tsx"), "utf8");
+    expect(motion).toMatch(/prefers-reduced-motion/);
+    expect(motion).toMatch(/video-reel-player/);
+    const effects = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
+    expect(effects).toMatch(/fx-media--curtain/);
+    expect(effects).toMatch(/service-reel-box/);
+    expect(effects).toMatch(/hero-float/);
+    const countdownSrc = readFileSync(join(process.cwd(), "components/site/OpeningCountdown.tsx"), "utf8");
+    expect(countdownSrc).toMatch(/countdown-digit--tick/);
     const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
     expect(page).toMatch(/MicroMotion/);
     const intro = readFileSync(join(process.cwd(), "components/site/ScissorsIntro.tsx"), "utf8");
@@ -421,7 +438,7 @@ describe("public copy vs official identity", () => {
     expect(intro).toMatch(/scissors-intro-shears/);
     expect(css).toMatch(/scissors-photo-snip/);
     expect(css).toMatch(/listino-box--selected/);
-    expect(css).not.toMatch(/\.section-title\.reveal \{[\s\S]*?clip-path:\s*inset/);
+    expect(css).not.toMatch(/\.section-title\.reveal \{[^}]*clip-path/);
   });
 
   it("does not cap total bookings — wizard shows many open days", () => {

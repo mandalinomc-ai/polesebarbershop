@@ -91,7 +91,7 @@ body.nav-open { overflow: hidden; }
 }
 .section-title.reveal {
   transform: translateY(20px);
-  /* No clip-path — Cormorant G bottoms were getting cut off */
+  /* Avoid masking glyphs — Cormorant G bottoms were getting cut off */
   transition:
     opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
@@ -99,26 +99,60 @@ body.nav-open { overflow: hidden; }
 .section-title.reveal.visible {
   transform: translateY(0);
 }
-/* Media / video entrance — almost imperceptible */
+/* Media / video entrance — cinematic mask + scale */
 .fx-media {
   opacity: 0;
-  transform: scale(1.02);
+  transform: translateZ(0) scale(1.05);
   transition:
-    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    clip-path 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .fx-media.visible {
   opacity: 1;
-  transform: scale(1);
+  transform: translateZ(0) scale(1);
   will-change: auto;
+}
+.fx-media--soft {
+  clip-path: inset(4% 4% 4% 4% round 14px);
+}
+.fx-media--soft.visible {
+  clip-path: inset(0% 0% 0% 0% round 12px);
+}
+.fx-media--mask {
+  clip-path: inset(18% 0% 0% 0% round 10px);
+}
+.fx-media--mask.visible {
+  clip-path: inset(0% 0% 0% 0% round 0);
+}
+.fx-media--curtain {
+  clip-path: inset(8% 8% 8% 8% round 16px);
+  border-radius: 16px;
+}
+.fx-media--curtain.visible {
+  clip-path: inset(0% 0% 0% 0% round 12px);
+  border-radius: 12px;
+}
+.hero-float {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hero-float.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 .listino-box.reveal {
   transform: translateY(16px);
   transition:
     opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.55s ease;
+    border-color 0.55s ease,
+    box-shadow 0.35s ease,
+    background-color 0.35s ease;
 }
 .listino-box.reveal.visible {
   border-color: rgba(10, 10, 10, 0.16);
@@ -133,18 +167,26 @@ body.nav-open { overflow: hidden; }
 @media (max-width: 899px) {
   .reveal { transform: translateY(14px); }
   .section-title.reveal { transform: translateY(18px); }
-  .fx-media { transform: scale(1.012); }
+  .fx-media { transform: translateZ(0) scale(1.03); }
+  .fx-media--curtain { clip-path: inset(5% 5% 5% 5% round 12px); }
+  .fx-media--mask { clip-path: inset(12% 0% 0% 0% round 8px); }
   .listino-box.reveal { transform: translateY(12px); }
+  .hero-float { transform: translateY(14px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .section-title.reveal,
   .fx-media,
-  .listino-box.reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-    will-change: auto;
+  .fx-media--soft,
+  .fx-media--mask,
+  .fx-media--curtain,
+  .listino-box.reveal,
+  .hero-float {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    transition: opacity 0.25s ease !important;
+    will-change: auto !important;
   }
 }
 
@@ -523,6 +565,17 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   text-align: center;
   transform: none;
   vertical-align: baseline;
+}
+.countdown-digit--tick {
+  animation: countdown-digit-tick 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes countdown-digit-tick {
+  0% { opacity: 0.35; transform: scale(0.88); }
+  55% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .countdown-digit--tick { animation: none; }
 }
 .countdown-label {
   display: flex;
@@ -1193,6 +1246,16 @@ a.btn-whatsapp.contact-wa,
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
+.fresha-body > * {
+  animation: fresha-step-in 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes fresha-step-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fresha-body > * { animation: none; }
+}
 .fresha-body h3 {
   font-family: var(--font-cormorant), serif;
   font-size: 1.55rem;
@@ -1217,6 +1280,12 @@ a.btn-whatsapp.contact-wa,
   min-height: 44px;
   margin-bottom: 0.5rem;
   background: var(--surface);
+  transition:
+    border-color 0.28s ease,
+    background-color 0.28s ease,
+    opacity 0.28s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s ease;
   border: 1px solid var(--line);
   color: inherit;
   font: inherit;
@@ -1858,6 +1927,30 @@ video {
   border: 1px solid var(--line);
   background: var(--white);
   overflow: hidden;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-radius 0.35s ease,
+    border-color 0.35s ease;
+  transform: translateZ(0);
+}
+.video-reel-box.fx-media-hover:hover,
+.video-reel-box.fx-media-hover:focus-within {
+  transform: translateZ(0) scale(1.02);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(10, 10, 10, 0.1);
+}
+.service-reel-box.is-center {
+  border-color: rgba(10, 10, 10, 0.28);
+  box-shadow: 0 18px 40px rgba(10, 10, 10, 0.1);
+}
+.service-reel-box.is-center .service-price-on-media {
+  background: rgba(10, 10, 10, 0.82);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+}
+.service-reel-box.is-center .service-reel-head .service-price {
+  color: var(--ink);
 }
 .video-reel-media {
   position: relative;
@@ -1872,13 +1965,30 @@ video {
   object-fit: cover;
   display: block;
   background: var(--surface);
+  transform: translateZ(0) scale(1.05);
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (hover: hover) and (pointer: fine) {
   .video-reel-media:hover .video-reel-player,
   .about-video:hover .felice-video-hero,
   .hero-media-cell:hover .salon-video-player {
-    transform: scale(1.025);
+    transform: translateZ(0) scale(1.03) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .video-reel-box.fx-media-hover:hover,
+  .video-reel-box.fx-media-hover:focus-within {
+    transform: none;
+    box-shadow: none;
+  }
+  .video-reel-player,
+  .salon-video-player,
+  .felice-video-hero {
+    transform: none !important;
+    transition: opacity 0.25s ease !important;
   }
 }
 .video-reel-media::after {

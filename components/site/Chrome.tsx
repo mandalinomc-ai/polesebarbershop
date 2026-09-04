@@ -215,51 +215,93 @@ export function ClientEffects() {
         ".video-reel-box, .about-video, .hero-media-cell, .qr-card",
       ),
     );
-    const listinoEls = Array.from(
-      document.querySelectorAll(".listino-box"),
+    const listinoEls = Array.from(document.querySelectorAll(".listino-box"));
+    const heroFloaters = Array.from(
+      document.querySelectorAll(
+        ".hero-copy .eyebrow, .hero-copy .hero-title, .hero-copy .hero-text, .hero-copy .hero-pre-opening, .hero-copy .opening-countdown-block, .hero-copy .hero-actions",
+      ),
     );
 
     const markVisible = (el: Element) => {
       el.classList.add("visible");
+      if (el instanceof HTMLElement) {
+        window.setTimeout(() => {
+          if (el.classList.contains("visible")) el.style.willChange = "auto";
+        }, 720);
+      }
     };
+
+    let revealObserver: IntersectionObserver | null = null;
+    let centerObserver: IntersectionObserver | null = null;
 
     if (reduced || !("IntersectionObserver" in window)) {
       [...revealEls, ...mediaEls, ...listinoEls].forEach(markVisible);
-      return;
+      heroFloaters.forEach((el) => el.classList.add("hero-float", "visible"));
+    } else {
+      revealObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              markVisible(entry.target);
+              revealObserver?.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+      );
+
+      revealEls.forEach((el) => {
+        if (!el.classList.contains("reveal")) el.classList.add("reveal");
+        revealObserver?.observe(el);
+      });
+
+      mediaEls.forEach((el, i) => {
+        el.classList.add("fx-media");
+        if (el.classList.contains("about-video")) el.classList.add("fx-media--curtain");
+        else if (el.classList.contains("video-reel-box")) {
+          el.classList.add("fx-media--mask", "fx-media-hover");
+        } else el.classList.add("fx-media--soft");
+        const delay = Math.min(i % 4, 3) * 80;
+        if (delay) (el as HTMLElement).style.transitionDelay = `${delay}ms`;
+        (el as HTMLElement).style.willChange = "opacity, transform";
+        revealObserver?.observe(el);
+      });
+
+      listinoEls.forEach((el, i) => {
+        el.classList.add("reveal");
+        const delay = Math.min(i, 8) * 70;
+        if (delay) (el as HTMLElement).style.transitionDelay = `${delay}ms`;
+        revealObserver?.observe(el);
+      });
+
+      heroFloaters.forEach((el, i) => {
+        el.classList.add("hero-float");
+        (el as HTMLElement).style.transitionDelay = `${90 + i * 70}ms`;
+        revealObserver?.observe(el);
+      });
+
+      centerObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            entry.target.classList.toggle("is-center", entry.isIntersecting);
+            if (!entry.isIntersecting) return;
+            const video = entry.target.querySelector("video");
+            if (!video) return;
+            const play = video.play();
+            if (play && typeof play.catch === "function") play.catch(() => {});
+          });
+        },
+        { rootMargin: "-38% 0px -38% 0px", threshold: 0.01 },
+      );
+      document
+        .querySelectorAll<HTMLElement>(".service-reel-box")
+        .forEach((card) => centerObserver?.observe(card));
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            markVisible(entry.target);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -8% 0px" },
-    );
-
-    revealEls.forEach((el) => {
-      if (!el.classList.contains("reveal")) el.classList.add("reveal");
-      observer.observe(el);
-    });
-
-    mediaEls.forEach((el, i) => {
-      el.classList.add("fx-media");
-      const delay = Math.min(i % 4, 3) * 80;
-      if (delay) (el as HTMLElement).style.transitionDelay = `${delay}ms`;
-      observer.observe(el);
-    });
-
-    listinoEls.forEach((el, i) => {
-      el.classList.add("reveal");
-      const delay = Math.min(i, 8) * 70;
-      if (delay) (el as HTMLElement).style.transitionDelay = `${delay}ms`;
-      observer.observe(el);
-    });
-
-    return () => observer.disconnect();
+    return () => {
+      revealObserver?.disconnect();
+      centerObserver?.disconnect();
+    };
   }, []);
 
   useEffect(() => {

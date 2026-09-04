@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SITE } from "@/lib/site-config";
 import { formatItalianDate } from "@/lib/availability";
 
@@ -9,19 +9,41 @@ function pad(n: number) {
 }
 
 function openingTargetMs(): number {
-  // Official opening 7 Sept 2026, 10:00 Europe/Rome (CEST = UTC+2)
   return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
 }
 
 /** Stable two-digit slots — keys are positions only so digits don't remount crookedly. */
 function DigitPair({ value }: { value: string }) {
   const chars = value.padStart(2, "0").slice(-2).split("");
+  const prevRef = useRef(chars);
+  const [tick, setTick] = useState([false, false]);
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      prevRef.current = chars;
+      return;
+    }
+    const next = [prevRef.current[0] !== chars[0], prevRef.current[1] !== chars[1]];
+    prevRef.current = chars;
+    if (!next[0] && !next[1]) return;
+    setTick(next);
+    const id = window.setTimeout(() => setTick([false, false]), 380);
+    return () => window.clearTimeout(id);
+  }, [chars[0], chars[1]]);
+
   return (
     <span className="countdown-value" aria-hidden={false}>
-      <span className="countdown-digit" data-pos="0">
+      <span
+        className={`countdown-digit${tick[0] ? " countdown-digit--tick" : ""}`}
+        data-pos="0"
+      >
         {chars[0]}
       </span>
-      <span className="countdown-digit" data-pos="1">
+      <span
+        className={`countdown-digit${tick[1] ? " countdown-digit--tick" : ""}`}
+        data-pos="1"
+      >
         {chars[1]}
       </span>
     </span>
