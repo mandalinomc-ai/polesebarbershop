@@ -7,6 +7,7 @@ import {
 import { Hero } from "@/components/site/Hero";
 import { LandingSections } from "@/components/site/LandingSections";
 import { ComingSoon } from "@/components/site/ComingSoon";
+import { MicroMotion } from "@/components/site/MicroMotion";
 import { ScissorsIntro } from "@/components/site/ScissorsIntro";
 import { SiteShell } from "@/components/site/SiteShell";
 import { IS_COMING_SOON } from "@/lib/site-config";
@@ -18,6 +19,7 @@ export default function HomePage() {
         <ComingSoon />
         <SiteFabs />
         <ClientEffects />
+        <MicroMotion />
       </SiteShell>
     );
   }
@@ -33,6 +35,7 @@ export default function HomePage() {
       <Footer />
       <SiteFabs />
       <ClientEffects />
+      <MicroMotion />
     </SiteShell>
   );
 }

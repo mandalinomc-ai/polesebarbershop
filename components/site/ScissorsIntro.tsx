@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { ScissorsIcon } from "@/components/site/ScissorsIcon";
-import { SITE } from "@/lib/site-config";
+import { OpeningCountdown } from "@/components/site/OpeningCountdown";
+import { HERO_SLOT_CTA, SITE, isBeforeOfficialOpening } from "@/lib/site-config";
 
 const INTRO_KEY = "felice-polese-scissors-intro-seen";
 const TENSION_MS = 500;
-const SCISSORS_MS = 1200;
-const CUT_MS = 700;
-const REVEAL_MS = 1000;
+const SCISSORS_MS = 1300;
+const CUT_MS = 750;
+const REVEAL_HOLD_MS = 4200;
 
 type Phase = "hidden" | "dark" | "tension" | "scissors" | "cutting" | "reveal";
 
-/** Brief full-screen intro: dark → tension → scissors → cut → brand reveal. */
+/** Brief full-screen intro: dark → tension → chrome scissors → cut → brand + CTA. */
 export function ScissorsIntro() {
   const [phase, setPhase] = useState<Phase>("hidden");
 
@@ -34,9 +35,12 @@ export function ScissorsIntro() {
       window.setTimeout(() => setPhase("scissors"), TENSION_MS + 300),
       window.setTimeout(() => setPhase("cutting"), TENSION_MS + SCISSORS_MS),
       window.setTimeout(() => setPhase("reveal"), TENSION_MS + SCISSORS_MS + CUT_MS),
-      window.setTimeout(() => finishIntro(), TENSION_MS + SCISSORS_MS + CUT_MS + REVEAL_MS),
+      window.setTimeout(
+        () => finishIntro(),
+        TENSION_MS + SCISSORS_MS + CUT_MS + REVEAL_HOLD_MS,
+      ),
       /* Hard failsafe — never leave the intro blocking the site */
-      window.setTimeout(() => finishIntro(), 6000),
+      window.setTimeout(() => finishIntro(), 9000),
     ];
 
     return () => {
@@ -72,6 +76,25 @@ export function ScissorsIntro() {
             <p className="scissors-intro-brand-name">{SITE.brand}</p>
             <p className="scissors-intro-brand-tag">{SITE.tagline}</p>
             <p className="scissors-intro-brand-city">{SITE.city} · Italy</p>
+            {isBeforeOfficialOpening() ? (
+              <div
+                className="scissors-intro-countdown"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                <OpeningCountdown />
+              </div>
+            ) : null}
+            <a
+              href="/#prenota"
+              className="btn btn-ink scissors-intro-cta"
+              onClick={(e) => {
+                e.stopPropagation();
+                finishIntro();
+              }}
+            >
+              {HERO_SLOT_CTA}
+            </a>
           </div>
         ) : null}
         {phase === "scissors" || phase === "cutting" ? (

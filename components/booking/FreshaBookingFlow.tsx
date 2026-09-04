@@ -856,13 +856,36 @@ export function FreshaBookingFlow({
 
 export function BookingSectionNote() {
   return (
-    <p className="booking-open-note">
-      Prenota già ora, prima dell&apos;apertura ufficiale. Servizio, barbiere,
-      data e orario. Orari {SITE.hours.weekdays}. Primo giorno disponibile:{" "}
-      {formatItalianDate(getFirstBookableDate())}. Barbieri: Felice, Davide o
-      Qualsiasi disponibilità.
-      {" "}Non c&apos;è alcun limite al numero totale di prenotazioni: ogni
-      orario libero resta prenotabile finché la poltrona è disponibile.
-    </p>
+    <div className="booking-open-note booking-open-note--stack">
+      <p className="booking-note-headline">Prenota già ora</p>
+      <p className="booking-note-lead">
+        Scegli servizio, barbiere, data e orario — anche prima dell&apos;apertura
+        ufficiale.
+      </p>
+      <div className="booking-note-blocks" role="list">
+        <div className="booking-note-block" role="listitem">
+          <span className="booking-note-label">Orari</span>
+          <p>{SITE.hours.weekdays}</p>
+          <p className="booking-note-sub">Domenica chiuso</p>
+        </div>
+        <div className="booking-note-block" role="listitem">
+          <span className="booking-note-label">Primo giorno</span>
+          <p>{formatItalianDate(getFirstBookableDate())}</p>
+          <p className="booking-note-sub">Apertura ufficiale</p>
+        </div>
+        <div className="booking-note-block" role="listitem">
+          <span className="booking-note-label">Barbieri</span>
+          <p>Felice · Davide</p>
+          <p className="booking-note-sub">o Qualsiasi disponibilità</p>
+        </div>
+        <div className="booking-note-block" role="listitem">
+          <span className="booking-note-label">Prenotazioni</span>
+          <p>Illimitate</p>
+          <p className="booking-note-sub">
+            Ogni orario libero resta prenotabile — nessun tetto totale.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
