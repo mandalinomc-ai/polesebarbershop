@@ -85,7 +85,7 @@ describe("buffer math", () => {
     expect(services).not.toBeNull();
     const totals = totalsForServices(services!);
     expect(totals.durationMin).toBe(70);
-    expect(totals.durationLabel).toBe("70 min");
+    expect(totals.durationLabel).toBe("Durata prevista: 70 min");
     expect(chairBlockMinutes(totals.durationMin)).toBe(75);
   });
 
@@ -183,10 +183,16 @@ describe("candidate starts", () => {
 });
 
 describe("online bookable services", () => {
-  it("blocks services without known duration", () => {
+  it("allows all official listino services with known durations", () => {
     expect(servicesAreOnlineBookable([getService("taglio-pro")!])).toBe(true);
-    expect(servicesAreOnlineBookable([getService("acconciatura")!])).toBe(false);
-    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "barba-standard"])!)).toBe(false);
+    expect(servicesAreOnlineBookable([getService("acconciatura")!])).toBe(true);
+    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "barba-standard"])!)).toBe(true);
+    expect(servicesAreOnlineBookable(resolveServices(["decolorazione-meches"])!)).toBe(true);
+    expect(
+      servicesAreOnlineBookable([
+        { ...getService("tintura-capelli")!, durationKnown: false },
+      ]),
+    ).toBe(false);
   });
 });
 

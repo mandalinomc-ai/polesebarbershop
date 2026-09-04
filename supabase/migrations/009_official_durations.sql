@@ -50,6 +50,19 @@ update public.services set
   sort_order = 25
 where id = 'taglio-bambino';
 
+insert into public.services (id, name, description, category, duration_min, price_cents, price_max_cents, is_variable_price, active, sort_order)
+values ('taglio-bambino', 'Taglio Bambino', 'Taglio per bambini', 'capelli', 20, 1000, null, false, true, 25)
+on conflict (id) do update set
+  name = excluded.name,
+  description = excluded.description,
+  category = excluded.category,
+  duration_min = excluded.duration_min,
+  price_cents = excluded.price_cents,
+  price_max_cents = excluded.price_max_cents,
+  is_variable_price = excluded.is_variable_price,
+  active = true,
+  sort_order = excluded.sort_order;
+
 update public.services set
   name = 'Barba Pro',
   description = 'Panno caldo con vaporizzatore + Oli con fragranze',

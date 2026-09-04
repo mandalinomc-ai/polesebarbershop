@@ -2417,7 +2417,8 @@ body.scissors-intro-active { overflow: hidden; }
   .scissors-blade--right,
   .scissors-blade-shine--left,
   .scissors-blade-shine--right,
-  .scissors-float-group {
+  .scissors-float-group,
+  .scissors-icon--photo {
     animation: none !important;
   }
   .tilt-3d,
