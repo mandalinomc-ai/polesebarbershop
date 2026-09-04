@@ -114,5 +114,9 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(successBlock).toContain("Apple Calendar (.ics)");
     expect(successBlock).toContain("Google Calendar");
     expect(successBlock).toContain("success.whatsappUrl");
+    expect(successBlock).toContain("getBookingConfirmWhatsAppUrl");
+    expect(successBlock).not.toMatch(
+      /getWhatsAppUrl\(\)/,
+    );
   });
 });

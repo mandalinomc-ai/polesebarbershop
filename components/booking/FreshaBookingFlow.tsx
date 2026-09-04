@@ -30,6 +30,7 @@ import {
   BOOKING_UI_DAYS,
   CANCEL_NOTICE_IT,
   SITE,
+  getBookingConfirmWhatsAppUrl,
   getWhatsAppUrl,
   readBookingDateFromLocation,
   readBookingServiceFromLocation,
@@ -318,6 +319,19 @@ export function FreshaBookingFlow({
         if (res.status === 409) void loadSlots();
         return;
       }
+      const bookingWhatsAppUrl = getBookingConfirmWhatsAppUrl({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: resolveBookingPhone(phone) || phone.trim(),
+        email: email.trim(),
+        service: totals.names,
+        dateLabel: formatItalianDate(date),
+        timeLabel: slot.label,
+        barberName: json.barberName || barber?.name || "",
+        priceLabel: totals.priceLabel,
+        durationMin: totals.durationMin > 0 ? totals.durationMin : undefined,
+        manageUrl: json.manageUrl,
+      });
       setSuccess({
         manageUrl: json.manageUrl || "#",
         barberName: json.barberName || barber?.name || "",
@@ -325,9 +339,9 @@ export function FreshaBookingFlow({
         icsFilename: json.icsFilename || "polese-barbershop.ics",
         googleCalendarUrl: json.googleCalendarUrl || "",
         whatsappUrl:
-          json.customerWhatsAppUrl ||
           json.salonWhatsAppUrl ||
-          getWhatsAppUrl(),
+          json.customerWhatsAppUrl ||
+          bookingWhatsAppUrl,
         warnings: publicBookingWarnings(
           json.warnings || (json.error ? [json.error] : []),
         ),

@@ -1,3 +1,23 @@
+# DEPLOY_STATUS — unique batch (`temporary-prompt-quasar-rndxhgh`)
+
+**Target:** Vercel project `temporary-prompt-quasar-rndxhgh` only — **no deploy until quota reset** (code-only batch).
+
+## Merge order (LAST = this branch)
+
+Merge into `main` **in this sequence** before one production deploy:
+
+| # | Branch | Notes |
+|---|--------|-------|
+| 1 | `cursor/timer-fabs-mobile-56a6` | Mobile WA/Maps FABs, countdown polish |
+| 2 | `cursor/gestionale-admin-env-56a6` | Gestionale admin env |
+| 3 | `cursor/premium-motion-pass-56a6` | Motion polish |
+| 4 | `cursor/clear-bookings-delete-56a6` | Clear bookings |
+| 5 | **`cursor/wa-reminder-copy-56a6`** | **LAST** — success WA green + booking summary prefilled (not info template) |
+
+After merge: single `vercel --prod` on `temporary-prompt-quasar-rndxhgh`.
+
+---
+
 # DEPLOY_STATUS — emergency WhatsApp-only (2026-09-04)
 
 **Branch:** `cursor/emergency-whatsapp-only-56a6`  
