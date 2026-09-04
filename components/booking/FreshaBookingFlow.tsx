@@ -398,7 +398,7 @@ export function FreshaBookingFlow({
           </div>
           <div className="success-whatsapp-row">
             <a
-              className="btn btn-outline"
+              className="btn btn-whatsapp"
               href={getWhatsAppUrl()}
               target="_blank"
               rel="noopener noreferrer"
@@ -843,7 +843,7 @@ export function FreshaBookingFlow({
           </p>
         ) : null}
         <a
-          className="btn btn-outline appointment-sidebar-wa"
+          className="btn btn-whatsapp appointment-sidebar-wa"
           href={getWhatsAppUrl()}
           target="_blank"
           rel="noopener noreferrer"

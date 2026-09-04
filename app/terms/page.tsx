@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Header, Footer, ClientEffects } from "@/components/site/Chrome";
+import { Header, Footer, SiteFabs, ClientEffects } from "@/components/site/Chrome";
 import { SiteShell } from "@/components/site/SiteShell";
 import { SITE, CANCEL_NOTICE_IT } from "@/lib/site-config";
 
@@ -53,6 +53,7 @@ export default function TermsPage() {
         </div>
       </main>
       <Footer />
+      <SiteFabs />
       <ClientEffects />
     </SiteShell>
   );

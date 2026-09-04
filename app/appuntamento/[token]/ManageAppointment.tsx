@@ -133,7 +133,7 @@ export function ManageAppointment({ token }: { token: string }) {
               Scarica .ics (promemoria 30 min)
             </a>
             <a
-              className="btn btn-outline"
+              className="btn btn-whatsapp"
               href={getBookingConfirmWhatsAppUrl({
                 firstName: data.firstName,
                 service: data.serviceNames,
@@ -181,7 +181,7 @@ export function ManageAppointment({ token }: { token: string }) {
         {" · "}
         <a
           href={getWhatsAppUrl()}
-          className="contact-link"
+          className="btn btn-whatsapp contact-wa"
           target="_blank"
           rel="noopener noreferrer"
         >

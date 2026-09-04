@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Header, Footer, ClientEffects } from "@/components/site/Chrome";
+import { Header, Footer, SiteFabs, ClientEffects } from "@/components/site/Chrome";
 import { SiteShell } from "@/components/site/SiteShell";
 import { SITE } from "@/lib/site-config";
 
@@ -113,6 +113,7 @@ export default function PrivacyPage() {
         </div>
       </main>
       <Footer />
+      <SiteFabs />
       <ClientEffects />
     </SiteShell>
   );

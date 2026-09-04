@@ -90,7 +90,10 @@ describe("mobile QA (390px)", () => {
 
   it("avoids sticky hover and FAB overlap on touch phones", () => {
     expect(css).toMatch(/@media \(hover:\s*hover\) and \(pointer:\s*fine\)/);
-    expect(css).toMatch(/body:has\(\.fresha-footer\) \.fab-stack/);
+    /* FABs stay visible; elevated bottom clears sticky Continua without display:none */
+    expect(css).not.toMatch(/body:has\(\.fresha-footer\)\s*\.fab-stack\s*\{\s*display:\s*none/);
+    expect(css).toMatch(/\.fab-stack \{[\s\S]*?bottom:\s*calc\(5\.5rem/);
+    expect(css).toMatch(/wa-fab-glow/);
     expect(css).toMatch(/\.site-footer \{[\s\S]*?safe-bottom/);
     expect(css).toMatch(/overflow-x:\s*(clip|hidden)/);
     expect(css).toMatch(/min-height:\s*100vh;\s*min-height:\s*100dvh|min-height:\s*100dvh/);

@@ -17,7 +17,7 @@ export function SocialQrGrid({ variant }: { variant: Variant }) {
         return (
           <a
             key={`${variant}-${ch.id}`}
-            className="qr-card"
+            className={`qr-card${ch.id === "whatsapp" ? " qr-card--whatsapp" : ""}`}
             href={ch.href}
             role="listitem"
             target={link.target}
@@ -48,7 +48,12 @@ export function SocialTextLinks() {
         return (
           <span key={ch.id}>
             {i > 0 ? " · " : null}
-            <a href={ch.href} className="contact-link" target={link.target} rel={link.rel}>
+            <a
+              href={ch.href}
+              className={ch.id === "whatsapp" ? "btn btn-whatsapp contact-wa" : "contact-link"}
+              target={link.target}
+              rel={link.rel}
+            >
               {ch.id === "instagram" ? ch.handle : ch.label}
             </a>
           </span>

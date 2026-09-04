@@ -102,7 +102,7 @@ export function LandingSections() {
                 href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="contact-link"
+                className="btn btn-whatsapp contact-wa"
               >
                 Consulenza su WhatsApp
               </a>

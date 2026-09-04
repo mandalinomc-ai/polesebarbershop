@@ -12,7 +12,14 @@ export function ComingSoon() {
       <Hero />
       <section className="section-pad section-dark" aria-hidden="true">
         <OpeningCountdown />
-        <a href={getWhatsAppUrl(NOTIFY_WHATSAPP_MESSAGE)}>Avvisami su WhatsApp</a>
+        <a
+          className="btn btn-whatsapp"
+          href={getWhatsAppUrl(NOTIFY_WHATSAPP_MESSAGE)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Avvisami su WhatsApp
+        </a>
         <span>{SITE.name}</span>
       </section>
     </>
