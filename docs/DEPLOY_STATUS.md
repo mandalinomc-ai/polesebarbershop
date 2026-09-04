@@ -47,3 +47,10 @@ npx vercel --prod --yes --force
 ```
 
 Confirm after deploy: `/`, `/prenota`, `/cookie-policy`, `/privacy-policy`, `/gestionale`, cookie banner Accetta/Rifiuta/Personalizza, Genio footer, scissors intro.
+## 2026-09-04 — production-ready-final
+- Branch: cursor/production-ready-final-56a6
+- Tests: 209 passed; next build OK
+- Deploy: BLOCKED api-deployments-free-per-day (quota)
+- Target: temporary-prompt-quasar-rndxhgh → felicepolesebarbershop.vercel.app
+- NOT polesebarbershop
+
