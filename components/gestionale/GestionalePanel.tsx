@@ -195,6 +195,22 @@ export function GestionalePanel() {
     }
   }, []);
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/history");
+      if (res.status === 401) {
+        setAuth("needed");
+        return;
+      }
+      const json = (await res.json()) as { appointments?: HistoryAppt[]; warning?: string };
+      if (!res.ok) return;
+      setHistory(json.appointments || []);
+      if (json.warning) setCrmWarning(json.warning);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const load = useCallback(async () => {
     setError("");
     const ok = await loadAgenda();
@@ -456,7 +472,28 @@ export function GestionalePanel() {
         {tab === "statistiche" ? (
           <StatsView stats={stats} date={date} weekStart={agenda?.weekStart} period={statsPeriod} onPeriodChange={setStatsPeriod} />
         ) : null}
-        {tab === "storico" ? <StoricoView history={history} /> : null}
+        {tab === "storico" ? (
+          <StoricoView
+            history={history}
+            onDelete={async (id) => {
+              const res = await fetch(`/api/admin/appointments/${id}`, { method: "DELETE" });
+              if (res.status === 401) {
+                setAuth("needed");
+                return false;
+              }
+              if (!res.ok) {
+                const json = (await res.json()) as { error?: string };
+                setError(json.error || "Impossibile eliminare l'appuntamento.");
+                return false;
+              }
+              setError("");
+              await loadHistory();
+              await loadCrm();
+              await loadAgenda();
+              return true;
+            }}
+          />
+        ) : null}
       </div>
 
       <nav className="crm-bottom" aria-label="Sezioni gestionale">
@@ -1222,6 +1259,91 @@ function BulkWhatsAppModal({ clients, onClose }: { clients: ClientRecord[]; onCl
   );
 }
 
+function StoricoView({
+  history,
+  onDelete,
+}: {
+  history: HistoryAppt[];
+  onDelete: (id: string) => Promise<boolean>;
+}) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function remove(id: string, label: string) {
+    if (
+      !window.confirm(
+        `Eliminare definitivamente questo appuntamento?\n\n${label}\n\nL'operazione non si può annullare.`,
+      )
+    ) {
+      return;
+    }
+    setDeletingId(id);
+    try {
+      await onDelete(id);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  return (
+    <div className="crm-stack">
+      <section className="crm-card">
+        <h2 className="font-serif">Storico completo</h2>
+        <p className="slot-status">
+          Tutti gli appuntamenti, inclusi gli annullati. Puoi eliminare una voce errata o di test con «Elimina».
+        </p>
+        {history.length === 0 ? (
+          <p className="slot-status">Nessun appuntamento in archivio.</p>
+        ) : (
+          <div className="crm-table-wrap">
+            <table className="crm-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Ora</th>
+                  <th>Cliente</th>
+                  <th>Servizio</th>
+                  <th>Barbiere</th>
+                  <th>Stato</th>
+                  <th>Prezzo</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((h) => (
+                  <tr key={h.id} className={h.status === "cancelled" ? "is-cancelled" : ""}>
+                    <td data-label="Data">{h.dateLabel}</td>
+                    <td data-label="Ora">{h.timeLabel}</td>
+                    <td data-label="Cliente">{h.customerName}</td>
+                    <td data-label="Servizio">{h.serviceNames}</td>
+                    <td data-label="Barbiere">{h.barberName}</td>
+                    <td data-label="Stato">{h.statusLabel}</td>
+                    <td data-label="Prezzo">{formatEuroCents(h.priceCents)}</td>
+                    <td data-label="Azioni">
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        disabled={deletingId === h.id}
+                        onClick={() =>
+                          void remove(
+                            h.id,
+                            `${h.dateLabel} ${h.timeLabel} · ${h.customerName} · ${h.serviceNames}`,
+                          )
+                        }
+                      >
+                        {deletingId === h.id ? "…" : "Elimina"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => void; onSaved: () => void }) {
   const [serviceIds, setServiceIds] = useState<string[]>(["taglio-standard"]);
   const [barberId, setBarberId] = useState("felice");
@@ -1464,49 +1586,6 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
           </button>
         </div>
       </form>
-    </div>
-  );
-}
-
-function StoricoView({ history }: { history: HistoryAppt[] }) {
-  return (
-    <div className="crm-stack">
-      <section className="crm-card">
-        <h2 className="font-serif">Storico completo</h2>
-        <p className="slot-status">Tutti gli appuntamenti, inclusi gli annullati (ANNULLATA). Non vengono eliminati.</p>
-        {history.length === 0 ? (
-          <p className="slot-status">Nessun appuntamento in archivio.</p>
-        ) : (
-          <div className="crm-table-wrap">
-            <table className="crm-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Ora</th>
-                  <th>Cliente</th>
-                  <th>Servizio</th>
-                  <th>Barbiere</th>
-                  <th>Stato</th>
-                  <th>Prezzo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((h) => (
-                  <tr key={h.id} className={h.status === "cancelled" ? "is-cancelled" : ""}>
-                    <td data-label="Data">{h.dateLabel}</td>
-                    <td data-label="Ora">{h.timeLabel}</td>
-                    <td data-label="Cliente">{h.customerName}</td>
-                    <td data-label="Servizio">{h.serviceNames}</td>
-                    <td data-label="Barbiere">{h.barberName}</td>
-                    <td data-label="Stato">{h.statusLabel}</td>
-                    <td data-label="Prezzo">{formatEuroCents(h.priceCents)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
     </div>
   );
 }
