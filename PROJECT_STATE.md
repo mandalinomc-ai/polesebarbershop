@@ -1,32 +1,34 @@
 # PROJECT_STATE — Felice Polese Barber Shop
 
-**Updated:** 2026-09-03  
+**Updated:** 2026-09-04  
 **Public URL:** https://felicepolesebarbershop.vercel.app  
 **Vercel project:** `temporary-prompt-quasar-rndxhgh` (alias: felicepolesebarbershop)  
-**Branch:** `cursor/gestionale-crm-final-6157`
+**Branch:** `cursor/smart-booking-v2-56a6`
 
 ## Status summary
 
 | Area | Status |
 |------|--------|
 | Production site | **READY** — homepage 200, Felice branding, Maps Dante 44, listino, videos |
-| Gmail SMTP | **READY** — `GMAIL_USER` + `GMAIL_APP_PASSWORD` on Production; live booking email verified |
-| Supabase bookings | **READY** — test rows cleaned; real Ludovica booking kept |
-| Taglio Pro | **25 € / 50 min** (user correction) |
-| Scissors intro | Restored (silver/black, skippable, reduced-motion safe) |
-| Next step | Final polish deploy on this branch |
+| Gmail SMTP | **READY** — `GMAIL_USER` + `GMAIL_APP_PASSWORD` on Production |
+| Supabase bookings | **READY** |
+| Smart booking engine | **LIVE** — free-windows + smart thinned slots on `/api/availability` |
+| Migration 007 | **APPLIED** (2026-09-04) — `appointments.duration_override_min` |
+| Taglio Pro | **25 € / 50 min** (catalog + DB + live site) |
+| Next step | User reviews inbox / gestionale as needed |
 
-## Deploy (2026-09-03)
+## Migration 007 (2026-09-04)
+
+- File: `supabase/migrations/007_duration_override.sql`
+- Applied on production Supabase `dbbncprluqjrofjemfbg` via `psql` (pooler)
+- Column verified: `duration_override_min integer NULL` + check `> 0`
+- Write path verified: insert/read/patch/delete with override (test row removed)
+- Redeploy **not** required (DB-only)
+
+## Deploy
 
 - Project: **temporary-prompt-quasar-rndxhgh** only (NOT polesebarbershop)
-- Force prod: `npx vercel --prod --yes --force`
 - Aliased: https://felicepolesebarbershop.vercel.app
-
-## Email verification (2026-09-03)
-
-Safe live POST to `/api/bookings` with customer email = owner only (`felicepolese550@gmail.com`) was verified earlier.
-Owner/test appointments (`felicepolese550@gmail.com`, junk `polesegay@sega.it`) were **deleted** from Supabase.
-Confirmed customer booking **Ludovica Covino** kept.
 
 ## Booking system
 
@@ -38,6 +40,7 @@ Confirmed customer booking **Ludovica Covino** kept.
 | Opening | 2026-09-07 |
 | Admin | `/gestionale` |
 | Public booking | `/prenota` |
+| Engine | Smart free-windows (`lib/booking/*`); online display interval 15 min |
 
 ## Site config highlights
 
@@ -49,14 +52,5 @@ Confirmed customer booking **Ludovica Covino** kept.
 
 ## Still later (non-blocking)
 
-1. User reviews Gmail inbox for the test confirmation + owner alert
+1. User reviews Gmail inbox for confirmation emails as needed
 2. Cleanup unused / duplicate Vercel projects (e.g. polesebarbershop) when Felice confirms
-3. Optional: cancel leftover test appointment from gestionale
-
-## Final polish deploy (2026-09-03 evening)
-
-- Branch: `cursor/final-polish-deploy-c959`
-- Force prod: `npx vercel --prod --yes --force` → **temporary-prompt-quasar-rndxhgh**
-- Aliased: https://felicepolesebarbershop.vercel.app
-- Inspect: https://vercel.com/mandalinomc-8144s-projects/temporary-prompt-quasar-rndxhgh/JAUPBiJNe6qBnEtwh7ZavKYiaL3T
-- Verified live: Taglio Pro **25 € / 50 min**, scissors intro JS+CSS, countdown-digit 1ch, Maps Dante 44, WhatsApp

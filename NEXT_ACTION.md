@@ -1,23 +1,23 @@
 # NEXT ACTION
 
-**Updated:** 2026-09-03  
+**Updated:** 2026-09-04  
 **USA QUESTO:** https://felicepolesebarbershop.vercel.app  
 **Vercel:** `temporary-prompt-quasar-rndxhgh` (NOT polesebarbershop)
 
-## Fatto oggi
+## Fatto (2026-09-04)
 
-1. `GMAIL_APP_PASSWORD` presente su **Production** (insieme a `GMAIL_USER` / `BOOKING_NOTIFICATION_EMAIL`)
-2. Redeploy production forzato → nuovo env caricato
-3. Test prenotazione live verso **solo** `felicepolese550@gmail.com` → `persisted` + `emailSent` + `ownerNotified` OK
-4. Site healthy: homepage 200, Maps Dante 44, prezzi, video
+1. **Migration 007 applied** on production Supabase — `appointments.duration_override_min`
+2. Column + check constraint verified; override insert/update/delete path OK (test row deleted)
+3. Live `/api/availability` returns smart slots (Taglio Pro 50 min; blockEnd includes +5 buffer)
+4. Taglio Pro live + DB: **25 € / 50 min**
+5. Site health: homepage/prenota/gestionale 200 — redeploy not needed (DB-only)
 
 ## Prossimo passo (utente)
 
-1. **Review:** controlla inbox Gmail (`felicepolese550@gmail.com`) — conferma cliente + avviso salone del test Taglio Pro 9 set 08:30
-2. Se vuoi, cancella l’appuntamento di test da `/gestionale`
-3. **Più avanti:** cleanup progetti Vercel inutilizzati / duplicati (es. polesebarbershop) quando confermi che Felice vive solo su questo progetto
+1. Opzionale: prova override durata da `/gestionale` (walk-in / modifica)
+2. **Più avanti:** cleanup progetti Vercel inutilizzati / duplicati (es. polesebarbershop) quando confermi che Felice vive solo su questo progetto
 
 ## Non fare
 
 - Non toccare `polesebarbershop` come target di deploy
-- Non stampare / condividere `GMAIL_APP_PASSWORD`
+- Non stampare / condividere secret (service role, DB password, Gmail app password)
