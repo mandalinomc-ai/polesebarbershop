@@ -1070,6 +1070,70 @@ body:has(.fresha-footer) .fab-stack {
 .gdpr-row a { color: var(--ink); }
 .gdpr-row input { margin-top: 0.2rem; accent-color: var(--ink); width: 20px; height: 20px; flex-shrink: 0; }
 
+/* Invisible honeypot — off-screen, not display:none (some bots skip hidden fields). */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Cookie banner — compact, non-blocking */
+.cookie-banner {
+  position: fixed;
+  z-index: 120;
+  left: max(0.75rem, var(--safe-left, 0px));
+  right: max(0.75rem, var(--safe-right, 0px));
+  bottom: max(0.75rem, var(--safe-bottom, 0px));
+  max-width: 28rem;
+  margin-inline: auto;
+  padding: 0.85rem 1rem;
+  background: var(--white, #fff);
+  border: 1px solid var(--line, #e5e5e5);
+  box-shadow: 0 8px 28px rgba(10, 10, 10, 0.1);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink, #111);
+}
+.cookie-banner-text { margin: 0 0 0.65rem; color: var(--muted, #555); }
+.cookie-banner-text a { color: var(--ink, #111); text-decoration: underline; }
+.cookie-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.cookie-banner-actions .btn {
+  min-height: 40px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.75rem;
+}
+.cookie-banner-list {
+  list-style: none;
+  margin: 0 0 0.65rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.cookie-banner-list label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  cursor: pointer;
+}
+.cookie-manage-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* Manage / legal pages */
 .manage-page {
   min-height: 100dvh;

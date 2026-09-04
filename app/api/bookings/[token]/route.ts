@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { formatItalianDate, formatWallDate, formatWallTime } from "@/lib/availability";
 import { namesFromSnapshot, publicAppointment, shouldAttachCalendarReminder } from "@/lib/appointments";
+import { getClientIp } from "@/lib/client-ip";
 import { customerCancelEmail, ownerCancelEmail, sendCancelEmails } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
+import { isManageTokenFormat } from "@/lib/manage-token";
+import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { SITE, CANCEL_NOTICE_IT, canCancelAppointment, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 
@@ -20,7 +23,18 @@ async function loadByToken(token: string) {
 
 export async function GET(request: Request, ctx: RouteCtx) {
   const { token } = await ctx.params;
-  if (!token || token.length < 16) return NextResponse.json({ error: "Token non valido." }, { status: 400 });
+  if (!isManageTokenFormat(token)) {
+    return NextResponse.json({ error: "Token non valido." }, { status: 400 });
+  }
+  const ip = getClientIp(request);
+  const limited = rateLimit(`booking-get:${ip}`, RATE_LIMITS.bookingManageGet);
+  if (!limited.ok) {
+    const rl = rateLimitResponse(
+      limited.retryAfterSec,
+      "Troppe richieste. Riprova tra poco.",
+    );
+    return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers });
+  }
   if (!isSupabaseConfigured()) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
   const wantIcs = new URL(request.url).searchParams.get("ics") === "1";
   try {
@@ -59,9 +73,20 @@ export async function GET(request: Request, ctx: RouteCtx) {
   }
 }
 
-export async function DELETE(_request: Request, ctx: RouteCtx) {
+export async function DELETE(request: Request, ctx: RouteCtx) {
   const { token } = await ctx.params;
-  if (!token || token.length < 16) return NextResponse.json({ error: "Token non valido." }, { status: 400 });
+  if (!isManageTokenFormat(token)) {
+    return NextResponse.json({ error: "Token non valido." }, { status: 400 });
+  }
+  const ip = getClientIp(request);
+  const limited = rateLimit(`booking-cancel:${ip}`, RATE_LIMITS.bookingCancel);
+  if (!limited.ok) {
+    const rl = rateLimitResponse(
+      limited.retryAfterSec,
+      "Troppe disdette. Riprova più tardi o chiama il salone.",
+    );
+    return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers });
+  }
   if (!isSupabaseConfigured()) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
   try {
     const { db, row } = await loadByToken(token);
@@ -88,7 +113,14 @@ export async function DELETE(_request: Request, ctx: RouteCtx) {
     if (!canCancelAppointment(row.starts_at)) {
       return NextResponse.json({ error: `La disdetta è possibile fino a ${CANCEL_NOTICE_IT} prima. Chiama il ${SITE.phone}.` }, { status: 400 });
     }
-    const { data, error } = await db.from("appointments").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", row.id).select("*").single();
+    // IDOR: cancel only by unguessable manage_token ownership (no cross-id access).
+    const { data, error } = await db
+      .from("appointments")
+      .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .eq("manage_token", token)
+      .select("*")
+      .single();
     if (error) return NextResponse.json({ error: "Impossibile annullare la prenotazione." }, { status: 500 });
     const start = new Date(row.starts_at);
     const names = namesFromSnapshot(row.services_snapshot);

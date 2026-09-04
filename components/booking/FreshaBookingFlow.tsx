@@ -103,6 +103,8 @@ export function FreshaBookingFlow({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [gdpr, setGdpr] = useState(false);
+  /** Invisible honeypot — leave empty; bots that fill it are dropped server-side. */
+  const [website, setWebsite] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [success, setSuccess] = useState<{
@@ -285,6 +287,7 @@ export function FreshaBookingFlow({
           email: email.trim(),
           phone: resolveBookingPhone(phone) || phone,
           gdprConsent: true,
+          website,
         }),
       });
       const json = (await res.json()) as {
@@ -719,6 +722,18 @@ export function FreshaBookingFlow({
                   <a href="/privacy-policy">Informativa privacy</a>.
                 </span>
               </label>
+              <div className="hp-field" aria-hidden="true">
+                <label htmlFor="booking-website">Sito web</label>
+                <input
+                  id="booking-website"
+                  name="website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
             </div>
           </>
         )}

@@ -1,13 +1,18 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import {
+  ADMIN_COOKIE,
+  ADMIN_SESSION_MAX_AGE_SEC,
+  DEFAULT_ADMIN_PASSWORD,
+  DEFAULT_ADMIN_USER,
+} from "./admin-auth-constants";
 
-export const ADMIN_COOKIE = "polese_admin";
-export const DEFAULT_ADMIN_USER = "admin";
-export const DEFAULT_ADMIN_PASSWORD = "admin";
-
-function expectedToken(user: string, password: string) {
-  return createHmac("sha256", `${user}:${password}`).update("polese-admin-session").digest("hex");
-}
+export {
+  ADMIN_COOKIE,
+  ADMIN_SESSION_MAX_AGE_SEC,
+  DEFAULT_ADMIN_PASSWORD,
+  DEFAULT_ADMIN_USER,
+} from "./admin-auth-constants";
 
 function safeEqual(a: string, b: string) {
   const left = Buffer.from(a);
@@ -36,6 +41,14 @@ export function isAdminConfigured() {
   return getAdminPassword().length >= 4;
 }
 
+/** True when credentials are the insecure local defaults. */
+export function isUsingDefaultAdminCredentials() {
+  return (
+    getAdminUser().toLowerCase() === DEFAULT_ADMIN_USER &&
+    getAdminPassword() === DEFAULT_ADMIN_PASSWORD
+  );
+}
+
 export function verifyAdminPassword(password: string) {
   return safeEqual(password, getAdminPassword());
 }
@@ -47,16 +60,43 @@ export function verifyAdminCredentials(username: string, password: string) {
   return userOk && passOk;
 }
 
-export function createAdminToken() {
-  if (!isAdminConfigured()) return null;
-  return expectedToken(getAdminUser(), getAdminPassword());
+function sessionSecret(): string {
+  const fromEnv = process.env.ADMIN_SESSION_SECRET?.trim();
+  if (fromEnv && fromEnv.length >= 16) return fromEnv;
+  // Derive from credentials so password rotation invalidates sessions.
+  return createHmac("sha256", `${getAdminUser()}:${getAdminPassword()}`)
+    .update("polese-admin-session-v2")
+    .digest("hex");
 }
 
-export function isAdminTokenValid(token: string | undefined | null) {
+/**
+ * Signed, expiring session token: `{expMs}.{nonce}.{hmac}`.
+ * HttpOnly cookie only — never readable by client JS.
+ */
+export function createAdminToken(now = Date.now()) {
+  if (!isAdminConfigured()) return null;
+  const exp = now + ADMIN_SESSION_MAX_AGE_SEC * 1000;
+  const nonce = randomBytes(16).toString("hex");
+  const payload = `${exp}.${nonce}`;
+  const sig = createHmac("sha256", sessionSecret()).update(payload).digest("hex");
+  return `${payload}.${sig}`;
+}
+
+export function isAdminTokenValid(token: string | undefined | null, now = Date.now()) {
   if (!token) return false;
-  const expected = createAdminToken();
-  if (!expected) return false;
-  return safeEqual(token, expected);
+  const parts = token.split(".");
+  if (parts.length !== 3) return false;
+  const [expStr, nonce, sig] = parts;
+  if (!expStr || !nonce || !sig) return false;
+  if (!/^\d{10,16}$/.test(expStr)) return false;
+  if (!/^[a-f0-9]{32}$/.test(nonce)) return false;
+  if (!/^[a-f0-9]{64}$/.test(sig)) return false;
+  const exp = Number(expStr);
+  if (!Number.isFinite(exp) || now > exp) return false;
+  const expected = createHmac("sha256", sessionSecret())
+    .update(`${expStr}.${nonce}`)
+    .digest("hex");
+  return safeEqual(sig, expected);
 }
 
 export async function isAdminRequest() {
@@ -65,15 +105,19 @@ export async function isAdminRequest() {
 }
 
 export function adminCookieOptions() {
-  const onVercel = process.env.VERCEL === "1";
+  const secure =
+    process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" && onVercel,
+    secure,
     sameSite: "lax" as const,
     path: "/",
-    maxAge: 60 * 60 * 12,
+    maxAge: ADMIN_SESSION_MAX_AGE_SEC,
   };
 }
 
 export const ADMIN_MISSING_IT =
   "Area gestionale non configurata: ADMIN_PASSWORD deve avere almeno 4 caratteri.";
+
+export const ADMIN_WEAK_DEFAULTS_IT =
+  "Credenziali gestionale di default non ammesse in produzione. Imposta ADMIN_USER e ADMIN_PASSWORD.";

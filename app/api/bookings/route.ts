@@ -1,10 +1,12 @@
-import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
 import { resolveEffectiveServiceDuration } from "@/lib/booking";
 import { getBarber, onlineBookingBlockReason, resolveServices, totalsForServices } from "@/lib/catalog";
+import { getClientIp } from "@/lib/client-ip";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
+import { createManageToken } from "@/lib/manage-token";
+import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { SITE, getAdminEmail, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
@@ -18,9 +20,36 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function honeypotOkResponse() {
+  // Silent acceptance for bots — no DB write, no email.
+  return NextResponse.json({
+    ok: true,
+    persisted: false,
+    emailSent: false,
+    ownerNotified: false,
+    honeypot: true,
+    warnings: [],
+    appointmentId: null,
+    manageToken: null,
+    manageUrl: "#",
+  });
+}
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limited = rateLimit(`booking-create:${ip}`, RATE_LIMITS.bookingCreate);
+  if (!limited.ok) {
+    const rl = rateLimitResponse(
+      limited.retryAfterSec,
+      "Troppe prenotazioni da questo dispositivo. Riprova più tardi o chiama il salone.",
+    );
+    return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers });
+  }
+
   let raw: unknown;
-  try { raw = await request.json(); } catch {
+  try {
+    raw = await request.json();
+  } catch {
     return NextResponse.json({ error: "Richiesta non valida." }, { status: 400 });
   }
   const parsed = bookingSchema.safeParse(raw);
@@ -28,6 +57,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: flattenZodError(parsed.error) }, { status: 400 });
   }
   const body = parsed.data;
+  if (body.website && body.website.trim().length > 0) {
+    return honeypotOkResponse();
+  }
+
   const services = resolveServices(body.serviceIds);
   if (!services) return NextResponse.json({ error: "Seleziona almeno un servizio valido." }, { status: 400 });
   const blockReason = onlineBookingBlockReason(services);
@@ -79,7 +112,7 @@ export async function POST(request: Request) {
   }
 
   const barberName = getBarber(slot.barberId)?.name || slot.barberId;
-  const manageToken = randomBytes(24).toString("hex");
+  const manageToken = createManageToken();
   const manageUrl = `${getSiteUrl()}/appuntamento/${manageToken}`;
   const timeLabel = formatWallTime(slot.start);
   const dateLabel = formatItalianDate(body.date);

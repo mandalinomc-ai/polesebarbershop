@@ -82,6 +82,15 @@ describe("POST /api/bookings", () => {
     expect((await postBooking(payload({ gdprConsent: false }))).status).toBe(400);
     expect((await postBooking(payload({ serviceIds: ["razor-taper"] }))).status).toBe(400);
   });
+
+  it("silently accepts honeypot spam without hitting the calendar", async () => {
+    const res = await postBooking(payload({ website: "http://spam.example" }));
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { ok?: boolean; persisted?: boolean; honeypot?: boolean };
+    expect(json.ok).toBe(true);
+    expect(json.persisted).toBe(false);
+    expect(json.honeypot).toBe(true);
+  });
 });
 
 describe("POST /api/bookings — validation (no calendar)", () => {

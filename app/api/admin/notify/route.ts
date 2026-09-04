@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
+import { getClientIp } from "@/lib/client-ip";
 import { buildNotifyCopy, GMAIL_CRM_MISSING_IT } from "@/lib/crm-notify";
 import { isGmailConfigured, sendEmail, staffCrmEmail } from "@/lib/email";
+import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { crmNotifySchema, flattenZodError } from "@/lib/validations";
 
@@ -10,6 +12,17 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
+
+  const ip = getClientIp(request);
+  const limited = rateLimit(`admin-notify:${ip}`, RATE_LIMITS.adminNotify);
+  if (!limited.ok) {
+    const rl = rateLimitResponse(
+      limited.retryAfterSec,
+      "Troppe notifiche inviate. Riprova più tardi.",
+    );
+    return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers });
+  }
+
   let raw: unknown;
   try {
     raw = await request.json();

@@ -46,6 +46,8 @@ export const bookingSchema = z.object({
     errorMap: () => ({ message: "Il consenso privacy è obbligatorio" }),
   }),
   notes: z.string().trim().max(500).optional(),
+  /** Invisible honeypot — must stay empty. Bots that fill it are rejected silently. */
+  website: z.string().max(200).optional().default(""),
 });
 
 export type BookingInput = z.infer<typeof bookingSchema>;
@@ -112,7 +114,9 @@ export const adminAppointmentsQuerySchema = z.object({
 });
 
 export const cancelTokenSchema = z.object({
-  token: z.string().min(16, "Token non valido"),
+  token: z
+    .string()
+    .regex(/^[a-f0-9]{48}$|^[a-f0-9]{64}$/, "Token non valido"),
 });
 
 export function assertKnownBookingRefs(input: {

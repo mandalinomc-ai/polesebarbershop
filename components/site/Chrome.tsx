@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CookieBanner, ManageCookiesButton } from "@/components/site/CookieBanner";
 import { HERO_SLOT_CTA, SITE, getWhatsAppUrl, getMapsUrl } from "@/lib/site-config";
 import { SITE_PDFS } from "@/lib/site-pdf";
 
@@ -193,10 +194,15 @@ export function Footer() {
         {" · "}
         <a href="/privacy-policy">Privacy</a>
         {" · "}
+        <a href="/cookie-policy">Cookie</a>
+        {" · "}
+        <ManageCookiesButton />
+        {" · "}
         <a href="/terms">Termini</a>
         {" · "}
         <a href="/gestionale">Gestionale</a>
       </span>
+      <CookieBanner />
     </footer>
   );
 }
