@@ -1399,7 +1399,11 @@ a.btn-whatsapp.contact-wa,
 .fresha-totals span { color: var(--muted); font-size: 0.72rem; }
 .fresha-totals strong { font-family: var(--font-cormorant), serif; font-size: 1.25rem; font-weight: 500; }
 .success-box { text-align: center; padding: 1.25rem 0.5rem; }
-.success-box a { color: var(--ink); text-decoration: underline; }
+.success-box a:not(.btn) { color: var(--ink); text-decoration: underline; }
+.success-box a.btn-whatsapp {
+  color: #fff;
+  text-decoration: none;
+}
 .success-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; justify-content: center; margin: 1.25rem 0; }
 .gdpr-row { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.82rem; color: var(--muted); line-height: 1.5; cursor: pointer; min-height: 44px; }
 .gdpr-row a { color: var(--ink); }
