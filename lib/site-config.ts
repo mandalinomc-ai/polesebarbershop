@@ -192,7 +192,6 @@ export type BookingConfirmCopy = {
 /** Same plain-text summary as ownerNewBookingEmail — used for WhatsApp to the salon. */
 export function getBookingWhatsAppSummaryMessage(opts: BookingConfirmCopy): string {
   const notes = opts.notes?.trim() || "";
-  const manage = opts.manageUrl?.trim() || "";
   const lines = [
     "NUOVA PRENOTAZIONE",
     "",
@@ -209,7 +208,6 @@ export function getBookingWhatsAppSummaryMessage(opts: BookingConfirmCopy): stri
   lines.push(`Data: ${opts.dateLabel}`);
   lines.push(`Ora: ${opts.timeLabel}`);
   if (notes) lines.push(`Note: ${notes}`);
-  if (manage) lines.push(`Gestisci: ${manage}`);
   return lines.join("\n");
 }
 

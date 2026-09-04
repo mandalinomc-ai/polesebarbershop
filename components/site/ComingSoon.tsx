@@ -3,25 +3,34 @@
 import { Hero } from "@/components/site/Hero";
 import { Header } from "@/components/site/Chrome";
 import { OpeningCountdown } from "@/components/site/OpeningCountdown";
-import { SITE, NOTIFY_WHATSAPP_MESSAGE, getWhatsAppUrl } from "@/lib/site-config";
+import {
+  SITE,
+  NOTIFY_WHATSAPP_MESSAGE,
+  getWhatsAppUrl,
+  isBeforeOfficialOpening,
+} from "@/lib/site-config";
 
 export function ComingSoon() {
+  const beforeOpening = isBeforeOfficialOpening();
+
   return (
     <>
       <Header />
       <Hero />
-      <section className="section-pad section-dark" aria-hidden="true">
-        <OpeningCountdown />
-        <a
-          className="btn btn-whatsapp"
-          href={getWhatsAppUrl(NOTIFY_WHATSAPP_MESSAGE)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Avvisami su WhatsApp
-        </a>
-        <span>{SITE.name}</span>
-      </section>
+      {beforeOpening ? (
+        <section className="section-pad section-dark" aria-hidden="true">
+          <OpeningCountdown />
+          <a
+            className="btn btn-whatsapp"
+            href={getWhatsAppUrl(NOTIFY_WHATSAPP_MESSAGE)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Avvisami su WhatsApp
+          </a>
+          <span>{SITE.name}</span>
+        </section>
+      ) : null}
     </>
   );
 }

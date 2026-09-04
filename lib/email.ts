@@ -310,10 +310,9 @@ export async function sendBookingEmails(opts: {
   ics: { filename: string; content: string };
 }) {
   if (BOOKING_EMAIL_DISABLED) {
-    console.info("[email] prenotazione: invio disattivato (BOOKING_EMAIL_DISABLED)", {
-      customer: opts.customerEmail,
-      salon: getBookingNotificationEmail(),
-    });
+    console.warn(
+      "[email] GMAIL_APP_PASSWORD empty on Vercel → SMTP cannot auth; booking emails skipped (BOOKING_EMAIL_DISABLED)",
+    );
     const skipped = { ok: true as const, skipped: true };
     return { customer: skipped, admin: skipped, owner: { results: [], ok: true } };
   }

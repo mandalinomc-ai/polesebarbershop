@@ -472,7 +472,7 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/Raggiungimi ora su Google Maps/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/btn btn-whatsapp appointment-sidebar-wa/);
-    expect(wizard).toMatch(/btn btn-whatsapp[\s\S]*Scrivi su WhatsApp/);
+    expect(wizard).toMatch(/INVIA ORA IL PROMEMORIA APPUNTAMENTO/);
     const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(contact).toMatch(/btn btn-whatsapp contact-wa/);
     const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8");

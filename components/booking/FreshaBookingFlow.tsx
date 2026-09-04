@@ -360,9 +360,21 @@ export function FreshaBookingFlow({
             <strong>{success.barberName}</strong> il {formatItalianDate(date)}{" "}
             alle {slot?.label} · {totals.priceLabel}.
           </p>
+          <div className="success-whatsapp-row">
+            <a
+              className="btn btn-whatsapp"
+              href={success.whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              INVIA ORA IL PROMEMORIA APPUNTAMENTO
+            </a>
+            <p className="booking-open-note">
+              Invia al salone il riepilogo della prenotazione con un tap.
+            </p>
+          </div>
           <p className="prose success-calendar-label">
-            Aggiungi l&apos;appuntamento al calendario (Apple o Google). Il file
-            .ics ha un solo promemoria: 30 minuti prima.
+            Aggiungi al tuo calendario
           </p>
           <div className="success-actions" aria-label="Aggiungi al calendario">
             {success.ics ? (
@@ -389,19 +401,6 @@ export function FreshaBookingFlow({
                 Scarica .ics
               </a>
             ) : null}
-          </div>
-          <div className="success-whatsapp-row">
-            <a
-              className="btn btn-whatsapp"
-              href={success.whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Scrivi su WhatsApp
-            </a>
-            <p className="booking-open-note">
-              Invia al salone il riepilogo della prenotazione con un tap.
-            </p>
           </div>
           {success.warnings.map((w) => (
             <p key={w} className="booking-open-note">

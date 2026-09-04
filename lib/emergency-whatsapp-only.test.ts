@@ -65,7 +65,7 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(summary).toContain("Data: martedì 8 settembre 2026");
     expect(summary).toContain("Ora: 09:30");
     expect(summary).toContain("Note: Sponde basse");
-    expect(summary).toContain("Gestisci: https://felicepolesebarbershop.vercel.app/appuntamento/abc");
+    expect(summary).not.toContain("Gestisci:");
 
     const url = getBookingConfirmWhatsAppUrl({
       firstName: "Mario",
@@ -95,7 +95,11 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(successBlock).not.toMatch(/non recapitato/i);
     expect(successBlock).not.toMatch(/field-error/);
     expect(successBlock).toContain("btn btn-whatsapp");
-    expect(successBlock).toContain("Scrivi su WhatsApp");
+    expect(successBlock).toContain("INVIA ORA IL PROMEMORIA APPUNTAMENTO");
+    expect(successBlock).toContain("Aggiungi al tuo calendario");
+    expect(successBlock.indexOf("success-whatsapp-row")).toBeLessThan(
+      successBlock.indexOf("success-actions"),
+    );
     expect(successBlock).toContain("Apple Calendar (.ics)");
     expect(successBlock).toContain("Google Calendar");
     expect(successBlock).toContain("success.whatsappUrl");
