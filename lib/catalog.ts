@@ -42,16 +42,16 @@ export type Service = {
   isVariablePrice: boolean;
   /**
    * Catalog duration when durationKnown.
-   * When durationKnown is false this value is NOT used as an invented booking default
-   * (online blocked; gestionale requires override unless processing is configured).
+   * Booking occupancy uses this (or DB override / gestionale override).
    */
   durationMin: number;
-  /** False = official listino shows "durata n/d"; do not invent online duration. */
+  /** False = listino/booking must not invent a duration. All 10 official services are known. */
   durationKnown: boolean;
+  /** When false, service is hidden from public booking (admin can deactivate). */
+  active: boolean;
   description: string;
   /**
    * Optional servicing→processing→servicing. Only set when real minutes exist.
-   * Tinture/colore stay without processing until Felice confirms durations.
    */
   processing?: ServiceProcessing | null;
 };
@@ -59,6 +59,7 @@ export type Service = {
 /**
  * Official listino — exactly these 10 bookable services.
  * Razor Taper / Skin Fade / other rasature are techniques, not services.
+ * Durations are operational booking times (Durata prevista).
  */
 export const SERVICES: Service[] = [
   {
@@ -70,6 +71,7 @@ export const SERVICES: Service[] = [
     isVariablePrice: false,
     durationMin: 50,
     durationKnown: true,
+    active: true,
     description: "Shampoo specifico per tipo di capello + Black Mask",
   },
   {
@@ -81,6 +83,7 @@ export const SERVICES: Service[] = [
     isVariablePrice: false,
     durationMin: 30,
     durationKnown: true,
+    active: true,
     description: "Taglio classico",
   },
   {
@@ -91,7 +94,8 @@ export const SERVICES: Service[] = [
     priceMaxEuro: null,
     isVariablePrice: false,
     durationMin: 15,
-    durationKnown: false,
+    durationKnown: true,
+    active: true,
     description: "Solo styling",
   },
   {
@@ -103,6 +107,7 @@ export const SERVICES: Service[] = [
     isVariablePrice: false,
     durationMin: 20,
     durationKnown: true,
+    active: true,
     description: "Taglio per bambini",
   },
   {
@@ -114,6 +119,7 @@ export const SERVICES: Service[] = [
     isVariablePrice: false,
     durationMin: 20,
     durationKnown: true,
+    active: true,
     description: "Panno caldo con vaporizzatore + Oli con fragranze",
   },
   {
@@ -124,7 +130,8 @@ export const SERVICES: Service[] = [
     priceMaxEuro: null,
     isVariablePrice: false,
     durationMin: 15,
-    durationKnown: false,
+    durationKnown: true,
+    active: true,
     description: "Rifinitura / Modellatura classica",
   },
   {
@@ -134,8 +141,9 @@ export const SERVICES: Service[] = [
     priceEuro: 40,
     priceMaxEuro: 100,
     isVariablePrice: true,
-    durationMin: 45,
-    durationKnown: false,
+    durationMin: 90,
+    durationKnown: true,
+    active: true,
     description: "In base a lunghezza, tipo di capello e tempo",
   },
   {
@@ -145,8 +153,9 @@ export const SERVICES: Service[] = [
     priceEuro: 50,
     priceMaxEuro: 120,
     isVariablePrice: true,
-    durationMin: 45,
-    durationKnown: false,
+    durationMin: 120,
+    durationKnown: true,
+    active: true,
     description: "In base a lunghezza e tipo di capello",
   },
   {
@@ -156,8 +165,9 @@ export const SERVICES: Service[] = [
     priceEuro: 10,
     priceMaxEuro: 30,
     isVariablePrice: true,
-    durationMin: 30,
-    durationKnown: false,
+    durationMin: 60,
+    durationKnown: true,
+    active: true,
     description: "Colore capelli",
   },
   {
@@ -167,8 +177,9 @@ export const SERVICES: Service[] = [
     priceEuro: 5,
     priceMaxEuro: 15,
     isVariablePrice: true,
-    durationMin: 20,
-    durationKnown: false,
+    durationMin: 15,
+    durationKnown: true,
+    active: true,
     description: "Colore barba",
   },
 ];
@@ -186,6 +197,11 @@ export const UNOFFICIAL_SERVICE_IDS = [
 ] as const;
 
 export const BOOKABLE_SERVICE_IDS = SERVICES.map((s) => s.id);
+
+/** Expected booking durations for the 10 official services (source of truth seed). */
+export const OFFICIAL_DURATION_MIN: Record<string, number> = Object.fromEntries(
+  SERVICES.map((s) => [s.id, s.durationMin]),
+);
 
 export type Barber = {
   id: string;
@@ -209,19 +225,26 @@ export const BARBERS: Barber[] = [
   { id: "davide", name: "Davide", title: "Barber · poltrona indipendente", virtual: false, hours: SHOP_HOURS },
 ];
 
-export function getService(id: string) { return SERVICES.find((s) => s.id === id); }
-export function getBarber(id: string) { return BARBERS.find((b) => b.id === id); }
-export function getRealBarbers(barbers: Barber[] = BARBERS) { return barbers.filter((b) => !b.virtual); }
+export function getService(id: string) {
+  return SERVICES.find((s) => s.id === id);
+}
+export function getBarber(id: string) {
+  return BARBERS.find((b) => b.id === id);
+}
+export function getRealBarbers(barbers: Barber[] = BARBERS) {
+  return barbers.filter((b) => !b.virtual);
+}
 
 export function isBookableServiceId(id: string): boolean {
-  return SERVICES.some((s) => s.id === id);
+  const s = getService(id);
+  return Boolean(s && s.active !== false);
 }
 
 export function resolveServices(ids: string[]): Service[] | null {
   const unique = [...new Set(ids)];
   if (!unique.length) return null;
   const found = unique.map((id) => getService(id));
-  if (found.some((s) => !s)) return null;
+  if (found.some((s) => !s || s.active === false)) return null;
   return found as Service[];
 }
 
@@ -237,8 +260,16 @@ export function formatPriceRange(service: Service): string {
   return formatPrice(service);
 }
 
+/** Public listino / booking label — expected duration, not a guarantee. */
 export function formatDuration(service: Service): string {
-  return service.durationKnown ? `${service.durationMin} min` : "durata n/d";
+  if (!service.durationKnown || !(service.durationMin > 0)) return "Durata non disponibile";
+  return `Durata prevista: ${service.durationMin} min`;
+}
+
+/** Short duration for compact UI (chips, summaries). */
+export function formatDurationShort(service: Service): string {
+  if (!service.durationKnown || !(service.durationMin > 0)) return "—";
+  return `${service.durationMin} min`;
 }
 
 export function totalsForServices(services: Service[]) {
@@ -248,7 +279,9 @@ export function totalsForServices(services: Service[]) {
   const isVariable = services.some((s) => s.isVariablePrice);
   const names = services.map((s) => s.name).join(" + ");
   const durationKnown = services.every((s) => s.durationKnown);
-  const durationLabel = durationKnown ? `${durationMin} min` : "durata n/d";
+  const durationLabel = durationKnown
+    ? `Durata prevista: ${durationMin} min`
+    : "Durata non disponibile";
   const priceLabel = isVariable
     ? priceMaxEuro > priceEuro
       ? `${priceEuro}–${priceMaxEuro} €`
@@ -261,11 +294,15 @@ export function totalsForServices(services: Service[]) {
 
 /** Online booking requires every selected service to have a known catalog duration. */
 export function servicesAreOnlineBookable(services: Service[]): boolean {
-  return services.length > 0 && services.every((s) => s.durationKnown);
+  return services.length > 0 && services.every((s) => s.durationKnown && s.active !== false);
 }
 
 export function onlineBookingBlockReason(services: Service[]): string | null {
   if (!services.length) return "Seleziona almeno un servizio.";
+  const inactive = services.filter((s) => s.active === false);
+  if (inactive.length) {
+    return `Servizio non disponibile: ${inactive.map((s) => s.name).join(", ")}.`;
+  }
   const unknown = services.filter((s) => !s.durationKnown);
   if (!unknown.length) return null;
   const names = unknown.map((s) => s.name).join(", ");

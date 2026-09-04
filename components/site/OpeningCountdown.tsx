@@ -13,15 +13,17 @@ function openingTargetMs(): number {
   return Date.parse(`${SITE.openingDate}T10:00:00+02:00`);
 }
 
+/** Stable two-digit slots — keys are positions only so digits don't remount crookedly. */
 function DigitPair({ value }: { value: string }) {
   const chars = value.padStart(2, "0").slice(-2).split("");
   return (
     <span className="countdown-value" aria-hidden={false}>
-      {chars.map((ch, i) => (
-        <span key={`${i}-${ch}`} className="countdown-digit">
-          {ch}
-        </span>
-      ))}
+      <span className="countdown-digit" data-pos="0">
+        {chars[0]}
+      </span>
+      <span className="countdown-digit" data-pos="1">
+        {chars[1]}
+      </span>
     </span>
   );
 }

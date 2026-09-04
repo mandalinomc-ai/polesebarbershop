@@ -10,11 +10,13 @@ import {
   Mail,
   MessageCircle,
   Plus,
+  Scissors,
   Search,
   Users,
   X,
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
+import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
 import { getRealBarbers, SERVICES, formatDuration, formatPrice, totalsForServices } from "@/lib/catalog";
 import {
   formatItalianDate,
@@ -33,7 +35,7 @@ import {
   type NotifyTemplate,
 } from "@/lib/crm-notify";
 
-type Tab = "dashboard" | "agenda" | "clienti" | "statistiche" | "storico";
+type Tab = "dashboard" | "agenda" | "listino" | "clienti" | "statistiche" | "storico";
 
 type AdminAppt = {
   id: string;
@@ -87,6 +89,7 @@ type HistoryAppt = {
 const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "agenda", label: "Agenda", icon: CalendarDays },
+  { id: "listino", label: "Listino", icon: Scissors },
   { id: "clienti", label: "Clienti", icon: Users },
   { id: "statistiche", label: "Statistiche", icon: BarChart3 },
   { id: "storico", label: "Storico", icon: History },
@@ -429,6 +432,7 @@ export function GestionalePanel() {
             }}
           />
         ) : null}
+        {tab === "listino" ? <ServicesAdminPanel /> : null}
         {tab === "clienti" ? (
           <ClientiView
             clients={filteredClients}
@@ -1360,7 +1364,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
                 <span>
                   {s.name} · {formatPrice(s)}
                   {!s.durationKnown ? (
-                    <em className="duration-unknown-flag"> · durata n/d</em>
+                    <em className="duration-unknown-flag"> · durata assente</em>
                   ) : (
                     ` · ${formatDuration(s)}`
                   )}

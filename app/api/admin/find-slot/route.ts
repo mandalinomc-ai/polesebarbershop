@@ -14,7 +14,8 @@ import {
   loadAppointmentsBetween,
   loadDayAppointments,
 } from "@/lib/appointments";
-import { getBarber, resolveServices } from "@/lib/catalog";
+import { getBarber } from "@/lib/catalog";
+import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import { resolveEffectiveServiceDuration } from "@/lib/booking";
 import { z } from "zod";
 import { flattenZodError } from "@/lib/validations";
@@ -65,7 +66,9 @@ export async function GET(request: Request) {
   let duration = body.durationMin || 0;
   let durationMeta: ReturnType<typeof resolveEffectiveServiceDuration> | null = null;
   if (body.serviceIds) {
-    const services = resolveServices(body.serviceIds.split(",").map((s) => s.trim()).filter(Boolean));
+    const services = await resolveRuntimeServices(
+      body.serviceIds.split(",").map((s) => s.trim()).filter(Boolean),
+    );
     if (!services) {
       return NextResponse.json({ error: "Servizi non validi." }, { status: 400 });
     }

@@ -459,8 +459,13 @@ describe("resolveEffectiveServiceDuration", () => {
   });
 
   it("blocks unknown duration without override (no invented default)", () => {
+    const fake = {
+      ...getService("tintura-capelli")!,
+      durationKnown: false,
+      durationMin: 0,
+    };
     const r = resolveEffectiveServiceDuration({
-      services: [getService("tintura-capelli")!],
+      services: [fake],
     });
     expect(r.ok).toBe(false);
     expect(r.durationMin).toBeNull();
@@ -468,13 +473,32 @@ describe("resolveEffectiveServiceDuration", () => {
     expect(r.reason).toMatch(/non determinabile/i);
   });
 
-  it("allows gestionale override for unknown tinture", () => {
+  it("allows online booking for tinture with fixed catalog minutes (variable price OK)", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("tintura-capelli")!],
+    });
+    expect(r).toMatchObject({
+      ok: true,
+      durationMin: 60,
+      source: "catalog",
+      onlineBookable: true,
+    });
+  });
+
+  it("allows gestionale override for assisted occupancy", () => {
     const r = resolveEffectiveServiceDuration({
       services: [getService("tintura-capelli")!],
       durationOverrideMin: 55,
       assisted: true,
     });
-    expect(r).toMatchObject({ ok: true, durationMin: 55, source: "override", kind: "assisted" });
+    expect(r).toMatchObject({ ok: true, durationMin: 55, source: "override" });
+  });
+
+  it("sums meches 90 with taglio pro for multi-service slots", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("taglio-pro")!, getService("decolorazione-meches")!],
+    });
+    expect(r).toMatchObject({ ok: true, durationMin: 140, onlineBookable: true });
   });
 
   it("uses processing config when present", () => {

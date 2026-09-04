@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
 import { resolveEffectiveServiceDuration } from "@/lib/booking";
-import { getBarber, onlineBookingBlockReason, resolveServices, totalsForServices } from "@/lib/catalog";
+import { getBarber, onlineBookingBlockReason, totalsForServices } from "@/lib/catalog";
+import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import { getClientIp } from "@/lib/client-ip";
 import { customerConfirmEmail, ownerNewBookingEmail, publicCustomerMailError, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
@@ -61,7 +62,8 @@ export async function POST(request: Request) {
     return honeypotOkResponse();
   }
 
-  const services = resolveServices(body.serviceIds);
+  // Server resolves duration/price from catalog (+ DB overlays). Never trust client minutes/€.
+  const services = await resolveRuntimeServices(body.serviceIds);
   if (!services) return NextResponse.json({ error: "Seleziona almeno un servizio valido." }, { status: 400 });
   const blockReason = onlineBookingBlockReason(services);
   if (blockReason) {

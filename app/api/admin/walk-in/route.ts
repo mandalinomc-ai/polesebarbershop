@@ -6,7 +6,8 @@ import {
   wallTimeToUtc,
 } from "@/lib/availability";
 import { blockEndFromStart, resolveEffectiveServiceDuration } from "@/lib/booking";
-import { getBarber, resolveServices, totalsForServices } from "@/lib/catalog";
+import { getBarber, totalsForServices } from "@/lib/catalog";
+import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import {
   AppointmentsUnavailableError,
   loadDayAppointments,
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   const parsed = walkInWithOverride.safeParse(raw);
   if (!parsed.success) return NextResponse.json({ error: flattenZodError(parsed.error) }, { status: 400 });
   const body = parsed.data;
-  const services = resolveServices(body.serviceIds);
+  const services = await resolveRuntimeServices(body.serviceIds);
   if (!services) return NextResponse.json({ error: "Servizi non validi." }, { status: 400 });
   const barber = getBarber(body.barberId);
   if (!barber || barber.virtual) return NextResponse.json({ error: "Seleziona Felice o Davide." }, { status: 400 });

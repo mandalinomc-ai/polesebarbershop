@@ -3,23 +3,33 @@ type ScissorsIconProps = {
   variant?: "countdown" | "intro";
 };
 
-const PIVOT_X = 50;
-const PIVOT_Y = 72;
-
-/** Full barber scissors — chrome/silver 3D metal, both tips visible, no gold. */
+/** Photoreal chrome shears — intro uses PNG asset; countdown keeps compact SVG. */
 export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconProps) {
-  const rootClass = [
-    "scissors-icon",
-    variant === "intro" ? "scissors-icon--intro" : "scissors-icon--countdown",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  if (variant === "intro") {
+    const rootClass = ["scissors-icon", "scissors-icon--intro", "scissors-icon--photo", className]
+      .filter(Boolean)
+      .join(" ");
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        className={rootClass}
+        src="/assets/3d/shear-intro.png"
+        alt=""
+        width={420}
+        height={380}
+        decoding="async"
+        aria-hidden="true"
+      />
+    );
+  }
 
-  const metal = variant === "intro" ? "sc-metal-intro" : "sc-metal-cd";
-  const shine = variant === "intro" ? "sc-shine-intro" : "sc-shine-cd";
-  const edge = variant === "intro" ? "sc-edge-intro" : "sc-edge-cd";
-  const shadow = variant === "intro" ? "sc-shadow-intro" : "sc-shadow-cd";
+  const rootClass = ["scissors-icon", "scissors-icon--countdown", className].filter(Boolean).join(" ");
+  const metal = "sc-metal-cd";
+  const shine = "sc-shine-cd";
+  const edge = "sc-edge-cd";
+  const shadow = "sc-shadow-cd";
+  const PIVOT_X = 50;
+  const PIVOT_Y = 72;
 
   return (
     <svg
@@ -55,7 +65,6 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
       </defs>
 
       <g filter={`url(#${shadow})`} className="scissors-float-group">
-        {/* Finger rings */}
         <circle
           className="scissors-ring scissors-ring--left"
           cx="27"
@@ -77,7 +86,6 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
         <circle cx="27" cy="102" r="6.2" stroke={`url(#${shine})`} strokeWidth="1.1" fill="none" opacity="0.7" />
         <circle cx="73" cy="102" r="6.2" stroke={`url(#${shine})`} strokeWidth="1.1" fill="none" opacity="0.7" />
 
-        {/* Blades — tips fully in viewBox */}
         <path
           className="scissors-blade scissors-blade--left"
           d="M28 92 L42 10 L46.5 13.5 L34 98 Z"
@@ -93,7 +101,6 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
           strokeWidth="0.4"
         />
 
-        {/* Specular chrome strips */}
         <path
           className="scissors-blade-shine scissors-blade-shine--left"
           d="M30.5 88 L42.5 16 L44.2 17.2 L33.2 92 Z"
@@ -107,11 +114,9 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
           opacity="0.92"
         />
 
-        {/* Tip highlights */}
         <path d="M42 10 L44.2 11.2 L43.1 14 Z" fill="#F4F4F4" opacity="0.9" />
         <path d="M58 10 L55.8 11.2 L56.9 14 Z" fill="#F4F4F4" opacity="0.9" />
 
-        {/* Pivot screw */}
         <circle cx={PIVOT_X} cy={PIVOT_Y} r="4.1" fill={`url(#${metal})`} stroke="#EDEDED" strokeWidth="0.5" />
         <circle cx={PIVOT_X} cy={PIVOT_Y} r="1.7" fill="#F2F2F2" opacity="0.95" />
         <circle cx={PIVOT_X} cy={PIVOT_Y} r="0.7" fill="#3A3A3A" opacity="0.55" />

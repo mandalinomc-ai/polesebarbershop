@@ -476,7 +476,7 @@ export function FreshaBookingFlow({
                     <strong>{s.name}</strong>
                     <small>
                       {s.description}
-                      {!s.durationKnown ? " · durata n/d" : ` · ${formatDuration(s)}`}
+                      {` · ${formatDuration(s)}`}
                     </small>
                   </span>
                   <span className="meta">{formatPriceRange(s)}</span>
@@ -490,8 +490,8 @@ export function FreshaBookingFlow({
           <>
             <h3>Scegli il servizio</h3>
             <p className="booking-open-note">
-              Seleziona uno o più servizi con durata nota. I servizi &quot;durata n/d&quot;
-              si prenotano in salone (nessuna durata inventata online).
+              Seleziona uno o più servizi. La durata indicata è prevista (non una garanzia).
+              I prezzi a fascia si definiscono in salone.
             </p>
             {onlineBlockedReason ? (
               <p className="field-error">{onlineBlockedReason}</p>
@@ -499,7 +499,7 @@ export function FreshaBookingFlow({
             {SERVICE_CATEGORIES.map((cat) => (
               <div key={cat}>
                 <p className="fresha-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
-                {SERVICES.filter((s) => s.category === cat).map((s) => {
+                {SERVICES.filter((s) => s.category === cat && s.active !== false).map((s) => {
                   const onlineOk = s.durationKnown;
                   return (
                   <button
@@ -508,13 +508,13 @@ export function FreshaBookingFlow({
                     className={`fresha-option${selectedIds.includes(s.id) ? " selected" : ""}${!onlineOk ? " muted" : ""}`}
                     onClick={() => toggleService(s.id)}
                     aria-pressed={selectedIds.includes(s.id)}
-                    title={!onlineOk ? "Durata non definita — prenota in salone" : undefined}
+                    title={!onlineOk ? "Durata non disponibile online" : undefined}
                   >
                     <span>
                       <strong>{s.name}</strong>
                       <small>
                         {s.description}
-                        {!onlineOk ? " · Online non disponibile (durata n/d)" : ` · ${formatDuration(s)}`}
+                        {` · ${formatDuration(s)}`}
                       </small>
                     </span>
                     <span className="meta">{formatPriceRange(s)}</span>

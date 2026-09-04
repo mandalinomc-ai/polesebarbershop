@@ -391,15 +391,19 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   text-align: center;
 }
 .countdown-value {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  justify-content: center;
+  justify-items: center;
   gap: 0;
-  width: auto;
+  width: 2.4ch;
+  min-width: 2.4ch;
+  max-width: 100%;
   min-height: 1.75rem;
-  margin: 0;
+  height: 1.75rem;
+  margin: 0 auto;
   padding: 0;
-  font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", ui-monospace, monospace;
   font-size: clamp(1.35rem, 4.8vw, 1.75rem);
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
@@ -410,13 +414,14 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   font-optical-sizing: none;
   font-style: normal;
   transform: none;
+  vertical-align: baseline;
 }
 .countdown-digit {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 1ch;
-  min-width: 1ch;
+  width: 100%;
+  min-width: 0;
   height: 1.75rem;
   margin: 0;
   padding: 0;
@@ -427,6 +432,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   line-height: 1;
   text-align: center;
   transform: none;
+  vertical-align: baseline;
 }
 .countdown-label {
   display: flex;
@@ -1465,6 +1471,45 @@ body:has(.fresha-footer) .fab-stack {
 }
 .crm-view-toggle button.active { background: var(--ink); color: #fff; }
 .crm-notes-field textarea { min-height: 5rem; resize: vertical; }
+.crm-services-admin { display: grid; gap: 1.25rem; }
+.crm-services-group h3 { margin: 0 0 0.65rem; font-size: 1.25rem; }
+.crm-services-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.crm-service-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1.4fr) repeat(3, minmax(4.5rem, 1fr)) auto auto;
+  gap: 0.55rem 0.65rem;
+  align-items: end;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.crm-service-row label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.crm-service-meta { display: grid; gap: 0.15rem; align-content: center; }
+.crm-service-meta .meta { font-size: 0.72rem; color: var(--muted); }
+.crm-service-active {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+  color: var(--ink);
+  min-height: 44px;
+}
+@media (max-width: 899px) {
+  .crm-service-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .crm-service-meta { grid-column: 1 / -1; }
+  .crm-service-row .btn { grid-column: 1 / -1; }
+}
 .crm-table tr.is-cancelled td { opacity: 0.7; }
 .crm-table tr.is-cancelled td[data-label="Stato"] { color: #a33; font-weight: 600; }
 .crm-link { background: none; border: 0; color: var(--ink); font: inherit; cursor: pointer; text-decoration: underline; padding: 0; min-height: 44px; display: inline-flex; align-items: center; }
@@ -1516,8 +1561,8 @@ video {
   .opening-countdown-block { max-width: 100%; }
   .countdown { gap: 0.3rem; }
   .countdown-item { min-height: 4.25rem; padding: 0.45rem 0.1rem 0.4rem; }
-  .countdown-value { font-size: clamp(1.25rem, 6.5vw, 1.55rem); min-height: 1.65rem; }
-  .countdown-digit { height: 1.65rem; width: 1ch; min-width: 1ch; }
+  .countdown-value { font-size: clamp(1.25rem, 6.5vw, 1.55rem); min-height: 1.65rem; height: 1.65rem; width: 2.35ch; min-width: 2.35ch; }
+  .countdown-digit { height: 1.65rem; width: 100%; min-width: 0; }
   .listino-boxes { gap: 0.75rem; }
   .listino-box { padding: 1rem 0.9rem; }
   .listino-box-head { flex-wrap: wrap; gap: 0.35rem 0.75rem; }
@@ -1554,8 +1599,8 @@ video {
 @media (max-width: 380px) {
   .hero-media { gap: 0.3rem; }
   .countdown-item { min-height: 3.85rem; padding: 0.35rem 0.05rem 0.3rem; }
-  .countdown-value { font-size: clamp(1.1rem, 6vw, 1.35rem); min-height: 1.45rem; }
-  .countdown-digit { height: 1.45rem; }
+  .countdown-value { font-size: clamp(1.1rem, 6vw, 1.35rem); min-height: 1.45rem; height: 1.45rem; width: 2.2ch; min-width: 2.2ch; }
+  .countdown-digit { height: 1.45rem; width: 100%; min-width: 0; }
   .listino-box-price { font-size: 0.95rem; }
   .btn-listino-prenota { width: 100%; justify-content: center; }
 }
@@ -2153,6 +2198,26 @@ img, video { backface-visibility: hidden; }
 .scissors-icon--intro {
   width: clamp(7rem, 36vw, 12rem);
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+}
+.scissors-icon--photo {
+  width: clamp(9rem, 48vw, 16rem);
+  height: auto;
+  object-fit: contain;
+  transform-origin: 50% 55%;
+  animation: scissors-photo-float 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 22px 36px rgba(0, 0, 0, 0.55));
+}
+@keyframes scissors-photo-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg) scale(1); }
+  50% { transform: translateY(-12px) rotate(2deg) scale(1.02); }
+}
+.scissors-intro--cutting .scissors-icon--photo {
+  animation: scissors-photo-cut 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes scissors-photo-cut {
+  0% { transform: translateY(0) rotate(-2deg) scale(1); opacity: 1; }
+  55% { transform: translateY(8px) rotate(8deg) scale(1.08); opacity: 1; }
+  100% { transform: translateY(-40px) rotate(-12deg) scale(0.92); opacity: 0; }
 }
 .scissors-float-group {
   transform-origin: 50px 72px;

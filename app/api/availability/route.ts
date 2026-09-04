@@ -12,9 +12,9 @@ import { resolveEffectiveServiceDuration } from "@/lib/booking";
 import {
   ANYONE_BARBER_ID,
   getBarber,
-  resolveServices,
   servicesAreOnlineBookable,
 } from "@/lib/catalog";
+import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import {
   AppointmentsUnavailableError,
   loadAppointmentsBetween,
@@ -88,54 +88,49 @@ export async function GET(request: Request) {
 
   const date = searchParams.get("date") || "";
   const barberId = searchParams.get("barberId") || ANYONE_BARBER_ID;
-  const durationParam = Number(searchParams.get("duration") || "0");
   const serviceIdsRaw = searchParams.get("serviceIds") || "";
 
-  let durationMinutes = 0;
-
-  if (serviceIdsRaw) {
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: flattenZodError(parsed.error) },
-        { status: 400 },
-      );
-    }
-    const services = resolveServices(parsed.data.serviceIds);
-    if (!services) {
-      return NextResponse.json(
-        { error: "Uno o più servizi non sono validi." },
-        { status: 400 },
-      );
-    }
-    if (!servicesAreOnlineBookable(services)) {
-      const unknown = services.filter((s) => !s.durationKnown).map((s) => s.name).join(", ");
-      return NextResponse.json(
-        {
-          error: `Durata non definita per: ${unknown}. Prenota in salone — nessuna durata inventata online.`,
-          durationUnknown: true,
-        },
-        { status: 400 },
-      );
-    }
-    const resolved = resolveEffectiveServiceDuration({ services });
-    if (!resolved.ok || resolved.durationMin == null || !resolved.onlineBookable) {
-      return NextResponse.json(
-        {
-          error: resolved.reason || "Durata non definita per prenotazione online.",
-          durationUnknown: true,
-        },
-        { status: 400 },
-      );
-    }
-    durationMinutes = resolved.durationMin;
-  } else if (Number.isFinite(durationParam) && durationParam > 0) {
-    durationMinutes = durationParam;
-  } else {
+  // Public availability never trusts client `duration` — only catalog/DB via serviceIds.
+  if (!serviceIdsRaw) {
     return NextResponse.json(
-      { error: "Indica i servizi oppure una durata valida." },
+      { error: "Indica i servizi (serviceIds). La durata non è accettata dal client." },
       { status: 400 },
     );
   }
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: flattenZodError(parsed.error) },
+      { status: 400 },
+    );
+  }
+  const services = await resolveRuntimeServices(parsed.data.serviceIds);
+  if (!services) {
+    return NextResponse.json(
+      { error: "Uno o più servizi non sono validi." },
+      { status: 400 },
+    );
+  }
+  if (!servicesAreOnlineBookable(services)) {
+    const unknown = services.filter((s) => !s.durationKnown).map((s) => s.name).join(", ");
+    return NextResponse.json(
+      {
+        error: `Durata non definita per: ${unknown}. Prenota in salone — nessuna durata inventata online.`,
+        durationUnknown: true,
+      },
+      { status: 400 },
+    );
+  }
+  const resolved = resolveEffectiveServiceDuration({ services });
+  if (!resolved.ok || resolved.durationMin == null || !resolved.onlineBookable) {
+    return NextResponse.json(
+      {
+        error: resolved.reason || "Durata non definita per prenotazione online.",
+        durationUnknown: true,
+      },
+      { status: 400 },
+    );
+  }
+  const durationMinutes = resolved.durationMin;
 
   if (!DATE_RE.test(date)) {
     return NextResponse.json(
