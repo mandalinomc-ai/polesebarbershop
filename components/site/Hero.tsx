@@ -55,7 +55,7 @@ export function Hero() {
             </a>
           </div>
         </div>
-        <div className="hero-media" data-parallax="0.08">
+        <div className="hero-media" data-parallax="0.06">
           {HERO_VIDEOS.map((video) => (
             <HeroMediaCell key={video.id} video={video} />
           ))}

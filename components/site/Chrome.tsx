@@ -211,29 +211,60 @@ export function Footer() {
 
 export function ClientEffects() {
   useEffect(() => {
-    const els = Array.from(
-      document.querySelectorAll(".reveal, .section-title"),
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const revealEls = Array.from(
+      document.querySelectorAll(".reveal, .section-title, .eyebrow"),
     );
-    if (!els.length) return;
-    if (!("IntersectionObserver" in window)) {
-      els.forEach((el) => el.classList.add("visible"));
+    const mediaEls = Array.from(
+      document.querySelectorAll(
+        ".video-reel-box, .about-video, .hero-media-cell, .qr-card",
+      ),
+    );
+    const listinoEls = Array.from(
+      document.querySelectorAll(".listino-box"),
+    );
+
+    const markVisible = (el: Element) => {
+      el.classList.add("visible");
+    };
+
+    if (reduced || !("IntersectionObserver" in window)) {
+      [...revealEls, ...mediaEls, ...listinoEls].forEach(markVisible);
       return;
     }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
+            markVisible(entry.target);
             observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.08, rootMargin: "0px 0px -24px 0px" },
+      { threshold: 0.1, rootMargin: "0px 0px -8% 0px" },
     );
-    els.forEach((el) => {
+
+    revealEls.forEach((el) => {
       if (!el.classList.contains("reveal")) el.classList.add("reveal");
       observer.observe(el);
     });
+
+    mediaEls.forEach((el, i) => {
+      el.classList.add("fx-media");
+      const delay = Math.min(i % 4, 3) * 80;
+      if (delay) (el as HTMLElement).style.transitionDelay = `${delay}ms`;
+      observer.observe(el);
+    });
+
+    listinoEls.forEach((el, i) => {
+      el.classList.add("reveal");
+      const delay = Math.min(i, 8) * 70;
+      if (delay) (el as HTMLElement).style.transitionDelay = `${delay}ms`;
+      observer.observe(el);
+    });
+
     return () => observer.disconnect();
   }, []);
 

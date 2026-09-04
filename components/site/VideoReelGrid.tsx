@@ -55,7 +55,7 @@ export function VideoReelGrid() {
       <section id="gallery" className="section-pad section-marble marble-accent">
         <div className="eyebrow">Sfumature</div>
         <h2 className="section-title font-serif">Le nostre sfumature</h2>
-        <p className="prose technique-lead">
+        <p className="prose technique-lead fx-copy">
           Scopri alcune delle sfumature e tecniche che utilizziamo nei nostri tagli.
         </p>
         <div className="video-reel-grid technique-grid">
@@ -73,7 +73,7 @@ export function VideoReelGrid() {
       <section id="trattamenti" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow">Servizi reali</div>
         <h2 className="section-title font-serif">Ogni trattamento con il suo media</h2>
-        <p className="prose technique-lead">
+        <p className="prose technique-lead fx-copy">
           Ogni trattamento con il video Drive corrispondente. Barba Pro, Barba
           Standard e Tintura Barba usano le foto generate: non c&apos;è un clip
           dedicato.

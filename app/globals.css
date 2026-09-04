@@ -46,6 +46,9 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 
 body {
   margin: 0;
@@ -72,22 +75,77 @@ body.nav-open { overflow: hidden; }
 }
 .font-serif { font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif; }
 
+/* Micro motion — intensity 1–2 only (opacity + 10–20px) */
 .reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.85s ease, transform 0.85s ease;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
-.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+.section-title.reveal {
+  transform: translateY(28px);
+  clip-path: inset(0 0 18% 0);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.section-title.reveal.visible {
+  transform: translateY(0);
+  clip-path: inset(0 0 0 0);
+}
+/* Media / video entrance — almost imperceptible */
+.fx-media {
+  opacity: 0;
+  transform: scale(1.02);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.fx-media.visible {
+  opacity: 1;
+  transform: scale(1);
+  will-change: auto;
+}
+.listino-box.reveal {
+  transform: translateY(16px);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.55s ease;
+}
+.listino-box.reveal.visible {
+  border-color: rgba(10, 10, 10, 0.16);
+}
+.reveal-d1 { transition-delay: 0.12s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.24s; }
+@media (max-width: 899px) {
+  .reveal { transform: translateY(14px); }
+  .section-title.reveal { transform: translateY(18px); clip-path: none; }
+  .fx-media { transform: scale(1.012); }
+  .listino-box.reveal { transform: translateY(12px); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
+  .reveal,
+  .section-title.reveal,
+  .fx-media,
+  .listino-box.reveal {
     opacity: 1;
     transform: none;
+    clip-path: none;
     transition: none;
+    will-change: auto;
   }
 }
-.reveal-d1 { transition-delay: 0.1s; }
-.reveal-d2 { transition-delay: 0.2s; }
-.reveal-d3 { transition-delay: 0.3s; }
 
 .btn {
   display: inline-flex;
@@ -104,7 +162,12 @@ body.nav-open { overflow: hidden; }
   border: 1px solid transparent;
   cursor: pointer;
   touch-action: manipulation;
-  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-dark {
@@ -213,13 +276,20 @@ body.nav-open { overflow: hidden; }
   justify-content: space-between;
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
-  transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+  transition:
+    transform 0.4s ease,
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    backdrop-filter 0.35s ease;
   border-bottom: 1px solid transparent;
   background: #FFFFFF;
   backdrop-filter: blur(12px);
 }
 .site-header.header-scrolled {
   border-color: var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
   box-shadow: 0 4px 24px rgba(10, 10, 10, 0.04);
 }
 .site-header.header-hidden { transform: translateY(-110%); }
@@ -237,10 +307,17 @@ body.nav-open { overflow: hidden; }
   font-size: 0.68rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  transition: color 0.25s ease;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  transition: color 0.25s ease, background-size 0.25s ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  .nav-desktop a:hover { color: var(--ink); }
+  .nav-desktop a:hover {
+    color: var(--ink);
+    background-size: 100% 1px;
+  }
 }
 .nav-toggle {
   width: 44px;
@@ -1779,6 +1856,14 @@ video {
   object-fit: cover;
   display: block;
   background: var(--surface);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .video-reel-media:hover .video-reel-player,
+  .about-video:hover .felice-video-hero,
+  .hero-media-cell:hover .salon-video-player {
+    transform: scale(1.025);
+  }
 }
 .video-reel-media::after {
   content: "";
@@ -1990,6 +2075,17 @@ video {
   color: var(--white);
   border: 1px solid var(--ink);
   text-decoration: none;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-listino-prenota:hover {
+    background: #111111;
+    transform: scale(1.02);
+  }
 }
 .booking-calendar { margin-top: 0.25rem; }
 .booking-calendar-nav {
@@ -2132,6 +2228,7 @@ img, video { backface-visibility: hidden; }
   .btn-ink:hover {
     background: #111111;
     color: #ffffff;
+    transform: scale(1.02);
   }
 }
 .btn-ghost {
@@ -2145,6 +2242,7 @@ img, video { backface-visibility: hidden; }
     background: #f4f2ef;
     color: #000000;
     border-color: #000000;
+    transform: scale(1.015);
   }
 }
 
@@ -2500,7 +2598,15 @@ body.scissors-intro-active { overflow: hidden; }
 }
 [data-parallax] {
   will-change: transform;
-  transition: transform 0.12s linear;
+  transition: transform 0.1s linear;
+}
+@media (max-width: 899px) {
+  .tilt-3d { transform: none !important; }
+  [data-parallax] {
+    transform: none !important;
+    transition: none !important;
+    will-change: auto;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .scissors-intro { display: none !important; }
@@ -2516,6 +2622,19 @@ body.scissors-intro-active { overflow: hidden; }
   [data-parallax] {
     transform: none !important;
     transition: none !important;
+    will-change: auto;
+  }
+  .btn:hover,
+  .btn-ink:hover,
+  .btn-ghost:hover,
+  .btn-listino-prenota:hover {
+    transform: none !important;
+  }
+  .video-reel-player,
+  .salon-video-player,
+  .felice-video-hero {
+    transition: none !important;
+    transform: none !important;
   }
 }
 

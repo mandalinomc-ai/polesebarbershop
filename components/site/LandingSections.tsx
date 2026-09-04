@@ -18,22 +18,22 @@ export function LandingSections() {
           Felice Polese giovane talento
         </h2>
         <div className="about-grid">
-          <div className="about-copy reveal">
-            <p className="prose">
+          <div className="about-copy">
+            <p className="prose reveal reveal-d1">
               <span className="badge-match badge-match-inline">
                 Barber Match 2023 · Giovane Talento
               </span>
             </p>
-            <p className="prose">
+            <p className="prose reveal reveal-d2">
               Felice Polese, giovane talento della barberia italiana, porta la
               tecnica del fade e il taglio sartoriale nel nuovo salone in{" "}
               <strong>{SITE.address}</strong>, {SITE.city}.
             </p>
-            <p className="prose">
+            <p className="prose reveal reveal-d3">
               In salone lavorano <strong>Felice</strong> e <strong>Davide</strong>{" "}
               su due poltrone indipendenti: taglio, barba e colore.
             </p>
-            <p className="prose">
+            <p className="prose reveal reveal-d3">
               <a
                 className="map-link"
                 href={getMapsUrl()}
@@ -44,7 +44,7 @@ export function LandingSections() {
               </a>
             </p>
           </div>
-          <div className="about-video glass-card">
+          <div className="about-video glass-card" data-parallax="0.05">
             <SalonVideo
               video={FELICE_WORKING_VIDEO}
               className="felice-video-hero"
