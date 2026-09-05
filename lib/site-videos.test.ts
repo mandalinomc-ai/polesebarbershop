@@ -78,6 +78,15 @@ describe("site-videos", () => {
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "decolorazione-cutanea")?.src,
     ).toBe(`${VIDEO_BASE}/decolorazione-cutanea.mp4`);
     expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "acconciatura")?.posterSrc,
+    ).toBe("/assets/images/services/acconciatura.jpg");
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "acconciatura")?.imageSrc,
+    ).toBe("/assets/images/services/acconciatura.jpg");
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "acconciatura")?.src,
+    ).toBeUndefined();
+    expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-pro")?.posterSrc,
     ).toBe("/assets/images/services/barba-pro.jpg");
     expect(

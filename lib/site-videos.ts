@@ -177,10 +177,11 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
   {
     serviceId: "acconciatura",
     id: "service-acconciatura",
-    src: `${VIDEO_BASE}/taglio-03.mp4`,
-    alt: "Acconciatura e styling — clip reale dal salone Felice Polese",
+    alt: "Acconciatura — piega e styling con phon, mullet contemporaneo Felice Polese",
     label: "Acconciatura",
-    sourceFile: "taglio-03.mp4",
+    posterSrc: "/assets/images/services/acconciatura.jpg",
+    imageSrc: "/assets/images/services/acconciatura.jpg",
+    sourceFile: "acconciatura.jpg",
   },
   {
     serviceId: "taglio-bambino",
