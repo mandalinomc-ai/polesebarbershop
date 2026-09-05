@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, wallTimeToUtc } from "@/lib/availability";
-import { resolveEffectiveServiceDuration, CALENDAR_UNAVAILABLE_IT, publicBookingWarnings } from "@/lib/booking";
+import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirstBookableDate, isClosedDay, wallTimeToUtc } from "@/lib/availability";
+import { resolveEffectiveServiceDuration, CALENDAR_UNAVAILABLE_IT, CLOSED_DAY_IT, CONFIG_CALENDAR_BLOCKS, publicBookingWarnings } from "@/lib/booking";
 import { getBarber, onlineBookingBlockReason, totalsForServices } from "@/lib/catalog";
+import { loadCalendarBlocksFromDb, loadClosedDates } from "@/lib/closed-days";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import { getClientIp } from "@/lib/client-ip";
 import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@/lib/email";
@@ -88,6 +89,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Le prenotazioni aprono dal ${formatItalianDate(SITE.openingDate)}.` }, { status: 400 });
   }
 
+  const [closedSet, dbBlocks] = await Promise.all([
+    loadClosedDates({ from: body.date, to: body.date }),
+    loadCalendarBlocksFromDb(),
+  ]);
+  if (isClosedDay(body.date, undefined, closedSet)) {
+    return NextResponse.json({ error: CLOSED_DAY_IT }, { status: 400 });
+  }
+  const calendarBlocks = [...CONFIG_CALENDAR_BLOCKS, ...dbBlocks];
+
   const startsAt = wallTimeToUtc(body.date, body.startTime);
 
   let dayAppointments;
@@ -108,6 +118,7 @@ export async function POST(request: Request) {
     durationMinutes: occupancyDuration,
     appointments: dayAppointments,
     fullSearch: true,
+    calendarBlocks,
   });
   const slot = findSlot(slots, startsAt);
   if (!slot) {

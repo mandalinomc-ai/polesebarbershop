@@ -41,8 +41,11 @@ describe("mobile QA (390px)", () => {
     expect(crm).toMatch(/crm-mobile-logout/);
     expect(crm).toMatch(/walkin-service/);
     expect(crm).toMatch(/occupancy-table/);
+    expect(crm).toMatch(/Chiudi giornata/);
+    expect(crm).toMatch(/\/api\/admin\/closed-days/);
     expect(css).toMatch(/\.crm-mobile-logout \{ display: inline-flex; \}/);
     expect(css).toMatch(/\.occupancy-table td\.taken/);
+    expect(css).toMatch(/\.cal-day\.salon-closed/);
   });
 
   it("opens the gestionale notification bell on tap and illuminates unread", () => {

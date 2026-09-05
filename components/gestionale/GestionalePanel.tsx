@@ -128,6 +128,8 @@ export function GestionalePanel() {
   const [history, setHistory] = useState<HistoryAppt[]>([]);
   const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
   const [bellTick, setBellTick] = useState(0);
+  const [dayClosed, setDayClosed] = useState(false);
+  const [closingDay, setClosingDay] = useState(false);
 
   const loadAgenda = useCallback(async () => {
     try {
@@ -195,15 +197,53 @@ export function GestionalePanel() {
     }
   }, []);
 
+  const loadClosedDay = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/closed-days?date=${date}`);
+      if (res.status === 401) {
+        setAuth("needed");
+        return;
+      }
+      const json = (await res.json()) as { closed?: boolean };
+      if (!res.ok) return;
+      setDayClosed(Boolean(json.closed));
+    } catch {
+      /* ignore */
+    }
+  }, [date]);
+
+  const toggleClosedDay = useCallback(async () => {
+    setClosingDay(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/closed-days", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ date, closed: !dayClosed }),
+      });
+      const json = (await res.json()) as { closed?: boolean; error?: string };
+      if (!res.ok) {
+        setError(json.error || "Impossibile aggiornare la chiusura.");
+        return;
+      }
+      setDayClosed(Boolean(json.closed));
+    } catch {
+      setError("Connessione non disponibile. Riprova.");
+    } finally {
+      setClosingDay(false);
+    }
+  }, [date, dayClosed]);
+
   const load = useCallback(async () => {
     setError("");
     const ok = await loadAgenda();
     if (ok) {
       await loadCrm();
       await loadHistory();
+      await loadClosedDay();
       setBellTick((n) => n + 1);
     }
-  }, [loadAgenda, loadCrm, loadHistory]);
+  }, [loadAgenda, loadCrm, loadHistory, loadClosedDay]);
 
   useEffect(() => {
     void load();
@@ -345,13 +385,23 @@ export function GestionalePanel() {
               }}
             />
             <input
-              className="input-lux"
+              className={`input-lux${dayClosed ? " crm-date-closed" : ""}`}
               type="date"
               value={date}
               min={SITE.openingDate}
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
+            <button
+              type="button"
+              className={`btn btn-danger${dayClosed ? " is-closed" : ""}`}
+              onClick={() => void toggleClosedDay()}
+              disabled={closingDay || auth !== "ok"}
+              aria-pressed={dayClosed}
+              title={dayClosed ? "Riapri questa giornata alle prenotazioni" : "Chiudi il salone per l'intera giornata"}
+            >
+              {closingDay ? "…" : dayClosed ? "Riapri giornata" : "Chiudi giornata"}
+            </button>
             <button type="button" className="btn btn-gold" onClick={() => setWalkOpen(true)}>
               <Plus size={16} aria-hidden /> Walk-in
             </button>

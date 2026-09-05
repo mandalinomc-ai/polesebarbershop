@@ -21,6 +21,7 @@ import {
   workingWindowsFromHours,
   busyMinutesFromBlocks,
   CONFIG_CALENDAR_BLOCKS,
+  blocksForDate,
   type CalendarBlock,
   freeWindowStarts,
   suggestFillGaps,
@@ -210,7 +211,17 @@ export function getHoursForDate(barber: Barber, date: string): DayHours {
   );
 }
 
-export function isClosedDay(date: string, barber?: Barber): boolean {
+export function isClosedDay(
+  date: string,
+  barber?: Barber,
+  /** Extra salon closures (ferie / chiusura giornaliera) as YYYY-MM-DD. */
+  closedDates?: ReadonlySet<string> | readonly string[],
+): boolean {
+  if (closedDates) {
+    const set =
+      closedDates instanceof Set ? closedDates : new Set(closedDates);
+    if (set.has(date)) return true;
+  }
   if (barber) return getHoursForDate(barber, date) === null;
   return SHOP_HOURS[weekdayOfDate(date)] === null;
 }
@@ -486,6 +497,12 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
   if (!date || durationMinutes <= 0) return [];
   if (date < getFirstBookableDate(now)) return [];
   if (isClosedDay(date)) return [];
+  // Full-day ferie / chiusura from calendar_blocks (kind=closed)
+  if (
+    blocksForDate(date, calendarBlocks).some((b) => b.kind === "closed")
+  ) {
+    return [];
+  }
 
   const real = getRealBarbers(barbers);
   const shared = {
@@ -860,7 +877,10 @@ export type CalendarDay = {
 };
 
 /** Monday-first month grid for the mobile booking calendar. */
-export function monthCalendarWeeks(monthDate: string): (CalendarDay | null)[][] {
+export function monthCalendarWeeks(
+  monthDate: string,
+  closedDates?: ReadonlySet<string> | readonly string[],
+): (CalendarDay | null)[][] {
   const { y, m } = parseDateParts(monthDate);
   const first = startOfMonth(monthDate);
   const firstDow = weekdayOfDate(first);
@@ -873,7 +893,7 @@ export function monthCalendarWeeks(monthDate: string): (CalendarDay | null)[][] 
     cells.push({
       date,
       inMonth: true,
-      closed: isClosedDay(date),
+      closed: isClosedDay(date, undefined, closedDates),
     });
   }
   while (cells.length % 7 !== 0) cells.push(null);
