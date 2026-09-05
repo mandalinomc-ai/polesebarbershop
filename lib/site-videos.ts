@@ -164,6 +164,7 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
     src: `${VIDEO_BASE}/taglio-01.mp4`,
     alt: "Taglio Pro — clip reale dal salone Felice Polese",
     label: "Taglio Pro",
+    posterSrc: "/assets/images/services/taglio-pro-poster.jpg",
     sourceFile: "taglio-01.mp4",
   },
   {
