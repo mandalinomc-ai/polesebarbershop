@@ -2297,6 +2297,23 @@ video {
 .cal-day.full:not(.selected) {
   background: #eceae6;
 }
+.cal-day.salon-closed,
+.cal-day.salon-closed:disabled,
+.cal-day.salon-closed.muted {
+  background: #f8dede;
+  border-color: #f0c4c4;
+  color: #8a4040;
+  cursor: default;
+}
+.input-lux.crm-date-closed {
+  background: #f8dede;
+  border-color: #f0c4c4;
+}
+.btn-danger.is-closed {
+  background: #f8dede;
+  color: #7a2e2e;
+  border-color: rgba(179, 51, 51, 0.45);
+}
 .fresha-layout {
   display: grid;
   gap: 1.25rem;
