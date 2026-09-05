@@ -13,6 +13,12 @@ related to the Windows/Cursor dialog titled **"Felice Polese - lavoro da finire"
   reminder on the user's PC**, not something deployable or killable from GitHub.
 
 ### Action from agent side
-- Cleared/verified empty agent subscriptions.
-- Cannot remove a Windows Task Scheduler / local Cursor reminder from the cloud
-  repo. Disable it on the PC (Task Scheduler or Cursor scheduled messages).
+- Cleared/verified empty agent subscriptions (`list_subscriptions` = vuoto).
+- Script Windows pronto: `scripts/disattiva-popup-lavoro-da-finire.bat`
+  (elimina task pianificati + scorciatoie Avvio con nomi Felice/lavoro/polese).
+
+### Sul PC Windows
+1. Scarica/apri `scripts/disattiva-popup-lavoro-da-finire.bat`
+2. Tasto destro → **Esegui come amministratore**
+3. Se non trova nulla: in Cursor Desktop spegni Automations / reminder
+   «Felice Polese - lavoro da finire»
