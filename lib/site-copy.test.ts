@@ -288,13 +288,16 @@ describe("public copy vs official identity", () => {
     const aboutIdx = landing.indexOf('id="about"');
     const videoIdx = landing.indexOf("<VideoReelGrid");
     const prenotaIdx = landing.indexOf('id="prenota"');
+    const prodottiIdx = landing.indexOf("<ProductVetrina");
     const socialIdx = landing.indexOf('id="social"');
     const contactIdx = landing.indexOf('id="contact"');
     expect(aboutIdx).toBeGreaterThan(-1);
     expect(videoIdx).toBeGreaterThan(aboutIdx);
     expect(prenotaIdx).toBeGreaterThan(videoIdx);
-    expect(socialIdx).toBeGreaterThan(prenotaIdx);
+    expect(prodottiIdx).toBeGreaterThan(prenotaIdx);
+    expect(socialIdx).toBeGreaterThan(prodottiIdx);
     expect(contactIdx).toBeGreaterThan(socialIdx);
+    expect(landing).toMatch(/ProductVetrina/);
     expect(landing).toMatch(/SocialQrGrid/);
     expect(landing).toMatch(/Resta in contatto/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");

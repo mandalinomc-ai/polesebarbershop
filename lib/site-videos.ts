@@ -177,7 +177,7 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
   {
     serviceId: "acconciatura",
     id: "service-acconciatura",
-    alt: "Acconciatura — piega e styling con phon, mullet contemporaneo Felice Polese",
+    alt: "Acconciatura — piega con phon e vent brush, profilo e backlight Felice Polese",
     label: "Acconciatura",
     posterSrc: "/assets/images/services/acconciatura.jpg",
     imageSrc: "/assets/images/services/acconciatura.jpg",
