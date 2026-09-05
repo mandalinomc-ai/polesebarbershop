@@ -118,9 +118,12 @@ export function customerConfirmEmail(opts: {
   const price = opts.priceLabel?.trim() || "";
   const duration = opts.durationLabel?.trim() || "";
   const textLines = [
-    `Ciao ${opts.firstName}, la tua prenotazione da ${SITE.name} è confermata! 💈`,
+    `Ciao ${opts.firstName}, abbiamo ricevuto la tua richiesta di prenotazione da ${SITE.name}.`,
     "",
-    `📅 Data e Ora: ${opts.date} alle ${opts.time}`,
+    "Il salone ti contatterà su WhatsApp per confermare l'appuntamento.",
+    "Attendi la conferma su WhatsApp prima di considerare l'appuntamento definitivo.",
+    "",
+    `📅 Data e ora richieste: ${opts.date} alle ${opts.time}`,
     `✂️ Servizio: ${opts.service}`,
     price ? `💶 Prezzo: ${price}` : "",
     duration ? `⏱ Durata: ${duration}` : "",
@@ -133,7 +136,10 @@ export function customerConfirmEmail(opts: {
   if (manage) {
     textLines.push("", `Gestisci o disdici: ${manage}`);
   }
-  textLines.push("", "Ti aspettiamo! 🔥");
+  textLines.push(
+    "",
+    "In caso di sovrapposizioni o necessità organizzative, il salone potrà confermare l'orario oppure proporti una modifica.",
+  );
   const text = textLines.join("\n");
 
   const name = escapeHtml(opts.firstName);
@@ -149,19 +155,21 @@ export function customerConfirmEmail(opts: {
     : "";
 
   return {
-    subject: `Prenotazione confermata — ${SITE.name}`,
+    subject: `Richiesta di prenotazione ricevuta — ${SITE.name}`,
     text,
     html: wrap(`
-      <p style="font-size:18px;line-height:1.55;">Ciao ${name}, la tua prenotazione da ${SITE.name} è confermata! 💈</p>
-      <p style="margin:24px 0 8px;letter-spacing:0.18em;text-transform:uppercase;font-size:11px;color:#C9A962;">Dettagli</p>
-      <p style="line-height:1.8;margin:0;">📅 Data e Ora: <strong>${date}</strong> alle <strong>${time}</strong><br/>
+      <p style="font-size:18px;line-height:1.55;">Ciao ${name}, abbiamo ricevuto la tua richiesta di prenotazione da ${SITE.name}.</p>
+      <p style="line-height:1.55;">Il salone ti contatterà su WhatsApp per confermare l&apos;appuntamento.</p>
+      <p style="line-height:1.55;"><strong>Attendi la conferma su WhatsApp prima di considerare l&apos;appuntamento definitivo.</strong></p>
+      <p style="margin:24px 0 8px;letter-spacing:0.18em;text-transform:uppercase;font-size:11px;color:#C9A962;">Riepilogo richiesta</p>
+      <p style="line-height:1.8;margin:0;">📅 Data e ora richieste: <strong>${date}</strong> alle <strong>${time}</strong><br/>
       ✂️ Servizio: <strong>${service}</strong><br/>
       ${priceHtml}${durationHtml}👤 Barber: <strong>${barber}</strong><br/>
       📍 Dove siamo: ${CUSTOMER_CONFIRM_ADDRESS}<br/>
       📞 Telefono salone: ${SITE.phone}</p>
       <p style="margin-top:24px;">Per modifiche o disdette ti preghiamo di avvisarci con almeno <strong>${CANCEL_NOTICE_IT}</strong> di anticipo.</p>
       ${manageHtml}
-      <p style="margin-top:24px;font-size:18px;">Ti aspettiamo! 🔥</p>
+      <p style="margin-top:24px;font-size:14px;line-height:1.55;">In caso di sovrapposizioni o necessità organizzative, il salone potrà confermare l&apos;orario oppure proporti una modifica.</p>
       <p style="font-size:13px;color:#B5B5B5;">In allegato il file .ics (promemoria 30 minuti prima).</p>`),
   };
 }

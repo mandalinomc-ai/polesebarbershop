@@ -59,7 +59,7 @@ describe("sendEmail", () => {
 });
 
 describe("booking email copy", () => {
-  it("uses the Italian customer confirmation with 30 minuti notice and optional manage link", () => {
+  it("uses the Italian booking request acknowledgment with 30 minuti notice and optional manage link", () => {
     const mail = customerConfirmEmail({
       firstName: "Mario",
       service: "Taglio completo",
@@ -70,10 +70,12 @@ describe("booking email copy", () => {
       priceLabel: "25 €",
       durationLabel: "50 min",
     });
+    expect(mail.subject).toContain("Richiesta di prenotazione ricevuta");
     expect(mail.text).toContain(
-      "Ciao Mario, la tua prenotazione da Felice Polese Barber Shop è confermata! 💈",
+      "Ciao Mario, abbiamo ricevuto la tua richiesta di prenotazione da Felice Polese Barber Shop.",
     );
-    expect(mail.text).toContain("📅 Data e Ora: martedì 1 settembre 2026 alle 09:30");
+    expect(mail.text).toContain("Attendi la conferma su WhatsApp");
+    expect(mail.text).toContain("📅 Data e ora richieste: martedì 1 settembre 2026 alle 09:30");
     expect(mail.text).toContain("✂️ Servizio: Taglio completo");
     expect(mail.text).toContain("💶 Prezzo: 25 €");
     expect(mail.text).toContain("⏱ Durata: 50 min");
@@ -81,7 +83,8 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("📍 Dove siamo: Corso Dante Alighieri, 44");
     expect(mail.text).toContain("📞 Telefono salone: +39 327 015 6225");
     expect(mail.text).toContain(`almeno ${CANCEL_NOTICE_IT} di anticipo`);
-    expect(mail.text).toContain("Ti aspettiamo! 🔥");
+    expect(mail.text).toContain("sovrapposizioni o necessità organizzative");
+    expect(mail.text).not.toMatch(/è confermata|Prenotazione confermata/i);
     expect(mail.text).toContain("Gestisci o disdici: https://polesebarbershop.vercel.app/appuntamento/abc");
     expect(mail.text).not.toMatch(/24h|24 ore|3 ore/);
     expect(mail.html).toContain("Felice Polese Barber Shop");
@@ -150,7 +153,7 @@ describe("booking email copy", () => {
     expect(owner.text).toContain(CANCEL_NOTICE_IT);
   });
 
-  it("opens the customer confirm with Ciao {nome} and 30 minuti di anticipo", async () => {
+  it("opens the customer request mail with Ciao {nome} and 30 minuti di anticipo", async () => {
     const { customerConfirmEmail } = await import("./email");
     const mail = customerConfirmEmail({
       firstName: "Mario",
@@ -162,7 +165,9 @@ describe("booking email copy", () => {
       priceLabel: "da 25 €",
     });
     expect(mail.text).toMatch(/^Ciao Mario,/);
-    expect(mail.text).toMatch(/Felice Polese Barber Shop è confermata/);
+    expect(mail.text).toMatch(/richiesta di prenotazione da Felice Polese Barber Shop/);
+    expect(mail.text).toMatch(/Attendi la conferma su WhatsApp/);
+    expect(mail.text).not.toMatch(/è confermata|Prenotazione confermata/i);
     expect(mail.text).toMatch(/Corso Dante Alighieri, 44/);
     expect(mail.text).toMatch(/30 minuti di anticipo/);
     expect(mail.text).toMatch(/Taglio completo/);

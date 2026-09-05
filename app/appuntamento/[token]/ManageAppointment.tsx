@@ -92,8 +92,14 @@ export function ManageAppointment({ token }: { token: string }) {
 
   return (
     <div className="manage-card">
-      <p className="eyebrow">{cancelled ? "Annullata" : "Confermata"}</p>
+      <p className="eyebrow">{cancelled ? "Annullata" : "Richiesta inviata"}</p>
       <h1 className="section-title font-serif">Il tuo appuntamento</h1>
+      {!cancelled ? (
+        <p className="booking-open-note" style={{ marginTop: "0.75rem" }}>
+          Attendi la conferma su WhatsApp prima di considerare l&apos;appuntamento
+          definitivo.
+        </p>
+      ) : null}
       <ul className="summary-list" style={{ marginTop: "1.5rem" }}>
         <li>
           Servizio <strong>{data.serviceNames}</strong>
