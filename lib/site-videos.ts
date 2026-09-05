@@ -164,6 +164,7 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
     src: `${VIDEO_BASE}/taglio-01.mp4`,
     alt: "Taglio Pro — clip reale dal salone Felice Polese",
     label: "Taglio Pro",
+    posterSrc: "/assets/images/services/taglio-pro-poster.jpg",
     sourceFile: "taglio-01.mp4",
   },
   {
@@ -177,7 +178,7 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
   {
     serviceId: "acconciatura",
     id: "service-acconciatura",
-    alt: "Acconciatura — piega e styling con phon, mullet contemporaneo Felice Polese",
+    alt: "Acconciatura — piega con phon e vent brush, profilo e backlight Felice Polese",
     label: "Acconciatura",
     posterSrc: "/assets/images/services/acconciatura.jpg",
     imageSrc: "/assets/images/services/acconciatura.jpg",
