@@ -207,7 +207,6 @@ export function Footer() {
         <p>
           P.IVA {SITE.vatNumber} · CF {SITE.fiscalCode}
         </p>
-        <p>{SITE.previousAddress}</p>
       </div>
       <span className="footer-links">
         <a href="/privacy-policy">Privacy</a>
@@ -217,8 +216,6 @@ export function Footer() {
         <ManageCookiesButton />
         {" · "}
         <a href="/terms">Termini</a>
-        {" · "}
-        <a href="/gestionale">Gestionale</a>
       </span>
       <p className="footer-powered">Powered by Genio Digital</p>
       <CookieBanner />

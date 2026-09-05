@@ -18,7 +18,6 @@ export const SITE = {
   address: "Corso Dante Alighieri, 44",
   addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
   streetAddress: "Corso Dante Alighieri, 44",
-  previousAddress: "ex Via Ungaretti 6",
   city: "Benevento",
   province: "BN",
   postalCode: "82100",

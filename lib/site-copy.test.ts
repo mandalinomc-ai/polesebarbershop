@@ -77,7 +77,6 @@ describe("public copy vs official identity", () => {
     expect(SITE.openingDate).toBe("2026-09-07");
     expect(SITE.fiscalCode).toBe("PLSFLC04S21A783K");
     expect(SITE.vatNumber).toBe("01894030624");
-    expect(SITE.previousAddress).toBe("ex Via Ungaretti 6");
     expect(SITE.pricesIncludeVat).toMatch(/IVA inclusa/);
     expect(getSalonNotifyWhatsApp()).toBe(SALON_NOTIFY_WHATSAPP_FALLBACK);
     expect(getSalonNotifyWhatsApp()).toBe("+393270156225");
@@ -112,6 +111,8 @@ describe("public copy vs official identity", () => {
       /\+39\s*351/,
       /Menu grooming/i,
       /grooming premium/i,
+      /Ungaretti/i,
+      /ex Via/i,
     ];
     const hits: string[] = [];
     for (const file of files) {
@@ -161,7 +162,7 @@ describe("public copy vs official identity", () => {
     const header = chrome.slice(0, chrome.indexOf("export function WhatsAppFab"));
     expect(header).not.toMatch(/gestionale/i);
     expect(header).not.toMatch(/Dashboard/);
-    expect(chrome).toMatch(/href="\/gestionale"/);
+    expect(chrome).not.toMatch(/href="\/gestionale"/);
   });
 
   it("keeps shop WhatsApp on wa.me/393270156225 without Twilio", () => {
@@ -427,7 +428,7 @@ describe("public copy vs official identity", () => {
     expect(chrome).not.toMatch(/SITE_PDFS\.hoursPanel/);
     expect(chrome).not.toMatch(/Logo \(PDF\)/);
     expect(chrome).not.toMatch(/Orari \(PDF\)/);
-    expect(chrome).toMatch(/href="\/gestionale"/);
+    expect(chrome).not.toMatch(/href="\/gestionale"/);
     expect(chrome).toMatch(/Powered by Genio Digital/);
     const css = readFileSync(join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.wa-fab/);

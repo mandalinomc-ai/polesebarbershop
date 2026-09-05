@@ -86,7 +86,10 @@ describe("site-videos", () => {
     expect(SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-pro")?.src).toBeUndefined();
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-standard")?.imageSrc,
-    ).toBe("/assets/images/services/barba-pro.jpg");
+    ).toBe("/assets/images/services/barba-standard.jpg");
+    expect(
+      SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-standard")?.posterSrc,
+    ).toBe("/assets/images/services/barba-standard.jpg");
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "barba-standard")?.src,
     ).toBeUndefined();
