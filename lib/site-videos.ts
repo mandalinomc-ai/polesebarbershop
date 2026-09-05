@@ -185,10 +185,10 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
   {
     serviceId: "taglio-bambino",
     id: "service-taglio-bambino",
-    src: `${VIDEO_BASE}/taglio-01.mp4`,
+    src: `${VIDEO_BASE}/taglio-03.mp4`,
     alt: "Taglio Bambino — clip reale dal salone Felice Polese",
     label: "Taglio Bambino",
-    sourceFile: "taglio-01.mp4",
+    sourceFile: "taglio-03.mp4",
   },
   {
     serviceId: "barba-pro",
