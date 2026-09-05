@@ -11,6 +11,7 @@ import {
 import {
   CALENDAR_UNAVAILABLE_IT,
   CLOSED_DAY_IT,
+  CONFIG_CALENDAR_BLOCKS,
   resolveEffectiveServiceDuration,
 } from "@/lib/booking";
 import {
@@ -19,6 +20,7 @@ import {
   onlineBookingBlockReason,
   servicesAreOnlineBookable,
 } from "@/lib/catalog";
+import { loadCalendarBlocksFromDb, loadClosedDates } from "@/lib/closed-days";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import {
   AppointmentsUnavailableError,
@@ -69,7 +71,7 @@ function emptyPayload(
   return {
     date,
     slots: [],
-    days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
+    days: [{ date, availableCount: 0, bookedCount: 0, full: false, closed: false }],
     firstBookableDate: first,
     shopOpen: false,
     durationMinutes,
@@ -78,6 +80,7 @@ function emptyPayload(
     full: false,
     warning,
     sourceUnavailable: true,
+    closedDates: [] as string[],
   };
 }
 
@@ -148,27 +151,39 @@ export async function GET(request: Request) {
   }
 
   const first = getFirstBookableDate();
+  const summaryDates = parseSummaryDates(searchParams.get("summaryDates"), date);
+  const rangeStart = summaryDates.reduce((min, d) => (d < min ? d : min), date);
+  const rangeEnd = summaryDates.reduce((max, d) => (d > max ? d : max), date);
+  const [closedSet, dbBlocks] = await Promise.all([
+    loadClosedDates({ from: rangeStart, to: rangeEnd }),
+    loadCalendarBlocksFromDb(),
+  ]);
+  const calendarBlocks = [...CONFIG_CALENDAR_BLOCKS, ...dbBlocks];
+  const closedDates = [...closedSet].sort();
+
   if (date < first) {
     return NextResponse.json({
       date,
       slots: [],
-      days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
+      days: [{ date, availableCount: 0, bookedCount: 0, full: false, closed: false }],
       firstBookableDate: first,
       shopOpen: false,
       durationMinutes,
       warning: `Le prenotazioni aprono dal ${formatItalianDate(SITE.openingDate)}.`,
+      closedDates,
     });
   }
 
-  if (isClosedDay(date)) {
+  if (isClosedDay(date, undefined, closedSet)) {
     return NextResponse.json({
       date,
       slots: [],
-      days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
+      days: [{ date, availableCount: 0, bookedCount: 0, full: false, closed: true }],
       firstBookableDate: first,
       shopOpen: false,
       durationMinutes,
       warning: CLOSED_DAY_IT,
+      closedDates,
     });
   }
 
@@ -177,10 +192,6 @@ export async function GET(request: Request) {
       status: 503,
     });
   }
-
-  const summaryDates = parseSummaryDates(searchParams.get("summaryDates"), date);
-  const rangeStart = summaryDates.reduce((min, d) => (d < min ? d : min), date);
-  const rangeEnd = summaryDates.reduce((max, d) => (d > max ? d : max), date);
 
   let appointments;
   try {
@@ -203,25 +214,33 @@ export async function GET(request: Request) {
     appointments,
     fullSearch: false,
     displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
+    calendarBlocks,
   });
   const occupancy = summarizeSchedule(date, slots, { openDay: true });
   const days = summaryDates.map((iso) => {
-    if (iso === date) return occupancy;
-    if (iso < first || isClosedDay(iso)) {
-      return { date: iso, availableCount: 0, bookedCount: 0, full: false };
+    if (isClosedDay(iso, undefined, closedSet)) {
+      return { date: iso, availableCount: 0, bookedCount: 0, full: false, closed: true };
     }
-    return summarizeSchedule(
-      iso,
-      getScheduleSlots({
-        date: iso,
-        barberId,
-        durationMinutes,
-        appointments,
-        fullSearch: false,
-        displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
-      }),
-      { openDay: true },
-    );
+    if (iso === date) return { ...occupancy, closed: false };
+    if (iso < first) {
+      return { date: iso, availableCount: 0, bookedCount: 0, full: false, closed: false };
+    }
+    return {
+      ...summarizeSchedule(
+        iso,
+        getScheduleSlots({
+          date: iso,
+          barberId,
+          durationMinutes,
+          appointments,
+          fullSearch: false,
+          displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
+          calendarBlocks,
+        }),
+        { openDay: true },
+      ),
+      closed: false,
+    };
   });
 
   return NextResponse.json({
@@ -235,5 +254,6 @@ export async function GET(request: Request) {
     days,
     slots: slots.map(serializeSlot),
     sourceUnavailable: false,
+    closedDates,
   });
 }

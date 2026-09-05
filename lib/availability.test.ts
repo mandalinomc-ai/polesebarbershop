@@ -33,6 +33,25 @@ describe("timezone helpers", () => {
 });
 
 describe("getAvailableSlots", () => {
+  it("returns no slots when calendar has a full-day closed block", () => {
+    const slots = getAvailableSlots({
+      date: TUESDAY,
+      barberId: "felice",
+      durationMinutes: 50,
+      now: nowBeforeOpening,
+      calendarBlocks: [
+        {
+          id: "ferie",
+          date: TUESDAY,
+          start: "00:00",
+          end: "23:59",
+          kind: "closed",
+          label: "Chiusura",
+        },
+      ],
+    });
+    expect(slots).toEqual([]);
+  });
   it("returns no slots on Sunday or before opening", () => {
     expect(getAvailableSlots({ date: MONDAY_PRE_OPENING, barberId: "felice", durationMinutes: 25, now: nowBeforeOpening })).toEqual([]);
     expect(getAvailableSlots({ date: SUNDAY, barberId: "davide", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
