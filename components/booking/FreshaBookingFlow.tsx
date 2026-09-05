@@ -367,10 +367,23 @@ export function FreshaBookingFlow({
     return (
       <div className="fresha-booking" id="booking-wizard">
         <div className="fresha-body success-box">
-          <p className="eyebrow">Confermata</p>
-          <h3 className="font-serif">Grazie, {firstName}.</h3>
+          <h3 className="font-serif">Richiesta di prenotazione ricevuta</h3>
           <p className="prose">
-            Prenotazione confermata per <strong>{totals.names}</strong> con{" "}
+            La tua richiesta è stata ricevuta. Il salone ti contatterà su
+            WhatsApp per confermare l&apos;appuntamento.
+          </p>
+          <p className="prose">
+            <strong>
+              Attendi la conferma su WhatsApp prima di considerare
+              l&apos;appuntamento definitivo.
+            </strong>
+          </p>
+          <p className="prose booking-open-note">
+            In caso di sovrapposizioni o necessità organizzative, il salone
+            potrà confermare l&apos;orario oppure proporti una modifica.
+          </p>
+          <p className="prose">
+            Riepilogo richiesta: <strong>{totals.names}</strong> con{" "}
             <strong>{success.barberName}</strong> il {formatItalianDate(date)}{" "}
             alle {slot?.label} · {totals.priceLabel}.
           </p>

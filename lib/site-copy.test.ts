@@ -204,7 +204,9 @@ describe("public copy vs official identity", () => {
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).not.toMatch(/postSalonBookingRelay/);
     expect(wizard).not.toMatch(/Conferma su WhatsApp/);
-    expect(wizard).toMatch(/Prenotazione confermata/);
+    expect(wizard).toMatch(/Richiesta di prenotazione ricevuta/);
+    expect(wizard).toMatch(/Attendi la conferma su WhatsApp/);
+    expect(wizard).not.toMatch(/Prenotazione confermata/);
     expect(wizard).not.toMatch(/twilio/i);
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);
