@@ -15,6 +15,7 @@ import {
   loadDayAppointments,
 } from "@/lib/appointments";
 import { getBarber } from "@/lib/catalog";
+import { loadMergedCalendarBlocks } from "@/lib/closed-days";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import { resolveEffectiveServiceDuration } from "@/lib/booking";
 import { z } from "zod";
@@ -95,6 +96,7 @@ export async function GET(request: Request) {
 
   const date = body.date || getFirstBookableDate();
   const wantFillGaps = body.fillGaps === "1" || body.fillGaps === "true";
+  const calendarBlocks = await loadMergedCalendarBlocks();
 
   try {
     if (body.mode === "first") {
@@ -110,6 +112,7 @@ export async function GET(request: Request) {
         now: new Date(),
         fromDate: date,
         minNoticeMinutes: 0,
+        calendarBlocks,
       });
       if (!slot) {
         return NextResponse.json({ ok: true, slot: null, message: "Nessuna disponibilità nei prossimi giorni." });
@@ -143,6 +146,7 @@ export async function GET(request: Request) {
         appointments,
         now: new Date(0),
         minNoticeMinutes: 0,
+        calendarBlocks,
       });
       if (!best) {
         return NextResponse.json({
@@ -162,6 +166,7 @@ export async function GET(request: Request) {
             barberId: best.slot.barberId,
             durationMinutes: duration,
             appointments,
+            calendarBlocks,
           }).slice(0, 5)
         : undefined;
       return NextResponse.json({
@@ -198,6 +203,7 @@ export async function GET(request: Request) {
       minNoticeMinutes: 0,
       now: new Date(0),
       fullSearch: true,
+      calendarBlocks,
     });
     const fillGaps = wantFillGaps
       ? suggestFillGapsForDay({
@@ -205,6 +211,7 @@ export async function GET(request: Request) {
           barberId: body.barberId === "anyone" ? "felice" : body.barberId,
           durationMinutes: duration,
           appointments,
+          calendarBlocks,
         }).slice(0, 5)
       : undefined;
     return NextResponse.json({

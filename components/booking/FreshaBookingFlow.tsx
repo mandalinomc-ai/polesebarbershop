@@ -100,6 +100,7 @@ export function FreshaBookingFlow({
   const [dayOccupancy, setDayOccupancy] = useState<Record<string, DayOccupancyChip>>(
     {},
   );
+  const [closedDates, setClosedDates] = useState<Set<string>>(() => new Set());
   const [slotsState, setSlotsState] = useState<
     "idle" | "loading" | "error" | "ready"
   >("idle");
@@ -197,7 +198,8 @@ export function FreshaBookingFlow({
       const res = await fetch(`/api/availability?${params.toString()}`);
       const json = (await res.json()) as {
         slots?: ApiSlot[];
-        days?: { date: string; full?: boolean }[];
+        days?: { date: string; full?: boolean; closed?: boolean }[];
+        closedDates?: string[];
         error?: string;
         warning?: string;
         sourceUnavailable?: boolean;
@@ -222,12 +224,26 @@ export function FreshaBookingFlow({
         if (!match) return null;
         return match;
       });
+      if (Array.isArray(json.closedDates)) {
+        setClosedDates(new Set(json.closedDates.filter(Boolean)));
+      }
       if (Array.isArray(json.days)) {
         const next: Record<string, DayOccupancyChip> = {};
+        const closedNext = new Set<string>();
         for (const row of json.days) {
-          if (row?.date) next[row.date] = { full: Boolean(row.full) };
+          if (row?.date) {
+            next[row.date] = { full: Boolean(row.full) };
+            if (row.closed) closedNext.add(row.date);
+          }
         }
         setDayOccupancy(next);
+        if (closedNext.size) {
+          setClosedDates((prev) => {
+            const merged = new Set(prev);
+            for (const d of closedNext) merged.add(d);
+            return merged;
+          });
+        }
       }
       setSlotsWarning(publicAvailabilityMessage(json.warning) || "");
       setSlotsState("ready");
@@ -600,27 +616,30 @@ export function FreshaBookingFlow({
                 ))}
               </div>
               <div className="booking-calendar-grid" role="grid" aria-label="Giorni del mese">
-                {monthCalendarWeeks(month).flat().map((cell, index) => {
+                {monthCalendarWeeks(month, closedDates).flat().map((cell, index) => {
                   if (!cell) {
                     return <span key={`pad-${index}`} className="cal-day pad" />;
                   }
-                  const bookable = days.some((d) => d.date === cell.date);
+                  const salonClosed = cell.closed || closedDates.has(cell.date);
+                  const bookable = days.some((d) => d.date === cell.date) && !salonClosed;
                   const full = Boolean(dayOccupancy[cell.date]?.full);
                   const selected = date === cell.date;
                   return (
                     <button
                       key={cell.date}
                       type="button"
-                      className={`cal-day${selected ? " selected" : ""}${!bookable || cell.closed ? " muted" : ""}${full ? " full" : ""}`}
+                      className={`cal-day${selected ? " selected" : ""}${!bookable || salonClosed ? " muted" : ""}${full ? " full" : ""}${salonClosed ? " salon-closed" : ""}`}
                       disabled={!bookable}
                       onClick={() => {
                         if (!bookable) return;
                         setDate(cell.date);
                       }}
                       aria-label={
-                        full
-                          ? `${formatItalianDate(cell.date)}, completamente prenotato`
-                          : formatItalianDate(cell.date)
+                        salonClosed
+                          ? `${formatItalianDate(cell.date)}, salone chiuso`
+                          : full
+                            ? `${formatItalianDate(cell.date)}, completamente prenotato`
+                            : formatItalianDate(cell.date)
                       }
                     >
                       {Number(cell.date.slice(8))}

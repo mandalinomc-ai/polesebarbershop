@@ -24,9 +24,10 @@ import {
   getOccupancyGrid,
   wallTimeToUtc,
 } from "@/lib/availability";
+import { timeToMinutes } from "@/lib/booking/time-utils";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
-import { formatEuroCents, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
+import { formatEuroCents, type ClientHistoryItem, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
 import {
   NOTIFY_TEMPLATE_LABEL,
   WHATSAPP_MISSING_IT,
@@ -36,6 +37,15 @@ import {
 } from "@/lib/crm-notify";
 
 type Tab = "dashboard" | "agenda" | "listino" | "clienti" | "statistiche" | "storico";
+
+type TempBlock = {
+  id: string;
+  date?: string | null;
+  start: string;
+  end: string;
+  kind?: string;
+  label?: string;
+};
 
 type AdminAppt = {
   id: string;
@@ -128,6 +138,12 @@ export function GestionalePanel() {
   const [history, setHistory] = useState<HistoryAppt[]>([]);
   const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
   const [bellTick, setBellTick] = useState(0);
+  const [dayClosed, setDayClosed] = useState(false);
+  const [closingDay, setClosingDay] = useState(false);
+  const [tempBlocks, setTempBlocks] = useState<TempBlock[]>([]);
+  const [blockStart, setBlockStart] = useState("12:00");
+  const [blockEnd, setBlockEnd] = useState("13:00");
+  const [savingBlock, setSavingBlock] = useState(false);
 
   const loadAgenda = useCallback(async () => {
     try {
@@ -195,15 +211,113 @@ export function GestionalePanel() {
     }
   }, []);
 
+  const loadClosedDay = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/closed-days?date=${date}`);
+      if (res.status === 401) {
+        setAuth("needed");
+        return;
+      }
+      const json = (await res.json()) as { closed?: boolean };
+      if (!res.ok) return;
+      setDayClosed(Boolean(json.closed));
+    } catch {
+      /* ignore */
+    }
+  }, [date]);
+
+  const loadTempBlocks = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/calendar-blocks?date=${date}`);
+      if (res.status === 401) {
+        setAuth("needed");
+        return;
+      }
+      const json = (await res.json()) as { blocks?: TempBlock[] };
+      if (!res.ok) return;
+      setTempBlocks(json.blocks || []);
+    } catch {
+      /* ignore */
+    }
+  }, [date]);
+
+  const toggleClosedDay = useCallback(async () => {
+    setClosingDay(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/closed-days", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ date, closed: !dayClosed }),
+      });
+      const json = (await res.json()) as { closed?: boolean; error?: string };
+      if (!res.ok) {
+        setError(json.error || "Impossibile aggiornare la chiusura.");
+        return;
+      }
+      setDayClosed(Boolean(json.closed));
+    } catch {
+      setError("Connessione non disponibile. Riprova.");
+    } finally {
+      setClosingDay(false);
+    }
+  }, [date, dayClosed]);
+
+  const addTempBlock = useCallback(async () => {
+    setSavingBlock(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/calendar-blocks", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ date, start: blockStart, end: blockEnd }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(json.error || "Impossibile creare il blocco.");
+        return;
+      }
+      await loadTempBlocks();
+    } catch {
+      setError("Connessione non disponibile. Riprova.");
+    } finally {
+      setSavingBlock(false);
+    }
+  }, [date, blockStart, blockEnd, loadTempBlocks]);
+
+  const removeTempBlock = useCallback(
+    async (id: string) => {
+      setError("");
+      try {
+        const res = await fetch("/api/admin/calendar-blocks", {
+          method: "DELETE",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        const json = (await res.json()) as { error?: string };
+        if (!res.ok) {
+          setError(json.error || "Impossibile eliminare il blocco.");
+          return;
+        }
+        setTempBlocks((prev) => prev.filter((b) => b.id !== id));
+      } catch {
+        setError("Connessione non disponibile. Riprova.");
+      }
+    },
+    [],
+  );
+
   const load = useCallback(async () => {
     setError("");
     const ok = await loadAgenda();
     if (ok) {
       await loadCrm();
       await loadHistory();
+      await loadClosedDay();
+      await loadTempBlocks();
       setBellTick((n) => n + 1);
     }
-  }, [loadAgenda, loadCrm, loadHistory]);
+  }, [loadAgenda, loadCrm, loadHistory, loadClosedDay, loadTempBlocks]);
 
   useEffect(() => {
     void load();
@@ -345,13 +459,23 @@ export function GestionalePanel() {
               }}
             />
             <input
-              className="input-lux"
+              className={`input-lux${dayClosed ? " crm-date-closed" : ""}`}
               type="date"
               value={date}
               min={SITE.openingDate}
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
+            <button
+              type="button"
+              className={`btn btn-danger${dayClosed ? " is-closed" : ""}`}
+              onClick={() => void toggleClosedDay()}
+              disabled={closingDay || auth !== "ok"}
+              aria-pressed={dayClosed}
+              title={dayClosed ? "Riapri questa giornata alle prenotazioni" : "Chiudi il salone per l'intera giornata"}
+            >
+              {closingDay ? "…" : dayClosed ? "Riapri giornata" : "Chiudi giornata"}
+            </button>
             <button type="button" className="btn btn-gold" onClick={() => setWalkOpen(true)}>
               <Plus size={16} aria-hidden /> Walk-in
             </button>
@@ -371,6 +495,60 @@ export function GestionalePanel() {
         {error ? <p className="field-error">{error}</p> : null}
         {crmWarning ? <p className="crm-warning">{crmWarning}</p> : null}
 
+        {auth === "ok" ? (
+          <section className="crm-temp-block" aria-label="Blocco temporaneo salone">
+            <div className="crm-temp-block-form">
+              <span className="crm-temp-block-title">Blocco temporaneo</span>
+              <label>
+                Da
+                <input
+                  className="input-lux"
+                  type="time"
+                  value={blockStart}
+                  onChange={(e) => setBlockStart(e.target.value)}
+                  disabled={dayClosed}
+                />
+              </label>
+              <label>
+                A
+                <input
+                  className="input-lux"
+                  type="time"
+                  value={blockEnd}
+                  onChange={(e) => setBlockEnd(e.target.value)}
+                  disabled={dayClosed}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => void addTempBlock()}
+                disabled={savingBlock || dayClosed}
+                title="Blocca nuove prenotazioni in questa fascia (gli appuntamenti esistenti restano)"
+              >
+                {savingBlock ? "…" : "Blocca fascia"}
+              </button>
+            </div>
+            {tempBlocks.length > 0 ? (
+              <ul className="crm-temp-block-list">
+                {tempBlocks.map((b) => (
+                  <li key={b.id}>
+                    <span>
+                      {b.start}–{b.end}
+                      {b.label ? ` · ${b.label}` : ""}
+                    </span>
+                    <button type="button" className="crm-icon-btn" onClick={() => void removeTempBlock(b.id)} aria-label="Rimuovi blocco">
+                      <X size={16} aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="slot-status">Nessun blocco orario per {formatItalianDate(date)}.</p>
+            )}
+          </section>
+        ) : null}
+
         {tab === "dashboard" ? (
           <DashboardView
             stats={stats}
@@ -388,6 +566,7 @@ export function GestionalePanel() {
             agenda={agenda}
             date={date}
             view={agendaView}
+            tempBlocks={tempBlocks}
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
@@ -656,6 +835,7 @@ function AgendaView({
   agenda,
   date,
   view,
+  tempBlocks,
   onViewChange,
   onPatch,
   onMove,
@@ -664,6 +844,7 @@ function AgendaView({
   agenda: Agenda | null;
   date: string;
   view: "day" | "week";
+  tempBlocks: TempBlock[];
   onViewChange: (v: "day" | "week") => void;
   onPatch: (id: string, body: Record<string, unknown>) => void;
   onMove: (a: AdminAppt) => void;
@@ -696,6 +877,19 @@ function AgendaView({
     () => getOccupancyGrid({ date, appointments: occupying }),
     [date, occupying],
   );
+  const blockRanges = useMemo(
+    () =>
+      tempBlocks.map((b) => ({
+        startMin: timeToMinutes(b.start),
+        endMin: timeToMinutes(b.end),
+        label: b.label || "Blocco",
+      })),
+    [tempBlocks],
+  );
+  const isBlockedTime = (time: string) => {
+    const min = timeToMinutes(time);
+    return blockRanges.find((b) => min >= b.startMin && min < b.endMin);
+  };
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
   return (
     <div className="crm-stack">
@@ -729,7 +923,8 @@ function AgendaView({
       <section className="occupancy-wrap" aria-label="Occupazione poltrone">
         <h2 className="font-serif">Tabella orari</h2>
         <p className="slot-status occupancy-legend">
-          Stessi appuntamenti del prenota online. Grigio = occupato, bianco = libero.
+          Stessi appuntamenti del prenota online. Grigio = occupato, bianco = libero
+          {tempBlocks.length ? ", rosso chiaro = blocco temporaneo" : ""}.
         </p>
         {occupancy.length === 0 ? (
           <p className="slot-status">Nessuna fascia oraria: salone chiuso o data non valida.</p>
@@ -745,19 +940,32 @@ function AgendaView({
                 </tr>
               </thead>
               <tbody>
-                {occupancy.map((row) => (
+                {occupancy.map((row) => {
+                  const blocked = isBlockedTime(row.time);
+                  return (
                   <tr key={row.time}>
                     <th scope="row">{row.time}</th>
                     {row.cells.map((cell) => (
                       <td
                         key={cell.barberId}
-                        className={cell.occupied ? "taken" : "free"}
+                        className={
+                          blocked
+                            ? "blocked"
+                            : cell.occupied
+                              ? "taken"
+                              : "free"
+                        }
                       >
-                        {cell.occupied ? cell.label || "Prenotato" : "Libero"}
+                        {blocked
+                          ? blocked.label || "Blocco"
+                          : cell.occupied
+                            ? cell.label || "Prenotato"
+                            : "Libero"}
                       </td>
                     ))}
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -930,6 +1138,26 @@ function ClientiView({
             {open.topBarber ? ` · top barbiere: ${open.topBarber}` : ""}
             {open.nextVisitAt ? ` · prossimo: ${new Date(open.nextVisitAt).toLocaleString("it-IT")}` : ""}
           </p>
+          {(() => {
+            const recent: ClientHistoryItem | undefined = open.history[0];
+            if (!recent) return null;
+            return (
+              <div className="crm-recent-booking" aria-label="Prenotazione recente">
+                <h3>Prenotazione recente</h3>
+                <p>
+                  <strong>{new Date(recent.startsAt).toLocaleString("it-IT")}</strong>
+                  {" · "}
+                  {recent.serviceNames || "—"}
+                  {" · "}
+                  {recent.barberName}
+                  {" · "}
+                  {recent.cancelled ? "ANNULLATA" : STATUS_IT[recent.status] || recent.status}
+                  {" · "}
+                  {formatEuroCents(recent.priceCents)}
+                </p>
+              </div>
+            );
+          })()}
           <label className="crm-notes-field">
             Note cliente
             <textarea
