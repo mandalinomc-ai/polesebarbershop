@@ -7,6 +7,7 @@ import {
 } from "@/lib/availability";
 import { blockEndFromStart, resolveEffectiveServiceDuration } from "@/lib/booking";
 import { getBarber, totalsForServices } from "@/lib/catalog";
+import { loadMergedCalendarBlocks } from "@/lib/closed-days";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import {
   AppointmentsUnavailableError,
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 503 });
   }
 
+  const calendarBlocks = await loadMergedCalendarBlocks();
   const slots = getAvailableSlots({
     date: body.date,
     barberId: body.barberId,
@@ -74,6 +76,7 @@ export async function POST(request: Request) {
     minNoticeMinutes: 0,
     now: new Date(0),
     fullSearch: true,
+    calendarBlocks,
   });
   let slot = findSlot(slots, startsAt);
   const force = Boolean(body.force);

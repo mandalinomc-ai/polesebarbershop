@@ -1696,6 +1696,11 @@ a.btn-whatsapp.contact-wa,
   color: var(--ink);
   font-weight: 600;
 }
+.occupancy-table td.blocked {
+  background: #f8dede;
+  color: #7a2e2e;
+  font-weight: 600;
+}
 .occupancy-table td.free { background: var(--white); color: var(--smoke); }
 .agenda-columns { display: grid; gap: 1rem; }
 @media (min-width: 800px) { .agenda-columns { grid-template-columns: 1fr 1fr; } }
@@ -2313,6 +2318,65 @@ video {
   background: #f8dede;
   color: #7a2e2e;
   border-color: rgba(179, 51, 51, 0.45);
+}
+.crm-temp-block {
+  border: 1px solid var(--line);
+  background: var(--white);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.crm-temp-block-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: end;
+}
+.crm-temp-block-title {
+  font-weight: 600;
+  align-self: center;
+  margin-right: 0.25rem;
+}
+.crm-temp-block-form label {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--smoke);
+}
+.crm-temp-block-form .input-lux {
+  min-width: 7rem;
+}
+.crm-temp-block-list {
+  list-style: none;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.crm-temp-block-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f8dede;
+  color: #7a2e2e;
+  border: 1px solid #f0c4c4;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.9rem;
+}
+.crm-recent-booking {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  background: #faf9f7;
+}
+.crm-recent-booking h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.crm-recent-booking p {
+  margin: 0;
+  font-size: 0.95rem;
 }
 .fresha-layout {
   display: grid;

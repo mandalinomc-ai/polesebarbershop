@@ -1,4 +1,7 @@
-import type { CalendarBlock } from "@/lib/booking/calendar-blocks";
+import {
+  CONFIG_CALENDAR_BLOCKS,
+  type CalendarBlock,
+} from "@/lib/booking/calendar-blocks";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -83,6 +86,115 @@ export async function loadCalendarBlocksFromDb(): Promise<CalendarBlock[]> {
   );
   if (error || !data) return [];
   return (data as BlockRow[]).map(rowToBlock);
+}
+
+/** Config + DB blocks for getAvailableSlots. Empty when no blocks exist. */
+export async function loadMergedCalendarBlocks(): Promise<CalendarBlock[]> {
+  const dbBlocks = await loadCalendarBlocksFromDb();
+  return [...CONFIG_CALENDAR_BLOCKS, ...dbBlocks];
+}
+
+const TIME_RE = /^\d{2}:\d{2}$/;
+const TEMP_KIND = "custom" as const;
+const TEMP_LABEL = "Blocco temporaneo";
+
+function toPgTime(hhmm: string): string {
+  return `${hhmm}:00`;
+}
+
+function missingTableMessage(error: { code?: string; message?: string }): string | null {
+  const missing =
+    error.code === "PGRST205" ||
+    /Could not find the table|does not exist/i.test(error.message || "");
+  return missing
+    ? "Tabella calendar_blocks mancante: esegui supabase/migrations/008_calendar_blocks.sql."
+    : null;
+}
+
+/** Dated temporary unavailability blocks (kind=custom), not full-day closed. */
+export async function listTemporaryBlocks(date: string): Promise<CalendarBlock[]> {
+  if (!DATE_RE.test(date) || !isSupabaseConfigured()) return [];
+  const db = getSupabaseAdmin();
+  if (!db) return [];
+  const { data, error } = await db
+    .from("calendar_blocks")
+    .select("id, block_date, weekday, barber_id, start_time, end_time, kind, label")
+    .eq("block_date", date)
+    .eq("kind", TEMP_KIND)
+    .order("start_time", { ascending: true });
+  if (error || !data) return [];
+  return (data as BlockRow[]).map(rowToBlock);
+}
+
+export async function createTemporaryBlock(input: {
+  date: string;
+  start: string;
+  end: string;
+  label?: string;
+}): Promise<{ ok: boolean; block?: CalendarBlock; error?: string }> {
+  if (!DATE_RE.test(input.date)) {
+    return { ok: false, error: "Data non valida (YYYY-MM-DD)." };
+  }
+  if (!TIME_RE.test(input.start) || !TIME_RE.test(input.end)) {
+    return { ok: false, error: "Orari non validi (HH:MM)." };
+  }
+  if (input.end <= input.start) {
+    return { ok: false, error: "L'orario di fine deve essere dopo l'inizio." };
+  }
+  if (!isSupabaseConfigured()) {
+    return { ok: false, error: "Database non collegato." };
+  }
+  const db = getSupabaseAdmin();
+  if (!db) return { ok: false, error: "Database non disponibile." };
+
+  const label = (input.label || TEMP_LABEL).trim() || TEMP_LABEL;
+  const { data, error } = await db
+    .from("calendar_blocks")
+    .insert({
+      block_date: input.date,
+      weekday: null,
+      barber_id: null,
+      start_time: toPgTime(input.start),
+      end_time: toPgTime(input.end),
+      kind: TEMP_KIND,
+      label,
+    })
+    .select("id, block_date, weekday, barber_id, start_time, end_time, kind, label")
+    .single();
+
+  if (error || !data) {
+    return {
+      ok: false,
+      error: missingTableMessage(error || {}) || "Impossibile creare il blocco.",
+    };
+  }
+  return { ok: true, block: rowToBlock(data as BlockRow) };
+}
+
+export async function deleteTemporaryBlock(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+    return { ok: false, error: "Id blocco non valido." };
+  }
+  if (!isSupabaseConfigured()) {
+    return { ok: false, error: "Database non collegato." };
+  }
+  const db = getSupabaseAdmin();
+  if (!db) return { ok: false, error: "Database non disponibile." };
+
+  const { error } = await db
+    .from("calendar_blocks")
+    .delete()
+    .eq("id", id)
+    .eq("kind", TEMP_KIND);
+  if (error) {
+    return {
+      ok: false,
+      error: missingTableMessage(error) || "Impossibile eliminare il blocco.",
+    };
+  }
+  return { ok: true };
 }
 
 export async function setSalonClosedDate(

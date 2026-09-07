@@ -18,6 +18,7 @@ import {
   namesFromSnapshot,
   publicAppointment,
 } from "@/lib/appointments";
+import { loadMergedCalendarBlocks } from "@/lib/closed-days";
 import { isPaidStatus } from "@/lib/crm";
 import { buildStaffCancelCopy, waMeUrl } from "@/lib/crm-notify";
 import { getBarber } from "@/lib/catalog";
@@ -305,6 +306,7 @@ export async function PATCH(request: Request) {
             : "Calendario non disponibile.";
         return NextResponse.json({ error: message }, { status: 503 });
       }
+      const calendarBlocks = await loadMergedCalendarBlocks();
       const slots = getAvailableSlots({
         date: targetDate,
         barberId: targetBarber,
@@ -313,6 +315,7 @@ export async function PATCH(request: Request) {
         minNoticeMinutes: 0,
         now: new Date(0),
         fullSearch: true,
+        calendarBlocks,
       });
       const slot = findSlot(slots, start);
       if (!slot && !force) {
@@ -355,6 +358,7 @@ export async function PATCH(request: Request) {
       );
       try {
         const dayAppointments = (await loadDayAppointments(targetDate)).filter((a) => a.id !== row.id);
+        const calendarBlocks = await loadMergedCalendarBlocks();
         const slots = getAvailableSlots({
           date: targetDate,
           barberId: targetBarber,
@@ -363,6 +367,7 @@ export async function PATCH(request: Request) {
           minNoticeMinutes: 0,
           now: new Date(0),
           fullSearch: true,
+          calendarBlocks,
         });
         return NextResponse.json(
           {
