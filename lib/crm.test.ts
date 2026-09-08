@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateClients, aggregateStats, type CrmAppointment } from "./crm";
+import { aggregateClients, aggregateStats, findClientContactByName, type CrmAppointment } from "./crm";
 
 function appt(overrides: Partial<CrmAppointment> & Pick<CrmAppointment, "id" | "startsAt" | "status">): CrmAppointment {
   return {
@@ -112,5 +112,24 @@ describe("CRM stats aggregation", () => {
       }),
     ];
     expect(aggregateClients(walkins)).toHaveLength(2);
+  });
+
+  it("matches anagrafica contact by nome+cognome for walk-in", () => {
+    const hit = findClientContactByName(
+      [
+        { firstName: "Mario", lastName: "Rossi", phone: "3270156225", email: "mario@example.com" },
+        { firstName: "Luca", lastName: "Bianchi", phone: "", email: "" },
+      ],
+      " mario ",
+      "ROSSI",
+    );
+    expect(hit).toEqual({ phone: "3270156225", email: "mario@example.com" });
+    expect(
+      findClientContactByName(
+        [{ firstName: "Nuovo", lastName: "Cliente", phone: "", email: "" }],
+        "Nuovo",
+        "Cliente",
+      ),
+    ).toBeNull();
   });
 });

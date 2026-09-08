@@ -102,6 +102,36 @@ function digits(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
+/** Normalize person name for walk-in / anagrafica matching. */
+export function normalizePersonName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function samePersonName(
+  a: { firstName: string; lastName: string },
+  b: { firstName: string; lastName: string },
+): boolean {
+  const af = normalizePersonName(a.firstName);
+  const al = normalizePersonName(a.lastName);
+  if (!af || !al) return false;
+  return af === normalizePersonName(b.firstName) && al === normalizePersonName(b.lastName);
+}
+
+/** Prefer the most recent contact details for a nome+cognome match. */
+export function findClientContactByName(
+  clients: Array<{ firstName: string; lastName: string; phone: string; email: string }>,
+  firstName: string,
+  lastName: string,
+): { phone: string; email: string } | null {
+  const hit = clients.find(
+    (c) =>
+      samePersonName(c, { firstName, lastName }) &&
+      (digits(c.phone).length >= 8 || c.email.trim().includes("@")),
+  );
+  if (!hit) return null;
+  return { phone: hit.phone.trim(), email: hit.email.trim() };
+}
+
 /** Group key: phone, then email, then unique id for anonymous walk-ins. */
 export function clientKey(row: {
   id: string;

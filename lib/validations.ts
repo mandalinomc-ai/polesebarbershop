@@ -99,8 +99,8 @@ export const walkInSchema = z.object({
     .trim()
     .regex(/^\d{2}:\d{2}(:\d{2})?$/, "Orario non valido")
     .transform((value) => value.slice(0, 5)),
-  firstName: z.string().trim().max(80).optional().default("Walk-in"),
-  lastName: z.string().trim().max(80).optional().default(""),
+  firstName: z.string().trim().min(1, "Inserisci il nome").max(80),
+  lastName: z.string().trim().min(1, "Inserisci il cognome").max(80),
   phone: z.string().trim().max(20).optional().default(""),
   email: z.string().trim().max(120).optional().default(""),
   priceEuro: z.number().min(0).max(500),

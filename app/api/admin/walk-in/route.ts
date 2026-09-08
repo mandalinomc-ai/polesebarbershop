@@ -14,9 +14,41 @@ import {
   publicAppointment,
   servicesSnapshot,
 } from "@/lib/appointments";
+import { normalizePersonName } from "@/lib/crm";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { flattenZodError, walkInSchema } from "@/lib/validations";
 import { z } from "zod";
+
+async function contactFromAnagrafica(
+  firstName: string,
+  lastName: string,
+): Promise<{ phone: string; email: string; matched: boolean }> {
+  const db = getSupabaseAdmin();
+  if (!db) return { phone: "", email: "", matched: false };
+  const wantFirst = normalizePersonName(firstName);
+  const wantLast = normalizePersonName(lastName);
+  if (!wantFirst || !wantLast) return { phone: "", email: "", matched: false };
+  const { data } = await db
+    .from("appointments")
+    .select("customer_first_name, customer_last_name, customer_phone, customer_email, starts_at")
+    .order("starts_at", { ascending: false })
+    .limit(800);
+  const hit = (data || []).find((row) => {
+    const same =
+      normalizePersonName(String(row.customer_first_name || "")) === wantFirst &&
+      normalizePersonName(String(row.customer_last_name || "")) === wantLast;
+    if (!same) return false;
+    const phone = String(row.customer_phone || "").replace(/\D/g, "");
+    const email = String(row.customer_email || "").trim();
+    return phone.length >= 8 || email.includes("@");
+  });
+  if (!hit) return { phone: "", email: "", matched: false };
+  return {
+    phone: String(hit.customer_phone || "").trim(),
+    email: String(hit.customer_email || "").trim(),
+    matched: true,
+  };
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -98,12 +130,27 @@ export async function POST(request: Request) {
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
+
+  // Walk-in essentials: servizi + nome + cognome. If anagrafica already has
+  // this person, reuse phone/email — never invent or require them here.
+  let phone = (body.phone || "").trim();
+  let email = (body.email || "").trim();
+  let linkedExisting = false;
+  if (!phone && !email) {
+    const fromAnag = await contactFromAnagrafica(body.firstName, body.lastName);
+    if (fromAnag.matched) {
+      phone = fromAnag.phone;
+      email = fromAnag.email;
+      linkedExisting = true;
+    }
+  }
+
   const insertPayload: Record<string, unknown> = {
     status: "walk_in",
-    customer_first_name: body.firstName || "Walk-in",
-    customer_last_name: body.lastName || "",
-    customer_email: body.email || "",
-    customer_phone: body.phone || "",
+    customer_first_name: body.firstName.trim(),
+    customer_last_name: body.lastName.trim(),
+    customer_email: email,
+    customer_phone: phone,
     barber_id: body.barberId,
     service_ids: services.map((s) => s.id),
     services_snapshot: servicesSnapshot(services),
@@ -132,5 +179,6 @@ export async function POST(request: Request) {
     ok: true,
     appointment: publicAppointment(data as AppointmentRow),
     forced: force && !slot,
+    linkedExisting,
   });
 }

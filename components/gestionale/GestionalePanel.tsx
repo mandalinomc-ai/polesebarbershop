@@ -26,7 +26,7 @@ import {
 } from "@/lib/availability";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
-import { formatEuroCents, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
+import { formatEuroCents, findClientContactByName, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
 import {
   NOTIFY_TEMPLATE_LABEL,
   WHATSAPP_MISSING_IT,
@@ -495,6 +495,7 @@ export function GestionalePanel() {
       {walkOpen ? (
         <WalkInModal
           date={date}
+          clients={clients}
           onClose={() => setWalkOpen(false)}
           onSaved={() => {
             setWalkOpen(false);
@@ -1328,14 +1329,22 @@ function StoricoView({
   );
 }
 
-function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => void; onSaved: () => void }) {
+function WalkInModal({
+  date,
+  clients,
+  onClose,
+  onSaved,
+}: {
+  date: string;
+  clients: ClientRecord[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const [serviceIds, setServiceIds] = useState<string[]>(["taglio-standard"]);
   const [barberId, setBarberId] = useState("felice");
   const [startTime, setStartTime] = useState("09:30");
-  const [firstName, setFirstName] = useState("Walk-in");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [priceEuro, setPriceEuro] = useState(15);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [durationOverride, setDurationOverride] = useState("");
   const [error, setError] = useState("");
   const [alternatives, setAlternatives] = useState<{ label: string; startIso: string }[]>([]);
@@ -1346,9 +1355,11 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
     () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
     [serviceIds],
   );
-  useEffect(() => {
-    setPriceEuro(totals.priceEuro);
-  }, [totals.priceEuro]);
+  const existingContact = useMemo(
+    () => findClientContactByName(clients, firstName, lastName),
+    [clients, firstName, lastName],
+  );
+  const canSave = serviceIds.length > 0 && firstName.trim().length > 0 && lastName.trim().length > 0;
 
   async function findSlot(mode: "day" | "first" | "best") {
     setFinding(true);
@@ -1405,6 +1416,10 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
 
   async function save(e: FormEvent, force = false) {
     e.preventDefault();
+    if (!canSave) {
+      setError("Servizio, nome e cognome sono obbligatori.");
+      return;
+    }
     setSaving(true);
     setError("");
     setAlternatives([]);
@@ -1416,10 +1431,9 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
         barberId,
         date,
         startTime,
-        firstName,
-        phone,
-        email,
-        priceEuro,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        priceEuro: totals.priceEuro,
         durationOverrideMin: durationOverride ? Number(durationOverride) : null,
         force,
       }),
@@ -1443,6 +1457,10 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
       <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
         <p className="eyebrow">Walk-in</p>
         <h2 className="font-serif">Inserisci in agenda</h2>
+        <p className="slot-status">
+          Solo trattamento, nome e cognome. Telefono ed email si associano da soli se il cliente è già in anagrafica;
+          altrimenti li aggiungi dopo dalla scheda cliente.
+        </p>
         <label>
           Barbiere
           <select className="input-lux" value={barberId} onChange={(e) => setBarberId(e.target.value)}>
@@ -1454,7 +1472,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
           </select>
         </label>
         <label>
-          Servizi
+          Trattamento
           <div className="walkin-services">
             {SERVICES.map((s) => (
               <label key={s.id} className={`walkin-service${serviceIds.includes(s.id) ? " selected" : ""}`}>
@@ -1480,22 +1498,20 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
           </div>
         </label>
         {hasUnknownDuration ? (
-          <p className="slot-status">
-            Servizio senza durata catalogo: imposta una durata override (min) per l&apos;occupazione poltrona.
-          </p>
+          <label>
+            Durata (min)
+            <input
+              className="input-lux"
+              type="number"
+              min={1}
+              max={480}
+              required
+              placeholder={String(totals.durationMin || "")}
+              value={durationOverride}
+              onChange={(e) => setDurationOverride(e.target.value)}
+            />
+          </label>
         ) : null}
-        <label>
-          Durata override (min, opzionale)
-          <input
-            className="input-lux"
-            type="number"
-            min={1}
-            max={480}
-            placeholder={String(totals.durationMin || "")}
-            value={durationOverride}
-            onChange={(e) => setDurationOverride(e.target.value)}
-          />
-        </label>
         <label>
           Orario
           <input className="input-lux" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
@@ -1513,20 +1529,31 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
         </div>
         <label>
           Nome
-          <input className="input-lux" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <input
+            className="input-lux"
+            value={firstName}
+            required
+            autoComplete="given-name"
+            onChange={(e) => setFirstName(e.target.value)}
+          />
         </label>
         <label>
-          Telefono
-          <input className="input-lux" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="opzionale" />
+          Cognome
+          <input
+            className="input-lux"
+            value={lastName}
+            required
+            autoComplete="family-name"
+            onChange={(e) => setLastName(e.target.value)}
+          />
         </label>
-        <label>
-          Email
-          <input className="input-lux" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="opzionale" />
-        </label>
-        <label>
-          Prezzo effettivo (€)
-          <input className="input-lux" type="number" min={0} value={priceEuro} onChange={(e) => setPriceEuro(Number(e.target.value))} />
-        </label>
+        {existingContact ? (
+          <p className="slot-status">
+            Cliente già in anagrafica — telefono/email verranno associati automaticamente.
+          </p>
+        ) : firstName.trim() && lastName.trim() ? (
+          <p className="slot-status">Cliente nuovo — puoi completare i dati dopo dalla scheda Cliente.</p>
+        ) : null}
         {error ? <p className="field-error">{error}</p> : null}
         {alternatives.length > 0 ? (
           <div className="walkin-services">
@@ -1565,7 +1592,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
               Forza comunque
             </button>
           ) : null}
-          <button type="submit" className="btn btn-gold" disabled={saving || serviceIds.length === 0}>
+          <button type="submit" className="btn btn-gold" disabled={saving || !canSave}>
             {saving ? "Salvataggio…" : "Salva walk-in"}
           </button>
         </div>

@@ -55,10 +55,35 @@ describe("phone + booking validation", () => {
       barberId: "felice",
       date: "2026-09-01",
       startTime: "09:30:00",
+      firstName: "Mario",
+      lastName: "Rossi",
       priceEuro: 15,
     });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.startTime).toBe("09:30");
+  });
+
+  it("requires nome and cognome for walk-in", () => {
+    expect(
+      walkInSchema.safeParse({
+        serviceIds: ["taglio-standard"],
+        barberId: "felice",
+        date: "2026-09-01",
+        startTime: "09:30",
+        priceEuro: 15,
+      }).success,
+    ).toBe(false);
+    expect(
+      walkInSchema.safeParse({
+        serviceIds: ["taglio-standard"],
+        barberId: "felice",
+        date: "2026-09-01",
+        startTime: "09:30",
+        firstName: "Mario",
+        lastName: "",
+        priceEuro: 15,
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts gestionale login with username or id", () => {
