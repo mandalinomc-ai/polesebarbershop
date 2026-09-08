@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { aggregateClients, aggregateStats, findClientContactByName, type CrmAppointment } from "./crm";
+import {
+  aggregateClients,
+  aggregateStats,
+  findClientContactByName,
+  mergeCustomerProfiles,
+  type CrmAppointment,
+} from "./crm";
 
 function appt(overrides: Partial<CrmAppointment> & Pick<CrmAppointment, "id" | "startsAt" | "status">): CrmAppointment {
   return {
@@ -131,5 +137,79 @@ describe("CRM stats aggregation", () => {
         "Cliente",
       ),
     ).toBeNull();
+  });
+
+  it("marks incomplete sheets and tracks last + preferred treatment", () => {
+    const rows = [
+      appt({
+        id: "a1",
+        startsAt: "2026-09-01T08:00:00.000Z",
+        status: "walk_in",
+        firstName: "Sara",
+        lastName: "Verdi",
+        phone: "",
+        email: "",
+        serviceNames: "Taglio Standard",
+        isWalkIn: true,
+        dateLabel: "2026-09-01",
+      }),
+      appt({
+        id: "a2",
+        startsAt: "2026-09-05T08:00:00.000Z",
+        status: "walk_in",
+        firstName: "Sara",
+        lastName: "Verdi",
+        phone: "",
+        email: "",
+        serviceIds: ["taglio-pro"],
+        serviceNames: "Taglio Pro",
+        isWalkIn: true,
+        dateLabel: "2026-09-05",
+      }),
+      appt({
+        id: "a3",
+        startsAt: "2026-09-08T08:00:00.000Z",
+        status: "walk_in",
+        firstName: "Sara",
+        lastName: "Verdi",
+        phone: "",
+        email: "",
+        serviceNames: "Taglio Standard",
+        isWalkIn: true,
+        dateLabel: "2026-09-08",
+      }),
+    ];
+    const clients = aggregateClients(rows);
+    expect(clients).toHaveLength(1);
+    expect(clients[0].incomplete).toBe(true);
+    expect(clients[0].lastService).toBe("Taglio Standard");
+    expect(clients[0].topService).toBe("Taglio Standard");
+  });
+
+  it("merges customer profiles onto incomplete walk-in clients", () => {
+    const clients = aggregateClients([
+      appt({
+        id: "w",
+        startsAt: "2026-09-08T08:00:00.000Z",
+        status: "walk_in",
+        firstName: "Paolo",
+        lastName: "Neri",
+        phone: "",
+        email: "",
+        isWalkIn: true,
+      }),
+    ]);
+    const merged = mergeCustomerProfiles(clients, [
+      {
+        clientKey: "n:paolo neri",
+        firstName: "Paolo",
+        lastName: "Neri",
+        phone: "3270156225",
+        email: "paolo@example.com",
+      },
+    ]);
+    expect(merged[0].phone).toBe("3270156225");
+    expect(merged[0].email).toBe("paolo@example.com");
+    expect(merged[0].incomplete).toBe(false);
   });
 });

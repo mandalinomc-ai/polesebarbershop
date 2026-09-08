@@ -50,11 +50,42 @@ export type ClientRecord = {
   nextVisitAt: string | null;
   spendCents: number;
   topService: string | null;
+  lastService: string | null;
   topBarber: string | null;
   crmNotes: string;
+  incomplete: boolean;
   services: ClientServiceStat[];
   history: ClientHistoryItem[];
 };
+
+export type CustomerProfileRow = {
+  clientKey: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+};
+
+/** Missing usable phone and email — typical after “prenota in sede” for new clients. */
+export function isIncompleteContact(c: { phone: string; email: string }): boolean {
+  return digits(c.phone).length < 8 && !c.email.trim().includes("@");
+}
+
+export function clientKeyFromContact(row: {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+}): string {
+  return clientKey({
+    id: row.id || `profile:${normalizePersonName(row.firstName)}:${normalizePersonName(row.lastName)}`,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    phone: row.phone,
+    email: row.email,
+  });
+}
 
 export type StatsPeriod = "today" | "7d" | "month" | "year" | "all";
 
@@ -230,8 +261,10 @@ export function aggregateClients(
           nextVisitAt: null,
           spendCents: 0,
           topService: null,
+          lastService: null,
           topBarber: null,
           crmNotes: notesMap[key] || "",
+          incomplete: true,
           services: [],
           history: [],
         },
@@ -262,7 +295,7 @@ export function aggregateClients(
     });
   }
 
-  // Second pass: next visit + top service/barber
+  // Second pass: next visit + top service/barber + last service + incomplete
   const nowIso = new Date().toISOString();
   for (const group of groups.values()) {
     const rec = group.row;
@@ -270,13 +303,19 @@ export function aggregateClients(
       .filter((h) => !h.cancelled && h.startsAt > nowIso)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
     rec.nextVisitAt = future[0]?.startsAt || null;
-    rec.topService = rec.services[0]?.name || null;
+    const rankedServices = [...group.services.values()].sort((a, b) => b.count - a.count);
+    rec.topService = rankedServices[0]?.name || null;
+    const lastPaid = [...rec.history]
+      .filter((h) => !h.cancelled)
+      .sort((a, b) => b.startsAt.localeCompare(a.startsAt))[0];
+    rec.lastService = lastPaid?.serviceNames || rec.history[0]?.serviceNames || null;
     const barberCounts = new Map<string, number>();
     for (const h of rec.history.filter((x) => !x.cancelled)) {
       barberCounts.set(h.barberName, (barberCounts.get(h.barberName) || 0) + 1);
     }
     rec.topBarber = [...barberCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     rec.crmNotes = notesMap[rec.key] || rec.crmNotes;
+    rec.incomplete = isIncompleteContact(rec);
   }
 
   return [...groups.values()]
@@ -286,6 +325,63 @@ export function aggregateClients(
       history: [...row.history].sort((a, b) => b.startsAt.localeCompare(a.startsAt)),
     }))
     .sort((a, b) => (b.lastVisitAt || "").localeCompare(a.lastVisitAt || ""));
+}
+
+/** Merge standalone CRM profiles (clients without appointments, or contact overrides). */
+export function mergeCustomerProfiles(
+  clients: ClientRecord[],
+  profiles: CustomerProfileRow[],
+  notesMap: Record<string, string> = {},
+): ClientRecord[] {
+  if (!profiles.length) return clients;
+  const byKey = new Map(clients.map((c) => [c.key, { ...c }]));
+  const byName = new Map<string, ClientRecord>();
+  for (const c of byKey.values()) {
+    const nk = `${normalizePersonName(c.firstName)}|${normalizePersonName(c.lastName)}`;
+    if (nk !== "|") byName.set(nk, c);
+  }
+
+  for (const p of profiles) {
+    const phone = p.phone.trim();
+    const email = p.email.trim();
+    const nameKey = `${normalizePersonName(p.firstName)}|${normalizePersonName(p.lastName)}`;
+    let target = byKey.get(p.clientKey) || (nameKey !== "|" ? byName.get(nameKey) : undefined);
+    if (target) {
+      if (digits(phone).length >= 8) target.phone = phone;
+      if (email.includes("@")) target.email = email;
+      if (p.firstName) target.firstName = p.firstName;
+      if (p.lastName) target.lastName = p.lastName;
+      target.name = `${target.firstName} ${target.lastName}`.trim();
+      target.incomplete = isIncompleteContact(target);
+      target.crmNotes = notesMap[target.key] || notesMap[p.clientKey] || target.crmNotes;
+      byKey.set(target.key, target);
+      continue;
+    }
+    const key = p.clientKey || clientKeyFromContact(p);
+    byKey.set(key, {
+      key,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      name: `${p.firstName} ${p.lastName}`.trim(),
+      phone,
+      email,
+      visitCount: 0,
+      cancelledCount: 0,
+      lastVisitAt: null,
+      lastVisitStatus: null,
+      nextVisitAt: null,
+      spendCents: 0,
+      topService: null,
+      lastService: null,
+      topBarber: null,
+      crmNotes: notesMap[key] || notesMap[p.clientKey] || "",
+      incomplete: isIncompleteContact({ phone, email }),
+      services: [],
+      history: [],
+    });
+  }
+
+  return [...byKey.values()].sort((a, b) => (b.lastVisitAt || "").localeCompare(a.lastVisitAt || ""));
 }
 
 export function aggregateStats(

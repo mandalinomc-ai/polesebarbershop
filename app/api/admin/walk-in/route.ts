@@ -28,6 +28,29 @@ async function contactFromAnagrafica(
   const wantFirst = normalizePersonName(firstName);
   const wantLast = normalizePersonName(lastName);
   if (!wantFirst || !wantLast) return { phone: "", email: "", matched: false };
+
+  const { data: profiles } = await db
+    .from("customer_profiles")
+    .select("first_name, last_name, phone, email, updated_at")
+    .order("updated_at", { ascending: false })
+    .limit(400);
+  const profileHit = (profiles || []).find((row) => {
+    const same =
+      normalizePersonName(String(row.first_name || "")) === wantFirst &&
+      normalizePersonName(String(row.last_name || "")) === wantLast;
+    if (!same) return false;
+    const phone = String(row.phone || "").replace(/\D/g, "");
+    const email = String(row.email || "").trim();
+    return phone.length >= 8 || email.includes("@");
+  });
+  if (profileHit) {
+    return {
+      phone: String(profileHit.phone || "").trim(),
+      email: String(profileHit.email || "").trim(),
+      matched: true,
+    };
+  }
+
   const { data } = await db
     .from("appointments")
     .select("customer_first_name, customer_last_name, customer_phone, customer_email, starts_at")

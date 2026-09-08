@@ -412,8 +412,10 @@ export function GestionalePanel() {
                   spendCents: appt.priceCents,
                   nextVisitAt: null,
                   topService: null,
+                  lastService: appt.serviceNames || null,
                   topBarber: appt.barberName,
                   crmNotes: "",
+                  incomplete: !(appt.phone || "").replace(/\D/g, "").length && !(appt.email || "").includes("@"),
                   services: [],
                   history: [
                     {
@@ -450,6 +452,7 @@ export function GestionalePanel() {
               });
               if (res.ok) void loadCrm();
             }}
+            onClientsChanged={() => void loadCrm()}
             total={clients.length}
           />
         ) : null}
@@ -824,6 +827,7 @@ function ClientiView({
   onNotify,
   onBulk,
   onSaveNotes,
+  onClientsChanged,
   total,
 }: {
   clients: ClientRecord[];
@@ -834,17 +838,99 @@ function ClientiView({
   onNotify: (c: ClientRecord) => void;
   onBulk: () => void;
   onSaveNotes: (key: string, notes: string) => Promise<void>;
+  onClientsChanged: () => void;
   total: number;
 }) {
   const open = selected && clients.find((c) => c.key === selected.key) ? selected : null;
   const [notesDraft, setNotesDraft] = useState("");
   const [notesMsg, setNotesMsg] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editContact, setEditContact] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const recentClients = useMemo(
+    () =>
+      [...clients]
+        .filter((c) => c.lastVisitAt)
+        .sort((a, b) => (b.lastVisitAt || "").localeCompare(a.lastVisitAt || ""))
+        .slice(0, 8),
+    [clients],
+  );
+
   useEffect(() => {
     setNotesDraft(open?.crmNotes || "");
     setNotesMsg("");
-  }, [open?.key, open?.crmNotes]);
+    setEditContact(false);
+    if (open) {
+      setFirstName(open.firstName);
+      setLastName(open.lastName);
+      setPhone(open.phone);
+      setEmail(open.email);
+    }
+  }, [open?.key, open?.crmNotes, open?.firstName, open?.lastName, open?.phone, open?.email]);
+
+  async function saveClient(opts: { asNew: boolean }) {
+    setSaving(true);
+    setFormError("");
+    const res = await fetch("/api/admin/clients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientKey: opts.asNew ? undefined : open?.key,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        updateAppointments: true,
+      }),
+    });
+    const json = (await res.json()) as { error?: string };
+    setSaving(false);
+    if (!res.ok) {
+      setFormError(json.error || "Salvataggio non riuscito.");
+      return;
+    }
+    setAddOpen(false);
+    setEditContact(false);
+    onClientsChanged();
+  }
+
   return (
     <div className="crm-stack">
+      <section className="crm-card">
+        <h2 className="font-serif">Clienti recenti</h2>
+        <p className="slot-status" style={{ marginTop: 0 }}>
+          Ultimo trattamento e preferito (il più scelto).
+        </p>
+        {recentClients.length === 0 ? (
+          <p className="slot-status">Nessuna visita recente.</p>
+        ) : (
+          <div className="crm-recent-grid">
+            {recentClients.map((c) => (
+              <button
+                key={`recent-${c.key}`}
+                type="button"
+                className="crm-recent-card"
+                onClick={() => onSelect(c)}
+              >
+                <strong>{c.name || "—"}</strong>
+                {c.incomplete ? <span className="crm-incomplete-flag">Scheda incompleta</span> : null}
+                <span>Ultimo: {c.lastService || "—"}</span>
+                <span>Preferito: {c.topService || c.lastService || "—"}</span>
+                <span>
+                  {c.lastVisitAt ? new Date(c.lastVisitAt).toLocaleDateString("it-IT") : ""}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div className="crm-toolbar">
         <label className="crm-search">
           <Search size={16} aria-hidden />
@@ -855,14 +941,27 @@ function ClientiView({
             placeholder="Cerca nome, telefono, email…"
           />
         </label>
+        <button
+          type="button"
+          className="btn btn-gold"
+          onClick={() => {
+            setFirstName("");
+            setLastName("");
+            setPhone("");
+            setEmail("");
+            setFormError("");
+            setAddOpen(true);
+          }}
+        >
+          <Plus size={16} aria-hidden /> Aggiungi cliente
+        </button>
         <button type="button" className="btn btn-outline" onClick={onBulk} disabled={clients.length === 0}>
           <MessageCircle size={16} aria-hidden /> WhatsApp massivo
         </button>
       </div>
       {total === 0 ? (
         <p className="slot-status">
-          Nessun cliente in anagrafica. Le prenotazioni online e in sede compariranno qui con servizi, visite, ultima visita e
-          spesa. Gli appuntamenti annullati restano nello storico, contrassegnati.
+          Nessun cliente in anagrafica. Aggiungi un cliente o registra una prenotazione in sede / online.
         </p>
       ) : clients.length === 0 ? (
         <p className="slot-status">Nessun risultato per «{search}».</p>
@@ -887,6 +986,7 @@ function ClientiView({
                   <td data-label="Cliente">
                     <button type="button" className="crm-link" onClick={() => onSelect(open?.key === c.key ? null : c)}>
                       {c.name || "—"}
+                      {c.incomplete ? " · incompleta" : ""}
                     </button>
                   </td>
                   <td data-label="Telefono">{c.phone || "—"}</td>
@@ -920,14 +1020,21 @@ function ClientiView({
               <p>
                 {open.phone || "Nessun telefono"} · {open.email || "Nessuna email"}
               </p>
+              {open.incomplete ? <p className="crm-incomplete-flag">Scheda incompleta — aggiungi telefono o email</p> : null}
             </div>
-            <button type="button" className="btn btn-gold" onClick={() => onNotify(open)}>
-              Contatta
-            </button>
+            <div className="admin-head-actions">
+              <button type="button" className="btn btn-outline" onClick={() => setEditContact(true)}>
+                {open.incomplete ? "Completa scheda" : "Modifica contatti"}
+              </button>
+              <button type="button" className="btn btn-gold" onClick={() => onNotify(open)}>
+                Contatta
+              </button>
+            </div>
           </header>
           <p className="crm-meta">
             {open.visitCount} visite (di cui {open.cancelledCount} annullate) · spesa {formatEuroCents(open.spendCents)}
-            {open.topService ? ` · top servizio: ${open.topService}` : ""}
+            {open.lastService ? ` · ultimo: ${open.lastService}` : ""}
+            {open.topService ? ` · preferito: ${open.topService}` : ""}
             {open.topBarber ? ` · top barbiere: ${open.topBarber}` : ""}
             {open.nextVisitAt ? ` · prossimo: ${new Date(open.nextVisitAt).toLocaleString("it-IT")}` : ""}
           </p>
@@ -968,6 +1075,65 @@ function ClientiView({
             </ul>
           )}
         </section>
+      ) : null}
+
+      {addOpen || editContact ? (
+        <div
+          className="admin-modal-backdrop"
+          onClick={() => {
+            setAddOpen(false);
+            setEditContact(false);
+          }}
+        >
+          <form
+            className="admin-modal"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveClient({ asNew: addOpen && !editContact });
+            }}
+          >
+            <p className="eyebrow">Clienti</p>
+            <h2 className="font-serif">{addOpen ? "Aggiungi cliente" : "Completa scheda cliente"}</h2>
+            <label>
+              Nome
+              <input className="input-lux" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </label>
+            <label>
+              Cognome
+              <input className="input-lux" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </label>
+            <label>
+              Telefono
+              <input className="input-lux" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </label>
+            <label>
+              Email
+              <input className="input-lux" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </label>
+            {editContact ? (
+              <p className="slot-status">
+                I contatti aggiornano anche le prenotazioni in sede incomplete con lo stesso nome e cognome.
+              </p>
+            ) : null}
+            {formError ? <p className="field-error">{formError}</p> : null}
+            <div className="admin-head-actions">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => {
+                  setAddOpen(false);
+                  setEditContact(false);
+                }}
+              >
+                Chiudi
+              </button>
+              <button type="submit" className="btn btn-gold" disabled={saving}>
+                {saving ? "Salvataggio…" : "Salva in CRM"}
+              </button>
+            </div>
+          </form>
+        </div>
       ) : null}
     </div>
   );
