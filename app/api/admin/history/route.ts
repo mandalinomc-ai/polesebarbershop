@@ -14,7 +14,7 @@ const STATUS_IT: Record<string, string> = {
   confirmed: "Confermato",
   completed: "Completato",
   cancelled: "ANNULLATA",
-  walk_in: "Walk-in",
+  walk_in: "Prenota in sede",
 };
 
 export async function GET() {

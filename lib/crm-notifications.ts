@@ -45,7 +45,7 @@ export function notificationFromAppointment(row: AppointmentRow): CrmNotificatio
       id: `${row.id}:walk_in`,
       appointmentId: row.id,
       type: "walk_in",
-      title: "Walk-in in agenda",
+      title: "Prenota in sede — in agenda",
       body,
       createdAt: row.created_at || row.starts_at,
       date,

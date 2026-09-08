@@ -173,7 +173,7 @@ export async function POST(request: Request) {
     if (overlap) {
       return NextResponse.json({ error: "Orario occupato (vincolo database).", conflict: true }, { status: 409 });
     }
-    return NextResponse.json({ error: "Impossibile registrare il walk-in." }, { status: 500 });
+    return NextResponse.json({ error: "Impossibile registrare la prenotazione in sede." }, { status: 500 });
   }
   return NextResponse.json({
     ok: true,

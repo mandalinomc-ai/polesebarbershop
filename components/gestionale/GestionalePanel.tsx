@@ -100,7 +100,7 @@ const STATUS_IT: Record<string, string> = {
   confirmed: "Confermato",
   completed: "Completato",
   cancelled: "Annullato",
-  walk_in: "Walk-in",
+  walk_in: "Prenota in sede",
 };
 
 function pct(n: number) {
@@ -353,7 +353,7 @@ export function GestionalePanel() {
               aria-label="Data agenda"
             />
             <button type="button" className="btn btn-gold" onClick={() => setWalkOpen(true)}>
-              <Plus size={16} aria-hidden /> Walk-in
+              <Plus size={16} aria-hidden /> Prenota in sede
             </button>
             <button
               type="button"
@@ -559,12 +559,12 @@ function DashboardView({
         <Kpi label="Confermati" value={String(stats?.confirmedCount ?? 0)} hint={`Periodo: ${stats?.period || "all"}`} />
         <Kpi label="Annullati" value={String(stats?.cancelledCount ?? 0)} hint={pct(stats?.cancelRate || 0)} />
         <Kpi label="Clienti nuovi / di ritorno" value={`${stats?.newClients ?? 0} / ${stats?.returningClients ?? 0}`} />
-        <Kpi label="Clienti totali" value={String(stats?.totalClients ?? 0)} hint="Anagrafica da prenotazioni e walk-in" />
+        <Kpi label="Clienti totali" value={String(stats?.totalClients ?? 0)} hint="Anagrafica da prenotazioni e prenotazioni in sede" />
         <Kpi label="Incasso giorno" value={formatEuroCents(stats?.takings.dayCents || 0)} hint={formatItalianDate(date)} />
         <Kpi
           label="Incasso settimana"
           value={formatEuroCents(stats?.takings.weekCents || 0)}
-          hint="Walk-in + prenotazioni confermate"
+          hint="Prenotazioni in sede + confermate"
         />
       </section>
       <div className="crm-split">
@@ -631,7 +631,7 @@ function DashboardView({
           <h2 className="font-serif">Clienti recenti</h2>
           {recent.length === 0 ? (
             <p className="slot-status">
-              Anagrafica vuota. Prenotazioni online e walk-in riempiono nome, telefono, email, visite e spesa.
+              Anagrafica vuota. Prenotazioni online e in sede riempiono nome, telefono, email, visite e spesa.
             </p>
           ) : (
             <ul className="crm-list">
@@ -780,7 +780,7 @@ function AgendaView({
                   <p>{a.serviceNames}</p>
                   <p>
                     {a.firstName} {a.lastName}
-                    {a.isWalkIn ? " · Walk-in" : ""}
+                    {a.isWalkIn ? " · In sede" : ""}
                     {a.status === "cancelled" ? " · Annullato" : ""}
                   </p>
                   <p className="agenda-price">{formatEuroCents(a.priceCents)}</p>
@@ -861,7 +861,7 @@ function ClientiView({
       </div>
       {total === 0 ? (
         <p className="slot-status">
-          Nessun cliente in anagrafica. Le prenotazioni e i walk-in compariranno qui con servizi, visite, ultima visita e
+          Nessun cliente in anagrafica. Le prenotazioni online e in sede compariranno qui con servizi, visite, ultima visita e
           spesa. Gli appuntamenti annullati restano nello storico, contrassegnati.
         </p>
       ) : clients.length === 0 ? (
@@ -1100,7 +1100,7 @@ function StatsView({
               ))}
             </ul>
           ) : (
-            <p className="slot-status">Nessun incasso registrato (walk-in e confermati).</p>
+            <p className="slot-status">Nessun incasso registrato (in sede e confermati).</p>
           )}
         </section>
       </div>
@@ -1455,8 +1455,8 @@ function WalkInModal({
   return (
     <div className="admin-modal-backdrop" onClick={onClose}>
       <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
-        <p className="eyebrow">Walk-in</p>
-        <h2 className="font-serif">Inserisci in agenda</h2>
+        <p className="eyebrow">Prenota in sede</p>
+        <h2 className="font-serif">Prenota in sede</h2>
         <p className="slot-status">
           Solo trattamento, nome e cognome. Telefono ed email si associano da soli se il cliente è già in anagrafica;
           altrimenti li aggiungi dopo dalla scheda cliente.
@@ -1593,7 +1593,7 @@ function WalkInModal({
             </button>
           ) : null}
           <button type="submit" className="btn btn-gold" disabled={saving || !canSave}>
-            {saving ? "Salvataggio…" : "Salva walk-in"}
+            {saving ? "Salvataggio…" : "Salva prenotazione in sede"}
           </button>
         </div>
       </form>
