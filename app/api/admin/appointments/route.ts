@@ -36,7 +36,19 @@ const AGENDA_EMPTY_IT =
 
 function serialize(row: AppointmentRow) {
   const start = new Date(row.starts_at);
+  const end = new Date(row.ends_at);
   const override = row.duration_override_min ?? null;
+  const effectiveDurationMin = override && override > 0 ? override : row.duration_min;
+  /** Derived only — no DB column. Missing/invalid → 0 for agenda retrocompat. */
+  let bufferTime = 0;
+  if (
+    !Number.isNaN(start.getTime()) &&
+    !Number.isNaN(end.getTime()) &&
+    effectiveDurationMin > 0
+  ) {
+    const raw = Math.round((end.getTime() - start.getTime()) / 60_000) - effectiveDurationMin;
+    bufferTime = raw > 0 ? raw : 0;
+  }
   return {
     id: row.id,
     status: row.status,
@@ -53,7 +65,8 @@ function serialize(row: AppointmentRow) {
     dateLabel: formatWallDate(start),
     durationMin: row.duration_min,
     durationOverrideMin: override,
-    effectiveDurationMin: override && override > 0 ? override : row.duration_min,
+    effectiveDurationMin,
+    bufferTime,
     priceCents: row.price_cents,
     isWalkIn: row.is_walk_in,
     notes: row.notes,

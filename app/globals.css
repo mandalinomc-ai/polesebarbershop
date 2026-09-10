@@ -1849,6 +1849,19 @@ a.btn-whatsapp.contact-wa,
   font-weight: 600;
 }
 .walkin-chip.is-on small { color: #5a4a10; }
+.walkin-chip.is-disabled,
+.walkin-chip:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  background: #ececec;
+  border-color: rgba(10, 10, 10, 0.1);
+}
+.walkin-gap-hint {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
 .input-lux--lg { min-height: 52px; font-size: 1.05rem; padding: 0.75rem 0.9rem; }
 .btn-touch-xl { min-height: 52px; font-size: 1.05rem; }
 .walkin-preset-banner {
@@ -1909,10 +1922,12 @@ a.btn-whatsapp.contact-wa,
   color: var(--ink);
 }
 .occupancy-free-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  text-align: center;
+  max-width: 11rem;
 }
 .occupancy-free-hint {
   font-size: 0.68rem;

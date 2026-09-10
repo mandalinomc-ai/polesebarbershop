@@ -17,13 +17,25 @@ import {
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
-import { getRealBarbers, SERVICES, formatDuration, formatPrice, totalsForServices } from "@/lib/catalog";
+import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
 import {
   formatItalianDate,
   getFirstBookableDate,
   getOccupancyGrid,
+  OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
+import { BOOKING_BUFFER_MINUTES } from "@/lib/booking";
+import {
+  formatAgendaBlockLabel,
+  formatFreeSlotLabel,
+  formatTimeRange,
+  freeMinutesFromStart,
+  INSUFFICIENT_AGENDA_TIME_IT,
+  newBookingBlockMinutes,
+  resolveAppointmentBlock,
+  serviceFitsInFreeMinutes,
+} from "@/lib/gestionale/agenda-block";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
 import { formatEuroCents, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
@@ -51,6 +63,8 @@ type AdminAppt = {
   durationMin: number;
   durationOverrideMin?: number | null;
   effectiveDurationMin?: number;
+  /** Optional; missing → treat as 0 for legacy rows. */
+  bufferTime?: number | null;
   priceCents: number;
   isWalkIn: boolean;
   startsAt?: string;
@@ -513,6 +527,7 @@ export function GestionalePanel() {
         <WalkInModal
           date={date}
           clients={clients}
+          appointments={agenda?.appointments || []}
           preset={walkPreset}
           onClose={() => {
             setWalkOpen(false);
@@ -699,21 +714,25 @@ function AgendaView({
       (agenda?.appointments || [])
         .filter((a) => a.status !== "cancelled")
         .map((a) => {
-          const start = a.startsAt
-            ? new Date(a.startsAt)
-            : wallTimeToUtc(date, a.timeLabel);
           const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
-          const end = a.endsAt
-            ? new Date(a.endsAt)
-            : new Date(start.getTime() + dur * 60_000);
+          const block = resolveAppointmentBlock({
+            startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
+            endsAt: a.endsAt,
+            durationMin: dur,
+            bufferTime: a.bufferTime,
+          });
           const name = `${a.firstName} ${a.lastName}`.trim();
           const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
           return {
             id: a.id,
             barberId: a.barberId,
-            startsAt: start,
-            endsAt: end,
-            label: `${name || "Cliente"} — ${services || "Servizio"} · ${dur} min`,
+            startsAt: block.start,
+            endsAt: block.end,
+            label: formatAgendaBlockLabel(
+              block.start,
+              block.end,
+              `${name || "Cliente"} - ${services || "Servizio"}`,
+            ),
           };
         }),
     [agenda, date],
@@ -792,7 +811,9 @@ function AgendaView({
                               <span className="occupancy-free-plus" aria-hidden>
                                 +
                               </span>
-                              <span className="occupancy-free-label">Libero</span>
+                              <span className="occupancy-free-label">
+                                {formatFreeSlotLabel(row.time, OCCUPANCY_STEP_MINUTES)}
+                              </span>
                               <span className="occupancy-free-hint">Prenota</span>
                             </button>
                           )}
@@ -816,10 +837,16 @@ function AgendaView({
               byBarber(b.id).map((a) => {
                 const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
                 const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
+                const block = resolveAppointmentBlock({
+                  startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
+                  endsAt: a.endsAt,
+                  durationMin: dur,
+                  bufferTime: a.bufferTime,
+                });
                 return (
                 <article key={a.id} className={`agenda-card status-${a.status}`}>
                   <header>
-                    <strong>{a.timeLabel}</strong>
+                    <strong>{formatTimeRange(block.start, block.end)}</strong>
                     <span>{dur} min</span>
                   </header>
                   <p>
@@ -1559,18 +1586,21 @@ function StoricoView({
 function WalkInModal({
   date,
   clients,
+  appointments,
   preset,
   onClose,
   onSaved,
 }: {
   date: string;
   clients: ClientRecord[];
+  appointments: AdminAppt[];
   preset: { barberId: string; startTime: string } | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const requestId = useRef(`wi-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   const nameRef = useRef<HTMLInputElement>(null);
+  const appliedClientKey = useRef<string | null>(null);
   const [serviceIds, setServiceIds] = useState<string[]>(["taglio-standard"]);
   const [barberId, setBarberId] = useState(preset?.barberId || "felice");
   const [startTime, setStartTime] = useState(preset?.startTime || "09:30");
@@ -1591,6 +1621,40 @@ function WalkInModal({
     () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
     [serviceIds],
   );
+
+  const freeMinutes = useMemo(
+    () =>
+      freeMinutesFromStart({
+        date,
+        startTime,
+        barberId,
+        appointments: appointments.map((a) => ({
+          barberId: a.barberId,
+          startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
+          endsAt: a.endsAt,
+          durationMin: a.effectiveDurationMin || a.durationOverrideMin || a.durationMin,
+          bufferTime: a.bufferTime,
+          status: a.status,
+        })),
+      }),
+    [appointments, barberId, date, startTime],
+  );
+
+  const effectiveServiceMin = useMemo(() => {
+    if (durationOverride && Number(durationOverride) > 0) return Number(durationOverride);
+    return totals.durationMin;
+  }, [durationOverride, totals.durationMin]);
+
+  const neededBlockMin = useMemo(
+    () => newBookingBlockMinutes(effectiveServiceMin || 0),
+    [effectiveServiceMin],
+  );
+
+  const selectionFits = useMemo(
+    () => serviceFitsInFreeMinutes(effectiveServiceMin || 0, freeMinutes),
+    [effectiveServiceMin, freeMinutes],
+  );
+
   const frequentClients = useMemo(
     () =>
       [...clients]
@@ -1621,17 +1685,56 @@ function WalkInModal({
     return () => window.clearTimeout(t);
   }, []);
 
+  /** Auto-match unique anagrafica while typing → last treatment. */
+  useEffect(() => {
+    const q = `${firstName} ${lastName}`.trim().toLowerCase();
+    if (q.length < 3) return;
+    const exact = clients.filter((c) => {
+      const full = c.name.trim().toLowerCase();
+      const composed = `${c.firstName} ${c.lastName}`.trim().toLowerCase();
+      return full === q || composed === q;
+    });
+    if (exact.length !== 1) return;
+    const hit = exact[0]!;
+    if (appliedClientKey.current === hit.key) return;
+    appliedClientKey.current = hit.key;
+    setPhone(hit.phone || "");
+    setEmail(hit.email || "");
+    if (hit.lastServiceIds?.length) setServiceIds(hit.lastServiceIds);
+  }, [clients, firstName, lastName]);
+
   function pickClient(c: ClientRecord) {
+    appliedClientKey.current = c.key;
     setFirstName(c.firstName);
     setLastName(c.lastName);
     setPhone(c.phone || "");
     setEmail(c.email || "");
-    if (c.lastServiceIds?.length) setServiceIds(c.lastServiceIds);
+    if (c.lastServiceIds?.length) setServiceIds([...c.lastServiceIds]);
     setSuggestOpen(false);
+    setError("");
+  }
+
+  function serviceDisabled(id: string): boolean {
+    const alone = SERVICES.find((s) => s.id === id);
+    if (!alone?.durationKnown) return false;
+    if (serviceIds.includes(id)) {
+      // Keep selected chips interactive so operator can deselect.
+      return false;
+    }
+    const nextIds = [...serviceIds, id];
+    const nextTotals = totalsForServices(SERVICES.filter((s) => nextIds.includes(s.id)));
+    const override = durationOverride && Number(durationOverride) > 0 ? Number(durationOverride) : null;
+    const dur = override ?? nextTotals.durationMin;
+    return !serviceFitsInFreeMinutes(dur, freeMinutes);
   }
 
   function toggleService(id: string) {
+    if (!serviceIds.includes(id) && serviceDisabled(id)) {
+      setError(INSUFFICIENT_AGENDA_TIME_IT);
+      return;
+    }
     setServiceIds((curr) => (curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id]));
+    setError("");
   }
 
   async function findSlot(mode: "day" | "first" | "best") {
@@ -1693,6 +1796,10 @@ function WalkInModal({
       setError("Inserisci almeno il nome.");
       return;
     }
+    if (!selectionFits || serviceIds.length === 0) {
+      setError(INSUFFICIENT_AGENDA_TIME_IT);
+      return;
+    }
     setSaving(true);
     setError("");
     setAlternatives([]);
@@ -1748,6 +1855,7 @@ function WalkInModal({
                   onClick={() => pickClient(c)}
                 >
                   {c.name}
+                  {c.lastService ? <small>ultima: {c.lastService}</small> : null}
                 </button>
               ))}
             </div>
@@ -1769,22 +1877,36 @@ function WalkInModal({
           </div>
         </div>
         <div className="walkin-field">
-          <span className="walkin-field-label">Trattamenti</span>
+          <span className="walkin-field-label">
+            Trattamenti
+            <em className="walkin-gap-hint">
+              {" "}
+              · libero {freeMinutes} min · blocco {neededBlockMin || "—"} min (+{BOOKING_BUFFER_MINUTES} buffer)
+            </em>
+          </span>
           <div className="walkin-chip-grid walkin-chip-grid--xl">
-            {SERVICES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                className={`walkin-chip walkin-chip--xl${serviceIds.includes(s.id) ? " is-on" : ""}`}
-                onClick={() => toggleService(s.id)}
-              >
-                {s.name}
-                <small>
-                  {formatPrice(s)}
-                  {!s.durationKnown ? " · durata?" : ` · ${formatDuration(s)}`}
-                </small>
-              </button>
-            ))}
+            {SERVICES.map((s) => {
+              const disabled = serviceDisabled(s.id);
+              const block = s.durationKnown ? newBookingBlockMinutes(s.durationMin) : null;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  disabled={disabled}
+                  title={disabled ? INSUFFICIENT_AGENDA_TIME_IT : undefined}
+                  className={`walkin-chip walkin-chip--xl${serviceIds.includes(s.id) ? " is-on" : ""}${disabled ? " is-disabled" : ""}`}
+                  onClick={() => toggleService(s.id)}
+                >
+                  {s.name}
+                  <small>
+                    {formatPrice(s)}
+                    {!s.durationKnown
+                      ? " · durata?"
+                      : ` · ${s.durationMin}+${BOOKING_BUFFER_MINUTES}=${block} min`}
+                  </small>
+                </button>
+              );
+            })}
           </div>
         </div>
         {hasUnknownDuration ? (
@@ -1822,7 +1944,7 @@ function WalkInModal({
           </>
         ) : (
           <p className="slot-status walkin-preset-banner">
-            Orario <strong>{startTime}</strong> · barbiere già impostato dalla cella Libero
+            Orario <strong>{startTime}</strong> · barbiere già impostato dalla cella Libero · {freeMinutes} min liberi
           </p>
         )}
         <div className="walkin-suggest-wrap">
@@ -1839,6 +1961,7 @@ function WalkInModal({
                 setFirstName(e.target.value);
                 setPhone("");
                 setEmail("");
+                appliedClientKey.current = null;
                 setSuggestOpen(true);
               }}
             />
@@ -1855,6 +1978,7 @@ function WalkInModal({
                 setLastName(e.target.value);
                 setPhone("");
                 setEmail("");
+                appliedClientKey.current = null;
                 setSuggestOpen(true);
               }}
             />
@@ -1877,6 +2001,9 @@ function WalkInModal({
           <input className="input-lux" type="number" min={0} value={priceEuro} onChange={(e) => setPriceEuro(Number(e.target.value))} />
         </label>
         {error ? <p className="field-error">{error}</p> : null}
+        {!selectionFits && !error ? (
+          <p className="field-error">{INSUFFICIENT_AGENDA_TIME_IT}</p>
+        ) : null}
         {alternatives.length > 0 ? (
           <div className="walkin-chip-grid walkin-chip-grid--xl">
             {alternatives.map((a) => (
@@ -1903,15 +2030,23 @@ function WalkInModal({
             <button
               type="button"
               className="btn btn-outline"
-              disabled={saving}
+              disabled={saving || !selectionFits}
               onClick={(e) => {
+                if (!selectionFits) {
+                  setError(INSUFFICIENT_AGENDA_TIME_IT);
+                  return;
+                }
                 if (window.confirm("Forzare l'inserimento anche in conflitto?")) void save(e, true);
               }}
             >
               Forza comunque
             </button>
           ) : null}
-          <button type="submit" className="btn btn-gold btn-touch-xl" disabled={saving || serviceIds.length === 0 || !firstName.trim()}>
+          <button
+            type="submit"
+            className="btn btn-gold btn-touch-xl"
+            disabled={saving || serviceIds.length === 0 || !firstName.trim() || !selectionFits}
+          >
             {saving ? "Salvataggio…" : "Salva"}
           </button>
         </div>
