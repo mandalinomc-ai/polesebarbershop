@@ -21,7 +21,7 @@ function weekdayOfDate(date: string): number {
   return new Date(Date.UTC(y, m - 1, d, 12, 0, 0)).getUTCDay();
 }
 
-export const INSUFFICIENT_AGENDA_TIME_IT = "Tempo insufficiente in agenda";
+export const INSUFFICIENT_AGENDA_TIME_IT = "Tempo insufficiente";
 
 export type AgendaBlockInput = {
   startsAt: Date | string;
