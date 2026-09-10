@@ -99,6 +99,10 @@ export type OccupancyCell = {
   barberId: string;
   occupied: boolean;
   label: string;
+  /** Continuous block height in table rows (multi-service / long visits). */
+  rowSpan: number;
+  /** Covered by a previous cell's rowSpan — do not render a <td>. */
+  skip: boolean;
 };
 
 export type OccupancyRow = {
@@ -799,26 +803,58 @@ export function getOccupancyGrid(input: {
   } = input;
   if (isClosedDay(date)) return [];
   const real = getRealBarbers(barbers);
-  return listDayHourStarts(date, stepMinutes).map((time) => {
-    const start = wallTimeToUtc(date, time, timeZone);
-    const end = addMinutes(start, stepMinutes);
-    return {
-      time,
-      cells: real.map((barber) => {
-        const hit = appointments.find(
-          (a) =>
-            a.barberId === barber.id &&
-            rangesOverlap(start, end, asDate(a.startsAt), asDate(a.endsAt)),
-        );
-        return {
-          time,
-          barberId: barber.id,
-          occupied: Boolean(hit),
-          label: hit?.label || "",
-        };
-      }),
-    };
+  const times = listDayHourStarts(date, stepMinutes);
+  const emptyCell = (time: string, barberId: string): OccupancyCell => ({
+    time,
+    barberId,
+    occupied: false,
+    label: "",
+    rowSpan: 1,
+    skip: false,
   });
+  const rows: OccupancyRow[] = times.map((time) => ({
+    time,
+    cells: real.map((barber) => emptyCell(time, barber.id)),
+  }));
+
+  for (let bi = 0; bi < real.length; bi += 1) {
+    const barber = real[bi]!;
+    const covered = new Set<number>();
+    const barberAppts = appointments.filter((a) => a.barberId === barber.id);
+    for (let i = 0; i < times.length; i += 1) {
+      if (covered.has(i)) {
+        rows[i]!.cells[bi] = {
+          ...emptyCell(times[i]!, barber.id),
+          occupied: true,
+          skip: true,
+        };
+        continue;
+      }
+      const start = wallTimeToUtc(date, times[i]!, timeZone);
+      const end = addMinutes(start, stepMinutes);
+      const hit = barberAppts.find((a) =>
+        rangesOverlap(start, end, asDate(a.startsAt), asDate(a.endsAt)),
+      );
+      if (!hit) continue;
+      let span = 1;
+      for (let j = i + 1; j < times.length; j += 1) {
+        const s2 = wallTimeToUtc(date, times[j]!, timeZone);
+        const e2 = addMinutes(s2, stepMinutes);
+        if (!rangesOverlap(s2, e2, asDate(hit.startsAt), asDate(hit.endsAt))) break;
+        span += 1;
+        covered.add(j);
+      }
+      rows[i]!.cells[bi] = {
+        time: times[i]!,
+        barberId: barber.id,
+        occupied: true,
+        label: hit.label || "",
+        rowSpan: span,
+        skip: false,
+      };
+    }
+  }
+  return rows;
 }
 
 export function findSlot(slots: Slot[], startsAt: Date): Slot | undefined {

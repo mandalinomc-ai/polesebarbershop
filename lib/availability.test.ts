@@ -217,11 +217,29 @@ describe("getOccupancyGrid", () => {
     expect(ten?.cells.find((c) => c.barberId === "felice")).toMatchObject({
       occupied: true,
       label: "Mario Rossi",
+      rowSpan: 1,
+      skip: false,
     });
     expect(ten?.cells.find((c) => c.barberId === "davide")?.occupied).toBe(false);
     expect(tenThirty?.cells.find((c) => c.barberId === "felice")?.occupied).toBe(false);
     expect(getOccupancyGrid({ date: SUNDAY })).toEqual([]);
     expect(getOccupancyGrid({ date: MONDAY_OPEN })[0]?.time).toBe("15:00");
+  });
+
+  it("merges multi-slot visits into one continuous rowspan block", () => {
+    const grid = getOccupancyGrid({
+      date: TUESDAY,
+      appointments: [{
+        barberId: "felice",
+        startsAt: wallTimeToUtc(TUESDAY, "10:00"),
+        endsAt: wallTimeToUtc(TUESDAY, "11:00"),
+        label: "Luca Bianchi — Taglio + Barba · 60 min",
+      }],
+    });
+    const ten = grid.find((row) => row.time === "10:00")?.cells.find((c) => c.barberId === "felice");
+    const tenThirty = grid.find((row) => row.time === "10:30")?.cells.find((c) => c.barberId === "felice");
+    expect(ten).toMatchObject({ occupied: true, rowSpan: 2, skip: false });
+    expect(tenThirty).toMatchObject({ occupied: true, skip: true });
   });
 });
 

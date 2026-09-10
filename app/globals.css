@@ -1782,12 +1782,121 @@ a.btn-whatsapp.contact-wa,
 }
 .crm-bottom button { flex-direction: column; font-size: 0.58rem; color: rgba(255,255,255,0.75); min-height: 44px; justify-content: center; }
 .crm-mobile-logout { display: none; }
-.admin-modal-backdrop { position: fixed; inset: 0; background: rgba(10,10,10,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
-.admin-modal { width: min(100%, 28rem); background: var(--white); border: 1px solid var(--line); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; max-height: 90dvh; overflow: auto; }
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 9000;
+  padding: calc(0.75rem + var(--safe-top, 0px)) 0.75rem calc(5.5rem + var(--safe-bottom, 0px));
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-modal {
+  width: min(100%, 28rem);
+  background: var(--white);
+  border: 1px solid var(--line);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: none;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
 .admin-modal label { color: var(--muted); font-size: 0.78rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.admin-head-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; width: 100%; }
+.admin-head-actions .btn { flex: 1 1 auto; min-width: min(100%, 8rem); justify-content: center; }
 .walkin-services { display: flex; flex-direction: column; gap: 0.35rem; }
 .walkin-service { display: flex; align-items: center; gap: 0.55rem; min-height: 44px; padding: 0.4rem 0.65rem; border: 1px solid var(--line); cursor: pointer; }
 .walkin-service.selected { border-color: var(--ink); }
+.walkin-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.walkin-field-label { color: var(--muted); font-size: 0.78rem; }
+.walkin-chip-grid { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.walkin-chip {
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(10, 10, 10, 0.18);
+  background: #d9d9d9;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.walkin-chip.is-on {
+  background: #ffe14a;
+  border-color: #c9a012;
+  font-weight: 600;
+}
+.walkin-suggest-wrap { display: grid; gap: 0.55rem; position: relative; }
+@media (min-width: 700px) {
+  .walkin-suggest-wrap { grid-template-columns: 1fr 1fr; }
+}
+.walkin-suggest-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  grid-column: 1 / -1;
+  border: 1px solid var(--line);
+  background: var(--white);
+  max-height: 10rem;
+  overflow: auto;
+}
+.walkin-suggest-list button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 0.7rem 0.8rem;
+  min-height: 44px;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.walkin-suggest-list button span { color: var(--muted); font-size: 0.78rem; }
+.occupancy-free-btn {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--smoke);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.occupancy-table td.free { padding: 0; }
+.occupancy-table td.taken {
+  vertical-align: middle;
+  background: #eceae6;
+}
+.occupancy-block {
+  display: block;
+  padding: 0.45rem 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--ink);
+}
+.crm-incomplete-flag {
+  color: #8a5a00;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+.crm-complete-sheet {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.65rem 0 1rem;
+  padding: 0.85rem;
+  border: 1px dashed var(--line);
+}
 .duration-unknown-flag { color: #8a5a00; font-style: italic; font-size: 0.85em; }
 .fresha-option.muted { opacity: 0.72; }
 @media (max-width: 800px) {
@@ -1795,6 +1904,31 @@ a.btn-whatsapp.contact-wa,
   .crm-sidebar { display: none; }
   .crm-bottom { display: flex; }
   .crm-mobile-logout { display: inline-flex; }
+  .admin-head-actions { flex-direction: column; }
+  .admin-head-actions .btn { width: 100%; }
+  .crm-main { padding-bottom: calc(6.5rem + var(--safe-bottom, 0px)); }
+}
+
+/* Tablet / iPad landscape ergonomics */
+@media (orientation: landscape) and (min-width: 700px) and (max-height: 900px) {
+  .crm-app { grid-template-columns: 11.5rem 1fr; }
+  .crm-sidebar { display: flex; }
+  .crm-bottom { display: none; }
+  .crm-mobile-logout { display: none; }
+  .crm-main { padding: 0.85rem 1rem 1.25rem; }
+  .occupancy-scroll { max-height: min(52dvh, 22rem); }
+  .agenda-columns { grid-template-columns: 1fr 1fr; }
+  .admin-modal { width: min(92vw, 36rem); }
+  .walkin-chip-grid { gap: 0.4rem; }
+  .walkin-chip { min-height: 40px; font-size: 0.8rem; }
+}
+
+@media (min-width: 900px) {
+  .crm-top-actions .btn { min-height: 44px; }
+  .occupancy-table td.free .occupancy-free-btn:hover {
+    background: #fff8d6;
+    color: var(--ink);
+  }
 }
 
 input, select, textarea { font-size: 16px; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
@@ -119,6 +119,7 @@ export function GestionalePanel() {
   const [stats, setStats] = useState<CrmStats | null>(null);
   const [crmWarning, setCrmWarning] = useState("");
   const [walkOpen, setWalkOpen] = useState(false);
+  const [walkPreset, setWalkPreset] = useState<{ barberId: string; startTime: string } | null>(null);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ClientRecord | null>(null);
   const [notifyFor, setNotifyFor] = useState<ClientRecord | null>(null);
@@ -352,7 +353,14 @@ export function GestionalePanel() {
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
-            <button type="button" className="btn btn-gold" onClick={() => setWalkOpen(true)}>
+            <button
+              type="button"
+              className="btn btn-gold"
+              onClick={() => {
+                setWalkPreset(null);
+                setWalkOpen(true);
+              }}
+            >
               <Plus size={16} aria-hidden /> Walk-in
             </button>
             <button
@@ -391,6 +399,10 @@ export function GestionalePanel() {
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
+            onQuickWalkIn={(barberId, startTime) => {
+              setWalkPreset({ barberId, startTime });
+              setWalkOpen(true);
+            }}
             onNotify={(appt) => {
               const match =
                 clients.find(
@@ -412,8 +424,10 @@ export function GestionalePanel() {
                   spendCents: appt.priceCents,
                   nextVisitAt: null,
                   topService: null,
+                  lastServiceIds: [],
                   topBarber: appt.barberName,
                   crmNotes: "",
+                  incomplete: !(appt.phone || "").replace(/\D/g, "").length && !(appt.email || "").includes("@"),
                   services: [],
                   history: [
                     {
@@ -422,6 +436,7 @@ export function GestionalePanel() {
                       status: appt.status,
                       cancelled: appt.status === "cancelled",
                       serviceNames: appt.serviceNames,
+                      serviceIds: [],
                       barberName: appt.barberName,
                       priceCents: appt.priceCents,
                       isWalkIn: appt.isWalkIn,
@@ -450,6 +465,7 @@ export function GestionalePanel() {
               });
               if (res.ok) void loadCrm();
             }}
+            onClientsChanged={() => void loadCrm()}
             total={clients.length}
           />
         ) : null}
@@ -495,9 +511,15 @@ export function GestionalePanel() {
       {walkOpen ? (
         <WalkInModal
           date={date}
-          onClose={() => setWalkOpen(false)}
+          clients={clients}
+          preset={walkPreset}
+          onClose={() => {
+            setWalkOpen(false);
+            setWalkPreset(null);
+          }}
           onSaved={() => {
             setWalkOpen(false);
+            setWalkPreset(null);
             void load();
           }}
         />
@@ -660,6 +682,7 @@ function AgendaView({
   onPatch,
   onMove,
   onNotify,
+  onQuickWalkIn,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -668,6 +691,7 @@ function AgendaView({
   onPatch: (id: string, body: Record<string, unknown>) => void;
   onMove: (a: AdminAppt) => void;
   onNotify: (a: AdminAppt) => void;
+  onQuickWalkIn: (barberId: string, startTime: string) => void;
 }) {
   const occupying = useMemo(
     () =>
@@ -677,17 +701,18 @@ function AgendaView({
           const start = a.startsAt
             ? new Date(a.startsAt)
             : wallTimeToUtc(date, a.timeLabel);
+          const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
           const end = a.endsAt
             ? new Date(a.endsAt)
-            : new Date(
-                start.getTime() +
-                  (a.effectiveDurationMin || a.durationOverrideMin || a.durationMin) * 60_000,
-              );
+            : new Date(start.getTime() + dur * 60_000);
+          const name = `${a.firstName} ${a.lastName}`.trim();
+          const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
           return {
+            id: a.id,
             barberId: a.barberId,
             startsAt: start,
             endsAt: end,
-            label: `${a.firstName} ${a.lastName}`.trim() || a.serviceNames,
+            label: `${name || "Cliente"} — ${services || "Servizio"} · ${dur} min`,
           };
         }),
     [agenda, date],
@@ -729,7 +754,7 @@ function AgendaView({
       <section className="occupancy-wrap" aria-label="Occupazione poltrone">
         <h2 className="font-serif">Tabella orari</h2>
         <p className="slot-status occupancy-legend">
-          Stessi appuntamenti del prenota online. Grigio = occupato, bianco = libero.
+          Tocca una cella <strong>Libero</strong> per walk-in rapido. Un appuntamento multi-servizio = un solo blocco continuo.
         </p>
         {occupancy.length === 0 ? (
           <p className="slot-status">Nessuna fascia oraria: salone chiuso o data non valida.</p>
@@ -748,14 +773,27 @@ function AgendaView({
                 {occupancy.map((row) => (
                   <tr key={row.time}>
                     <th scope="row">{row.time}</th>
-                    {row.cells.map((cell) => (
-                      <td
-                        key={cell.barberId}
-                        className={cell.occupied ? "taken" : "free"}
-                      >
-                        {cell.occupied ? cell.label || "Prenotato" : "Libero"}
-                      </td>
-                    ))}
+                    {row.cells.map((cell) =>
+                      cell.skip ? null : (
+                        <td
+                          key={cell.barberId}
+                          rowSpan={cell.occupied ? cell.rowSpan : 1}
+                          className={cell.occupied ? "taken" : "free"}
+                        >
+                          {cell.occupied ? (
+                            <span className="occupancy-block">{cell.label || "Prenotato"}</span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="occupancy-free-btn"
+                              onClick={() => onQuickWalkIn(cell.barberId, row.time)}
+                            >
+                              Libero
+                            </button>
+                          )}
+                        </td>
+                      ),
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -770,15 +808,17 @@ function AgendaView({
             {byBarber(b.id).length === 0 ? (
               <p className="slot-status">Nessun appuntamento</p>
             ) : (
-              byBarber(b.id).map((a) => (
+              byBarber(b.id).map((a) => {
+                const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
+                const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
+                return (
                 <article key={a.id} className={`agenda-card status-${a.status}`}>
                   <header>
                     <strong>{a.timeLabel}</strong>
-                    <span>{a.durationMin} min</span>
+                    <span>{dur} min</span>
                   </header>
-                  <p>{a.serviceNames}</p>
                   <p>
-                    {a.firstName} {a.lastName}
+                    {a.firstName} {a.lastName} — {services}
                     {a.isWalkIn ? " · Walk-in" : ""}
                     {a.status === "cancelled" ? " · Annullato" : ""}
                   </p>
@@ -805,7 +845,8 @@ function AgendaView({
                     </div>
                   )}
                 </article>
-              ))
+              );
+              })
             )}
           </div>
         ))}
@@ -823,6 +864,7 @@ function ClientiView({
   onNotify,
   onBulk,
   onSaveNotes,
+  onClientsChanged,
   total,
 }: {
   clients: ClientRecord[];
@@ -833,15 +875,33 @@ function ClientiView({
   onNotify: (c: ClientRecord) => void;
   onBulk: () => void;
   onSaveNotes: (key: string, notes: string) => Promise<void>;
+  onClientsChanged: () => void;
   total: number;
 }) {
-  const open = selected && clients.find((c) => c.key === selected.key) ? selected : null;
+  const [filter, setFilter] = useState<"all" | "incomplete">("all");
+  const visible = useMemo(
+    () => (filter === "incomplete" ? clients.filter((c) => c.incomplete) : clients),
+    [clients, filter],
+  );
+  const incompleteCount = useMemo(() => clients.filter((c) => c.incomplete).length, [clients]);
+  const open = selected && visible.find((c) => c.key === selected.key)
+    ? selected
+    : selected && clients.find((c) => c.key === selected.key)
+      ? selected
+      : null;
   const [notesDraft, setNotesDraft] = useState("");
   const [notesMsg, setNotesMsg] = useState("");
+  const [phoneDraft, setPhoneDraft] = useState("");
+  const [emailDraft, setEmailDraft] = useState("");
+  const [contactMsg, setContactMsg] = useState("");
+  const [savingContact, setSavingContact] = useState(false);
   useEffect(() => {
     setNotesDraft(open?.crmNotes || "");
     setNotesMsg("");
-  }, [open?.key, open?.crmNotes]);
+    setPhoneDraft(open?.phone || "");
+    setEmailDraft(open?.email || "");
+    setContactMsg("");
+  }, [open?.key, open?.crmNotes, open?.phone, open?.email]);
   return (
     <div className="crm-stack">
       <div className="crm-toolbar">
@@ -854,17 +914,24 @@ function ClientiView({
             placeholder="Cerca nome, telefono, email…"
           />
         </label>
+        <div className="crm-view-toggle">
+          <button type="button" className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>
+            Tutti
+          </button>
+          <button type="button" className={filter === "incomplete" ? "active" : ""} onClick={() => setFilter("incomplete")}>
+            Anagrafiche incomplete{incompleteCount ? ` (${incompleteCount})` : ""}
+          </button>
+        </div>
         <button type="button" className="btn btn-outline" onClick={onBulk} disabled={clients.length === 0}>
           <MessageCircle size={16} aria-hidden /> WhatsApp massivo
         </button>
       </div>
       {total === 0 ? (
+        <p className="slot-status">Nessun cliente in anagrafica.</p>
+      ) : visible.length === 0 ? (
         <p className="slot-status">
-          Nessun cliente in anagrafica. Le prenotazioni e i walk-in compariranno qui con servizi, visite, ultima visita e
-          spesa. Gli appuntamenti annullati restano nello storico, contrassegnati.
+          {filter === "incomplete" ? "Nessuna anagrafica incompleta." : `Nessun risultato per «${search}».`}
         </p>
-      ) : clients.length === 0 ? (
-        <p className="slot-status">Nessun risultato per «{search}».</p>
       ) : (
         <div className="crm-table-wrap">
           <table className="crm-table">
@@ -881,11 +948,12 @@ function ClientiView({
               </tr>
             </thead>
             <tbody>
-              {clients.map((c) => (
+              {visible.map((c) => (
                 <tr key={c.key} className={open?.key === c.key ? "is-open" : ""}>
                   <td data-label="Cliente">
                     <button type="button" className="crm-link" onClick={() => onSelect(open?.key === c.key ? null : c)}>
                       {c.name || "—"}
+                      {c.incomplete ? " · incompleta" : ""}
                     </button>
                   </td>
                   <td data-label="Telefono">{c.phone || "—"}</td>
@@ -919,14 +987,59 @@ function ClientiView({
               <p>
                 {open.phone || "Nessun telefono"} · {open.email || "Nessuna email"}
               </p>
+              {open.incomplete ? <p className="crm-incomplete-flag">Anagrafica incompleta</p> : null}
             </div>
             <button type="button" className="btn btn-gold" onClick={() => onNotify(open)}>
               Contatta
             </button>
           </header>
+          {open.incomplete ? (
+            <div className="crm-complete-sheet">
+              <label>
+                Telefono
+                <input className="input-lux" inputMode="tel" value={phoneDraft} onChange={(e) => setPhoneDraft(e.target.value)} />
+              </label>
+              <label>
+                Email
+                <input className="input-lux" type="email" value={emailDraft} onChange={(e) => setEmailDraft(e.target.value)} />
+              </label>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={savingContact}
+                onClick={() => {
+                  void (async () => {
+                    setSavingContact(true);
+                    setContactMsg("");
+                    const res = await fetch("/api/admin/clients", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        firstName: open.firstName,
+                        lastName: open.lastName,
+                        phone: phoneDraft,
+                        email: emailDraft,
+                      }),
+                    });
+                    const json = (await res.json()) as { error?: string };
+                    setSavingContact(false);
+                    if (!res.ok) {
+                      setContactMsg(json.error || "Errore salvataggio.");
+                      return;
+                    }
+                    setContactMsg("Anagrafica aggiornata.");
+                    onClientsChanged();
+                  })();
+                }}
+              >
+                {savingContact ? "…" : "Completa anagrafica"}
+              </button>
+              {contactMsg ? <span className="crm-ok">{contactMsg}</span> : null}
+            </div>
+          ) : null}
           <p className="crm-meta">
             {open.visitCount} visite (di cui {open.cancelledCount} annullate) · spesa {formatEuroCents(open.spendCents)}
-            {open.topService ? ` · top servizio: ${open.topService}` : ""}
+            {open.topService ? ` · preferito: ${open.topService}` : ""}
             {open.topBarber ? ` · top barbiere: ${open.topBarber}` : ""}
             {open.nextVisitAt ? ` · prossimo: ${new Date(open.nextVisitAt).toLocaleString("it-IT")}` : ""}
           </p>
@@ -1328,11 +1441,25 @@ function StoricoView({
   );
 }
 
-function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => void; onSaved: () => void }) {
+function WalkInModal({
+  date,
+  clients,
+  preset,
+  onClose,
+  onSaved,
+}: {
+  date: string;
+  clients: ClientRecord[];
+  preset: { barberId: string; startTime: string } | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const requestId = useRef(`wi-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   const [serviceIds, setServiceIds] = useState<string[]>(["taglio-standard"]);
-  const [barberId, setBarberId] = useState("felice");
-  const [startTime, setStartTime] = useState("09:30");
-  const [firstName, setFirstName] = useState("Walk-in");
+  const [barberId, setBarberId] = useState(preset?.barberId || "felice");
+  const [startTime, setStartTime] = useState(preset?.startTime || "09:30");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [priceEuro, setPriceEuro] = useState(15);
@@ -1341,14 +1468,41 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
   const [alternatives, setAlternatives] = useState<{ label: string; startIso: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [finding, setFinding] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const totals = useMemo(() => totalsForServices(SERVICES.filter((s) => serviceIds.includes(s.id))), [serviceIds]);
   const hasUnknownDuration = useMemo(
     () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
     [serviceIds],
   );
+  const suggestions = useMemo(() => {
+    const q = `${firstName} ${lastName}`.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return clients
+      .filter((c) => c.name.toLowerCase().includes(q) || c.firstName.toLowerCase().includes(q) || c.lastName.toLowerCase().includes(q))
+      .slice(0, 6);
+  }, [clients, firstName, lastName]);
+
+  useEffect(() => {
+    if (preset?.barberId) setBarberId(preset.barberId);
+    if (preset?.startTime) setStartTime(preset.startTime);
+  }, [preset?.barberId, preset?.startTime]);
+
   useEffect(() => {
     setPriceEuro(totals.priceEuro);
   }, [totals.priceEuro]);
+
+  function pickClient(c: ClientRecord) {
+    setFirstName(c.firstName);
+    setLastName(c.lastName);
+    setPhone(c.phone || "");
+    setEmail(c.email || "");
+    if (c.lastServiceIds?.length) setServiceIds(c.lastServiceIds);
+    setSuggestOpen(false);
+  }
+
+  function toggleService(id: string) {
+    setServiceIds((curr) => (curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id]));
+  }
 
   async function findSlot(mode: "day" | "first" | "best") {
     setFinding(true);
@@ -1365,9 +1519,8 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
       const json = (await res.json()) as {
         error?: string;
         first?: { label: string; barberId?: string } | null;
-        slot?: { label: string; date?: string; barberId?: string; rank?: string } | null;
+        slot?: { label: string; date?: string; barberId?: string } | null;
         message?: string;
-        rank?: string;
       };
       if (!res.ok) {
         setError(json.error || "Ricerca non riuscita.");
@@ -1405,137 +1558,177 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
 
   async function save(e: FormEvent, force = false) {
     e.preventDefault();
+    if (saving) return;
+    if (!firstName.trim()) {
+      setError("Inserisci almeno il nome.");
+      return;
+    }
     setSaving(true);
     setError("");
     setAlternatives([]);
-    const res = await fetch("/api/admin/walk-in", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        serviceIds,
-        barberId,
-        date,
-        startTime,
-        firstName,
-        phone,
-        email,
-        priceEuro,
-        durationOverrideMin: durationOverride ? Number(durationOverride) : null,
-        force,
-      }),
-    });
-    const json = (await res.json()) as {
-      error?: string;
-      conflict?: boolean;
-      alternatives?: { label: string; startIso: string }[];
-    };
-    setSaving(false);
-    if (!res.ok) {
-      setError(json.error || "Impossibile salvare.");
-      if (json.alternatives?.length) setAlternatives(json.alternatives);
-      return;
+    try {
+      const res = await fetch("/api/admin/walk-in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceIds,
+          barberId,
+          date,
+          startTime,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          phone,
+          email,
+          priceEuro,
+          durationOverrideMin: durationOverride ? Number(durationOverride) : null,
+          force,
+          clientRequestId: requestId.current,
+        }),
+      });
+      const json = (await res.json()) as {
+        error?: string;
+        conflict?: boolean;
+        alternatives?: { label: string; startIso: string }[];
+      };
+      if (!res.ok) {
+        setError(json.error || "Impossibile salvare.");
+        if (json.alternatives?.length) setAlternatives(json.alternatives);
+        return;
+      }
+      onSaved();
+    } finally {
+      setSaving(false);
     }
-    onSaved();
   }
 
   return (
     <div className="admin-modal-backdrop" onClick={onClose}>
       <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
         <p className="eyebrow">Walk-in</p>
-        <h2 className="font-serif">Inserisci in agenda</h2>
-        <label>
-          Barbiere
-          <select className="input-lux" value={barberId} onChange={(e) => setBarberId(e.target.value)}>
+        <h2 className="font-serif">{preset ? `Rapido · ${preset.startTime}` : "Inserisci in agenda"}</h2>
+        <div className="walkin-field">
+          <span className="walkin-field-label">Barbiere</span>
+          <div className="walkin-chip-grid">
             {getRealBarbers().map((b) => (
-              <option key={b.id} value={b.id}>
+              <button
+                key={b.id}
+                type="button"
+                className={`walkin-chip${barberId === b.id ? " is-on" : ""}`}
+                onClick={() => setBarberId(b.id)}
+              >
                 {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Servizi
-          <div className="walkin-services">
-            {SERVICES.map((s) => (
-              <label key={s.id} className={`walkin-service${serviceIds.includes(s.id) ? " selected" : ""}`}>
-                <input
-                  type="checkbox"
-                  checked={serviceIds.includes(s.id)}
-                  onChange={() =>
-                    setServiceIds((curr) =>
-                      curr.includes(s.id) ? curr.filter((id) => id !== s.id) : [...curr, s.id],
-                    )
-                  }
-                />
-                <span>
-                  {s.name} · {formatPrice(s)}
-                  {!s.durationKnown ? (
-                    <em className="duration-unknown-flag"> · durata assente</em>
-                  ) : (
-                    ` · ${formatDuration(s)}`
-                  )}
-                </span>
-              </label>
+              </button>
             ))}
           </div>
-        </label>
+        </div>
+        <div className="walkin-field">
+          <span className="walkin-field-label">Trattamenti</span>
+          <div className="walkin-chip-grid">
+            {SERVICES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`walkin-chip${serviceIds.includes(s.id) ? " is-on" : ""}`}
+                onClick={() => toggleService(s.id)}
+              >
+                {s.name} · {formatPrice(s)}
+                {!s.durationKnown ? " · durata?" : ` · ${formatDuration(s)}`}
+              </button>
+            ))}
+          </div>
+        </div>
         {hasUnknownDuration ? (
-          <p className="slot-status">
-            Servizio senza durata catalogo: imposta una durata override (min) per l&apos;occupazione poltrona.
-          </p>
+          <label>
+            Durata override (min)
+            <input
+              className="input-lux"
+              type="number"
+              min={1}
+              max={480}
+              required
+              placeholder={String(totals.durationMin || "")}
+              value={durationOverride}
+              onChange={(e) => setDurationOverride(e.target.value)}
+            />
+          </label>
         ) : null}
-        <label>
-          Durata override (min, opzionale)
-          <input
-            className="input-lux"
-            type="number"
-            min={1}
-            max={480}
-            placeholder={String(totals.durationMin || "")}
-            value={durationOverride}
-            onChange={(e) => setDurationOverride(e.target.value)}
-          />
-        </label>
         <label>
           Orario
           <input className="input-lux" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
         </label>
         <div className="admin-head-actions" style={{ marginBottom: "0.5rem" }}>
-          <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("day")}>
+          <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("day")}>
             {finding ? "…" : "Trova orario"}
           </button>
-          <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("best")}>
+          <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("best")}>
             Trova migliore
           </button>
-          <button type="button" className="btn btn-outline" disabled={finding || serviceIds.length === 0} onClick={() => void findSlot("first")}>
+          <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("first")}>
             Prima disponibilità
           </button>
         </div>
+        <div className="walkin-suggest-wrap">
+          <label>
+            Nome
+            <input
+              className="input-lux"
+              value={firstName}
+              autoComplete="off"
+              onFocus={() => setSuggestOpen(true)}
+              onChange={(e) => {
+                setFirstName(e.target.value);
+                setSuggestOpen(true);
+              }}
+            />
+          </label>
+          <label>
+            Cognome
+            <input
+              className="input-lux"
+              value={lastName}
+              autoComplete="off"
+              onFocus={() => setSuggestOpen(true)}
+              onChange={(e) => {
+                setLastName(e.target.value);
+                setSuggestOpen(true);
+              }}
+            />
+          </label>
+          {suggestOpen && suggestions.length > 0 ? (
+            <ul className="walkin-suggest-list">
+              {suggestions.map((c) => (
+                <li key={c.key}>
+                  <button type="button" onClick={() => pickClient(c)}>
+                    <strong>{c.name}</strong>
+                    <span>
+                      {c.phone || "no tel"} · ultima: {c.services[0]?.name || c.topService || "—"}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
         <label>
-          Nome
-          <input className="input-lux" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          Telefono <em>(opzionale)</em>
+          <input className="input-lux" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="se manca → anagrafica incompleta" />
         </label>
         <label>
-          Telefono
-          <input className="input-lux" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="opzionale" />
+          Email <em>(opzionale)</em>
+          <input className="input-lux" value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
         <label>
-          Email
-          <input className="input-lux" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="opzionale" />
-        </label>
-        <label>
-          Prezzo effettivo (€)
+          Prezzo (€)
           <input className="input-lux" type="number" min={0} value={priceEuro} onChange={(e) => setPriceEuro(Number(e.target.value))} />
         </label>
         {error ? <p className="field-error">{error}</p> : null}
         {alternatives.length > 0 ? (
-          <div className="walkin-services">
-            <p className="slot-status">Alternative libere:</p>
+          <div className="walkin-chip-grid">
             {alternatives.map((a) => (
               <button
                 key={a.startIso}
                 type="button"
-                className="btn btn-ghost"
+                className="walkin-chip"
                 onClick={() => {
                   setStartTime(a.label);
                   setAlternatives([]);
@@ -1548,7 +1741,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
           </div>
         ) : null}
         <div className="admin-head-actions">
-          <button type="button" className="btn btn-outline" onClick={onClose}>
+          <button type="button" className="btn btn-outline" disabled={saving} onClick={onClose}>
             Chiudi
           </button>
           {alternatives.length > 0 ? (
@@ -1557,9 +1750,7 @@ function WalkInModal({ date, onClose, onSaved }: { date: string; onClose: () => 
               className="btn btn-outline"
               disabled={saving}
               onClick={(e) => {
-                if (window.confirm("Forzare l'inserimento anche in conflitto? Solo se sei sicuro.")) {
-                  void save(e, true);
-                }
+                if (window.confirm("Forzare l'inserimento anche in conflitto?")) void save(e, true);
               }}
             >
               Forza comunque

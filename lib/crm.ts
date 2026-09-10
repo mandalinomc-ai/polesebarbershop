@@ -31,6 +31,7 @@ export type ClientHistoryItem = {
   status: string;
   cancelled: boolean;
   serviceNames: string;
+  serviceIds: string[];
   barberName: string;
   priceCents: number;
   isWalkIn: boolean;
@@ -50,11 +51,32 @@ export type ClientRecord = {
   nextVisitAt: string | null;
   spendCents: number;
   topService: string | null;
+  lastServiceIds: string[];
   topBarber: string | null;
   crmNotes: string;
+  incomplete: boolean;
   services: ClientServiceStat[];
   history: ClientHistoryItem[];
 };
+
+/** Missing usable phone (and email) — typical walk-in without anagrafica. */
+export function isIncompleteContact(c: { phone: string; email: string }): boolean {
+  return digits(c.phone).length < 8 && !c.email.trim().includes("@");
+}
+
+export function normalizePersonName(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function samePersonName(
+  a: { firstName: string; lastName: string },
+  b: { firstName: string; lastName: string },
+): boolean {
+  const af = normalizePersonName(a.firstName);
+  const al = normalizePersonName(a.lastName);
+  if (!af || !al) return false;
+  return af === normalizePersonName(b.firstName) && al === normalizePersonName(b.lastName);
+}
 
 export type StatsPeriod = "today" | "7d" | "month" | "year" | "all";
 
@@ -200,8 +222,10 @@ export function aggregateClients(
           nextVisitAt: null,
           spendCents: 0,
           topService: null,
+          lastServiceIds: [],
           topBarber: null,
           crmNotes: notesMap[key] || "",
+          incomplete: true,
           services: [],
           history: [],
         },
@@ -226,13 +250,14 @@ export function aggregateClients(
       status: appt.status,
       cancelled: isCancelledStatus(appt.status),
       serviceNames: appt.serviceNames,
+      serviceIds: [...(appt.serviceIds || [])],
       barberName: appt.barberName,
       priceCents: appt.priceCents,
       isWalkIn: appt.isWalkIn,
     });
   }
 
-  // Second pass: next visit + top service/barber
+  // Second pass: next visit + top service/barber + last services + incomplete
   const nowIso = new Date().toISOString();
   for (const group of groups.values()) {
     const rec = group.row;
@@ -240,13 +265,21 @@ export function aggregateClients(
       .filter((h) => !h.cancelled && h.startsAt > nowIso)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
     rec.nextVisitAt = future[0]?.startsAt || null;
-    rec.topService = rec.services[0]?.name || null;
+    const ranked = [...group.services.values()].sort((a, b) => b.count - a.count);
+    rec.topService = ranked[0]?.name || null;
+    const lastPaid = [...rec.history]
+      .filter((h) => !h.cancelled)
+      .sort((a, b) => b.startsAt.localeCompare(a.startsAt))[0];
+    rec.lastServiceIds = lastPaid?.serviceIds?.length
+      ? [...lastPaid.serviceIds]
+      : [];
     const barberCounts = new Map<string, number>();
     for (const h of rec.history.filter((x) => !x.cancelled)) {
       barberCounts.set(h.barberName, (barberCounts.get(h.barberName) || 0) + 1);
     }
     rec.topBarber = [...barberCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     rec.crmNotes = notesMap[rec.key] || rec.crmNotes;
+    rec.incomplete = isIncompleteContact(rec);
   }
 
   return [...groups.values()]

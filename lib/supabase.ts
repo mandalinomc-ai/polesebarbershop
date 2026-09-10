@@ -27,6 +27,8 @@ export type AppointmentRow = {
   created_at: string;
   updated_at: string;
   cancelled_at: string | null;
+  /** Walk-in / CRM: missing phone+email. Optional until migration applied. */
+  is_incomplete?: boolean;
 };
 
 export function getSupabaseUrl() {
