@@ -789,7 +789,11 @@ function AgendaView({
                               className="occupancy-free-btn"
                               onClick={() => onQuickWalkIn(cell.barberId, row.time)}
                             >
-                              Libero
+                              <span className="occupancy-free-plus" aria-hidden>
+                                +
+                              </span>
+                              <span className="occupancy-free-label">Libero</span>
+                              <span className="occupancy-free-hint">Prenota</span>
                             </button>
                           )}
                         </td>
@@ -1566,11 +1570,13 @@ function WalkInModal({
   onSaved: () => void;
 }) {
   const requestId = useRef(`wi-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+  const nameRef = useRef<HTMLInputElement>(null);
   const [serviceIds, setServiceIds] = useState<string[]>(["taglio-standard"]);
   const [barberId, setBarberId] = useState(preset?.barberId || "felice");
   const [startTime, setStartTime] = useState(preset?.startTime || "09:30");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  /** Contatti solo da anagrafica (mai mostrati nel form). */
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [priceEuro, setPriceEuro] = useState(15);
@@ -1584,6 +1590,14 @@ function WalkInModal({
   const hasUnknownDuration = useMemo(
     () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
     [serviceIds],
+  );
+  const frequentClients = useMemo(
+    () =>
+      [...clients]
+        .filter((c) => c.visitCount > 0 && c.name.trim())
+        .sort((a, b) => b.visitCount - a.visitCount || (b.lastVisitAt || "").localeCompare(a.lastVisitAt || ""))
+        .slice(0, 6),
+    [clients],
   );
   const suggestions = useMemo(() => {
     const q = `${firstName} ${lastName}`.trim().toLowerCase();
@@ -1601,6 +1615,11 @@ function WalkInModal({
   useEffect(() => {
     setPriceEuro(totals.priceEuro);
   }, [totals.priceEuro]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => nameRef.current?.focus(), 50);
+    return () => window.clearTimeout(t);
+  }, []);
 
   function pickClient(c: ClientRecord) {
     setFirstName(c.firstName);
@@ -1714,17 +1733,34 @@ function WalkInModal({
 
   return (
     <div className="admin-modal-backdrop" onClick={onClose}>
-      <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
+      <form className="admin-modal walkin-modal-ergonomic" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
         <p className="eyebrow">Prenota in sede</p>
-        <h2 className="font-serif">{preset ? `Rapido · ${preset.startTime}` : "Prenota in sede"}</h2>
+        <h2 className="font-serif">{preset ? `${preset.startTime} · tap e vai` : "Prenota in sede"}</h2>
+        {frequentClients.length > 0 ? (
+          <div className="walkin-field">
+            <span className="walkin-field-label">Clienti frequenti · un tocco</span>
+            <div className="walkin-chip-grid walkin-chip-grid--xl">
+              {frequentClients.map((c) => (
+                <button
+                  key={`freq-${c.key}`}
+                  type="button"
+                  className="walkin-chip walkin-chip--xl"
+                  onClick={() => pickClient(c)}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div className="walkin-field">
           <span className="walkin-field-label">Barbiere</span>
-          <div className="walkin-chip-grid">
+          <div className="walkin-chip-grid walkin-chip-grid--xl">
             {getRealBarbers().map((b) => (
               <button
                 key={b.id}
                 type="button"
-                className={`walkin-chip${barberId === b.id ? " is-on" : ""}`}
+                className={`walkin-chip walkin-chip--xl${barberId === b.id ? " is-on" : ""}`}
                 onClick={() => setBarberId(b.id)}
               >
                 {b.name}
@@ -1734,16 +1770,19 @@ function WalkInModal({
         </div>
         <div className="walkin-field">
           <span className="walkin-field-label">Trattamenti</span>
-          <div className="walkin-chip-grid">
+          <div className="walkin-chip-grid walkin-chip-grid--xl">
             {SERVICES.map((s) => (
               <button
                 key={s.id}
                 type="button"
-                className={`walkin-chip${serviceIds.includes(s.id) ? " is-on" : ""}`}
+                className={`walkin-chip walkin-chip--xl${serviceIds.includes(s.id) ? " is-on" : ""}`}
                 onClick={() => toggleService(s.id)}
               >
-                {s.name} · {formatPrice(s)}
-                {!s.durationKnown ? " · durata?" : ` · ${formatDuration(s)}`}
+                {s.name}
+                <small>
+                  {formatPrice(s)}
+                  {!s.durationKnown ? " · durata?" : ` · ${formatDuration(s)}`}
+                </small>
               </button>
             ))}
           </div>
@@ -1763,31 +1802,43 @@ function WalkInModal({
             />
           </label>
         ) : null}
-        <label>
-          Orario
-          <input className="input-lux" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-        </label>
-        <div className="admin-head-actions" style={{ marginBottom: "0.5rem" }}>
-          <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("day")}>
-            {finding ? "…" : "Trova orario"}
-          </button>
-          <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("best")}>
-            Trova migliore
-          </button>
-          <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("first")}>
-            Prima disponibilità
-          </button>
-        </div>
+        {!preset ? (
+          <>
+            <label>
+              Orario
+              <input className="input-lux" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            </label>
+            <div className="admin-head-actions" style={{ marginBottom: "0.5rem" }}>
+              <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("day")}>
+                {finding ? "…" : "Trova orario"}
+              </button>
+              <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("best")}>
+                Trova migliore
+              </button>
+              <button type="button" className="btn btn-outline" disabled={finding || saving || serviceIds.length === 0} onClick={() => void findSlot("first")}>
+                Prima disponibilità
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="slot-status walkin-preset-banner">
+            Orario <strong>{startTime}</strong> · barbiere già impostato dalla cella Libero
+          </p>
+        )}
         <div className="walkin-suggest-wrap">
           <label>
             Nome
             <input
-              className="input-lux"
+              ref={nameRef}
+              className="input-lux input-lux--lg"
               value={firstName}
               autoComplete="off"
+              enterKeyHint="next"
               onFocus={() => setSuggestOpen(true)}
               onChange={(e) => {
                 setFirstName(e.target.value);
+                setPhone("");
+                setEmail("");
                 setSuggestOpen(true);
               }}
             />
@@ -1795,12 +1846,15 @@ function WalkInModal({
           <label>
             Cognome
             <input
-              className="input-lux"
+              className="input-lux input-lux--lg"
               value={lastName}
               autoComplete="off"
+              enterKeyHint="done"
               onFocus={() => setSuggestOpen(true)}
               onChange={(e) => {
                 setLastName(e.target.value);
+                setPhone("");
+                setEmail("");
                 setSuggestOpen(true);
               }}
             />
@@ -1811,9 +1865,7 @@ function WalkInModal({
                 <li key={c.key}>
                   <button type="button" onClick={() => pickClient(c)}>
                     <strong>{c.name}</strong>
-                    <span>
-                      {c.phone || "no tel"} · ultima: {c.services[0]?.name || c.topService || "—"}
-                    </span>
+                    <span>ultima: {c.lastService || c.topService || "—"}</span>
                   </button>
                 </li>
               ))}
@@ -1821,25 +1873,17 @@ function WalkInModal({
           ) : null}
         </div>
         <label>
-          Telefono <em>(opzionale)</em>
-          <input className="input-lux" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="se manca → anagrafica incompleta" />
-        </label>
-        <label>
-          Email <em>(opzionale)</em>
-          <input className="input-lux" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
-        <label>
           Prezzo (€)
           <input className="input-lux" type="number" min={0} value={priceEuro} onChange={(e) => setPriceEuro(Number(e.target.value))} />
         </label>
         {error ? <p className="field-error">{error}</p> : null}
         {alternatives.length > 0 ? (
-          <div className="walkin-chip-grid">
+          <div className="walkin-chip-grid walkin-chip-grid--xl">
             {alternatives.map((a) => (
               <button
                 key={a.startIso}
                 type="button"
-                className="walkin-chip"
+                className="walkin-chip walkin-chip--xl"
                 onClick={() => {
                   setStartTime(a.label);
                   setAlternatives([]);
@@ -1867,8 +1911,8 @@ function WalkInModal({
               Forza comunque
             </button>
           ) : null}
-          <button type="submit" className="btn btn-gold" disabled={saving || serviceIds.length === 0}>
-            {saving ? "Salvataggio…" : "Salva prenotazione in sede"}
+          <button type="submit" className="btn btn-gold btn-touch-xl" disabled={saving || serviceIds.length === 0 || !firstName.trim()}>
+            {saving ? "Salvataggio…" : "Salva"}
           </button>
         </div>
       </form>

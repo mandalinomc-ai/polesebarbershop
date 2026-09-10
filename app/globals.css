@@ -1815,6 +1815,7 @@ a.btn-whatsapp.contact-wa,
 .walkin-field { display: flex; flex-direction: column; gap: 0.4rem; }
 .walkin-field-label { color: var(--muted); font-size: 0.78rem; }
 .walkin-chip-grid { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.walkin-chip-grid--xl { gap: 0.55rem; }
 .walkin-chip {
   min-height: 44px;
   padding: 0.55rem 0.85rem;
@@ -1826,10 +1827,35 @@ a.btn-whatsapp.contact-wa,
   cursor: pointer;
   touch-action: manipulation;
 }
+.walkin-chip--xl {
+  min-height: 52px;
+  min-width: 7.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.1rem;
+}
+.walkin-chip--xl small {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+}
 .walkin-chip.is-on {
   background: #ffe14a;
   border-color: #c9a012;
   font-weight: 600;
+}
+.walkin-chip.is-on small { color: #5a4a10; }
+.input-lux--lg { min-height: 52px; font-size: 1.05rem; padding: 0.75rem 0.9rem; }
+.btn-touch-xl { min-height: 52px; font-size: 1.05rem; }
+.walkin-preset-banner {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  background: #fff8d6;
 }
 .walkin-suggest-wrap { display: grid; gap: 0.55rem; position: relative; }
 @media (min-width: 700px) {
@@ -1852,7 +1878,7 @@ a.btn-whatsapp.contact-wa,
   border-bottom: 1px solid var(--line);
   background: transparent;
   padding: 0.7rem 0.8rem;
-  min-height: 44px;
+  min-height: 48px;
   font: inherit;
   cursor: pointer;
   display: flex;
@@ -1862,15 +1888,43 @@ a.btn-whatsapp.contact-wa,
 .walkin-suggest-list button span { color: var(--muted); font-size: 0.78rem; }
 .occupancy-free-btn {
   width: 100%;
-  min-height: 44px;
+  min-height: 56px;
   border: 0;
   background: transparent;
   color: var(--smoke);
   font: inherit;
   cursor: pointer;
   touch-action: manipulation;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.45rem 0.25rem;
 }
-.occupancy-table td.free { padding: 0; }
+.occupancy-free-plus {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+}
+.occupancy-free-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.occupancy-free-hint {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.occupancy-table td.free {
+  padding: 0;
+  background: #fafafa;
+}
+.occupancy-table td.free:active {
+  background: #fff3b0;
+}
 .occupancy-table td.taken {
   vertical-align: middle;
   background: #eceae6;

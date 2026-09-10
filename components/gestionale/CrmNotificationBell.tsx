@@ -60,14 +60,31 @@ export function CrmNotificationBell({
 
   useEffect(() => {
     if (!ready) return;
-    const tick = () => void loadNotifications();
-    const id = window.setInterval(tick, 15_000);
-    const onVis = () => {
-      if (document.visibilityState === "visible") tick();
+    let id: number | null = null;
+    const POLL_MS = 60_000;
+    const clear = () => {
+      if (id != null) {
+        window.clearInterval(id);
+        id = null;
+      }
     };
+    const start = () => {
+      clear();
+      if (document.visibilityState !== "visible") return;
+      id = window.setInterval(() => void loadNotifications(), POLL_MS);
+    };
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        void loadNotifications();
+        start();
+      } else {
+        clear();
+      }
+    };
+    start();
     document.addEventListener("visibilitychange", onVis);
     return () => {
-      window.clearInterval(id);
+      clear();
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [ready, loadNotifications]);

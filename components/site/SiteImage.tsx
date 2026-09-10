@@ -30,7 +30,9 @@ export function FillCoverImage({
   alt,
   className,
   sizes,
-  quality = 95,
+  quality = 85,
+  priority,
+  loading,
   ...rest
 }: FillImageProps) {
   return (
@@ -40,6 +42,8 @@ export function FillCoverImage({
       className={className}
       sizes={sizes}
       quality={quality}
+      priority={priority}
+      loading={priority ? undefined : loading ?? "lazy"}
       style={{ objectFit: "cover", ...(rest.style ?? {}) }}
       {...rest}
     />
