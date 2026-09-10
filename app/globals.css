@@ -1890,6 +1890,29 @@ a.btn-whatsapp.contact-wa,
   font-size: 0.62rem;
   font-weight: 600;
 }
+.crm-recent-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 700px) {
+  .crm-recent-grid { grid-template-columns: 1fr 1fr; }
+}
+.crm-recent-card {
+  border: 1px solid var(--line);
+  background: var(--white);
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+.crm-recent-card strong { font-size: 0.95rem; }
+.crm-recent-card span { color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
 .crm-complete-sheet {
   display: grid;
   gap: 0.55rem;

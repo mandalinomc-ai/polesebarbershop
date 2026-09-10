@@ -100,7 +100,7 @@ const STATUS_IT: Record<string, string> = {
   confirmed: "Confermato",
   completed: "Completato",
   cancelled: "Annullato",
-  walk_in: "Walk-in",
+  walk_in: "Prenota in sede",
 };
 
 function pct(n: number) {
@@ -361,7 +361,7 @@ export function GestionalePanel() {
                 setWalkOpen(true);
               }}
             >
-              <Plus size={16} aria-hidden /> Walk-in
+              <Plus size={16} aria-hidden /> Prenota in sede
             </button>
             <button
               type="button"
@@ -425,6 +425,7 @@ export function GestionalePanel() {
                   nextVisitAt: null,
                   topService: null,
                   lastServiceIds: [],
+                  lastService: null,
                   topBarber: appt.barberName,
                   crmNotes: "",
                   incomplete: !(appt.phone || "").replace(/\D/g, "").length && !(appt.email || "").includes("@"),
@@ -754,7 +755,7 @@ function AgendaView({
       <section className="occupancy-wrap" aria-label="Occupazione poltrone">
         <h2 className="font-serif">Tabella orari</h2>
         <p className="slot-status occupancy-legend">
-          Tocca una cella <strong>Libero</strong> per walk-in rapido. Un appuntamento multi-servizio = un solo blocco continuo.
+          Tocca una cella <strong>Libero</strong> per prenotare in sede. Un appuntamento multi-servizio = un solo blocco continuo.
         </p>
         {occupancy.length === 0 ? (
           <p className="slot-status">Nessuna fascia oraria: salone chiuso o data non valida.</p>
@@ -819,7 +820,7 @@ function AgendaView({
                   </header>
                   <p>
                     {a.firstName} {a.lastName} — {services}
-                    {a.isWalkIn ? " · Walk-in" : ""}
+                    {a.isWalkIn ? " · In sede" : ""}
                     {a.status === "cancelled" ? " · Annullato" : ""}
                   </p>
                   <p className="agenda-price">{formatEuroCents(a.priceCents)}</p>
@@ -879,11 +880,26 @@ function ClientiView({
   total: number;
 }) {
   const [filter, setFilter] = useState<"all" | "incomplete">("all");
+  const [addOpen, setAddOpen] = useState(false);
+  const [addFirst, setAddFirst] = useState("");
+  const [addLast, setAddLast] = useState("");
+  const [addPhone, setAddPhone] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addError, setAddError] = useState("");
+  const [addSaving, setAddSaving] = useState(false);
   const visible = useMemo(
     () => (filter === "incomplete" ? clients.filter((c) => c.incomplete) : clients),
     [clients, filter],
   );
   const incompleteCount = useMemo(() => clients.filter((c) => c.incomplete).length, [clients]);
+  const recentClients = useMemo(
+    () =>
+      [...clients]
+        .filter((c) => c.lastVisitAt)
+        .sort((a, b) => (b.lastVisitAt || "").localeCompare(a.lastVisitAt || ""))
+        .slice(0, 8),
+    [clients],
+  );
   const open = selected && visible.find((c) => c.key === selected.key)
     ? selected
     : selected && clients.find((c) => c.key === selected.key)
@@ -904,6 +920,26 @@ function ClientiView({
   }, [open?.key, open?.crmNotes, open?.phone, open?.email]);
   return (
     <div className="crm-stack">
+      <section className="crm-card">
+        <h2 className="font-serif">Clienti recenti</h2>
+        <p className="slot-status" style={{ marginTop: 0 }}>
+          Ultimo trattamento e preferito.
+        </p>
+        {recentClients.length === 0 ? (
+          <p className="slot-status">Nessuna visita recente.</p>
+        ) : (
+          <div className="crm-recent-grid">
+            {recentClients.map((c) => (
+              <button key={`recent-${c.key}`} type="button" className="crm-recent-card" onClick={() => onSelect(c)}>
+                <strong>{c.name || "—"}</strong>
+                {c.incomplete ? <span className="crm-incomplete-flag">Scheda incompleta</span> : null}
+                <span>Ultimo: {c.lastService || "—"}</span>
+                <span>Preferito: {c.topService || c.lastService || "—"}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
       <div className="crm-toolbar">
         <label className="crm-search">
           <Search size={16} aria-hidden />
@@ -914,6 +950,20 @@ function ClientiView({
             placeholder="Cerca nome, telefono, email…"
           />
         </label>
+        <button
+          type="button"
+          className="btn btn-gold"
+          onClick={() => {
+            setAddFirst("");
+            setAddLast("");
+            setAddPhone("");
+            setAddEmail("");
+            setAddError("");
+            setAddOpen(true);
+          }}
+        >
+          <Plus size={16} aria-hidden /> Aggiungi cliente
+        </button>
         <div className="crm-view-toggle">
           <button type="button" className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>
             Tutti
@@ -1080,6 +1130,67 @@ function ClientiView({
             </ul>
           )}
         </section>
+      ) : null}
+      {addOpen ? (
+        <div className="admin-modal-backdrop" onClick={() => setAddOpen(false)}>
+          <form
+            className="admin-modal"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void (async () => {
+                setAddSaving(true);
+                setAddError("");
+                const res = await fetch("/api/admin/clients", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    firstName: addFirst,
+                    lastName: addLast,
+                    phone: addPhone,
+                    email: addEmail,
+                  }),
+                });
+                const json = (await res.json()) as { error?: string };
+                setAddSaving(false);
+                if (!res.ok) {
+                  setAddError(json.error || "Salvataggio non riuscito.");
+                  return;
+                }
+                setAddOpen(false);
+                onClientsChanged();
+              })();
+            }}
+          >
+            <p className="eyebrow">Clienti</p>
+            <h2 className="font-serif">Aggiungi cliente</h2>
+            <label>
+              Nome
+              <input className="input-lux" required value={addFirst} onChange={(e) => setAddFirst(e.target.value)} />
+            </label>
+            <label>
+              Cognome
+              <input className="input-lux" required value={addLast} onChange={(e) => setAddLast(e.target.value)} />
+            </label>
+            <label>
+              Telefono
+              <input className="input-lux" inputMode="tel" value={addPhone} onChange={(e) => setAddPhone(e.target.value)} />
+            </label>
+            <label>
+              Email
+              <input className="input-lux" type="email" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} />
+            </label>
+            {addError ? <p className="field-error">{addError}</p> : null}
+            <div className="admin-head-actions">
+              <button type="button" className="btn btn-outline" onClick={() => setAddOpen(false)}>
+                Chiudi
+              </button>
+              <button type="submit" className="btn btn-gold" disabled={addSaving}>
+                {addSaving ? "…" : "Salva in CRM"}
+              </button>
+            </div>
+          </form>
+        </div>
       ) : null}
     </div>
   );
@@ -1604,8 +1715,8 @@ function WalkInModal({
   return (
     <div className="admin-modal-backdrop" onClick={onClose}>
       <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => void save(e)}>
-        <p className="eyebrow">Walk-in</p>
-        <h2 className="font-serif">{preset ? `Rapido · ${preset.startTime}` : "Inserisci in agenda"}</h2>
+        <p className="eyebrow">Prenota in sede</p>
+        <h2 className="font-serif">{preset ? `Rapido · ${preset.startTime}` : "Prenota in sede"}</h2>
         <div className="walkin-field">
           <span className="walkin-field-label">Barbiere</span>
           <div className="walkin-chip-grid">
@@ -1757,7 +1868,7 @@ function WalkInModal({
             </button>
           ) : null}
           <button type="submit" className="btn btn-gold" disabled={saving || serviceIds.length === 0}>
-            {saving ? "Salvataggio…" : "Salva walk-in"}
+            {saving ? "Salvataggio…" : "Salva prenotazione in sede"}
           </button>
         </div>
       </form>

@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { formatWallDate } from "@/lib/availability";
-import { aggregateClients, aggregateStats, toCrmAppointment, type StatsPeriod } from "@/lib/crm";
+import {
+  aggregateClients,
+  aggregateStats,
+  mergeCustomerProfiles,
+  toCrmAppointment,
+  type CustomerProfileRow,
+  type StatsPeriod,
+} from "@/lib/crm";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/supabase-query";
 
@@ -24,6 +31,22 @@ async function loadNotesMap(): Promise<Record<string, string>> {
     map[row.client_key as string] = (row.notes as string) || "";
   }
   return map;
+}
+
+async function loadCustomerProfiles(): Promise<CustomerProfileRow[]> {
+  const db = getSupabaseAdmin();
+  if (!db) return [];
+  const { data, error } = await db
+    .from("customer_profiles")
+    .select("client_key, first_name, last_name, phone, email");
+  if (error) return [];
+  return (data || []).map((row) => ({
+    clientKey: String(row.client_key || ""),
+    firstName: String(row.first_name || ""),
+    lastName: String(row.last_name || ""),
+    phone: String(row.phone || ""),
+    email: String(row.email || ""),
+  }));
 }
 
 export async function GET(request: Request) {
@@ -67,12 +90,13 @@ export async function GET(request: Request) {
     });
   }
 
-  const notesMap = await loadNotesMap();
+  const [notesMap, profiles] = await Promise.all([loadNotesMap(), loadCustomerProfiles()]);
   const rows = ((data || []) as AppointmentRow[]).map(toCrmAppointment);
+  const clients = mergeCustomerProfiles(aggregateClients(rows, notesMap), profiles, notesMap);
   return NextResponse.json({
     date,
     period,
-    clients: aggregateClients(rows, notesMap),
+    clients,
     stats: aggregateStats(rows, { date, period }),
   });
 }
