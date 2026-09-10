@@ -1997,7 +1997,8 @@ a.btn-whatsapp.contact-wa,
   .agenda-columns { grid-template-columns: 1fr 1fr; }
   .admin-modal { width: min(92vw, 36rem); }
   .walkin-chip-grid { gap: 0.4rem; }
-  .walkin-chip { min-height: 40px; font-size: 0.8rem; }
+  .walkin-chip { min-height: 48px; font-size: 0.85rem; }
+  .walkin-chip--xl { min-height: 52px; }
 }
 
 @media (min-width: 900px) {
