@@ -228,7 +228,7 @@ describe("smart engine integration", () => {
       fullSearch: true,
     }).map((s) => s.label);
     expect(labels).toContain("09:42");
-    expect(labels).toContain("08:30");
+    expect(labels).not.toContain("09:00");
     const afterBusy = labels.filter((l) => l >= "09:42");
     expect(afterBusy[0]).toBe("09:42");
   });
@@ -366,7 +366,7 @@ describe("smart engine integration", () => {
       durationMinutes: duration,
       now: nowBefore,
     });
-    expect(slots[0]?.label).toBe("08:30");
+    expect(slots[0]?.label).toBe("09:00");
     expect(slots.at(-1)?.label).toBe("17:45");
     expect(slots.at(-1)?.blockEndIso).toBe(
       wallTimeToUtc(TUESDAY, "19:00").toISOString(),
@@ -388,7 +388,7 @@ describe("smart engine integration", () => {
       now: nowBefore,
     });
     expect(smart.length).toBeLessThan(full.length);
-    expect(smart[0]?.label).toBe("08:30");
+    expect(smart[0]?.label).toBe("09:00");
   });
 
   it("findFirstAvailability returns earliest free start", () => {
@@ -400,7 +400,7 @@ describe("smart engine integration", () => {
       fromDate: TUESDAY,
       minNoticeMinutes: 0,
     });
-    expect(slot?.label).toBe("08:30");
+    expect(slot?.label).toBe("09:00");
   });
 });
 
@@ -661,7 +661,7 @@ describe("trova migliore + riempi buco", () => {
       now: nowBefore,
       minNoticeMinutes: 0,
     });
-    expect(best?.slot.label).toBe("08:30");
+    expect(best?.slot.label).toBe("09:00");
     expect(best?.rank).toBe("OPTIMAL");
   });
 

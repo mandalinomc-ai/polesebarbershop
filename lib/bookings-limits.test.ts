@@ -21,7 +21,7 @@ describe("booking capacity policy", () => {
       // Freeze clock so past civil dates still exercise the engine.
       now: wallTimeToUtc("2026-08-31", "09:00"),
     });
-    // Tue 08:30–19:00 with lunch 13:00–14:00, 25-min + 5 buffer, 5-min step → ~104 starts
+    // Tue 09:00–19:00 with lunch 13:00–14:00, 25-min + 5 buffer, 5-min step
     expect(slots.length).toBeGreaterThan(90);
     expect(slots.length).toBeLessThan(120);
     expect(slots.some((s) => s.label >= "13:00" && s.label < "14:00")).toBe(false);

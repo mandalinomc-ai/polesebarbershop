@@ -42,7 +42,7 @@ describe("production official durations (all 10)", () => {
       now,
       fullSearch: true,
     });
-    expect(slots[0]?.label).toBe("08:30");
+    expect(slots[0]?.label).toBe("09:00");
     // 150 + 5 buffer = 155 → last start that fits before 19:00 is 16:25
     const last = slots.at(-1)!;
     expect(last.label <= "16:25").toBe(true);
