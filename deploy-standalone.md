@@ -75,13 +75,26 @@ Dietro Cloudflare Tunnel / Nginx punta il hostname al container sulla porta `300
 
 ---
 
-## Backup codice offline
+## Opzione C — Dominio .it su Cloudflare (DNS) + app su Vercel
+
+1. In Cloudflare DNS: CNAME/ALIAS del dominio verso Vercel (come da istruzioni Vercel Domains).  
+2. In Vercel: aggiungi il dominio custom al progetto **Felice** (non a progetti archiviati).  
+3. Imposta `NEXT_PUBLIC_SITE_URL=https://www.tuodominio.it` e **un solo** redeploy.  
+4. SSL Full (strict); bypass cache su `/api/*` e `/gestionale`.  
+5. robots/sitemap seguono automaticamente `NEXT_PUBLIC_SITE_URL`.
+
+Per rivendere / clonare il prodotto: `docs/WHITE_LABEL_TEMPLATE.md`.
+
+---
+
+## Backup codice offline / template
 
 Dal repo ufficiale:
 
 ```bash
-node scripts/export-offline-backup.mjs
-# oppure: npm run backup:offline
+npm run backup:offline
+# oppure, archivio “template” con stamp:
+node scripts/export-offline-backup.mjs --out /tmp/barbershop-template.tar.gz --template
 ```
 
 Genera un archivio `.tar.gz` senza `node_modules`, `.next`, cache e secret.  
@@ -92,8 +105,10 @@ Genera un archivio `.tar.gz` senza `node_modules`, `.next`, cache e secret.
 ## Checklist go-live dominio .it
 
 1. Imposta `NEXT_PUBLIC_SITE_URL=https://www.felicepolese.it` (senza slash finale)
-2. Rebuild / restart
-3. Verifica: home, `/prenota`, `/gestionale`, email `.ics`
-4. Non ripuntare Git a progetti Vercel vecchi o archiviati
+2. Rebuild / restart (un deploy)
+3. Verifica: home, `/prenota`, `/gestionale`, email `.ics`, `/robots.txt`, `/sitemap.xml`
+4. Imposta `ADMIN_USER` / `ADMIN_PASSWORD` forti (non lasciare i default)
+5. Non ripuntare Git a progetti Vercel vecchi o archiviati
 
-Identificativo: **FELICE_POLESE_BARBERSHOP_LIVE_2026_09_10**
+Identificativo: **FELICE_POLESE_BARBERSHOP_LIVE_2026_09_10**  
+White-label: **docs/WHITE_LABEL_TEMPLATE.md**

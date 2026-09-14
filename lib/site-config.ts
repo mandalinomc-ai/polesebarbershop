@@ -367,6 +367,15 @@ export function getSiteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || SITE.siteUrl).replace(/\/$/, "");
 }
 
+/** Host for ICS UID — follows public site URL (Vercel, .it, white-label). */
+export function getIcsUidDomain(): string {
+  try {
+    return new URL(getSiteUrl()).hostname || "localhost";
+  } catch {
+    return "localhost";
+  }
+}
+
 export function isResendTestFrom(): boolean {
   const from = process.env.RESEND_FROM ?? "";
   return from.includes("resend.dev") || from.includes("onboarding@");

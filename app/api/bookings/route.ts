@@ -8,7 +8,7 @@ import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
 import { createManageToken } from "@/lib/manage-token";
 import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
-import { SITE, getBookingConfirmWhatsAppUrl, getCustomerConfirmMessage, getSalonToCustomerWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
+import { SITE, getBookingConfirmWhatsAppUrl, getCustomerConfirmMessage, getSalonToCustomerWhatsAppUrl, getSiteUrl, getIcsUidDomain } from "@/lib/site-config";
 import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
   const dateLabel = formatItalianDate(body.date);
   // ICS / GCal use client-facing service end (no operational buffer).
   const icsContent = buildIcs({
-    uid: `${manageToken}@polesebarbershop.it`,
+    uid: `${manageToken}@${getIcsUidDomain()}`,
     startsAt: slot.start,
     endsAt: slot.end,
     summary: `${SITE.name} — ${totals.names}`,

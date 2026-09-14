@@ -71,3 +71,7 @@ CSP allows Google Fonts + Maps frames required by the live design.
 ## 8. Tests
 
 See `lib/admin-auth.test.ts`, `lib/rate-limit.test.ts`, `lib/manage-token.test.ts`, `lib/security-booking.test.ts`, `lib/cookie-consent.test.ts`.
+
+## Update 2026-09-14
+
+Vedi anche `docs/FULL_SITE_AUDIT.md` (front+gestionale+API+legal+white-label). SEO robots/sitemap ora dinamici; ICS UID da hostname pubblico. Template rivendita: `docs/WHITE_LABEL_TEMPLATE.md`.
