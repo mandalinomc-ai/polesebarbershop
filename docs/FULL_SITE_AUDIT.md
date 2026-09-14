@@ -9,7 +9,7 @@
 **Config:** `lib/site-config.ts` → `SITE.siteUrl` / `NEXT_PUBLIC_SITE_URL`  
 **White-label:** `docs/WHITE_LABEL_TEMPLATE.md` · export `npm run backup:offline`
 
-> **Punto critico (come da tua richiesta):** la UI di login **non** è la sicurezza. Qui le API `/api/admin/*` (tranne login/logout) passano da middleware (presenza cookie) **e** da `isAdminRequest()` HMAC lato server. Se in produzione manca `ADMIN_PASSWORD` forte, il rischio resta operativo (default codice `admin` / `smda2026`).
+> **Punto critico (come da tua richiesta):** la UI di login **non** è la sicurezza. Qui le API `/api/admin/*` (tranne login/logout) passano da middleware (presenza cookie) **e** da `isAdminRequest()` HMAC lato server. `ADMIN_PASSWORD` non ha fallback in codice: senza env il login è disabilitato (503). In produzione va impostata in Vercel.
 
 ---
 
@@ -35,7 +35,7 @@
 
 **Fix questo ciclo:** `app/robots.ts` + `app/sitemap.ts` dinamici; ICS UID = `getIcsUidDomain()` (hostname pubblico).
 
-**Residui:** anchor gallery; doppia entry `/prenota` vs `#prenota`; Fonts terze parti; default admin se env vuota.
+**Residui:** anchor gallery; doppia entry `/prenota` vs `#prenota`; Fonts terze parti.
 
 ---
 
@@ -43,7 +43,7 @@
 
 | Controllo | Stato |
 |-----------|--------|
-| Credenziali | `ADMIN_USER` / `ADMIN_PASSWORD` (default `admin` / `smda2026`) |
+| Credenziali | `ADMIN_USER` (default username `admin`) / `ADMIN_PASSWORD` (solo env, nessun fallback) |
 | Cookie | `polese_admin` HttpOnly + HMAC + expiry |
 | Middleware | Cookie presence su `/api/admin/*` |
 | Handler | `isAdminRequest()` su tutte le API dati |

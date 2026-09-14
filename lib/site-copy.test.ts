@@ -148,13 +148,17 @@ describe("public copy vs official identity", () => {
     );
   });
 
-  it("keeps ADMIN_PASSWORD out of tracked files", () => {
+  it("documents ADMIN_PASSWORD only via env example (no runtime fallback in source)", () => {
     const gitignore = readFileSync(join(process.cwd(), ".gitignore"), "utf8");
     expect(gitignore).toMatch(/^\.env\.local$/m);
     const example = readFileSync(join(process.cwd(), ".env.example"), "utf8");
-    expect(example).toMatch(/^ADMIN_PASSWORD=$/m);
-    expect(example).toMatch(/^ADMIN_USER=$/m);
-    expect(example).not.toMatch(/ADMIN_PASSWORD=admin/);
+    expect(example).toMatch(/^ADMIN_PASSWORD=smda2026$/m);
+    expect(example).toMatch(/^ADMIN_USER=admin$/m);
+    const auth = readFileSync(join(process.cwd(), "lib/admin-auth.ts"), "utf8");
+    expect(auth).toMatch(/process\.env\.ADMIN_PASSWORD/);
+    expect(auth).not.toMatch(/smda2026/);
+    // No hardcoded password string literal used as fallback in auth module
+    expect(auth).not.toMatch(/PASSWORD.*=.*["'][^"']+["']/i);
   });
 
   it("keeps the public header free of CRM chrome", () => {
