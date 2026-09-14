@@ -49,6 +49,11 @@ export type Service = {
   durationKnown: boolean;
   /** When false, service is hidden from public booking (admin can deactivate). */
   active: boolean;
+  /**
+   * When true: visible in listino but not online-bookable —
+   * CTA opens WhatsApp with consulenza message.
+   */
+  whatsAppOnly?: boolean;
   description: string;
   /**
    * Optional servicing→processing→servicing. Only set when real minutes exist.
@@ -84,7 +89,8 @@ export const SERVICES: Service[] = [
     durationMin: 30,
     durationKnown: true,
     active: true,
-    description: "Taglio classico",
+    whatsAppOnly: true,
+    description: "Taglio classico — 30 min ferrei · solo su consulenza WhatsApp",
   },
   {
     id: "acconciatura",
@@ -120,7 +126,8 @@ export const SERVICES: Service[] = [
     durationMin: 20,
     durationKnown: true,
     active: true,
-    description: "Panno caldo con vaporizzatore + Oli con fragranze",
+    whatsAppOnly: true,
+    description: "Panno caldo con vaporizzatore + Oli con fragranze · solo su consulenza WhatsApp",
   },
   {
     id: "barba-standard",
@@ -132,7 +139,8 @@ export const SERVICES: Service[] = [
     durationMin: 15,
     durationKnown: true,
     active: true,
-    description: "Rifinitura / Modellatura classica",
+    whatsAppOnly: true,
+    description: "Rifinitura / Modellatura classica · solo su consulenza WhatsApp",
   },
   {
     id: "decolorazione-meches",
@@ -197,6 +205,17 @@ export const UNOFFICIAL_SERVICE_IDS = [
 ] as const;
 
 export const BOOKABLE_SERVICE_IDS = SERVICES.map((s) => s.id);
+
+/** Public online checkout excludes these — WhatsApp consulenza only. */
+export const WHATSAPP_ONLY_SERVICE_IDS = SERVICES.filter((s) => s.whatsAppOnly).map((s) => s.id);
+
+export function isWhatsAppOnlyService(id: string): boolean {
+  return WHATSAPP_ONLY_SERVICE_IDS.includes(id);
+}
+
+export function onlineBookableServices(services: Service[] = SERVICES): Service[] {
+  return services.filter((s) => s.active !== false && !s.whatsAppOnly);
+}
 
 /** Expected booking durations for the 10 official services (source of truth seed). */
 export const OFFICIAL_DURATION_MIN: Record<string, number> = Object.fromEntries(
@@ -294,7 +313,10 @@ export function totalsForServices(services: Service[]) {
 
 /** Online booking requires every selected service to have a known catalog duration. */
 export function servicesAreOnlineBookable(services: Service[]): boolean {
-  return services.length > 0 && services.every((s) => s.durationKnown && s.active !== false);
+  return (
+    services.length > 0 &&
+    services.every((s) => s.durationKnown && s.active !== false && !s.whatsAppOnly)
+  );
 }
 
 /**
@@ -308,8 +330,11 @@ export function onlineBookingBlockReason(services: Service[]): string | null {
   if (inactive.length) {
     return `Servizio non disponibile: ${inactive.map((s) => s.name).join(", ")}.`;
   }
+  const waOnly = services.filter((s) => s.whatsAppOnly);
+  if (waOnly.length) {
+    return `Prenotabile solo via WhatsApp: ${waOnly.map((s) => s.name).join(", ")}.`;
+  }
   const unknown = services.filter((s) => !s.durationKnown);
   if (!unknown.length) return null;
-  // Official catalog always has known durations — edge case only (stale overlay).
   return "Uno o più servizi non sono prenotabili online. Scegline altri o chiama il salone.";
 }

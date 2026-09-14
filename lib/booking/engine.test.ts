@@ -183,10 +183,11 @@ describe("candidate starts", () => {
 });
 
 describe("online bookable services", () => {
-  it("allows all official listino services with known durations", () => {
+  it("allows online listino services and blocks WhatsApp-only ones", () => {
     expect(servicesAreOnlineBookable([getService("taglio-pro")!])).toBe(true);
     expect(servicesAreOnlineBookable([getService("acconciatura")!])).toBe(true);
-    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "barba-standard"])!)).toBe(true);
+    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "barba-standard"])!)).toBe(false);
+    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "acconciatura"])!)).toBe(true);
     expect(servicesAreOnlineBookable(resolveServices(["decolorazione-meches"])!)).toBe(true);
     expect(
       servicesAreOnlineBookable([
@@ -505,6 +506,19 @@ describe("resolveEffectiveServiceDuration", () => {
       services: [getService("taglio-pro")!, getService("decolorazione-meches")!],
     });
     expect(r).toMatchObject({ ok: true, durationMin: 200, onlineBookable: true });
+  });
+
+  it("keeps catalog duration for WhatsApp-only but blocks onlineBookable", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("barba-pro")!],
+    });
+    expect(r).toMatchObject({
+      ok: true,
+      durationMin: 20,
+      source: "catalog",
+      onlineBookable: false,
+    });
+    expect(r.reason).toMatch(/WhatsApp/i);
   });
 
   it("uses processing config when present", () => {

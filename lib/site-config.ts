@@ -122,6 +122,8 @@ export const BOOKING_DATE_EVENT = "polese-booking-date";
 export const BOOKING_SERVICE_EVENT = "polese-booking-service";
 /** Broadcast full selected service ids so the listino can highlight the order. */
 export const BOOKING_SELECTION_SYNC_EVENT = "polese-booking-selection-sync";
+/** Dual-cart sync for WhatsApp-only consulenza multi-select (`{ ids }` or `{ toggle }`). */
+export const CONSULTATION_SELECTION_SYNC_EVENT = "polese-consultation-selection-sync";
 
 export function wallDateRome(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -292,6 +294,12 @@ export function getMapsUrl(): string {
 export function getWhatsAppUrl(message?: string): string {
   const text = message || SALON_CONTACT_MESSAGE;
   return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
+}
+
+/** CTA listino: «Salve vorrei una consulenza per [Trattamento]». Supports «A + B». */
+export function getWhatsAppConsulenzaUrl(treatmentName: string): string {
+  const name = treatmentName.trim() || "un trattamento";
+  return getWhatsAppUrl(`Salve vorrei una consulenza per ${name}`);
 }
 
 /** Direct chat QR / link — no prefilled text. */

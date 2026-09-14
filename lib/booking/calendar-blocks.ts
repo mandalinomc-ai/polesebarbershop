@@ -20,9 +20,14 @@ export type CalendarBlock = {
   kind?: "pause" | "lunch" | "custom" | "closed";
 };
 
-/** In-repo blocks — extend carefully; prefer real shop policy over invented pauses. */
+/** In-repo blocks — hard lunch pause 13:00–14:00 every open weekday. */
 export const CONFIG_CALENDAR_BLOCKS: CalendarBlock[] = [
-  // Example (disabled): { id: "tue-lunch", weekday: 2, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa" },
+  { id: "lunch-mon", weekday: 1, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa pranzo" },
+  { id: "lunch-tue", weekday: 2, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa pranzo" },
+  { id: "lunch-wed", weekday: 3, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa pranzo" },
+  { id: "lunch-thu", weekday: 4, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa pranzo" },
+  { id: "lunch-fri", weekday: 5, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa pranzo" },
+  { id: "lunch-sat", weekday: 6, start: "13:00", end: "14:00", kind: "lunch", label: "Pausa pranzo" },
 ];
 
 export function blocksForDate(

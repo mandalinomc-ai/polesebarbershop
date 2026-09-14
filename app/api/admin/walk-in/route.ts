@@ -14,6 +14,11 @@ import {
   publicAppointment,
   servicesSnapshot,
 } from "@/lib/appointments";
+import {
+  freeMinutesFromStart,
+  INSUFFICIENT_AGENDA_TIME_IT,
+  newBookingBlockMinutes,
+} from "@/lib/gestionale/agenda-block";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { flattenZodError, walkInSchema } from "@/lib/validations";
 import { z } from "zod";
@@ -91,6 +96,29 @@ export async function POST(request: Request) {
         ? err.message
         : "Calendario non disponibile. Riprova tra poco.";
     return NextResponse.json({ error: message }, { status: 503 });
+  }
+
+  const freeMinutes = freeMinutesFromStart({
+    date: body.date,
+    startTime: body.startTime,
+    barberId: body.barberId,
+    appointments: dayAppointments.map((a) => ({
+      barberId: a.barberId,
+      startsAt: a.startsAt,
+      endsAt: a.endsAt,
+    })),
+  });
+  const neededBlock = newBookingBlockMinutes(occupancyDuration);
+  if (neededBlock > freeMinutes) {
+    return NextResponse.json(
+      {
+        error: INSUFFICIENT_AGENDA_TIME_IT,
+        conflict: true,
+        freeMinutes,
+        neededBlockMinutes: neededBlock,
+      },
+      { status: 409 },
+    );
   }
 
   const slots = getAvailableSlots({

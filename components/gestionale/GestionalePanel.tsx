@@ -17,13 +17,25 @@ import {
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
-import { getRealBarbers, SERVICES, formatDuration, formatPrice, totalsForServices } from "@/lib/catalog";
+import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
 import {
   formatItalianDate,
   getFirstBookableDate,
   getOccupancyGrid,
+  OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
+import { BOOKING_BUFFER_MINUTES } from "@/lib/booking";
+import {
+  formatAgendaBlockLabel,
+  formatFreeSlotLabel,
+  formatTimeRange,
+  freeMinutesFromStart,
+  INSUFFICIENT_AGENDA_TIME_IT,
+  newBookingBlockMinutes,
+  resolveAppointmentBlock,
+  serviceFitsInFreeMinutes,
+} from "@/lib/gestionale/agenda-block";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
 import { formatEuroCents, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
@@ -51,6 +63,8 @@ type AdminAppt = {
   durationMin: number;
   durationOverrideMin?: number | null;
   effectiveDurationMin?: number;
+  /** Optional; missing → treat as 0 for legacy rows. */
+  bufferTime?: number | null;
   priceCents: number;
   isWalkIn: boolean;
   startsAt?: string;
@@ -280,9 +294,11 @@ export function GestionalePanel() {
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••"
+              placeholder="Password gestionale"
+              required
             />
           </label>
+          <p className="slot-status">Accesso riservato al salone.</p>
           {error ? <p className="field-error">{error}</p> : null}
           <button type="submit" className="btn btn-gold">
             Entra
@@ -392,7 +408,9 @@ export function GestionalePanel() {
           />
         ) : null}
         {tab === "agenda" ? (
-          <AgendaView
+          <>
+            <BlockTimePanel date={date} onChanged={() => void load()} />
+            <AgendaView
             agenda={agenda}
             date={date}
             view={agendaView}
@@ -447,6 +465,7 @@ export function GestionalePanel() {
               setNotifyFor(match);
             }}
           />
+          </>
         ) : null}
         {tab === "listino" ? <ServicesAdminPanel /> : null}
         {tab === "clienti" ? (
@@ -471,7 +490,14 @@ export function GestionalePanel() {
           />
         ) : null}
         {tab === "statistiche" ? (
-          <StatsView stats={stats} date={date} weekStart={agenda?.weekStart} period={statsPeriod} onPeriodChange={setStatsPeriod} />
+          <StatsView
+            stats={stats}
+            date={date}
+            weekStart={agenda?.weekStart}
+            period={statsPeriod}
+            onPeriodChange={setStatsPeriod}
+            onReload={() => void load()}
+          />
         ) : null}
         {tab === "storico" ? (
           <StoricoView
@@ -513,6 +539,7 @@ export function GestionalePanel() {
         <WalkInModal
           date={date}
           clients={clients}
+          appointments={agenda?.appointments || []}
           preset={walkPreset}
           onClose={() => {
             setWalkOpen(false);
@@ -699,21 +726,25 @@ function AgendaView({
       (agenda?.appointments || [])
         .filter((a) => a.status !== "cancelled")
         .map((a) => {
-          const start = a.startsAt
-            ? new Date(a.startsAt)
-            : wallTimeToUtc(date, a.timeLabel);
           const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
-          const end = a.endsAt
-            ? new Date(a.endsAt)
-            : new Date(start.getTime() + dur * 60_000);
+          const block = resolveAppointmentBlock({
+            startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
+            endsAt: a.endsAt,
+            durationMin: dur,
+            bufferTime: a.bufferTime,
+          });
           const name = `${a.firstName} ${a.lastName}`.trim();
           const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
           return {
             id: a.id,
             barberId: a.barberId,
-            startsAt: start,
-            endsAt: end,
-            label: `${name || "Cliente"} — ${services || "Servizio"} · ${dur} min`,
+            startsAt: block.start,
+            endsAt: block.end,
+            label: formatAgendaBlockLabel(
+              block.start,
+              block.end,
+              `${name || "Cliente"} - ${services || "Servizio"}`,
+            ),
           };
         }),
     [agenda, date],
@@ -792,7 +823,9 @@ function AgendaView({
                               <span className="occupancy-free-plus" aria-hidden>
                                 +
                               </span>
-                              <span className="occupancy-free-label">Libero</span>
+                              <span className="occupancy-free-label">
+                                {formatFreeSlotLabel(row.time, OCCUPANCY_STEP_MINUTES)}
+                              </span>
                               <span className="occupancy-free-hint">Prenota</span>
                             </button>
                           )}
@@ -816,10 +849,16 @@ function AgendaView({
               byBarber(b.id).map((a) => {
                 const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
                 const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
+                const block = resolveAppointmentBlock({
+                  startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
+                  endsAt: a.endsAt,
+                  durationMin: dur,
+                  bufferTime: a.bufferTime,
+                });
                 return (
                 <article key={a.id} className={`agenda-card status-${a.status}`}>
                   <header>
-                    <strong>{a.timeLabel}</strong>
+                    <strong>{formatTimeRange(block.start, block.end)}</strong>
                     <span>{dur} min</span>
                   </header>
                   <p>
@@ -1200,19 +1239,148 @@ function ClientiView({
   );
 }
 
+function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => void }) {
+  const [blockDate, setBlockDate] = useState(date);
+  const [start, setStart] = useState("13:00");
+  const [end, setEnd] = useState("14:00");
+  const [label, setLabel] = useState("Blocco orario");
+  const [barberId, setBarberId] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [blocks, setBlocks] = useState<
+    { id: string; date?: string | null; start: string; end: string; label?: string; barberId?: string | null }[]
+  >([]);
+
+  const refresh = useCallback(async () => {
+    const res = await fetch("/api/admin/calendar-blocks");
+    const json = (await res.json()) as { blocks?: typeof blocks };
+    if (res.ok) setBlocks(json.blocks || []);
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    setBlockDate(date);
+  }, [date]);
+
+  async function saveBlock() {
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/calendar-blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: blockDate,
+          start,
+          end,
+          label,
+          barberId: barberId || null,
+        }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(json.error || "Blocco non salvato.");
+        return;
+      }
+      await refresh();
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeBlock(id: string) {
+    const res = await fetch(`/api/admin/calendar-blocks?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      await refresh();
+      onChanged();
+    }
+  }
+
+  return (
+    <section className="crm-card block-time-panel">
+      <h2 className="font-serif">Blocca Orario</h2>
+      <p className="slot-status">
+        Impedisce le prenotazioni online sulla fascia scelta (permessi, servizi esterni). La pausa pranzo 13:00–14:00 è già esclusa di default.
+      </p>
+      <div className="block-time-form">
+        <label>
+          Data
+          <input className="input-lux" type="date" value={blockDate} onChange={(e) => setBlockDate(e.target.value)} />
+        </label>
+        <label>
+          Inizio
+          <input className="input-lux" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+        </label>
+        <label>
+          Fine
+          <input className="input-lux" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+        </label>
+        <label>
+          Barbiere
+          <select className="input-lux" value={barberId} onChange={(e) => setBarberId(e.target.value)}>
+            <option value="">Tutti</option>
+            {getRealBarbers().map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Motivo
+          <input className="input-lux" value={label} onChange={(e) => setLabel(e.target.value)} />
+        </label>
+        <button type="button" className="btn btn-gold" disabled={saving} onClick={() => void saveBlock()}>
+          {saving ? "…" : "Blocca Orario"}
+        </button>
+      </div>
+      {error ? <p className="field-error">{error}</p> : null}
+      {blocks.length ? (
+        <ul className="crm-list">
+          {blocks.map((b) => (
+            <li key={b.id}>
+              <strong>
+                {b.date || "ricorrente"} · {b.start}–{b.end}
+              </strong>
+              <span>
+                {b.label || "Blocco"}
+                {b.barberId ? ` · ${b.barberId}` : " · tutti"}
+              </span>
+              <button type="button" className="btn btn-outline" onClick={() => void removeBlock(b.id)}>
+                Rimuovi
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="slot-status">Nessun blocco personalizzato salvato.</p>
+      )}
+    </section>
+  );
+}
+
 function StatsView({
   stats,
   date,
   weekStart,
   period,
   onPeriodChange,
+  onReload,
 }: {
   stats: CrmStats | null;
   date: string;
   weekStart?: string;
   period: StatsPeriod;
   onPeriodChange: (p: StatsPeriod) => void;
+  onReload: () => void;
 }) {
+  const [excludingId, setExcludingId] = useState<string | null>(null);
   const periods: { id: StatsPeriod; label: string }[] = [
     { id: "today", label: "Oggi" },
     { id: "7d", label: "7 giorni" },
@@ -1222,6 +1390,27 @@ function StatsView({
   ];
   const maxAppt = Math.max(...(stats?.appointmentsOverTime.map((p) => p.count) || [1]), 1);
   const maxRev = Math.max(...(stats?.revenueOverTime.map((p) => p.revenueCents) || [1]), 1);
+
+  async function excludeTransaction(id: string) {
+    if (!window.confirm("Escludere questo incasso dalle statistiche? (soft delete)")) return;
+    setExcludingId(id);
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ excludeFromStats: true }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        window.alert(json.error || "Operazione non riuscita.");
+        return;
+      }
+      onReload();
+    } finally {
+      setExcludingId(null);
+    }
+  }
+
   return (
     <div className="crm-stack">
       <div className="crm-toolbar">
@@ -1246,6 +1435,51 @@ function StatsView({
         <Kpi label="Tasso disdetta" value={pct(stats?.cancelRate || 0)} hint={`${stats?.cancelledCount ?? 0} su ${stats?.totalVisits ?? 0}`} />
         <Kpi label="Incasso giorno" value={formatEuroCents(stats?.takings.dayCents || 0)} hint={formatItalianDate(date)} />
         <Kpi label="Incasso settimana" value={formatEuroCents(stats?.takings.weekCents || 0)} hint={weekStart ? `da lunedì ${weekStart}` : undefined} />
+      </section>
+      <section className="crm-card">
+        <h2 className="font-serif">Incassi singoli</h2>
+        <p className="slot-status">Elimina (soft) una voce per sottrarla dai totali senza cancellare l&apos;appuntamento dall&apos;agenda.</p>
+        {stats?.paidTransactions?.length ? (
+          <div className="crm-table-wrap">
+            <table className="crm-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Ora</th>
+                  <th>Cliente</th>
+                  <th>Servizio</th>
+                  <th>Barbiere</th>
+                  <th>Importo</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {stats.paidTransactions.map((t) => (
+                  <tr key={t.id}>
+                    <td data-label="Data">{t.dateLabel}</td>
+                    <td data-label="Ora">{t.timeLabel}</td>
+                    <td data-label="Cliente">{t.customerName}</td>
+                    <td data-label="Servizio">{t.serviceNames}</td>
+                    <td data-label="Barbiere">{t.barberName}</td>
+                    <td data-label="Importo">{formatEuroCents(t.priceCents)}</td>
+                    <td data-label="Azioni">
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        disabled={excludingId === t.id}
+                        onClick={() => void excludeTransaction(t.id)}
+                      >
+                        {excludingId === t.id ? "…" : "Elimina incasso"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="slot-status">Nessun incasso nel periodo.</p>
+        )}
       </section>
       <div className="crm-split">
         <section className="crm-card">
@@ -1559,18 +1793,21 @@ function StoricoView({
 function WalkInModal({
   date,
   clients,
+  appointments,
   preset,
   onClose,
   onSaved,
 }: {
   date: string;
   clients: ClientRecord[];
+  appointments: AdminAppt[];
   preset: { barberId: string; startTime: string } | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const requestId = useRef(`wi-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   const nameRef = useRef<HTMLInputElement>(null);
+  const appliedClientKey = useRef<string | null>(null);
   const [serviceIds, setServiceIds] = useState<string[]>(["taglio-standard"]);
   const [barberId, setBarberId] = useState(preset?.barberId || "felice");
   const [startTime, setStartTime] = useState(preset?.startTime || "09:30");
@@ -1591,6 +1828,40 @@ function WalkInModal({
     () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
     [serviceIds],
   );
+
+  const freeMinutes = useMemo(
+    () =>
+      freeMinutesFromStart({
+        date,
+        startTime,
+        barberId,
+        appointments: appointments.map((a) => ({
+          barberId: a.barberId,
+          startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
+          endsAt: a.endsAt,
+          durationMin: a.effectiveDurationMin || a.durationOverrideMin || a.durationMin,
+          bufferTime: a.bufferTime,
+          status: a.status,
+        })),
+      }),
+    [appointments, barberId, date, startTime],
+  );
+
+  const effectiveServiceMin = useMemo(() => {
+    if (durationOverride && Number(durationOverride) > 0) return Number(durationOverride);
+    return totals.durationMin;
+  }, [durationOverride, totals.durationMin]);
+
+  const neededBlockMin = useMemo(
+    () => newBookingBlockMinutes(effectiveServiceMin || 0),
+    [effectiveServiceMin],
+  );
+
+  const selectionFits = useMemo(
+    () => serviceFitsInFreeMinutes(effectiveServiceMin || 0, freeMinutes),
+    [effectiveServiceMin, freeMinutes],
+  );
+
   const frequentClients = useMemo(
     () =>
       [...clients]
@@ -1621,17 +1892,56 @@ function WalkInModal({
     return () => window.clearTimeout(t);
   }, []);
 
+  /** Auto-match unique anagrafica while typing → last treatment. */
+  useEffect(() => {
+    const q = `${firstName} ${lastName}`.trim().toLowerCase();
+    if (q.length < 3) return;
+    const exact = clients.filter((c) => {
+      const full = c.name.trim().toLowerCase();
+      const composed = `${c.firstName} ${c.lastName}`.trim().toLowerCase();
+      return full === q || composed === q;
+    });
+    if (exact.length !== 1) return;
+    const hit = exact[0]!;
+    if (appliedClientKey.current === hit.key) return;
+    appliedClientKey.current = hit.key;
+    setPhone(hit.phone || "");
+    setEmail(hit.email || "");
+    if (hit.lastServiceIds?.length) setServiceIds(hit.lastServiceIds);
+  }, [clients, firstName, lastName]);
+
   function pickClient(c: ClientRecord) {
+    appliedClientKey.current = c.key;
     setFirstName(c.firstName);
     setLastName(c.lastName);
     setPhone(c.phone || "");
     setEmail(c.email || "");
-    if (c.lastServiceIds?.length) setServiceIds(c.lastServiceIds);
+    if (c.lastServiceIds?.length) setServiceIds([...c.lastServiceIds]);
     setSuggestOpen(false);
+    setError("");
+  }
+
+  function serviceDisabled(id: string): boolean {
+    const alone = SERVICES.find((s) => s.id === id);
+    if (!alone?.durationKnown) return false;
+    if (serviceIds.includes(id)) {
+      // Keep selected chips interactive so operator can deselect.
+      return false;
+    }
+    const nextIds = [...serviceIds, id];
+    const nextTotals = totalsForServices(SERVICES.filter((s) => nextIds.includes(s.id)));
+    const override = durationOverride && Number(durationOverride) > 0 ? Number(durationOverride) : null;
+    const dur = override ?? nextTotals.durationMin;
+    return !serviceFitsInFreeMinutes(dur, freeMinutes);
   }
 
   function toggleService(id: string) {
+    if (!serviceIds.includes(id) && serviceDisabled(id)) {
+      setError(INSUFFICIENT_AGENDA_TIME_IT);
+      return;
+    }
     setServiceIds((curr) => (curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id]));
+    setError("");
   }
 
   async function findSlot(mode: "day" | "first" | "best") {
@@ -1693,6 +2003,10 @@ function WalkInModal({
       setError("Inserisci almeno il nome.");
       return;
     }
+    if (!selectionFits || serviceIds.length === 0) {
+      setError(INSUFFICIENT_AGENDA_TIME_IT);
+      return;
+    }
     setSaving(true);
     setError("");
     setAlternatives([]);
@@ -1748,6 +2062,7 @@ function WalkInModal({
                   onClick={() => pickClient(c)}
                 >
                   {c.name}
+                  {c.lastService ? <small>ultima: {c.lastService}</small> : null}
                 </button>
               ))}
             </div>
@@ -1769,34 +2084,77 @@ function WalkInModal({
           </div>
         </div>
         <div className="walkin-field">
-          <span className="walkin-field-label">Trattamenti</span>
+          <span className="walkin-field-label">
+            Trattamenti
+            <em className="walkin-gap-hint">
+              {" "}
+              · libero {freeMinutes} min · blocco {neededBlockMin || "—"} min (+{BOOKING_BUFFER_MINUTES} buffer)
+            </em>
+          </span>
           <div className="walkin-chip-grid walkin-chip-grid--xl">
-            {SERVICES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                className={`walkin-chip walkin-chip--xl${serviceIds.includes(s.id) ? " is-on" : ""}`}
-                onClick={() => toggleService(s.id)}
-              >
-                {s.name}
-                <small>
-                  {formatPrice(s)}
-                  {!s.durationKnown ? " · durata?" : ` · ${formatDuration(s)}`}
-                </small>
-              </button>
-            ))}
+            <p className="slot-status" style={{ gridColumn: "1 / -1" }}>
+              Prenota ora (online)
+            </p>
+            {SERVICES.filter((s) => !s.whatsAppOnly).map((s) => {
+              const disabled = serviceDisabled(s.id);
+              const block = s.durationKnown ? newBookingBlockMinutes(s.durationMin) : null;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  disabled={disabled}
+                  title={disabled ? INSUFFICIENT_AGENDA_TIME_IT : undefined}
+                  className={`walkin-chip walkin-chip--xl${serviceIds.includes(s.id) ? " is-on" : ""}${disabled ? " is-disabled" : ""}`}
+                  onClick={() => toggleService(s.id)}
+                >
+                  {s.name}
+                  <small>
+                    {formatPrice(s)}
+                    {!s.durationKnown
+                      ? " · durata?"
+                      : ` · ${s.durationMin}+${BOOKING_BUFFER_MINUTES}=${block} min`}
+                  </small>
+                </button>
+              );
+            })}
+            <p className="slot-status" style={{ gridColumn: "1 / -1" }}>
+              Consulenza (solo salone · regola tu i minuti)
+            </p>
+            {SERVICES.filter((s) => s.whatsAppOnly).map((s) => {
+              const disabled = serviceDisabled(s.id);
+              const block = s.durationKnown ? newBookingBlockMinutes(s.durationMin) : null;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  disabled={disabled}
+                  title={disabled ? INSUFFICIENT_AGENDA_TIME_IT : undefined}
+                  className={`walkin-chip walkin-chip--xl walkin-chip--consult${serviceIds.includes(s.id) ? " is-on" : ""}${disabled ? " is-disabled" : ""}`}
+                  onClick={() => toggleService(s.id)}
+                >
+                  {s.name}
+                  <small>
+                    {formatPrice(s)}
+                    {!s.durationKnown
+                      ? " · durata?"
+                      : ` · cat. ${s.durationMin} min · override sotto`}
+                    {block ? ` · blocco ${block}` : ""}
+                  </small>
+                </button>
+              );
+            })}
           </div>
         </div>
-        {hasUnknownDuration ? (
+        {hasUnknownDuration ||
+        SERVICES.some((s) => serviceIds.includes(s.id) && s.whatsAppOnly) ? (
           <label>
-            Durata override (min)
+            Durata effettiva (min) — obbligatoria se tempi diversi dal listino
             <input
               className="input-lux"
               type="number"
               min={1}
               max={480}
-              required
-              placeholder={String(totals.durationMin || "")}
+              placeholder={`Catalogo: ${totals.durationMin || ""}`}
               value={durationOverride}
               onChange={(e) => setDurationOverride(e.target.value)}
             />
@@ -1822,7 +2180,7 @@ function WalkInModal({
           </>
         ) : (
           <p className="slot-status walkin-preset-banner">
-            Orario <strong>{startTime}</strong> · barbiere già impostato dalla cella Libero
+            Orario <strong>{startTime}</strong> · barbiere già impostato dalla cella Libero · {freeMinutes} min liberi
           </p>
         )}
         <div className="walkin-suggest-wrap">
@@ -1839,6 +2197,7 @@ function WalkInModal({
                 setFirstName(e.target.value);
                 setPhone("");
                 setEmail("");
+                appliedClientKey.current = null;
                 setSuggestOpen(true);
               }}
             />
@@ -1855,6 +2214,7 @@ function WalkInModal({
                 setLastName(e.target.value);
                 setPhone("");
                 setEmail("");
+                appliedClientKey.current = null;
                 setSuggestOpen(true);
               }}
             />
@@ -1877,6 +2237,9 @@ function WalkInModal({
           <input className="input-lux" type="number" min={0} value={priceEuro} onChange={(e) => setPriceEuro(Number(e.target.value))} />
         </label>
         {error ? <p className="field-error">{error}</p> : null}
+        {!selectionFits && !error ? (
+          <p className="field-error">{INSUFFICIENT_AGENDA_TIME_IT}</p>
+        ) : null}
         {alternatives.length > 0 ? (
           <div className="walkin-chip-grid walkin-chip-grid--xl">
             {alternatives.map((a) => (
@@ -1903,15 +2266,23 @@ function WalkInModal({
             <button
               type="button"
               className="btn btn-outline"
-              disabled={saving}
+              disabled={saving || !selectionFits}
               onClick={(e) => {
+                if (!selectionFits) {
+                  setError(INSUFFICIENT_AGENDA_TIME_IT);
+                  return;
+                }
                 if (window.confirm("Forzare l'inserimento anche in conflitto?")) void save(e, true);
               }}
             >
               Forza comunque
             </button>
           ) : null}
-          <button type="submit" className="btn btn-gold btn-touch-xl" disabled={saving || serviceIds.length === 0 || !firstName.trim()}>
+          <button
+            type="submit"
+            className="btn btn-gold btn-touch-xl"
+            disabled={saving || serviceIds.length === 0 || !firstName.trim() || !selectionFits}
+          >
             {saving ? "Salvataggio…" : "Salva"}
           </button>
         </div>
@@ -1943,6 +2314,11 @@ function MoveModal({
   >([]);
   const [saving, setSaving] = useState(false);
   const [finding, setFinding] = useState(false);
+  const [notifyHint, setNotifyHint] = useState<{
+    message?: string;
+    waUrl?: string | null;
+    notified?: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (appt.startsAt) {
@@ -1954,6 +2330,7 @@ function MoveModal({
     setStartTime(appt.timeLabel);
     setBarberId(appt.barberId);
     setDurationOverride(appt.durationOverrideMin != null ? String(appt.durationOverrideMin) : "");
+    setNotifyHint(null);
   }, [appt, date]);
 
   async function findBest(mode: "day" | "first" | "best") {
@@ -2023,11 +2400,36 @@ function MoveModal({
       error?: string;
       conflict?: boolean;
       alternatives?: { label: string; startIso: string; date?: string; barberId?: string }[];
+      clientNotify?: {
+        notified?: boolean;
+        customerWhatsAppUrl?: string | null;
+        rescheduleMessage?: string;
+        emailSent?: boolean;
+        whatsappSent?: boolean;
+      };
     };
     setSaving(false);
     if (!res.ok) {
       setError(json.error || "Impossibile spostare.");
       if (json.alternatives?.length) setAlternatives(json.alternatives);
+      return;
+    }
+    const n = json.clientNotify;
+    if (n) {
+      setNotifyHint({
+        notified: Boolean(n.notified),
+        waUrl: n.customerWhatsAppUrl,
+        message: n.rescheduleMessage,
+      });
+      // Keep modal briefly so staff can open WA if auto-notify failed.
+      if (n.notified && !n.customerWhatsAppUrl) {
+        onSaved();
+        return;
+      }
+      if (n.notified && n.whatsappSent) {
+        onSaved();
+        return;
+      }
       return;
     }
     onSaved();
@@ -2083,6 +2485,23 @@ function MoveModal({
           </button>
         </div>
         {error ? <p className="field-error">{error}</p> : null}
+        {notifyHint ? (
+          <div className="walkin-services">
+            <p className="slot-status">
+              {notifyHint.notified
+                ? "Orario salvato · cliente avvisato."
+                : "Orario salvato · avvisa il cliente (email/WhatsApp automatici non partiti)."}
+            </p>
+            {notifyHint.waUrl ? (
+              <a className="btn btn-listino-wa" href={notifyHint.waUrl} target="_blank" rel="noopener noreferrer">
+                Apri WhatsApp al cliente
+              </a>
+            ) : null}
+            <button type="button" className="btn btn-gold" onClick={onSaved}>
+              Chiudi e aggiorna agenda
+            </button>
+          </div>
+        ) : null}
         {alternatives.length > 0 ? (
           <div className="walkin-services">
             <p className="slot-status">Alternative:</p>

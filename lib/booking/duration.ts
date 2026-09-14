@@ -64,13 +64,16 @@ export function resolveEffectiveServiceDuration(input: {
   }
 
   const override = input.durationOverrideMin;
+  const anyWhatsAppOnly = services.some((s) => s.whatsAppOnly);
+
   if (override != null && override > 0) {
     return {
       ok: true,
       durationMin: override,
       source: "override",
       kind: input.assisted || kind === "unknown" || kind === "variable" ? "assisted" : kind,
-      onlineBookable: services.every((s) => s.durationKnown) && kind === "fixed",
+      onlineBookable:
+        !anyWhatsAppOnly && services.every((s) => s.durationKnown) && kind === "fixed",
       allowsGestionaleOverride,
     };
   }
@@ -84,13 +87,16 @@ export function resolveEffectiveServiceDuration(input: {
         durationMin: proc,
         source: "processing",
         kind: services[0]!.durationKnown ? kind : "assisted",
-        onlineBookable: Boolean(services[0]!.durationKnown && proc > 0),
+        onlineBookable: Boolean(
+          !anyWhatsAppOnly && services[0]!.durationKnown && proc > 0,
+        ),
         allowsGestionaleOverride,
       };
     }
   }
 
   const allKnown = services.every((s) => s.durationKnown);
+  const waOnly = services.some((s) => s.whatsAppOnly);
   if (allKnown) {
     const durationMin = services.reduce((sum, s) => sum + s.durationMin, 0);
     if (durationMin <= 0) {
@@ -105,12 +111,19 @@ export function resolveEffectiveServiceDuration(input: {
       };
     }
     return {
+      // Duration is known for gestionale / display; public online still gated by whatsAppOnly.
       ok: true,
       durationMin,
       source: "catalog",
       kind,
-      onlineBookable: true,
+      onlineBookable: !waOnly,
       allowsGestionaleOverride,
+      reason: waOnly
+        ? `Prenotabile solo via WhatsApp: ${services
+            .filter((s) => s.whatsAppOnly)
+            .map((s) => s.name)
+            .join(", ")}.`
+        : undefined,
     };
   }
 

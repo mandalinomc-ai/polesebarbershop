@@ -267,6 +267,37 @@ export function staffCancelCustomerEmail(opts: {
   };
 }
 
+/** Client notice when staff moves / retimes from the gestionale. */
+export function staffRescheduleCustomerEmail(opts: {
+  firstName: string;
+  service: string;
+  newDate: string;
+  newTime: string;
+  oldDate: string;
+  oldTime: string;
+  barber?: string;
+  bodyText: string;
+  manageUrl?: string;
+}) {
+  const barber = opts.barber?.trim()
+    ? `<br/>👤 Barber: <strong>${escapeHtml(opts.barber)}</strong>`
+    : "";
+  const manage = opts.manageUrl
+    ? `<p style="margin-top:20px;"><a href="${escapeHtml(opts.manageUrl)}" style="color:#C9A962;">Apri / gestisci prenotazione</a></p>`
+    : "";
+  return {
+    subject: `Orario aggiornato — ${SITE.name}`,
+    text: opts.bodyText,
+    html: wrap(`
+      <p>Ciao ${escapeHtml(opts.firstName)},</p>
+      <p>il salone ha aggiornato il tuo appuntamento per <strong>${escapeHtml(opts.service)}</strong>.</p>
+      <p>Nuovo orario: <strong>${escapeHtml(opts.newDate)}</strong> alle <strong>${escapeHtml(opts.newTime)}</strong>
+      (prima: ${escapeHtml(opts.oldDate)} ${escapeHtml(opts.oldTime)}).${barber}</p>
+      <p>Apri l'allegato .ics aggiornato per il calendario.</p>
+      ${manage}`),
+  };
+}
+
 export function ownerCancelEmail(opts: {
   firstName: string; lastName: string; email: string; service: string; date: string; time: string;
 }) {

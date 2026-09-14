@@ -91,3 +91,30 @@ export function buildStaffCancelCopy(opts: StaffCancelCopyInput) {
     text,
   };
 }
+
+export type StaffRescheduleCopyInput = {
+  firstName: string;
+  serviceNames: string;
+  oldDateLabel: string;
+  oldTimeLabel: string;
+  newDateLabel: string;
+  newTimeLabel: string;
+  barberName?: string;
+};
+
+/** Automatic message when the salon moves / retimes an appointment. */
+export function buildStaffRescheduleCopy(opts: StaffRescheduleCopyInput) {
+  const nome = (opts.firstName || "").trim() || "ciao";
+  const barber = opts.barberName ? ` con ${opts.barberName}` : "";
+  const sameDay = opts.oldDateLabel === opts.newDateLabel;
+  const when = sameDay
+    ? `alle ${opts.newTimeLabel} (prima era alle ${opts.oldTimeLabel})`
+    : `il ${opts.newDateLabel} alle ${opts.newTimeLabel} (prima: ${opts.oldDateLabel} ${opts.oldTimeLabel})`;
+  const text =
+    `Ciao ${nome}, il salone ha aggiornato il tuo appuntamento da ${SITE.name} per ${opts.serviceNames}${barber}: ` +
+    `ora è ${when}. Se non ti va bene, rispondi a questo messaggio o chiama ${SITE.phone}.`;
+  return {
+    subject: `Orario aggiornato — ${SITE.name}`,
+    text,
+  };
+}

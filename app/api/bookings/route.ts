@@ -8,7 +8,8 @@ import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
 import { createManageToken } from "@/lib/manage-token";
 import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
-import { SITE, getBookingConfirmWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
+import { SITE, getBookingConfirmWhatsAppUrl, getCustomerConfirmMessage, getSalonToCustomerWhatsAppUrl, getSiteUrl } from "@/lib/site-config";
+import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { bookingSchema, flattenZodError } from "@/lib/validations";
 import {
@@ -102,12 +103,14 @@ export async function POST(request: Request) {
   }
 
   // Server-side revalidation: full-search free windows (not online thinning).
+  const calendarBlocks = await loadMergedCalendarBlocks();
   const slots = getAvailableSlots({
     date: body.date,
     barberId: body.barberId,
     durationMinutes: occupancyDuration,
     appointments: dayAppointments,
     fullSearch: true,
+    calendarBlocks,
   });
   const slot = findSlot(slots, startsAt);
   if (!slot) {
@@ -192,7 +195,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const whatsappUrl = getBookingConfirmWhatsAppUrl({
+  const confirmCopy = {
     firstName: body.firstName,
     lastName: body.lastName,
     phone: body.phone,
@@ -203,9 +206,15 @@ export async function POST(request: Request) {
     barberName,
     priceLabel: totals.priceLabel,
     durationMin: occupancyDuration,
+    durationLabel: totals.durationLabel,
     notes: body.notes,
     manageUrl,
-  });
+  };
+  const whatsappUrl = getBookingConfirmWhatsAppUrl(confirmCopy);
+  const customerConfirmWhatsAppUrl =
+    getSalonToCustomerWhatsAppUrl(body.phone, confirmCopy) ||
+    getBookingConfirmWhatsAppUrl(confirmCopy);
+  const confirmMessage = getCustomerConfirmMessage(confirmCopy);
 
   // Email disabled (BOOKING_EMAIL_DISABLED) — no SMTP attempts, no failure warnings.
   await sendBookingEmails({
@@ -243,8 +252,9 @@ export async function POST(request: Request) {
     emailSent: true,
     ownerNotified: true,
     confirmViaWhatsApp: true,
-    customerWhatsAppUrl: whatsappUrl,
+    customerWhatsAppUrl: customerConfirmWhatsAppUrl,
     salonWhatsAppUrl: whatsappUrl,
+    confirmMessage,
     appointmentId,
     manageToken,
     manageUrl,

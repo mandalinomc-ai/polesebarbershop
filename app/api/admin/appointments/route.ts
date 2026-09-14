@@ -19,9 +19,9 @@ import {
   publicAppointment,
 } from "@/lib/appointments";
 import { isPaidStatus } from "@/lib/crm";
-import { buildStaffCancelCopy, waMeUrl } from "@/lib/crm-notify";
+import { buildStaffCancelCopy, buildStaffRescheduleCopy, waMeUrl } from "@/lib/crm-notify";
 import { getBarber } from "@/lib/catalog";
-import { sendEmail, staffCancelCustomerEmail } from "@/lib/email";
+import { sendEmail, staffCancelCustomerEmail, staffRescheduleCustomerEmail } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
 import { SITE, getSiteUrl } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
@@ -36,7 +36,19 @@ const AGENDA_EMPTY_IT =
 
 function serialize(row: AppointmentRow) {
   const start = new Date(row.starts_at);
+  const end = new Date(row.ends_at);
   const override = row.duration_override_min ?? null;
+  const effectiveDurationMin = override && override > 0 ? override : row.duration_min;
+  /** Derived only — no DB column. Missing/invalid → 0 for agenda retrocompat. */
+  let bufferTime = 0;
+  if (
+    !Number.isNaN(start.getTime()) &&
+    !Number.isNaN(end.getTime()) &&
+    effectiveDurationMin > 0
+  ) {
+    const raw = Math.round((end.getTime() - start.getTime()) / 60_000) - effectiveDurationMin;
+    bufferTime = raw > 0 ? raw : 0;
+  }
   return {
     id: row.id,
     status: row.status,
@@ -53,7 +65,8 @@ function serialize(row: AppointmentRow) {
     dateLabel: formatWallDate(start),
     durationMin: row.duration_min,
     durationOverrideMin: override,
-    effectiveDurationMin: override && override > 0 ? override : row.duration_min,
+    effectiveDurationMin,
+    bufferTime,
     priceCents: row.price_cents,
     isWalkIn: row.is_walk_in,
     notes: row.notes,
@@ -238,6 +251,88 @@ async function notifyClientOfStaffCancel(row: AppointmentRow) {
   };
 }
 
+async function notifyClientOfStaffReschedule(
+  previous: AppointmentRow,
+  updated: AppointmentRow,
+) {
+  const oldStart = new Date(previous.starts_at);
+  const newStart = new Date(updated.starts_at);
+  const oldDateLabel = formatItalianDate(formatWallDate(oldStart));
+  const oldTimeLabel = formatWallTime(oldStart);
+  const newDateLabel = formatItalianDate(formatWallDate(newStart));
+  const newTimeLabel = formatWallTime(newStart);
+  const serviceNames = namesFromSnapshot(updated.services_snapshot);
+  const barberName = getBarber(updated.barber_id)?.name || updated.barber_id;
+  const copy = buildStaffRescheduleCopy({
+    firstName: updated.customer_first_name,
+    serviceNames,
+    oldDateLabel,
+    oldTimeLabel,
+    newDateLabel,
+    newTimeLabel,
+    barberName,
+  });
+  const manageUrl = `${getSiteUrl()}/appuntamento/${updated.manage_token}`;
+  const icsContent = buildIcs({
+    uid: `${updated.manage_token}@polesebarbershop.it`,
+    startsAt: newStart,
+    endsAt: new Date(updated.ends_at),
+    summary: `${SITE.name} — ${serviceNames}`,
+    description: `${serviceNames} con ${barberName}. Orario aggiornato dal salone. ${SITE.addressFull}. ${manageUrl}`,
+    location: SITE.addressFull,
+    url: manageUrl,
+  });
+  const customerWhatsAppUrl = updated.customer_phone
+    ? waMeUrl(updated.customer_phone, copy.text)
+    : null;
+
+  let emailSent = false;
+  let emailError: string | undefined;
+  if (updated.customer_email) {
+    const mail = staffRescheduleCustomerEmail({
+      firstName: updated.customer_first_name,
+      service: serviceNames,
+      newDate: newDateLabel,
+      newTime: newTimeLabel,
+      oldDate: oldDateLabel,
+      oldTime: oldTimeLabel,
+      barber: barberName,
+      bodyText: copy.text,
+      manageUrl,
+    });
+    const result = await sendEmail({
+      to: updated.customer_email,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      ics: {
+        filename: icsFilename(formatWallDate(newStart), formatWallTime(newStart)),
+        content: icsContent,
+      },
+    });
+    emailSent = Boolean(result.ok);
+    if (!result.ok) emailError = result.error;
+  }
+
+  let whatsappSent = false;
+  let whatsappError: string | undefined;
+  if (updated.customer_phone && isWhatsAppConfigured()) {
+    const wa = await sendCustomerWhatsApp(updated.customer_phone, copy.text);
+    whatsappSent = Boolean(wa.ok);
+    if (!wa.ok && !wa.skipped) whatsappError = wa.error;
+  }
+
+  return {
+    notified: emailSent || whatsappSent,
+    emailSent,
+    emailError,
+    whatsappSent,
+    whatsappError,
+    customerWhatsAppUrl,
+    rescheduleMessage: copy.text,
+  };
+}
+
 export async function PATCH(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
   if (!isSupabaseConfigured()) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
@@ -397,7 +492,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Impossibile aggiornare l'appuntamento." }, { status: 500 });
   }
 
-  let clientNotify: Awaited<ReturnType<typeof notifyClientOfStaffCancel>> | null = null;
+  let clientNotify:
+    | Awaited<ReturnType<typeof notifyClientOfStaffCancel>>
+    | Awaited<ReturnType<typeof notifyClientOfStaffReschedule>>
+    | null = null;
   if (becomingCancelled) {
     try {
       clientNotify = await notifyClientOfStaffCancel(data as AppointmentRow);
@@ -412,6 +510,28 @@ export async function PATCH(request: Request) {
         emailError: "Avviso cliente non inviato.",
         whatsappError: undefined,
       };
+    }
+  } else if (moveDate || moveTime || moveBarber) {
+    const updated = data as AppointmentRow;
+    const moved =
+      updated.starts_at !== row.starts_at ||
+      updated.barber_id !== row.barber_id ||
+      updated.ends_at !== row.ends_at;
+    if (moved) {
+      try {
+        clientNotify = await notifyClientOfStaffReschedule(row, updated);
+      } catch (err) {
+        console.error("[admin/appointments] staff reschedule notify failed", err);
+        clientNotify = {
+          notified: false,
+          emailSent: false,
+          whatsappSent: false,
+          customerWhatsAppUrl: null,
+          rescheduleMessage: "",
+          emailError: "Avviso cliente non inviato.",
+          whatsappError: undefined,
+        };
+      }
     }
   }
 

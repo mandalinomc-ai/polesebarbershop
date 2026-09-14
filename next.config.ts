@@ -34,6 +34,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  /** Required for Docker / VPS multi-stage standalone deploy. */
+  output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
   images: {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAvailableSlots, listOpenDayChips } from "./availability";
+import { getAvailableSlots, listOpenDayChips, wallTimeToUtc } from "./availability";
 import {
   BOOKING_HORIZON_DAYS,
   BOOKING_UI_DAYS,
@@ -18,9 +18,12 @@ describe("booking capacity policy", () => {
       date: "2026-09-08",
       barberId: "felice",
       durationMinutes: 25,
+      // Freeze clock so past civil dates still exercise the engine.
+      now: wallTimeToUtc("2026-08-31", "09:00"),
     });
-    // Tue 08:30–19:00, 25-min services, 5-min step → 122 starts
-    expect(slots.length).toBeGreaterThan(100);
-    expect(slots.length).toBeLessThan(130);
+    // Tue 08:30–19:00 with lunch 13:00–14:00, 25-min + 5 buffer, 5-min step → ~104 starts
+    expect(slots.length).toBeGreaterThan(90);
+    expect(slots.length).toBeLessThan(120);
+    expect(slots.some((s) => s.label >= "13:00" && s.label < "14:00")).toBe(false);
   });
 });

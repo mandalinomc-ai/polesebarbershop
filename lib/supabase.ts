@@ -29,6 +29,8 @@ export type AppointmentRow = {
   cancelled_at: string | null;
   /** Walk-in / CRM: missing phone+email. Optional until migration applied. */
   is_incomplete?: boolean;
+  /** Soft-exclude from revenue KPIs. Optional until migration 013. */
+  exclude_from_stats?: boolean;
 };
 
 export function getSupabaseUrl() {
