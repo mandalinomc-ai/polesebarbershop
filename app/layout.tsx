@@ -82,26 +82,20 @@ function jsonLd() {
         openingHoursSpecification: [
           {
             "@type": "OpeningHoursSpecification",
-            dayOfWeek: "Monday",
-            opens: "15:00",
-            closes: "19:00",
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Tuesday", "Wednesday"],
-            opens: "08:30",
+            dayOfWeek: ["Monday", "Tuesday", "Wednesday"],
+            opens: "09:00",
             closes: "19:00",
           },
           {
             "@type": "OpeningHoursSpecification",
             dayOfWeek: "Thursday",
-            opens: "08:30",
+            opens: "09:00",
             closes: "20:00",
           },
           {
             "@type": "OpeningHoursSpecification",
             dayOfWeek: ["Friday", "Saturday"],
-            opens: "08:00",
+            opens: "09:00",
             closes: "21:00",
           },
         ],
