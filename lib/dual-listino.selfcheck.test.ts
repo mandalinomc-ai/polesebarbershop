@@ -28,6 +28,7 @@ describe("dual listino + consultation cart + reschedule notify", () => {
     expect(listino).toMatch(/Listino prenota ora/);
     expect(listino).toMatch(/Listino consulenza/);
     expect(listino).toMatch(/ConsultationMiniCart/);
+    expect(listino).toMatch(/Prenota sul calendario/);
     expect(listino).toMatch(/is-rise/);
     expect(CONSULTATION_SELECTION_SYNC_EVENT).toMatch(/consultation/);
   });

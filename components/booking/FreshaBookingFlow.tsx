@@ -184,8 +184,35 @@ export function FreshaBookingFlow({
     const onPick = (event: Event) => {
       apply((event as CustomEvent<string>).detail);
     };
+    const onSync = (event: Event) => {
+      const ids = (event as CustomEvent<string[]>).detail;
+      if (!Array.isArray(ids)) return;
+      const clean = ids.filter(
+        (id) => SERVICES.some((s) => s.id === id) && !isWhatsAppOnlyService(id),
+      );
+      setSelectedIds((curr) => {
+        if (curr.join("|") === clean.join("|")) return curr;
+        return clean;
+      });
+      if (clean.length) setStep(1);
+    };
     window.addEventListener(BOOKING_SERVICE_EVENT, onPick);
-    return () => window.removeEventListener(BOOKING_SERVICE_EVENT, onPick);
+    window.addEventListener(BOOKING_SELECTION_SYNC_EVENT, onSync);
+    const onGoCalendar = () => {
+      setSelectedIds((curr) => {
+        const services = SERVICES.filter((s) => curr.includes(s.id));
+        if (curr.length && servicesAreOnlineBookable(services)) {
+          queueMicrotask(() => setStep(2));
+        }
+        return curr;
+      });
+    };
+    window.addEventListener("polese-booking-go-calendar", onGoCalendar);
+    return () => {
+      window.removeEventListener(BOOKING_SERVICE_EVENT, onPick);
+      window.removeEventListener(BOOKING_SELECTION_SYNC_EVENT, onSync);
+      window.removeEventListener("polese-booking-go-calendar", onGoCalendar);
+    };
   }, []);
 
   const loadSlots = useCallback(async () => {

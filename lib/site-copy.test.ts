@@ -59,7 +59,7 @@ describe("public copy vs official identity", () => {
   it("uses MODERN BARBERING tagline and listino price boxes with PRENOTA CTA", () => {
     const listino = readFileSync(join(process.cwd(), "components/booking/ServiceListino.tsx"), "utf8");
     expect(listino).toMatch(/listino-box/);
-    expect(listino).toMatch(/serviceBookingHref/);
+    expect(listino).toMatch(/BOOKING_SELECTION_SYNC_EVENT/);
     expect(listino).toMatch(/formatDuration/);
     expect(listino).toMatch(/btn-listino-prenota/);
     expect(listino).toMatch(/Prenota/);
@@ -356,8 +356,10 @@ describe("public copy vs official identity", () => {
     expect(listino).toMatch(/id="listino"/);
     expect((listino.match(/id="listino"/g) || []).length).toBe(1);
     expect(listino).toMatch(/Listino/);
-    expect(listino).toMatch(/BOOKING_SERVICE_EVENT/);
+    expect(listino).toMatch(/Listino prenota ora/);
+    expect(listino).toMatch(/Listino consulenza/);
     expect(listino).toMatch(/BOOKING_SELECTION_SYNC_EVENT/);
+    expect(listino).toMatch(/BookingMiniCart/);
     expect(listino).toMatch(/listino-box--selected/);
     expect(listino).toMatch(/formatPriceRange/);
     expect(listino).toMatch(/listino-box/);
