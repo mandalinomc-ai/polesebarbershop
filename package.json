@@ -2,13 +2,15 @@
   "name": "polesebarbershop",
   "version": "2.0.0",
   "private": true,
-  "description": "Felice Polese Barber Shop — sito pubblico e prenotazioni (Gmail SMTP + .ics, senza Twilio/QStash)",
+  "description": "FELICE_POLESE_BARBERSHOP_LIVE_2026_09_10 — sito pubblico e gestionale (standalone / Docker ready)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:standalone": "node .next/standalone/server.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "backup:offline": "node scripts/export-offline-backup.mjs"
   },
   "engines": {
     "node": ">=20"
