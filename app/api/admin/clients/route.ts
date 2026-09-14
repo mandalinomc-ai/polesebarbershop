@@ -6,6 +6,7 @@ import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT } from "@/l
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const contactSchema = z.object({
   clientKey: z.string().min(1).optional(),

@@ -17,6 +17,14 @@ describe("security headers config", () => {
     expect(map["Permissions-Policy"]).toMatch(/camera=\(\)/);
   });
 
+  it("sets no-store on API and immutable on static assets", async () => {
+    const headers = await nextConfig.headers?.();
+    const api = headers!.find((h) => h.source === "/api/:path*");
+    expect(api?.headers[0]?.value).toMatch(/no-store/);
+    const staticAssets = headers!.find((h) => h.source === "/_next/static/:path*");
+    expect(staticAssets?.headers[0]?.value).toMatch(/immutable/);
+  });
+
   it("disables powered-by header", () => {
     expect(nextConfig.poweredByHeader).toBe(false);
   });

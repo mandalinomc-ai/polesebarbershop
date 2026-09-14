@@ -8,9 +8,11 @@ import { isManageTokenFormat } from "@/lib/manage-token";
 import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { SITE, CANCEL_NOTICE_IT, canCancelAppointment, getSiteUrl, getIcsUidDomain } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
+import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 type RouteCtx = { params: Promise<{ token: string }> };
 
 async function loadByToken(token: string) {
@@ -155,6 +157,7 @@ export async function DELETE(request: Request, ctx: RouteCtx) {
       }),
       ics: { filename: icsFilename(formatWallDate(start), formatWallTime(start)), content: cancelIcs },
     });
+    revalidateBookingPaths();
     return NextResponse.json({
       ok: true,
       slotFreed: true,

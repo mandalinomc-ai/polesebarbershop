@@ -12,6 +12,10 @@ import { ScissorsIntro } from "@/components/site/ScissorsIntro";
 import { SiteShell } from "@/components/site/SiteShell";
 import { IS_COMING_SOON } from "@/lib/site-config";
 
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function HomePage() {
   if (IS_COMING_SOON) {
     return (

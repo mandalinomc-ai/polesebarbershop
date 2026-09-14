@@ -27,9 +27,11 @@ import { SITE, getSiteUrl, getIcsUidDomain } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { sendCustomerWhatsApp, isWhatsAppConfigured } from "@/lib/whatsapp-outbound";
 import { adminAppointmentsQuerySchema, flattenZodError } from "@/lib/validations";
+import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const AGENDA_EMPTY_IT =
   "Database non collegato. L'agenda è vuota finché non configuri Supabase.";
@@ -535,6 +537,7 @@ export async function PATCH(request: Request) {
     }
   }
 
+  revalidateBookingPaths();
   return NextResponse.json({
     ok: true,
     appointment: publicAppointment(data as AppointmentRow),

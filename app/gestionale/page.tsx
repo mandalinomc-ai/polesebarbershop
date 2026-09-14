@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { GestionalePanel } from "@/components/gestionale/GestionalePanel";
 import { SITE } from "@/lib/site-config";
 
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: `Gestionale — ${SITE.name}`,
   robots: { index: false, follow: false },

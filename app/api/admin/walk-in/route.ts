@@ -21,10 +21,12 @@ import {
 } from "@/lib/gestionale/agenda-block";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { flattenZodError, walkInSchema } from "@/lib/validations";
+import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const walkInWithOverride = walkInSchema.extend({
   durationOverrideMin: z.number().int().min(1).max(480).nullable().optional(),
@@ -209,6 +211,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ error: "Impossibile registrare il walk-in." }, { status: 500 });
   }
+  revalidateBookingPaths();
   return NextResponse.json({
     ok: true,
     appointment: publicAppointment(data as AppointmentRow),

@@ -18,9 +18,11 @@ import {
   publicAppointment,
   servicesSnapshot,
 } from "@/lib/appointments";
+import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function honeypotOkResponse() {
   // Silent acceptance for bots — no DB write, no email.
@@ -245,6 +247,8 @@ export async function POST(request: Request) {
     }),
     ics: { filename, content: icsContent },
   });
+
+  if (persisted) revalidateBookingPaths();
 
   return NextResponse.json({
     ok: true,

@@ -7,7 +7,6 @@ import {
   getAdminUser,
   isAdminConfigured,
   isAdminTokenValid,
-  isUsingDefaultAdminCredentials,
   verifyAdminCredentials,
   adminCookieOptions,
 } from "./admin-auth";
@@ -35,28 +34,21 @@ describe("admin /gestionale credentials", () => {
     resetRateLimitStore();
   });
 
-  it("defaults to admin / smda2026 when env is unset", () => {
+  it("requires ADMIN_PASSWORD from env (no hardcoded fallback)", () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
     expect(getAdminUser()).toBe("admin");
-    expect(getAdminPassword()).toBe("smda2026");
-    expect(isAdminConfigured()).toBe(true);
-    expect(isUsingDefaultAdminCredentials()).toBe(false);
-    expect(verifyAdminCredentials("admin", "smda2026")).toBe(true);
-    expect(verifyAdminCredentials("Admin", "smda2026")).toBe(true);
+    expect(getAdminPassword()).toBe("");
+    expect(isAdminConfigured()).toBe(false);
+    expect(verifyAdminCredentials("admin", "smda2026")).toBe(false);
     expect(verifyAdminCredentials("admin", "admin")).toBe(false);
-    expect(verifyAdminCredentials("admin", "wrong")).toBe(false);
-    expect(verifyAdminCredentials("nope", "smda2026")).toBe(false);
-    const token = createAdminToken();
-    expect(token).toBeTruthy();
-    expect(isAdminTokenValid(token)).toBe(true);
-    expect(isAdminTokenValid("nope")).toBe(false);
+    expect(createAdminToken()).toBeNull();
     expect(ADMIN_COOKIE).toBe("polese_admin");
   });
 
-  it("issues expiring signed session tokens", () => {
+  it("issues expiring signed session tokens when password is set", () => {
+    process.env.ADMIN_PASSWORD = "test-secret-12";
     delete process.env.ADMIN_USER;
-    delete process.env.ADMIN_PASSWORD;
     const token = createAdminToken(1_700_000_000_000)!;
     const parts = token.split(".");
     expect(parts).toHaveLength(3);
@@ -78,16 +70,16 @@ describe("admin /gestionale credentials", () => {
   it("uses ADMIN_USER and ADMIN_PASSWORD when set", () => {
     process.env.ADMIN_USER = "felice";
     process.env.ADMIN_PASSWORD = "segreto12";
-    expect(isUsingDefaultAdminCredentials()).toBe(false);
+    expect(isAdminConfigured()).toBe(true);
     expect(verifyAdminCredentials("felice", "segreto12")).toBe(true);
     expect(verifyAdminCredentials("admin", "admin")).toBe(false);
   });
 
-  it("treats explicit admin/admin env as configured, not insecure defaults", () => {
+  it("rejects passwords shorter than 4 characters", () => {
     process.env.ADMIN_USER = "admin";
-    process.env.ADMIN_PASSWORD = "admin";
-    expect(isUsingDefaultAdminCredentials()).toBe(false);
-    expect(verifyAdminCredentials("admin", "admin")).toBe(true);
+    process.env.ADMIN_PASSWORD = "ab";
+    expect(isAdminConfigured()).toBe(false);
+    expect(verifyAdminCredentials("admin", "ab")).toBe(false);
   });
 });
 
@@ -119,11 +111,21 @@ describe("POST /api/admin/login", () => {
     );
   }
 
-  it("accepts username admin and password smda2026 by default outside Vercel production", async () => {
+  it("fails clearly when ADMIN_PASSWORD is unset", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
     delete process.env.VERCEL_ENV;
-    const res = await login({ username: "admin", password: "smda2026" });
+    const res = await login({ username: "admin", password: "anything" });
+    expect(res.status).toBe(503);
+    const json = (await res.json()) as { error: string };
+    expect(json.error).toMatch(/ADMIN_PASSWORD/);
+  });
+
+  it("accepts valid env credentials", async () => {
+    process.env.ADMIN_USER = "admin";
+    process.env.ADMIN_PASSWORD = "segreto12";
+    delete process.env.VERCEL_ENV;
+    const res = await login({ username: "admin", password: "segreto12" });
     expect(res.status).toBe(200);
     const json = (await res.json()) as { ok: boolean };
     expect(json.ok).toBe(true);
@@ -132,48 +134,31 @@ describe("POST /api/admin/login", () => {
   });
 
   it("accepts id as alias of username", async () => {
-    delete process.env.ADMIN_USER;
-    delete process.env.ADMIN_PASSWORD;
+    process.env.ADMIN_USER = "admin";
+    process.env.ADMIN_PASSWORD = "segreto12";
     delete process.env.VERCEL_ENV;
-    const res = await login({ id: "admin", password: "smda2026" });
+    const res = await login({ id: "admin", password: "segreto12" });
     expect(res.status).toBe(200);
   });
 
   it("rejects missing username", async () => {
-    delete process.env.ADMIN_USER;
-    delete process.env.ADMIN_PASSWORD;
-    const res = await login({ password: "admin" });
+    process.env.ADMIN_PASSWORD = "segreto12";
+    const res = await login({ password: "segreto12" });
     expect(res.status).toBe(400);
   });
 
   it("rejects wrong password", async () => {
-    delete process.env.ADMIN_USER;
-    delete process.env.ADMIN_PASSWORD;
+    process.env.ADMIN_USER = "admin";
+    process.env.ADMIN_PASSWORD = "segreto12";
     const res = await login({ username: "admin", password: "nope" });
     expect(res.status).toBe(401);
   });
 
-  it("rejects legacy admin/admin when defaults are smda2026", async () => {
-    delete process.env.ADMIN_USER;
-    delete process.env.ADMIN_PASSWORD;
-    process.env.VERCEL_ENV = "production";
-    const res = await login({ username: "admin", password: "admin" });
-    expect(res.status).toBe(401);
-  });
-
-  it("accepts default smda2026 in production", async () => {
-    delete process.env.ADMIN_USER;
-    delete process.env.ADMIN_PASSWORD;
-    process.env.VERCEL_ENV = "production";
-    const res = await login({ username: "admin", password: "smda2026" });
-    expect(res.status).toBe(200);
-  });
-
-  it("accepts explicit admin/admin env in Vercel production", async () => {
+  it("accepts explicit credentials in Vercel production", async () => {
     process.env.ADMIN_USER = "admin";
-    process.env.ADMIN_PASSWORD = "admin";
+    process.env.ADMIN_PASSWORD = "prod-secret-99";
     process.env.VERCEL_ENV = "production";
-    const res = await login({ username: "admin", password: "admin" });
+    const res = await login({ username: "admin", password: "prod-secret-99" });
     expect(res.status).toBe(200);
     const json = (await res.json()) as { ok: boolean };
     expect(json.ok).toBe(true);

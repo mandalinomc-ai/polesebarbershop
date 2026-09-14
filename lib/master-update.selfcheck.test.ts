@@ -11,7 +11,7 @@ import {
   servicesAreOnlineBookable,
 } from "@/lib/catalog";
 import { getWhatsAppConsulenzaUrl } from "@/lib/site-config";
-import { DEFAULT_ADMIN_PASSWORD, verifyAdminCredentials } from "@/lib/admin-auth";
+import { getAdminPassword, isAdminConfigured, verifyAdminCredentials } from "@/lib/admin-auth";
 import { countsTowardStats } from "@/lib/crm";
 
 describe("master update self-check", () => {
@@ -55,10 +55,17 @@ describe("master update self-check", () => {
     expect(url).toContain(encodeURIComponent("Salve vorrei una consulenza per Taglio Pro"));
   });
 
-  it("requires gestionale password smda2026 by default", () => {
-    expect(DEFAULT_ADMIN_PASSWORD).toBe("smda2026");
-    expect(verifyAdminCredentials("admin", "smda2026")).toBe(true);
-    expect(verifyAdminCredentials("admin", "admin")).toBe(false);
+  it("requires ADMIN_PASSWORD from env with no hardcoded fallback", () => {
+    const orig = process.env.ADMIN_PASSWORD;
+    delete process.env.ADMIN_PASSWORD;
+    expect(getAdminPassword()).toBe("");
+    expect(isAdminConfigured()).toBe(false);
+    expect(verifyAdminCredentials("admin", "smda2026")).toBe(false);
+    process.env.ADMIN_PASSWORD = "env-only-secret";
+    expect(isAdminConfigured()).toBe(true);
+    expect(verifyAdminCredentials("admin", "env-only-secret")).toBe(true);
+    if (orig === undefined) delete process.env.ADMIN_PASSWORD;
+    else process.env.ADMIN_PASSWORD = orig;
   });
 
   it("soft-excludes revenue when excludeFromStats is set", () => {

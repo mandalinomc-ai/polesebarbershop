@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import {
   ADMIN_COOKIE,
   ADMIN_MISSING_IT,
-  ADMIN_WEAK_DEFAULTS_IT,
   adminCookieOptions,
   isAdminConfigured,
-  isUsingDefaultAdminCredentials,
   verifyAdminCredentials,
   createAdminToken,
 } from "@/lib/admin-auth";
@@ -15,16 +13,11 @@ import { adminLoginSchema, flattenZodError } from "@/lib/validations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function POST(request: Request) {
   if (!isAdminConfigured()) {
     return NextResponse.json({ error: ADMIN_MISSING_IT }, { status: 503 });
-  }
-  if (
-    process.env.VERCEL_ENV === "production" &&
-    isUsingDefaultAdminCredentials()
-  ) {
-    return NextResponse.json({ error: ADMIN_WEAK_DEFAULTS_IT }, { status: 503 });
   }
 
   const ip = getClientIp(request);

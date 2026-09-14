@@ -5,6 +5,7 @@ import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/l
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });

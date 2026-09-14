@@ -15,6 +15,7 @@ import { fetchAllPages } from "@/lib/supabase-query";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const EMPTY_DB_IT =
   "Database non collegato. Il gestionale è pronto: anagrafica e statistiche si riempiranno dopo aver configurato Supabase.";
