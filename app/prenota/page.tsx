@@ -1,5 +1,6 @@
 import { Header, Footer, SiteFabs, ClientEffects } from "@/components/site/Chrome";
 import { BookingSectionNote, FreshaBookingFlow } from "@/components/booking/FreshaBookingFlow";
+import { BookingMiniCart } from "@/components/booking/ServiceListino";
 import { SiteShell } from "@/components/site/SiteShell";
 import { SITE } from "@/lib/site-config";
 import type { Metadata } from "next";
@@ -20,6 +21,7 @@ export default function PrenotaPage() {
           <BookingSectionNote />
           <FreshaBookingFlow />
         </div>
+        <BookingMiniCart />
       </main>
       <Footer />
       <SiteFabs />
