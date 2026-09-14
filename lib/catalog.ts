@@ -63,8 +63,8 @@ export type Service = {
 
 /**
  * Official listino — exactly these 10 bookable services.
- * Razor Taper / Skin Fade / other rasature are techniques, not services.
- * Durations are operational booking times (Durata prevista).
+ * Prenota ora (calendario online): Taglio Standard, Barba Standard, Barba Pro, Acconciatura.
+ * Consulenza WhatsApp (tempi in sede): tutto il resto.
  */
 export const SERVICES: Service[] = [
   {
@@ -77,7 +77,8 @@ export const SERVICES: Service[] = [
     durationMin: 50,
     durationKnown: true,
     active: true,
-    description: "Shampoo specifico per tipo di capello + Black Mask",
+    whatsAppOnly: true,
+    description: "Shampoo specifico per tipo di capello + Black Mask · consulenza in sede",
   },
   {
     id: "taglio-standard",
@@ -89,8 +90,7 @@ export const SERVICES: Service[] = [
     durationMin: 30,
     durationKnown: true,
     active: true,
-    whatsAppOnly: true,
-    description: "Taglio classico — 30 min ferrei · solo su consulenza WhatsApp",
+    description: "Taglio classico",
   },
   {
     id: "acconciatura",
@@ -114,7 +114,8 @@ export const SERVICES: Service[] = [
     durationMin: 20,
     durationKnown: true,
     active: true,
-    description: "Taglio per bambini",
+    whatsAppOnly: true,
+    description: "Taglio per bambini · consulenza in sede",
   },
   {
     id: "barba-pro",
@@ -126,8 +127,7 @@ export const SERVICES: Service[] = [
     durationMin: 20,
     durationKnown: true,
     active: true,
-    whatsAppOnly: true,
-    description: "Panno caldo con vaporizzatore + Oli con fragranze · solo su consulenza WhatsApp",
+    description: "Panno caldo con vaporizzatore + Oli con fragranze",
   },
   {
     id: "barba-standard",
@@ -139,8 +139,7 @@ export const SERVICES: Service[] = [
     durationMin: 15,
     durationKnown: true,
     active: true,
-    whatsAppOnly: true,
-    description: "Rifinitura / Modellatura classica · solo su consulenza WhatsApp",
+    description: "Rifinitura / Modellatura classica",
   },
   {
     id: "decolorazione-meches",
@@ -152,7 +151,8 @@ export const SERVICES: Service[] = [
     durationMin: 150,
     durationKnown: true,
     active: true,
-    description: "In base a lunghezza, tipo di capello e tempo",
+    whatsAppOnly: true,
+    description: "In base a lunghezza, tipo di capello e tempo · consulenza in sede",
   },
   {
     id: "decolorazione-cutanea",
@@ -164,7 +164,8 @@ export const SERVICES: Service[] = [
     durationMin: 180,
     durationKnown: true,
     active: true,
-    description: "In base a lunghezza e tipo di capello",
+    whatsAppOnly: true,
+    description: "In base a lunghezza e tipo di capello · consulenza in sede",
   },
   {
     id: "tintura-capelli",
@@ -176,7 +177,8 @@ export const SERVICES: Service[] = [
     durationMin: 30,
     durationKnown: true,
     active: true,
-    description: "Colore capelli",
+    whatsAppOnly: true,
+    description: "Colore capelli · consulenza in sede",
   },
   {
     id: "tintura-barba",
@@ -188,7 +190,8 @@ export const SERVICES: Service[] = [
     durationMin: 20,
     durationKnown: true,
     active: true,
-    description: "Colore barba",
+    whatsAppOnly: true,
+    description: "Colore barba · consulenza in sede",
   },
 ];
 

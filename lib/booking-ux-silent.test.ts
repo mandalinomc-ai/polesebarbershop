@@ -24,33 +24,33 @@ const BAD_UX =
 describe("multi-service booking combos (silent UX)", () => {
   const onlineCombos: { ids: string[]; minutes: number; label: string }[] = [
     {
-      ids: ["taglio-pro", "decolorazione-meches"],
-      minutes: 200,
-      label: "Taglio Pro + Decolorazione Meches",
+      ids: ["taglio-standard", "acconciatura"],
+      minutes: 40,
+      label: "Taglio Standard + Acconciatura",
     },
     {
-      ids: ["taglio-pro", "tintura-barba"],
-      minutes: 70,
-      label: "Taglio Pro + Tintura Barba",
+      ids: ["taglio-standard", "barba-pro"],
+      minutes: 50,
+      label: "Taglio Standard + Barba Pro",
     },
     {
-      ids: ["taglio-pro", "tintura-capelli"],
-      minutes: 80,
-      label: "Taglio Pro + Tintura Capelli",
+      ids: ["taglio-standard", "barba-standard"],
+      minutes: 45,
+      label: "Taglio Standard + Barba Standard",
     },
     {
-      ids: ["taglio-pro", "acconciatura"],
-      minutes: 60,
-      label: "Taglio Pro + Acconciatura",
+      ids: ["barba-pro", "acconciatura"],
+      minutes: 30,
+      label: "Barba Pro + Acconciatura",
     },
   ];
 
   /** WA-only catalog services redirect to consulenza — duration still sums for display. */
   const waOnlyCombos: { ids: string[]; minutes: number; label: string }[] = [
     {
-      ids: ["taglio-standard", "acconciatura"],
-      minutes: 40,
-      label: "Taglio Standard + Acconciatura",
+      ids: ["taglio-pro", "decolorazione-meches"],
+      minutes: 200,
+      label: "Taglio Pro + Decolorazione Meches",
     },
     {
       ids: ["taglio-pro", "barba-pro"],
@@ -58,9 +58,9 @@ describe("multi-service booking combos (silent UX)", () => {
       label: "Taglio Pro + Barba Pro",
     },
     {
-      ids: ["taglio-pro", "barba-standard"],
-      minutes: 65,
-      label: "Taglio Pro + Barba Standard",
+      ids: ["taglio-pro", "acconciatura"],
+      minutes: 60,
+      label: "Taglio Pro + Acconciatura",
     },
   ];
 
