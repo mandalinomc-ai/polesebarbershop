@@ -184,6 +184,16 @@ export function ServiceListino() {
   );
 }
 
+/** Fixed dock: both mini-carts stack without overlapping FABs or each other. */
+export function MiniCartDock() {
+  return (
+    <div className="booking-mini-cart-dock" aria-live="polite">
+      <BookingMiniCart />
+      <ConsultationMiniCart />
+    </div>
+  );
+}
+
 /** Magnetic cart — calendar booking. Opens automatically on selection. */
 export function BookingMiniCart() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
