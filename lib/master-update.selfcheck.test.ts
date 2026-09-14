@@ -30,17 +30,30 @@ describe("master update self-check", () => {
     expect(chairBlockMinutes(30)).toBe(30 + BOOKING_BUFFER_MINUTES);
   });
 
-  it("marks barba/standard as WhatsApp-only with dynamic consulenza link", () => {
-    for (const id of ["taglio-standard", "barba-pro", "barba-standard"]) {
+  it("marks consulenza services as WhatsApp-only; prenota-ora stays calendar", () => {
+    const onlineIds = ["taglio-standard", "barba-standard", "barba-pro", "acconciatura"];
+    const consultIds = [
+      "taglio-pro",
+      "taglio-bambino",
+      "decolorazione-meches",
+      "decolorazione-cutanea",
+      "tintura-capelli",
+      "tintura-barba",
+    ];
+    for (const id of onlineIds) {
+      expect(isWhatsAppOnlyService(id)).toBe(false);
+      expect(servicesAreOnlineBookable([getService(id)!])).toBe(true);
+    }
+    for (const id of consultIds) {
       expect(isWhatsAppOnlyService(id)).toBe(true);
       expect(WHATSAPP_ONLY_SERVICE_IDS).toContain(id);
     }
-    const svc = getService("barba-pro")!;
+    const svc = getService("taglio-pro")!;
     expect(servicesAreOnlineBookable([svc])).toBe(false);
     expect(onlineBookingBlockReason([svc])).toMatch(/WhatsApp/i);
     const url = getWhatsAppConsulenzaUrl(svc.name);
     expect(url).toContain("wa.me/");
-    expect(url).toContain(encodeURIComponent("Salve vorrei una consulenza per Barba Pro"));
+    expect(url).toContain(encodeURIComponent("Salve vorrei una consulenza per Taglio Pro"));
   });
 
   it("requires gestionale password smda2026 by default", () => {

@@ -184,11 +184,13 @@ describe("candidate starts", () => {
 
 describe("online bookable services", () => {
   it("allows online listino services and blocks WhatsApp-only ones", () => {
-    expect(servicesAreOnlineBookable([getService("taglio-pro")!])).toBe(true);
+    expect(servicesAreOnlineBookable([getService("taglio-standard")!])).toBe(true);
     expect(servicesAreOnlineBookable([getService("acconciatura")!])).toBe(true);
-    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "barba-standard"])!)).toBe(false);
-    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "acconciatura"])!)).toBe(true);
-    expect(servicesAreOnlineBookable(resolveServices(["decolorazione-meches"])!)).toBe(true);
+    expect(servicesAreOnlineBookable(resolveServices(["taglio-standard", "barba-standard"])!)).toBe(
+      true,
+    );
+    expect(servicesAreOnlineBookable(resolveServices(["taglio-pro", "acconciatura"])!)).toBe(false);
+    expect(servicesAreOnlineBookable(resolveServices(["decolorazione-meches"])!)).toBe(false);
     expect(
       servicesAreOnlineBookable([
         { ...getService("tintura-capelli")!, durationKnown: false },
@@ -449,9 +451,9 @@ describe("NO 5-MINUTE BUG — continuous free starts", () => {
 describe("resolveEffectiveServiceDuration", () => {
   it("uses catalog for known fixed services", () => {
     const r = resolveEffectiveServiceDuration({
-      services: [getService("taglio-pro")!],
+      services: [getService("taglio-standard")!],
     });
-    expect(r).toMatchObject({ ok: true, durationMin: 50, source: "catalog", onlineBookable: true });
+    expect(r).toMatchObject({ ok: true, durationMin: 30, source: "catalog", onlineBookable: true });
   });
 
   it("override wins without mutating catalog", () => {
@@ -480,7 +482,7 @@ describe("resolveEffectiveServiceDuration", () => {
     expect(r.reason).toMatch(/non determinabile/i);
   });
 
-  it("allows online booking for tinture with fixed catalog minutes (variable price OK)", () => {
+  it("allows online booking for tinture only when not WhatsApp-only", () => {
     const r = resolveEffectiveServiceDuration({
       services: [getService("tintura-capelli")!],
     });
@@ -488,7 +490,7 @@ describe("resolveEffectiveServiceDuration", () => {
       ok: true,
       durationMin: 30,
       source: "catalog",
-      onlineBookable: true,
+      onlineBookable: false,
     });
   });
 
@@ -501,20 +503,20 @@ describe("resolveEffectiveServiceDuration", () => {
     expect(r).toMatchObject({ ok: true, durationMin: 55, source: "override" });
   });
 
-  it("sums meches 150 with taglio pro for multi-service slots", () => {
+  it("sums meches 150 with taglio pro for multi-service slots (consulenza)", () => {
     const r = resolveEffectiveServiceDuration({
       services: [getService("taglio-pro")!, getService("decolorazione-meches")!],
     });
-    expect(r).toMatchObject({ ok: true, durationMin: 200, onlineBookable: true });
+    expect(r).toMatchObject({ ok: true, durationMin: 200, onlineBookable: false });
   });
 
   it("keeps catalog duration for WhatsApp-only but blocks onlineBookable", () => {
     const r = resolveEffectiveServiceDuration({
-      services: [getService("barba-pro")!],
+      services: [getService("taglio-pro")!],
     });
     expect(r).toMatchObject({
       ok: true,
-      durationMin: 20,
+      durationMin: 50,
       source: "catalog",
       onlineBookable: false,
     });

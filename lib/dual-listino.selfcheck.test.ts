@@ -9,17 +9,19 @@ describe("dual listino + consultation cart + reschedule notify", () => {
   it("splits catalog into online vs WhatsApp-only consulenza", () => {
     const online = onlineBookableServices();
     const consult = SERVICES.filter((s) => s.whatsAppOnly);
-    expect(online.length).toBeGreaterThan(0);
-    expect(consult.length).toBeGreaterThan(0);
+    expect(online.map((s) => s.id).sort()).toEqual(
+      ["acconciatura", "barba-pro", "barba-standard", "taglio-standard"].sort(),
+    );
+    expect(consult.length).toBe(6);
     expect(online.every((s) => !isWhatsAppOnlyService(s.id))).toBe(true);
     expect(consult.every((s) => isWhatsAppOnlyService(s.id))).toBe(true);
   });
 
   it("builds multi-treatment consulenza WhatsApp URL", () => {
-    const url = getWhatsAppConsulenzaUrl("Taglio Standard + Barba Pro");
+    const url = getWhatsAppConsulenzaUrl("Taglio Pro + Decolorazione Meches");
     expect(url).toContain("wa.me/");
     expect(url).toContain(
-      encodeURIComponent("Salve vorrei una consulenza per Taglio Standard + Barba Pro"),
+      encodeURIComponent("Salve vorrei una consulenza per Taglio Pro + Decolorazione Meches"),
     );
   });
 

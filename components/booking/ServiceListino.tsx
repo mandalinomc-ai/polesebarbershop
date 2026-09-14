@@ -103,8 +103,8 @@ function ListinoSection({
 
 /**
  * Dual listino + magnetic carts.
- * Calendar (online): Taglio Pro, Acconciatura, Bambino, colore…
- * WhatsApp consulenza: Taglio Standard, Barba Pro, Barba Standard (tempi in sede).
+ * Calendario: Taglio Standard, Barba Standard, Barba Pro, Acconciatura.
+ * Consulenza WhatsApp: Taglio Pro, Bambino, colore/meches/tinture.
  */
 export function ServiceListino() {
   const [onlineIds, setOnlineIds] = useState<string[]>([]);

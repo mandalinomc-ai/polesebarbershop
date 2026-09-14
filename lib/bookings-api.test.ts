@@ -46,7 +46,7 @@ function futureOpenTuesday(): string {
 
 function payload(overrides: Record<string, unknown> = {}) {
   return {
-    serviceIds: ["taglio-pro"],
+    serviceIds: ["taglio-standard"],
     barberId: "felice",
     date: futureOpenTuesday(),
     startTime: "09:30",

@@ -29,11 +29,12 @@ describe("production official durations (all 10)", () => {
     }
   });
 
-  it("books decolorazione-meches at 150 min (+ buffer) respecting Tuesday close", () => {
+  it("books decolorazione-meches duration (+ buffer) for gestionale occupancy math", () => {
     const services = resolveServices(["decolorazione-meches"])!;
     const resolved = resolveEffectiveServiceDuration({ services });
     expect(resolved.durationMin).toBe(150);
-    expect(resolved.onlineBookable).toBe(true);
+    // Colore is consulenza (not online); duration still drives chair math.
+    expect(resolved.onlineBookable).toBe(false);
     const slots = getAvailableSlots({
       date: TUESDAY,
       barberId: "felice",
@@ -53,7 +54,7 @@ describe("production official durations (all 10)", () => {
   it("sums multi-service Taglio Pro + Barba Pro (WA-only combo) and keeps chairs independent", () => {
     const services = resolveServices(["taglio-pro", "barba-pro"])!;
     expect(totalsForServices(services).durationMin).toBe(70);
-    // Barba Pro is WhatsApp-only — online cart blocks; gestionale still uses duration.
+    // Taglio Pro is WhatsApp-only — online cart blocks; gestionale still uses duration.
     expect(servicesAreOnlineBookable(services)).toBe(false);
     const duration = resolveEffectiveServiceDuration({ services }).durationMin!;
     expect(duration).toBe(70);
