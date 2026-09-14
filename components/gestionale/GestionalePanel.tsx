@@ -515,6 +515,8 @@ export function GestionalePanel() {
               if (res.ok) void loadCrm();
             }}
             onClientsChanged={() => void loadCrm()}
+            onCancelAppt={(id) => void patch(id, { status: "cancelled" })}
+            onMoveAppt={setMoveAppt}
             total={clients.length}
           />
         ) : null}
@@ -965,7 +967,7 @@ function AgendaView({
                         Sposta
                       </button>
                       <button type="button" onClick={() => onPatch(a.id, { status: "cancelled" })}>
-                        Annulla
+                        Elimina
                       </button>
                       <button type="button" onClick={() => onNotify(a)}>
                         Invia WhatsApp
@@ -993,6 +995,8 @@ function ClientiView({
   onBulk,
   onSaveNotes,
   onClientsChanged,
+  onCancelAppt,
+  onMoveAppt,
   total,
 }: {
   clients: ClientRecord[];
@@ -1004,6 +1008,8 @@ function ClientiView({
   onBulk: () => void;
   onSaveNotes: (key: string, notes: string) => Promise<void>;
   onClientsChanged: () => void;
+  onCancelAppt: (id: string) => void;
+  onMoveAppt: (a: AdminAppt) => void;
   total: number;
 }) {
   const [filter, setFilter] = useState<"all" | "incomplete">("all");
@@ -1252,6 +1258,56 @@ function ClientiView({
                   <span>{h.barberName}</span>
                   <span>{h.cancelled ? "ANNULLATA" : STATUS_IT[h.status] || h.status}</span>
                   <span>{formatEuroCents(h.priceCents)}</span>
+                  {!h.cancelled ? (
+                    <span className="crm-history-actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() =>
+                          onMoveAppt({
+                            id: h.id,
+                            status: h.status,
+                            barberId: h.barberId || "felice",
+                            barberName: h.barberName,
+                            serviceNames: h.serviceNames,
+                            firstName: open.firstName,
+                            lastName: open.lastName,
+                            phone: open.phone,
+                            email: open.email,
+                            timeLabel:
+                              h.timeLabel ||
+                              new Date(h.startsAt).toLocaleTimeString("it-IT", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              }),
+                            durationMin: 30,
+                            priceCents: h.priceCents,
+                            isWalkIn: h.isWalkIn,
+                            startsAt: h.startsAt,
+                          })
+                        }
+                      >
+                        Modifica
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => {
+                          if (
+                            !window.confirm(
+                              "Eliminare questa prenotazione dall'agenda? (vale anche per appuntamenti già creati)",
+                            )
+                          ) {
+                            return;
+                          }
+                          onCancelAppt(h.id);
+                        }}
+                      >
+                        Elimina
+                      </button>
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ul>
