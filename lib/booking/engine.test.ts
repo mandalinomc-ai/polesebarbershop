@@ -508,6 +508,19 @@ describe("resolveEffectiveServiceDuration", () => {
     expect(r).toMatchObject({ ok: true, durationMin: 200, onlineBookable: true });
   });
 
+  it("keeps catalog duration for WhatsApp-only but blocks onlineBookable", () => {
+    const r = resolveEffectiveServiceDuration({
+      services: [getService("barba-pro")!],
+    });
+    expect(r).toMatchObject({
+      ok: true,
+      durationMin: 20,
+      source: "catalog",
+      onlineBookable: false,
+    });
+    expect(r.reason).toMatch(/WhatsApp/i);
+  });
+
   it("uses processing config when present", () => {
     const fake = {
       ...getService("tintura-capelli")!,

@@ -32,11 +32,23 @@ function withoutCloud() {
   });
 }
 
+/** Open weekday far enough ahead of wall-clock so getFirstBookableDate does not 400. */
+function futureOpenTuesday(): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + 14);
+  // Advance to Tuesday (UTC weekday 2 ≈ civil Tue for midday Rome dates)
+  while (d.getUTCDay() !== 2) d.setUTCDate(d.getUTCDate() + 1);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function payload(overrides: Record<string, unknown> = {}) {
   return {
     serviceIds: ["taglio-pro"],
     barberId: "felice",
-    date: "2026-09-08",
+    date: futureOpenTuesday(),
     startTime: "09:30",
     firstName: "Mario",
     lastName: "Rossi",

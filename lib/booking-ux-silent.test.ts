@@ -22,22 +22,7 @@ const BAD_UX =
   /n\/d|non definita|inventat|assistent|stima assistita|durata nota|durationUnknown|attenzione/i;
 
 describe("multi-service booking combos (silent UX)", () => {
-  const combos: { ids: string[]; minutes: number; label: string }[] = [
-    {
-      ids: ["taglio-standard", "acconciatura"],
-      minutes: 40,
-      label: "Taglio Standard + Acconciatura",
-    },
-    {
-      ids: ["taglio-pro", "barba-pro"],
-      minutes: 70,
-      label: "Taglio Pro + Barba Pro",
-    },
-    {
-      ids: ["taglio-pro", "barba-standard"],
-      minutes: 65,
-      label: "Taglio Pro + Barba Standard",
-    },
+  const onlineCombos: { ids: string[]; minutes: number; label: string }[] = [
     {
       ids: ["taglio-pro", "decolorazione-meches"],
       minutes: 200,
@@ -53,9 +38,33 @@ describe("multi-service booking combos (silent UX)", () => {
       minutes: 80,
       label: "Taglio Pro + Tintura Capelli",
     },
+    {
+      ids: ["taglio-pro", "acconciatura"],
+      minutes: 60,
+      label: "Taglio Pro + Acconciatura",
+    },
   ];
 
-  it.each(combos)("$label sums to $minutes and stays online-bookable", ({ ids, minutes }) => {
+  /** WA-only catalog services redirect to consulenza — duration still sums for display. */
+  const waOnlyCombos: { ids: string[]; minutes: number; label: string }[] = [
+    {
+      ids: ["taglio-standard", "acconciatura"],
+      minutes: 40,
+      label: "Taglio Standard + Acconciatura",
+    },
+    {
+      ids: ["taglio-pro", "barba-pro"],
+      minutes: 70,
+      label: "Taglio Pro + Barba Pro",
+    },
+    {
+      ids: ["taglio-pro", "barba-standard"],
+      minutes: 65,
+      label: "Taglio Pro + Barba Standard",
+    },
+  ];
+
+  it.each(onlineCombos)("$label sums to $minutes and stays online-bookable", ({ ids, minutes }) => {
     const services = resolveServices(ids)!;
     expect(services).toHaveLength(ids.length);
     expect(services.every((s) => s.durationKnown)).toBe(true);
@@ -74,6 +83,26 @@ describe("multi-service booking combos (silent UX)", () => {
     expect(resolved.kind).toBe("fixed");
     expect(resolved.durationMin).toBe(minutes);
     expect(resolved.reason).toBeUndefined();
+  });
+
+  it.each(waOnlyCombos)("$label sums to $minutes but blocks online (WhatsApp-only)", ({ ids, minutes }) => {
+    const services = resolveServices(ids)!;
+    expect(services).toHaveLength(ids.length);
+    expect(services.every((s) => s.durationKnown)).toBe(true);
+    expect(servicesAreOnlineBookable(services)).toBe(false);
+    expect(onlineBookingBlockReason(services)).toMatch(/WhatsApp/i);
+
+    const totals = totalsForServices(services);
+    expect(totals.durationMin).toBe(minutes);
+    expect(totals.durationKnown).toBe(true);
+    expect(totals.durationLabel).toBe(`Durata prevista: ${minutes} min`);
+    expect(totals.durationLabel).not.toMatch(BAD_UX);
+
+    const resolved = resolveEffectiveServiceDuration({ services });
+    expect(resolved.ok).toBe(true);
+    expect(resolved.onlineBookable).toBe(false);
+    expect(resolved.durationMin).toBe(minutes);
+    expect(resolved.reason).toMatch(/WhatsApp/i);
   });
 
   it("empty selection stays silent (no red warning copy)", () => {

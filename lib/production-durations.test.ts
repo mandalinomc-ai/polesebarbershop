@@ -50,10 +50,11 @@ describe("production official durations (all 10)", () => {
     expect(endMs).toBeLessThanOrEqual(close);
   });
 
-  it("sums multi-service Taglio Pro + Barba Pro and keeps chairs independent", () => {
+  it("sums multi-service Taglio Pro + Barba Pro (WA-only combo) and keeps chairs independent", () => {
     const services = resolveServices(["taglio-pro", "barba-pro"])!;
     expect(totalsForServices(services).durationMin).toBe(70);
-    expect(servicesAreOnlineBookable(services)).toBe(true);
+    // Barba Pro is WhatsApp-only — online cart blocks; gestionale still uses duration.
+    expect(servicesAreOnlineBookable(services)).toBe(false);
     const duration = resolveEffectiveServiceDuration({ services }).durationMin!;
     expect(duration).toBe(70);
 
