@@ -2771,10 +2771,8 @@ function SubscriptionPanel({
     setLastName(c.lastName);
     setPhone(c.phone || "");
     if (c.lastServiceIds?.length) setServiceIds([...c.lastServiceIds]);
-    if (!preset) {
-      if (c.lastBarberId) setBarberId(c.lastBarberId);
-      if (c.lastTimeLabel) setStartTime(c.lastTimeLabel);
-    }
+    if (c.lastBarberId) setBarberId(c.lastBarberId);
+    if (c.lastTimeLabel) setStartTime(c.lastTimeLabel);
   }
 
   async function createSub(e: FormEvent) {

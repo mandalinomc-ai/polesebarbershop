@@ -2185,6 +2185,39 @@ a.btn-whatsapp.contact-wa,
   padding-top: 0.55rem;
   font-size: 0.9rem;
 }
+
+@media (max-width: 700px) {
+  .occupancy-table th,
+  .occupancy-table td {
+    padding: 0.28rem 0.2rem;
+  }
+  .occupancy-block {
+    font-size: 0.68rem;
+    padding: 0.3rem 0.2rem;
+  }
+  .occupancy-taken-actions {
+    grid-template-columns: 1fr;
+  }
+  .occupancy-edit-btn,
+  .occupancy-remove-btn {
+    min-height: 36px;
+    font-size: 0.7rem;
+  }
+  .subscription-panel {
+    padding: 0.85rem 0.75rem;
+  }
+  .subscription-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .subscription-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .subscription-row .btn {
+    width: 100%;
+  }
+}
+
 .crm-incomplete-flag {
   color: #8a5a00;
   letter-spacing: 0.08em;
