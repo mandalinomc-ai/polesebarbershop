@@ -250,6 +250,28 @@ export function GestionalePanel() {
     if (res.ok) void load();
   }
 
+  /** Mark a specific half-hour as unavailable (blocks online booking for that chair). */
+  async function quickBlockHalfHour(day: string, barberId: string, startTime: string) {
+    const endTime = addMinutesHhMm(startTime, OCCUPANCY_STEP_MINUTES);
+    const res = await fetch("/api/admin/calendar-blocks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: day,
+        start: startTime,
+        end: endTime,
+        barberId,
+        label: "Non disponibile",
+      }),
+    });
+    const json = (await res.json()) as { error?: string };
+    if (!res.ok) {
+      setError(json.error || "Impossibile bloccare la fascia.");
+      return;
+    }
+    void load();
+  }
+
   const filteredClients = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return clients;
@@ -420,6 +442,9 @@ export function GestionalePanel() {
             onQuickWalkIn={(barberId, startTime) => {
               setWalkPreset({ barberId, startTime });
               setWalkOpen(true);
+            }}
+            onQuickBlock={(barberId, startTime) => {
+              void quickBlockHalfHour(date, barberId, startTime);
             }}
             onNotify={(appt) => {
               const match =
@@ -711,6 +736,7 @@ function AgendaView({
   onMove,
   onNotify,
   onQuickWalkIn,
+  onQuickBlock,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -720,6 +746,7 @@ function AgendaView({
   onMove: (a: AdminAppt) => void;
   onNotify: (a: AdminAppt) => void;
   onQuickWalkIn: (barberId: string, startTime: string) => void;
+  onQuickBlock: (barberId: string, startTime: string) => void;
 }) {
   const occupying = useMemo(
     () =>
@@ -815,19 +842,29 @@ function AgendaView({
                           {cell.occupied ? (
                             <span className="occupancy-block">{cell.label || "Prenotato"}</span>
                           ) : (
-                            <button
-                              type="button"
-                              className="occupancy-free-btn"
-                              onClick={() => onQuickWalkIn(cell.barberId, row.time)}
-                            >
-                              <span className="occupancy-free-plus" aria-hidden>
-                                +
-                              </span>
-                              <span className="occupancy-free-label">
-                                {formatFreeSlotLabel(row.time, OCCUPANCY_STEP_MINUTES)}
-                              </span>
-                              <span className="occupancy-free-hint">Prenota</span>
-                            </button>
+                            <div className="occupancy-free-actions">
+                              <button
+                                type="button"
+                                className="occupancy-free-btn"
+                                onClick={() => onQuickWalkIn(cell.barberId, row.time)}
+                              >
+                                <span className="occupancy-free-plus" aria-hidden>
+                                  +
+                                </span>
+                                <span className="occupancy-free-label">
+                                  {formatFreeSlotLabel(row.time, OCCUPANCY_STEP_MINUTES)}
+                                </span>
+                                <span className="occupancy-free-hint">Prenota</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="occupancy-block-btn"
+                                title={`Non disponibile ${row.time}–${addMinutesHhMm(row.time, OCCUPANCY_STEP_MINUTES)}`}
+                                onClick={() => onQuickBlock(cell.barberId, row.time)}
+                              >
+                                Non disp.
+                              </button>
+                            </div>
                           )}
                         </td>
                       ),
@@ -1239,11 +1276,19 @@ function ClientiView({
   );
 }
 
+function addMinutesHhMm(time: string, minutes: number): string {
+  const [h, m] = time.split(":").map(Number);
+  const total = (h || 0) * 60 + (m || 0) + minutes;
+  const hh = Math.floor(total / 60) % 24;
+  const mm = total % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
 function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => void }) {
   const [blockDate, setBlockDate] = useState(date);
-  const [start, setStart] = useState("13:00");
-  const [end, setEnd] = useState("14:00");
-  const [label, setLabel] = useState("Blocco orario");
+  const [start, setStart] = useState("10:00");
+  const [end, setEnd] = useState("10:30");
+  const [label, setLabel] = useState("Non disponibile");
   const [barberId, setBarberId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -1265,19 +1310,31 @@ function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => vo
     setBlockDate(date);
   }, [date]);
 
-  async function saveBlock() {
+  function setStartAndHalfHour(nextStart: string) {
+    setStart(nextStart);
+    setEnd(addMinutesHhMm(nextStart, OCCUPANCY_STEP_MINUTES));
+  }
+
+  async function saveBlock(overrides?: {
+    start?: string;
+    end?: string;
+    barberId?: string;
+    label?: string;
+  }) {
     setSaving(true);
     setError("");
+    const s = overrides?.start ?? start;
+    const e = overrides?.end ?? end;
     try {
       const res = await fetch("/api/admin/calendar-blocks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date: blockDate,
-          start,
-          end,
-          label,
-          barberId: barberId || null,
+          start: s,
+          end: e,
+          label: overrides?.label ?? label,
+          barberId: (overrides?.barberId ?? barberId) || null,
         }),
       });
       const json = (await res.json()) as { error?: string };
@@ -1302,12 +1359,45 @@ function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => vo
     }
   }
 
+  const dayBlocks = blocks.filter((b) => b.date === blockDate);
+  const halfHourPresets = useMemo(() => {
+    // Shop-typical half hours for quick tap (open days).
+    const out: string[] = [];
+    for (let min = 8 * 60; min < 21 * 60; min += OCCUPANCY_STEP_MINUTES) {
+      const hh = String(Math.floor(min / 60)).padStart(2, "0");
+      const mm = String(min % 60).padStart(2, "0");
+      out.push(`${hh}:${mm}`);
+    }
+    return out;
+  }, []);
+
   return (
     <section className="crm-card block-time-panel">
       <h2 className="font-serif">Blocca Orario</h2>
       <p className="slot-status">
-        Impedisce le prenotazioni online sulla fascia scelta (permessi, servizi esterni). La pausa pranzo 13:00–14:00 è già esclusa di default.
+        Segna <strong>non disponibile</strong> a scatti di {OCCUPANCY_STEP_MINUTES} min (servizio esterno, permesso).
+        La pausa pranzo 13:00–14:00 è già esclusa. Puoi anche toccare «Non disp.» sulle celle libere in agenda.
       </p>
+      <div className="block-time-presets" aria-label="Mezzore rapide">
+        {halfHourPresets.map((t) => (
+          <button
+            key={t}
+            type="button"
+            className={`btn btn-outline block-time-chip${start === t ? " is-on" : ""}`}
+            disabled={saving}
+            onClick={() => {
+              setStartAndHalfHour(t);
+              void saveBlock({
+                start: t,
+                end: addMinutesHhMm(t, OCCUPANCY_STEP_MINUTES),
+                label: "Non disponibile",
+              });
+            }}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
       <div className="block-time-form">
         <label>
           Data
@@ -1315,11 +1405,23 @@ function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => vo
         </label>
         <label>
           Inizio
-          <input className="input-lux" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+          <input
+            className="input-lux"
+            type="time"
+            step={OCCUPANCY_STEP_MINUTES * 60}
+            value={start}
+            onChange={(e) => setStartAndHalfHour(e.target.value.slice(0, 5))}
+          />
         </label>
         <label>
           Fine
-          <input className="input-lux" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+          <input
+            className="input-lux"
+            type="time"
+            step={OCCUPANCY_STEP_MINUTES * 60}
+            value={end}
+            onChange={(e) => setEnd(e.target.value.slice(0, 5))}
+          />
         </label>
         <label>
           Barbiere
@@ -1337,16 +1439,16 @@ function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => vo
           <input className="input-lux" value={label} onChange={(e) => setLabel(e.target.value)} />
         </label>
         <button type="button" className="btn btn-gold" disabled={saving} onClick={() => void saveBlock()}>
-          {saving ? "…" : "Blocca Orario"}
+          {saving ? "…" : "Non disponibile"}
         </button>
       </div>
       {error ? <p className="field-error">{error}</p> : null}
-      {blocks.length ? (
+      {dayBlocks.length ? (
         <ul className="crm-list">
-          {blocks.map((b) => (
+          {dayBlocks.map((b) => (
             <li key={b.id}>
               <strong>
-                {b.date || "ricorrente"} · {b.start}–{b.end}
+                {b.start}–{b.end}
               </strong>
               <span>
                 {b.label || "Blocco"}
@@ -1359,7 +1461,7 @@ function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => vo
           ))}
         </ul>
       ) : (
-        <p className="slot-status">Nessun blocco personalizzato salvato.</p>
+        <p className="slot-status">Nessun blocco personalizzato per questa data.</p>
       )}
     </section>
   );
