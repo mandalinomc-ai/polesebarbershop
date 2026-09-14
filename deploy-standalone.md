@@ -107,7 +107,7 @@ Genera un archivio `.tar.gz` senza `node_modules`, `.next`, cache e secret.
 1. Imposta `NEXT_PUBLIC_SITE_URL=https://www.felicepolese.it` (senza slash finale)
 2. Rebuild / restart (un deploy)
 3. Verifica: home, `/prenota`, `/gestionale`, email `.ics`, `/robots.txt`, `/sitemap.xml`
-4. Imposta `ADMIN_USER` / `ADMIN_PASSWORD` forti (non lasciare i default)
+4. Imposta `ADMIN_USER` / `ADMIN_PASSWORD` forti in ambiente (nessun fallback password in codice)
 5. Non ripuntare Git a progetti Vercel vecchi o archiviati
 
 Identificativo: **FELICE_POLESE_BARBERSHOP_LIVE_2026_09_10**  
