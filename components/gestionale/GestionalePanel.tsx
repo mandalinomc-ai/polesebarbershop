@@ -2092,7 +2092,10 @@ function WalkInModal({
             </em>
           </span>
           <div className="walkin-chip-grid walkin-chip-grid--xl">
-            {SERVICES.map((s) => {
+            <p className="slot-status" style={{ gridColumn: "1 / -1" }}>
+              Prenota ora (online)
+            </p>
+            {SERVICES.filter((s) => !s.whatsAppOnly).map((s) => {
               const disabled = serviceDisabled(s.id);
               const block = s.durationKnown ? newBookingBlockMinutes(s.durationMin) : null;
               return (
@@ -2114,18 +2117,44 @@ function WalkInModal({
                 </button>
               );
             })}
+            <p className="slot-status" style={{ gridColumn: "1 / -1" }}>
+              Consulenza (solo salone · regola tu i minuti)
+            </p>
+            {SERVICES.filter((s) => s.whatsAppOnly).map((s) => {
+              const disabled = serviceDisabled(s.id);
+              const block = s.durationKnown ? newBookingBlockMinutes(s.durationMin) : null;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  disabled={disabled}
+                  title={disabled ? INSUFFICIENT_AGENDA_TIME_IT : undefined}
+                  className={`walkin-chip walkin-chip--xl walkin-chip--consult${serviceIds.includes(s.id) ? " is-on" : ""}${disabled ? " is-disabled" : ""}`}
+                  onClick={() => toggleService(s.id)}
+                >
+                  {s.name}
+                  <small>
+                    {formatPrice(s)}
+                    {!s.durationKnown
+                      ? " · durata?"
+                      : ` · cat. ${s.durationMin} min · override sotto`}
+                    {block ? ` · blocco ${block}` : ""}
+                  </small>
+                </button>
+              );
+            })}
           </div>
         </div>
-        {hasUnknownDuration ? (
+        {hasUnknownDuration ||
+        SERVICES.some((s) => serviceIds.includes(s.id) && s.whatsAppOnly) ? (
           <label>
-            Durata override (min)
+            Durata effettiva (min) — obbligatoria se tempi diversi dal listino
             <input
               className="input-lux"
               type="number"
               min={1}
               max={480}
-              required
-              placeholder={String(totals.durationMin || "")}
+              placeholder={`Catalogo: ${totals.durationMin || ""}`}
               value={durationOverride}
               onChange={(e) => setDurationOverride(e.target.value)}
             />
@@ -2285,6 +2314,11 @@ function MoveModal({
   >([]);
   const [saving, setSaving] = useState(false);
   const [finding, setFinding] = useState(false);
+  const [notifyHint, setNotifyHint] = useState<{
+    message?: string;
+    waUrl?: string | null;
+    notified?: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (appt.startsAt) {
@@ -2296,6 +2330,7 @@ function MoveModal({
     setStartTime(appt.timeLabel);
     setBarberId(appt.barberId);
     setDurationOverride(appt.durationOverrideMin != null ? String(appt.durationOverrideMin) : "");
+    setNotifyHint(null);
   }, [appt, date]);
 
   async function findBest(mode: "day" | "first" | "best") {
@@ -2365,11 +2400,36 @@ function MoveModal({
       error?: string;
       conflict?: boolean;
       alternatives?: { label: string; startIso: string; date?: string; barberId?: string }[];
+      clientNotify?: {
+        notified?: boolean;
+        customerWhatsAppUrl?: string | null;
+        rescheduleMessage?: string;
+        emailSent?: boolean;
+        whatsappSent?: boolean;
+      };
     };
     setSaving(false);
     if (!res.ok) {
       setError(json.error || "Impossibile spostare.");
       if (json.alternatives?.length) setAlternatives(json.alternatives);
+      return;
+    }
+    const n = json.clientNotify;
+    if (n) {
+      setNotifyHint({
+        notified: Boolean(n.notified),
+        waUrl: n.customerWhatsAppUrl,
+        message: n.rescheduleMessage,
+      });
+      // Keep modal briefly so staff can open WA if auto-notify failed.
+      if (n.notified && !n.customerWhatsAppUrl) {
+        onSaved();
+        return;
+      }
+      if (n.notified && n.whatsappSent) {
+        onSaved();
+        return;
+      }
       return;
     }
     onSaved();
@@ -2425,6 +2485,23 @@ function MoveModal({
           </button>
         </div>
         {error ? <p className="field-error">{error}</p> : null}
+        {notifyHint ? (
+          <div className="walkin-services">
+            <p className="slot-status">
+              {notifyHint.notified
+                ? "Orario salvato · cliente avvisato."
+                : "Orario salvato · avvisa il cliente (email/WhatsApp automatici non partiti)."}
+            </p>
+            {notifyHint.waUrl ? (
+              <a className="btn btn-listino-wa" href={notifyHint.waUrl} target="_blank" rel="noopener noreferrer">
+                Apri WhatsApp al cliente
+              </a>
+            ) : null}
+            <button type="button" className="btn btn-gold" onClick={onSaved}>
+              Chiudi e aggiorna agenda
+            </button>
+          </div>
+        ) : null}
         {alternatives.length > 0 ? (
           <div className="walkin-services">
             <p className="slot-status">Alternative:</p>

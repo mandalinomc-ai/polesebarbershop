@@ -1428,12 +1428,37 @@ a.btn-whatsapp.contact-wa,
   color: inherit;
   border-style: dashed;
 }
+.booking-listino-section + .booking-listino-section { margin-top: 1.75rem; }
+.booking-listino-eyebrow {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--silk);
+}
 .booking-mini-cart {
   position: fixed;
   z-index: 90;
   right: max(0.85rem, var(--safe-right, 0px));
   bottom: max(5.5rem, calc(var(--safe-bottom, 0px) + 4.5rem));
   width: min(20rem, calc(100vw - 1.5rem));
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+}
+.booking-mini-cart.is-rise {
+  animation: mini-cart-magnetic 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mini-cart-magnetic {
+  0% { transform: translateY(110%); opacity: 0.4; }
+  60% { transform: translateY(-8%); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.booking-mini-cart--consult {
+  right: auto;
+  left: max(0.85rem, var(--safe-left, 0px));
+  z-index: 91;
 }
 .booking-mini-cart-toggle {
   width: 100%;
@@ -1449,6 +1474,10 @@ a.btn-whatsapp.contact-wa,
   font: inherit;
   cursor: pointer;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+.booking-mini-cart-toggle--wa {
+  background: #128c7e;
+  border-color: #0e6b60;
 }
 .booking-mini-cart-panel {
   margin-top: 0.45rem;
@@ -1467,9 +1496,12 @@ a.btn-whatsapp.contact-wa,
 }
 .booking-mini-cart-panel h3 { margin: 0; font-size: 1.15rem; }
 .booking-mini-cart-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
-.booking-mini-cart-panel li { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.88rem; }
+.booking-mini-cart-panel li { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; font-size: 0.88rem; }
 .booking-mini-cart-sub { margin: 0; display: flex; justify-content: space-between; font-size: 0.92rem; }
+.booking-mini-cart-hint { margin: 0; font-size: 0.8rem; color: var(--silk); line-height: 1.35; }
 .btn-listino-wa { background: #25d366; border-color: #1da851; color: #fff; }
+.walkin-chip--consult { border-style: dashed; }
+.fresha-cat--sub { opacity: 0.75; font-size: 0.78rem; }
 .block-time-panel { margin-bottom: 1rem; }
 .block-time-form {
   display: grid;

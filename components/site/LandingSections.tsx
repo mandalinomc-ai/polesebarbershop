@@ -3,7 +3,11 @@ import {
   BookingSectionNote,
   FreshaBookingFlow,
 } from "@/components/booking/FreshaBookingFlow";
-import { ServiceListino, BookingMiniCart } from "@/components/booking/ServiceListino";
+import {
+  ServiceListino,
+  BookingMiniCart,
+  ConsultationMiniCart,
+} from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import { SocialQrGrid } from "@/components/site/SocialQr";
@@ -63,6 +67,7 @@ export function LandingSections() {
           </div>
         </div>
         <BookingMiniCart />
+        <ConsultationMiniCart />
         <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>
           {SITE.pricesIncludeVat}
         </p>

@@ -545,48 +545,74 @@ export function FreshaBookingFlow({
             {onlineBlockedReason ? (
               <p className="field-error">{onlineBlockedReason}</p>
             ) : null}
-            {SERVICE_CATEGORIES.map((cat) => (
-              <div key={cat}>
-                <p className="fresha-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
-                {SERVICES.filter((s) => s.category === cat && s.active !== false).map((s) => {
-                  if (s.whatsAppOnly || isWhatsAppOnlyService(s.id)) {
-                    return (
-                      <a
-                        key={s.id}
-                        className="fresha-option fresha-option--wa"
-                        href={getWhatsAppConsulenzaUrl(s.name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <span>
-                          <strong>{s.name}</strong>
-                          <small>Prenotabile tramite consulenza WhatsApp · {formatDuration(s)}</small>
-                        </span>
-                        <span className="meta">WhatsApp</span>
-                      </a>
-                    );
-                  }
-                  return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className={`fresha-option${selectedIds.includes(s.id) ? " selected" : ""}`}
-                    onClick={() => toggleService(s.id)}
-                    aria-pressed={selectedIds.includes(s.id)}
-                  >
-                    <span>
-                      <strong>{s.name}</strong>
-                      <small>
-                        {s.description}
-                        {` · ${formatDuration(s)}`}
-                      </small>
-                    </span>
-                    <span className="meta">{formatPriceRange(s)}</span>
-                  </button>
-                  );
-                })}
-              </div>
-            ))}
+            <p className="fresha-cat">Listino prenota ora</p>
+            {SERVICE_CATEGORIES.map((cat) => {
+              const rows = SERVICES.filter(
+                (s) =>
+                  s.category === cat &&
+                  s.active !== false &&
+                  !s.whatsAppOnly &&
+                  !isWhatsAppOnlyService(s.id),
+              );
+              if (!rows.length) return null;
+              return (
+                <div key={`online-${cat}`}>
+                  <p className="fresha-cat fresha-cat--sub">{SERVICE_CATEGORY_LABEL[cat]}</p>
+                  {rows.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className={`fresha-option${selectedIds.includes(s.id) ? " selected" : ""}`}
+                      onClick={() => toggleService(s.id)}
+                      aria-pressed={selectedIds.includes(s.id)}
+                    >
+                      <span>
+                        <strong>{s.name}</strong>
+                        <small>
+                          {s.description}
+                          {` · ${formatDuration(s)}`}
+                        </small>
+                      </span>
+                      <span className="meta">{formatPriceRange(s)}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+            <p className="fresha-cat">Listino consulenza</p>
+            <p className="booking-open-note">
+              Questi trattamenti li inserisce il barbiere in agenda (tempistiche in salone). Dal sito
+              apri la consulenza WhatsApp.
+            </p>
+            {SERVICE_CATEGORIES.map((cat) => {
+              const rows = SERVICES.filter(
+                (s) =>
+                  s.category === cat &&
+                  s.active !== false &&
+                  (s.whatsAppOnly || isWhatsAppOnlyService(s.id)),
+              );
+              if (!rows.length) return null;
+              return (
+                <div key={`wa-${cat}`}>
+                  <p className="fresha-cat fresha-cat--sub">{SERVICE_CATEGORY_LABEL[cat]}</p>
+                  {rows.map((s) => (
+                    <a
+                      key={s.id}
+                      className="fresha-option fresha-option--wa"
+                      href={getWhatsAppConsulenzaUrl(s.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span>
+                        <strong>{s.name}</strong>
+                        <small>Consulenza WhatsApp · {formatDuration(s)} · tempi in salone</small>
+                      </span>
+                      <span className="meta">WhatsApp</span>
+                    </a>
+                  ))}
+                </div>
+              );
+            })}
           </>
         )}
 
