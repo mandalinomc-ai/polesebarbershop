@@ -42,7 +42,7 @@ describe("catalog", () => {
       { id: "taglio-pro", name: "Taglio Pro", category: "capelli", priceEuro: 25, priceMaxEuro: null, durationMin: 50, durationKnown: true },
       { id: "taglio-standard", name: "Taglio Standard", category: "capelli", priceEuro: 15, priceMaxEuro: null, durationMin: 30, durationKnown: true },
       { id: "acconciatura", name: "Acconciatura", category: "capelli", priceEuro: 5, priceMaxEuro: null, durationMin: 10, durationKnown: true },
-      { id: "taglio-bambino", name: "Taglio Bambino", category: "capelli", priceEuro: 10, priceMaxEuro: null, durationMin: 20, durationKnown: true },
+      { id: "taglio-bambino", name: "Taglio Bambino", category: "capelli", priceEuro: 12, priceMaxEuro: null, durationMin: 20, durationKnown: true },
       { id: "barba-pro", name: "Barba Pro", category: "barba", priceEuro: 15, priceMaxEuro: null, durationMin: 20, durationKnown: true },
       { id: "barba-standard", name: "Barba Standard", category: "barba", priceEuro: 5, priceMaxEuro: null, durationMin: 15, durationKnown: true },
       { id: "decolorazione-meches", name: "Decolorazione Meches", category: "colore", priceEuro: 40, priceMaxEuro: 100, durationMin: 150, durationKnown: true },
@@ -90,7 +90,7 @@ describe("catalog", () => {
     expect(formatDuration(SERVICES.find((s) => s.id === "barba-standard")!)).toBe("Durata prevista: 15 min");
     expect(formatDuration(meches)).toBe("Durata prevista: 150 min");
     expect(formatDuration(SERVICES.find((s) => s.id === "tintura-barba")!)).toBe("Durata prevista: 20 min");
-    expect(SERVICES.find((s) => s.id === "taglio-bambino")!.priceEuro).toBe(10);
+    expect(SERVICES.find((s) => s.id === "taglio-bambino")!.priceEuro).toBe(12);
     for (const s of SERVICES) {
       expect(formatDuration(s)).not.toMatch(/n\/d|undefined|non definita/i);
     }

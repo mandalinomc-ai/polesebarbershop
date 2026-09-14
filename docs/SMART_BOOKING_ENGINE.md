@@ -127,4 +127,4 @@ See `lib/booking/engine.test.ts`:
 
 ## 12. Keep unchanged
 
-Gmail SMTP, Maps Corso Dante **44**, WhatsApp, scissors intro, Taglio Pro **25€/50min**, Taglio Bambino **10€**, prices, videos.
+Gmail SMTP, Maps Corso Dante **44**, WhatsApp, scissors intro, Taglio Pro **25€/50min**, Taglio Bambino **12€**, prices, videos.

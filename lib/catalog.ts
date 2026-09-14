@@ -109,7 +109,7 @@ export const SERVICES: Service[] = [
     id: "taglio-bambino",
     name: "Taglio Bambino",
     category: "capelli",
-    priceEuro: 10,
+    priceEuro: 12,
     priceMaxEuro: null,
     isVariablePrice: false,
     durationMin: 20,
