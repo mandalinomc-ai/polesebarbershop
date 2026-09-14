@@ -64,8 +64,8 @@ export type Service = {
 
 /**
  * Official listino — exactly these 10 bookable services.
- * Prenota ora (calendario online): Taglio Standard, Barba Standard, Barba Pro, Acconciatura.
- * Consulenza WhatsApp (tempi in sede): tutto il resto.
+ * Prenota ora (calendario online): Taglio Standard, Taglio Bambino, Barba Standard, Barba Pro, Acconciatura.
+ * Consulenza WhatsApp (tempi in sede): Taglio Pro + colori/meches/tinture.
  */
 export const SERVICES: Service[] = [
   {
@@ -115,8 +115,7 @@ export const SERVICES: Service[] = [
     durationMin: 20,
     durationKnown: true,
     active: true,
-    whatsAppOnly: true,
-    description: "Taglio per bambini · consulenza in sede",
+    description: "Taglio per bambini · 20 min servizio (slot 30 min; i 10 min restanti gestibili in sede)",
   },
   {
     id: "barba-pro",

@@ -18,6 +18,7 @@ import {
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
+import { WEEKDAY_OPTIONS_IT } from "@/lib/subscriptions";
 import {
   formatItalianDate,
   getFirstBookableDate,
@@ -432,6 +433,7 @@ export function GestionalePanel() {
         {tab === "agenda" ? (
           <>
             <BlockTimePanel date={date} onChanged={() => void load()} />
+            <SubscriptionPanel date={date} clients={clients} onChanged={() => void load()} />
             <AgendaView
             agenda={agenda}
             date={date}
@@ -469,6 +471,8 @@ export function GestionalePanel() {
                   topService: null,
                   lastServiceIds: [],
                   lastService: null,
+                  lastBarberId: appt.barberId,
+                  lastTimeLabel: appt.timeLabel || null,
                   topBarber: appt.barberName,
                   crmNotes: "",
                   incomplete: !(appt.phone || "").replace(/\D/g, "").length && !(appt.email || "").includes("@"),
@@ -813,7 +817,7 @@ function AgendaView({
       <section className="occupancy-wrap" aria-label="Occupazione poltrone">
         <h2 className="font-serif">Tabella orari</h2>
         <p className="slot-status occupancy-legend">
-          Tocca una cella <strong>Libero</strong> per prenotare in sede. Un appuntamento multi-servizio = un solo blocco continuo.
+          Tocca <strong>Libero</strong> per prenotare. Su una prenotazione: <strong>Elimina</strong> o doppio click / <strong>Modifica</strong> per spostarla (anche singola occorrenza di abbonamento).
         </p>
         {occupancy.length === 0 ? (
           <p className="slot-status">Nessuna fascia oraria: salone chiuso o data non valida.</p>
@@ -840,7 +844,50 @@ function AgendaView({
                           className={cell.occupied ? "taken" : "free"}
                         >
                           {cell.occupied ? (
-                            <span className="occupancy-block">{cell.label || "Prenotato"}</span>
+                            <div
+                              className="occupancy-taken"
+                              title="Doppio click per modificare / spostare"
+                              onDoubleClick={() => {
+                                const appt = (agenda?.appointments || []).find(
+                                  (a) => a.id === cell.appointmentId,
+                                );
+                                if (appt) onMove(appt);
+                              }}
+                            >
+                              <span className="occupancy-block">{cell.label || "Prenotato"}</span>
+                              {cell.appointmentId ? (
+                                <div className="occupancy-taken-actions">
+                                  <button
+                                    type="button"
+                                    className="occupancy-edit-btn"
+                                    onClick={() => {
+                                      const appt = (agenda?.appointments || []).find(
+                                        (a) => a.id === cell.appointmentId,
+                                      );
+                                      if (appt) onMove(appt);
+                                    }}
+                                  >
+                                    Modifica
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="occupancy-remove-btn"
+                                    onClick={() => {
+                                      if (
+                                        !window.confirm(
+                                          "Rimuovere questa prenotazione confermata dall'agenda?",
+                                        )
+                                      ) {
+                                        return;
+                                      }
+                                      onPatch(cell.appointmentId!, { status: "cancelled" });
+                                    }}
+                                  >
+                                    Elimina
+                                  </button>
+                                </div>
+                              ) : null}
+                            </div>
                           ) : (
                             <div className="occupancy-free-actions">
                               <button
@@ -2010,7 +2057,12 @@ function WalkInModal({
     setPhone(hit.phone || "");
     setEmail(hit.email || "");
     if (hit.lastServiceIds?.length) setServiceIds(hit.lastServiceIds);
-  }, [clients, firstName, lastName]);
+    // Ripeti ultima visita: orario + barbiere (se non si è partiti da una cella Libero).
+    if (!preset) {
+      if (hit.lastBarberId) setBarberId(hit.lastBarberId);
+      if (hit.lastTimeLabel) setStartTime(hit.lastTimeLabel);
+    }
+  }, [clients, firstName, lastName, preset]);
 
   function pickClient(c: ClientRecord) {
     appliedClientKey.current = c.key;
@@ -2019,6 +2071,10 @@ function WalkInModal({
     setPhone(c.phone || "");
     setEmail(c.email || "");
     if (c.lastServiceIds?.length) setServiceIds([...c.lastServiceIds]);
+    if (!preset) {
+      if (c.lastBarberId) setBarberId(c.lastBarberId);
+      if (c.lastTimeLabel) setStartTime(c.lastTimeLabel);
+    }
     setSuggestOpen(false);
     setError("");
   }
@@ -2656,3 +2712,229 @@ function MoveModal({
     </div>
   );
 }
+
+function SubscriptionPanel({
+  date,
+  clients,
+  onChanged,
+}: {
+  date: string;
+  clients: ClientRecord[];
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [subs, setSubs] = useState<
+    { id: string; firstName: string; lastName: string; weekday: number; startTime: string; barberId: string; endsOn: string }[]
+  >([]);
+  const [warning, setWarning] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [barberId, setBarberId] = useState("felice");
+  const [serviceIds, setServiceIds] = useState<string[]>(["taglio-standard"]);
+  const [weekday, setWeekday] = useState(1);
+  const [startTime, setStartTime] = useState("10:00");
+  const [startsOn, setStartsOn] = useState(date);
+  const [endsOn, setEndsOn] = useState(() => {
+    const d = new Date(`${date}T12:00:00`);
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().slice(0, 10);
+  });
+
+  async function loadSubs() {
+    const res = await fetch("/api/admin/subscriptions");
+    const json = (await res.json()) as {
+      subscriptions?: typeof subs;
+      warning?: string;
+      error?: string;
+    };
+    if (!res.ok) {
+      setWarning(json.error || "");
+      return;
+    }
+    setSubs(json.subscriptions || []);
+    setWarning(json.warning || "");
+  }
+
+  useEffect(() => {
+    if (open) void loadSubs();
+  }, [open]);
+
+  useEffect(() => {
+    setStartsOn(date);
+  }, [date]);
+
+  function pickClient(c: ClientRecord) {
+    setFirstName(c.firstName);
+    setLastName(c.lastName);
+    setPhone(c.phone || "");
+    if (c.lastServiceIds?.length) setServiceIds([...c.lastServiceIds]);
+    if (!preset) {
+      if (c.lastBarberId) setBarberId(c.lastBarberId);
+      if (c.lastTimeLabel) setStartTime(c.lastTimeLabel);
+    }
+  }
+
+  async function createSub(e: FormEvent) {
+    e.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          phone,
+          barberId,
+          serviceIds,
+          weekday,
+          startTime,
+          startsOn,
+          endsOn,
+        }),
+      });
+      const json = (await res.json()) as {
+        error?: string;
+        created?: number;
+        skipped?: number;
+      };
+      if (!res.ok) {
+        setError(json.error || "Impossibile creare abbonamento.");
+        return;
+      }
+      setError("");
+      await loadSubs();
+      onChanged();
+      setOpen(false);
+      if ((json.skipped || 0) > 0) {
+        setWarning(`Creati ${json.created || 0} appuntamenti; ${json.skipped} saltati (conflitto).`);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function stopSub(id: string) {
+    if (!window.confirm("Disattiva abbonamento e annulla le date future? Le date già passate restano in storico.")) {
+      return;
+    }
+    const res = await fetch("/api/admin/subscriptions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, cancelFuture: true }),
+    });
+    if (res.ok) {
+      await loadSubs();
+      onChanged();
+    }
+  }
+
+  return (
+    <section className="subscription-panel" aria-label="Abbonamenti cadenza fissa">
+      <div className="crm-toolbar" style={{ justifyContent: "space-between" }}>
+        <div>
+          <h2 className="font-serif">Abbonamento</h2>
+          <p className="slot-status">
+            Cadenza fissa giorno+ora per il cliente. Se un giorno non va, sposta o elimina solo quella prenotazione in tabella.
+          </p>
+        </div>
+        <button type="button" className="btn btn-outline" onClick={() => setOpen((v) => !v)}>
+          {open ? "Chiudi" : "Nuovo abbonamento"}
+        </button>
+      </div>
+      {warning ? <p className="crm-warning">{warning}</p> : null}
+      {open ? (
+        <form className="subscription-form" onSubmit={(e) => void createSub(e)}>
+          {clients.filter((c) => c.visitCount > 0).slice(0, 4).map((c) => (
+            <button key={c.key} type="button" className="walkin-chip" onClick={() => pickClient(c)}>
+              {c.name}
+            </button>
+          ))}
+          <label>
+            Nome
+            <input className="input-lux" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+          </label>
+          <label>
+            Cognome
+            <input className="input-lux" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          </label>
+          <label>
+            Telefono
+            <input className="input-lux" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </label>
+          <label>
+            Barbiere
+            <select className="input-lux" value={barberId} onChange={(e) => setBarberId(e.target.value)}>
+              {getRealBarbers().map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Giorno
+            <select className="input-lux" value={weekday} onChange={(e) => setWeekday(Number(e.target.value))}>
+              {WEEKDAY_OPTIONS_IT.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Orario
+            <input className="input-lux" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
+          </label>
+          <label>
+            Dal
+            <input className="input-lux" type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} required />
+          </label>
+          <label>
+            Al
+            <input className="input-lux" type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} required />
+          </label>
+          <label style={{ gridColumn: "1 / -1" }}>
+            Servizi
+            <select
+              className="input-lux"
+              value={serviceIds[0] || "taglio-standard"}
+              onChange={(e) => setServiceIds([e.target.value])}
+            >
+              {SERVICES.filter((s) => s.active !== false).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {error ? <p className="field-error" style={{ gridColumn: "1 / -1" }}>{error}</p> : null}
+          <button type="submit" className="btn" disabled={saving || !firstName.trim()}>
+            {saving ? "…" : "Crea abbonamento"}
+          </button>
+        </form>
+      ) : null}
+      {subs.length > 0 ? (
+        <div className="subscription-list">
+          {subs.map((s) => (
+            <div key={s.id} className="subscription-row">
+              <span>
+                {s.firstName} {s.lastName} · {WEEKDAY_OPTIONS_IT.find((d) => d.value === s.weekday)?.label || s.weekday}{" "}
+                {s.startTime} · fino al {s.endsOn}
+              </span>
+              <button type="button" className="btn btn-outline" onClick={() => void stopSub(s.id)}>
+                Interrompi
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
