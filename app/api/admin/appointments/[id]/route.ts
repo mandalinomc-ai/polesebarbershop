@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin-auth";
+import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const idSchema = z.string().uuid();
 
@@ -47,6 +49,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Impossibile eliminare l'appuntamento." }, { status: 500 });
   }
 
+  revalidateBookingPaths();
   return NextResponse.json({ ok: true, deletedId: parsed.data });
 }
 
@@ -108,6 +111,7 @@ export async function PATCH(
   if (!data) {
     return NextResponse.json({ error: "Appuntamento non trovato." }, { status: 404 });
   }
+  revalidateBookingPaths();
   return NextResponse.json({
     ok: true,
     id: data.id,

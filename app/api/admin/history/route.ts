@@ -8,6 +8,7 @@ import { fetchAllPages } from "@/lib/supabase-query";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const STATUS_IT: Record<string, string> = {
   pending: "In attesa",

@@ -10,6 +10,7 @@ import { flattenZodError } from "@/lib/validations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const patchSchema = z.object({
   id: z.string().min(1),

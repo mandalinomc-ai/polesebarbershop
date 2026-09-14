@@ -3,17 +3,13 @@ import { cookies } from "next/headers";
 import {
   ADMIN_COOKIE,
   ADMIN_SESSION_MAX_AGE_SEC,
-  DEFAULT_ADMIN_PASSWORD,
   DEFAULT_ADMIN_USER,
-  LEGACY_WEAK_ADMIN_PASSWORD,
 } from "./admin-auth-constants";
 
 export {
   ADMIN_COOKIE,
   ADMIN_SESSION_MAX_AGE_SEC,
-  DEFAULT_ADMIN_PASSWORD,
   DEFAULT_ADMIN_USER,
-  LEGACY_WEAK_ADMIN_PASSWORD,
 } from "./admin-auth-constants";
 
 function safeEqual(a: string, b: string) {
@@ -30,12 +26,12 @@ export function getAdminUser() {
 }
 
 /**
- * Password for /gestionale. Env ADMIN_PASSWORD if set (any length),
- * otherwise `admin` so local/dev works without .env.
+ * Password for /gestionale. Requires `process.env.ADMIN_PASSWORD`.
+ * No hardcoded fallback — unset/empty means login is disabled.
  */
 export function getAdminPassword() {
   const value = process.env.ADMIN_PASSWORD;
-  if (value == null || value.length === 0) return DEFAULT_ADMIN_PASSWORD;
+  if (value == null || value.length === 0) return "";
   return value;
 }
 
@@ -50,18 +46,10 @@ export function hasExplicitAdminCredentials() {
   return Boolean(userFromEnv && passFromEnv != null && passFromEnv.length > 0);
 }
 
-/** True when credentials are the insecure local defaults (env unset, falling back). */
-export function isUsingDefaultAdminCredentials() {
-  if (hasExplicitAdminCredentials()) return false;
-  // Only the historical admin/admin pair is treated as weak (blocked in production).
-  return (
-    getAdminUser().toLowerCase() === DEFAULT_ADMIN_USER &&
-    getAdminPassword() === LEGACY_WEAK_ADMIN_PASSWORD
-  );
-}
-
 export function verifyAdminPassword(password: string) {
-  return safeEqual(password, getAdminPassword());
+  const expected = getAdminPassword();
+  if (!expected) return false;
+  return safeEqual(password, expected);
 }
 
 export function verifyAdminCredentials(username: string, password: string) {
@@ -128,7 +116,4 @@ export function adminCookieOptions() {
 }
 
 export const ADMIN_MISSING_IT =
-  "Area gestionale non configurata: ADMIN_PASSWORD deve avere almeno 4 caratteri.";
-
-export const ADMIN_WEAK_DEFAULTS_IT =
-  "Credenziali gestionale di default non ammesse in produzione. Imposta ADMIN_USER e ADMIN_PASSWORD.";
+  "Area gestionale non configurata: imposta ADMIN_PASSWORD (almeno 4 caratteri) nell'ambiente.";

@@ -4,6 +4,10 @@ import { ManageAppointment } from "./ManageAppointment";
 import { SITE } from "@/lib/site-config";
 import type { Metadata } from "next";
 
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: `Il tuo appuntamento — ${SITE.name}`,
   robots: { index: false, follow: false },

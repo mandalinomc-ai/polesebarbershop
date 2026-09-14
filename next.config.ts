@@ -49,6 +49,10 @@ const nextConfig: NextConfig = {
     return [{ source: "/video/:path*", destination: "/assets/video/:path*" }];
   },
   async headers() {
+    const immutableAsset = {
+      key: "Cache-Control",
+      value: "public, max-age=31536000, immutable",
+    } as const;
     return [
       {
         source: "/:path*",
@@ -64,40 +68,37 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/assets/:path*",
+        source: "/api/:path*",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
           },
         ],
+      },
+      {
+        source: "/assets/:path*",
+        headers: [immutableAsset],
       },
       {
         source: "/video/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
+        headers: [immutableAsset],
+      },
+      {
+        source: "/videos/:path*",
+        headers: [immutableAsset],
       },
       {
         source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
+        headers: [immutableAsset],
       },
       {
         source: "/fonts/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
+        headers: [immutableAsset],
+      },
+      {
+        source: "/:path*.(jpg|jpeg|png|gif|webp|avif|svg|ico|mp4|webm|mov)",
+        headers: [immutableAsset],
       },
     ];
   },

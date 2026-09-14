@@ -9,6 +9,7 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 /** Public catalog — same source booking/slots use (catalog seed + DB overlays). */
 export async function GET() {

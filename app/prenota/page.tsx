@@ -5,6 +5,10 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { SITE } from "@/lib/site-config";
 import type { Metadata } from "next";
 
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: `Prenota — ${SITE.name}`,
   description: `Prenota taglio, barba e trattamenti da ${SITE.name}, ${SITE.address}, ${SITE.city}.`,

@@ -11,6 +11,7 @@ import { flattenZodError } from "@/lib/validations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const createSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
