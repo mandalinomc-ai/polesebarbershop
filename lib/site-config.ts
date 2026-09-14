@@ -35,7 +35,7 @@ export const SITE = {
   instagramHandle: "@felicepolese_barber",
   fiscalCode: "PLSFLC04S21A783K",
   vatNumber: "01894030624",
-  pricesIncludeVat: "Tutti i prezzi sono da intendersi IVA inclusa.",
+  pricesIncludeVat: "Tutti i prezzi si intendono IVA inclusa.",
   hours: {
     monday: "Lun · 09:00 — 19:00",
     tuesday: "Mar · 09:00 — 19:00",

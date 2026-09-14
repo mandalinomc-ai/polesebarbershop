@@ -3471,3 +3471,14 @@ body:not(.scissors-intro-active) .scissors-intro-cutline {
 .hero-editorial .countdown-digit {
   color: var(--ink);
 }
+
+.crm-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+.crm-history-actions .btn {
+  min-height: 36px;
+  font-size: 0.72rem;
+}
