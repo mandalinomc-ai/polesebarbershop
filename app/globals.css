@@ -1517,6 +1517,50 @@ a.btn-whatsapp.contact-wa,
 .block-time-panel { margin-bottom: 1rem; }
 .block-time-form {
   display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+.block-time-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.65rem 0 0.85rem;
+  max-height: 7.5rem;
+  overflow: auto;
+}
+.block-time-chip {
+  min-height: 36px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+}
+.block-time-chip.is-on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.occupancy-free-actions {
+  display: grid;
+  gap: 0.25rem;
+}
+.occupancy-block-btn {
+  min-height: 32px;
+  width: 100%;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.occupancy-block-btn:hover {
+  border-color: var(--ink);
+  background: rgba(0, 0, 0, 0.04);
+}
+  display: grid;
   gap: 0.65rem;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   align-items: end;
