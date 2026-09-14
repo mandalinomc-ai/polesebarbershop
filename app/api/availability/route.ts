@@ -28,6 +28,7 @@ import {
 import { BOOKING_UI_DAYS, SITE } from "@/lib/site-config";
 import { availabilityQuerySchema, flattenZodError } from "@/lib/validations";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -196,6 +197,8 @@ export async function GET(request: Request) {
     });
   }
 
+  const calendarBlocks = await loadMergedCalendarBlocks();
+
   const slots = getScheduleSlots({
     date,
     barberId,
@@ -203,6 +206,7 @@ export async function GET(request: Request) {
     appointments,
     fullSearch: false,
     displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
+    calendarBlocks,
   });
   const occupancy = summarizeSchedule(date, slots, { openDay: true });
   const days = summaryDates.map((iso) => {
@@ -219,6 +223,7 @@ export async function GET(request: Request) {
         appointments,
         fullSearch: false,
         displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
+        calendarBlocks,
       }),
       { openDay: true },
     );

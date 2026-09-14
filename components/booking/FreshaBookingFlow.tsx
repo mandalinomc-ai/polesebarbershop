@@ -11,6 +11,7 @@ import {
   totalsForServices,
   servicesAreOnlineBookable,
   onlineBookingBlockReason,
+  isWhatsAppOnlyService,
   type Service,
 } from "@/lib/catalog";
 import {
@@ -32,6 +33,7 @@ import {
   SITE,
   getBookingConfirmWhatsAppUrl,
   getWhatsAppUrl,
+  getWhatsAppConsulenzaUrl,
   readBookingDateFromLocation,
   readBookingServiceFromLocation,
 } from "@/lib/site-config";
@@ -165,6 +167,10 @@ export function FreshaBookingFlow({
     const apply = (serviceId: string | null, opts?: { replace?: boolean }) => {
       if (!serviceId) return;
       if (!SERVICES.some((s) => s.id === serviceId)) return;
+      if (isWhatsAppOnlyService(serviceId)) {
+        // WA-only: do not add to cart — open consulenza (listino CTA handles primary path).
+        return;
+      }
       setSelectedIds((curr) => {
         if (opts?.replace) return [serviceId];
         return curr.includes(serviceId)
@@ -254,6 +260,7 @@ export function FreshaBookingFlow({
   }, [date]);
 
   function toggleService(id: string) {
+    if (isWhatsAppOnlyService(id)) return;
     setSelectedIds((curr) =>
       curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id],
     );
@@ -369,8 +376,8 @@ export function FreshaBookingFlow({
         <div className="fresha-body success-box">
           <h3 className="font-serif">Richiesta di prenotazione ricevuta</h3>
           <p className="prose">
-            La tua richiesta è stata ricevuta. Il salone ti contatterà su
-            WhatsApp per confermare l&apos;appuntamento.
+            Ecco il riepilogo. Invia subito la conferma WhatsApp al salone con
+            orario e dettagli.
           </p>
           <p className="prose">
             <strong>
@@ -378,15 +385,32 @@ export function FreshaBookingFlow({
               l&apos;appuntamento definitivo.
             </strong>
           </p>
-          <p className="prose booking-open-note">
-            In caso di sovrapposizioni o necessità organizzative, il salone
-            potrà confermare l&apos;orario oppure proporti una modifica.
-          </p>
-          <p className="prose">
-            Riepilogo richiesta: <strong>{totals.names}</strong> con{" "}
-            <strong>{success.barberName}</strong> il {formatItalianDate(date)}{" "}
-            alle {slot?.label} · {totals.priceLabel}.
-          </p>
+          <ul className="success-details">
+            <li>
+              <span>Servizio</span>
+              <strong>{totals.names}</strong>
+            </li>
+            <li>
+              <span>Data</span>
+              <strong>{formatItalianDate(date)}</strong>
+            </li>
+            <li>
+              <span>Ora</span>
+              <strong>{slot?.label}</strong>
+            </li>
+            <li>
+              <span>Barbiere</span>
+              <strong>{success.barberName}</strong>
+            </li>
+            <li>
+              <span>Prezzo</span>
+              <strong>{totals.priceLabel}</strong>
+            </li>
+            <li>
+              <span>Indirizzo</span>
+              <strong>{SITE.addressFull}</strong>
+            </li>
+          </ul>
           <div className="success-whatsapp-row">
             <a
               className="btn btn-whatsapp"
@@ -397,7 +421,7 @@ export function FreshaBookingFlow({
               INVIA ORA IL PROMEMORIA APPUNTAMENTO
             </a>
             <p className="booking-open-note">
-              Invia al salone il riepilogo della prenotazione con un tap.
+              Chat con orario e riepilogo già compilati.
             </p>
           </div>
           <p className="prose success-calendar-label">
@@ -525,6 +549,23 @@ export function FreshaBookingFlow({
               <div key={cat}>
                 <p className="fresha-cat">{SERVICE_CATEGORY_LABEL[cat]}</p>
                 {SERVICES.filter((s) => s.category === cat && s.active !== false).map((s) => {
+                  if (s.whatsAppOnly || isWhatsAppOnlyService(s.id)) {
+                    return (
+                      <a
+                        key={s.id}
+                        className="fresha-option fresha-option--wa"
+                        href={getWhatsAppConsulenzaUrl(s.name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span>
+                          <strong>{s.name}</strong>
+                          <small>Prenotabile tramite consulenza WhatsApp · {formatDuration(s)}</small>
+                        </span>
+                        <span className="meta">WhatsApp</span>
+                      </a>
+                    );
+                  }
                   return (
                   <button
                     key={s.id}

@@ -1,4 +1,4 @@
-import { addDays, formatWallDate, mondayOfWeek } from "@/lib/availability";
+import { addDays, formatWallDate, formatWallTime, mondayOfWeek } from "@/lib/availability";
 import { namesFromSnapshot } from "@/lib/appointments";
 import { getBarber } from "@/lib/catalog";
 
@@ -21,6 +21,8 @@ export type CrmAppointment = {
   priceCents: number;
   isWalkIn: boolean;
   notes: string | null;
+  /** Soft-excluded from revenue KPIs. */
+  excludeFromStats?: boolean;
 };
 
 export type ClientServiceStat = { id: string; name: string; count: number };
@@ -113,10 +115,25 @@ export type CrmStats = {
   takingsByBarber: { barberId: string; name: string; cents: number; count: number }[];
   appointmentsOverTime: TimeSeriesPoint[];
   revenueOverTime: TimeSeriesPoint[];
+  /** Individual paid lines for soft-delete in Statistiche. */
+  paidTransactions: {
+    id: string;
+    dateLabel: string;
+    timeLabel: string;
+    customerName: string;
+    serviceNames: string;
+    barberName: string;
+    priceCents: number;
+    status: string;
+  }[];
 };
 
 export function isPaidStatus(status: string) {
   return status === "confirmed" || status === "walk_in" || status === "completed";
+}
+
+export function countsTowardStats(appt: { status: string; excludeFromStats?: boolean }) {
+  return isPaidStatus(appt.status) && !appt.excludeFromStats;
 }
 
 export function isCancelledStatus(status: string) {
@@ -410,6 +427,7 @@ export function aggregateStats(
   let upcomingCount = 0;
   let expectedRevenueCents = 0;
   const seriesMap = new Map<string, TimeSeriesPoint>();
+  const paidTransactions: CrmStats["paidTransactions"] = [];
 
   for (const appt of rows) {
     const wallDay =
@@ -419,7 +437,7 @@ export function aggregateStats(
     if (wallDay === date && !isCancelledStatus(appt.status)) todayAppointments += 1;
     if (appt.startsAt > nowIso && !isCancelledStatus(appt.status)) {
       upcomingCount += 1;
-      if (wallDay === date) expectedRevenueCents += appt.priceCents;
+      if (wallDay === date && countsTowardStats(appt)) expectedRevenueCents += appt.priceCents;
     }
   }
 
@@ -433,13 +451,23 @@ export function aggregateStats(
         : formatWallDate(new Date(appt.startsAt));
     const point = seriesMap.get(wallDay) || { date: wallDay, count: 0, revenueCents: 0 };
     point.count += 1;
-    if (isPaidStatus(appt.status)) {
+    if (countsTowardStats(appt)) {
       point.revenueCents += appt.priceCents;
       paidCount += 1;
       for (const svc of serviceEntries(appt)) bumpRevenue(revenueMap, svc.id, svc.name, appt.priceCents);
+      paidTransactions.push({
+        id: appt.id,
+        dateLabel: wallDay,
+        timeLabel: appt.timeLabel || formatWallTime(new Date(appt.startsAt)),
+        customerName: `${appt.firstName} ${appt.lastName}`.trim() || "Cliente",
+        serviceNames: appt.serviceNames,
+        barberName: appt.barberName,
+        priceCents: appt.priceCents,
+        status: appt.status,
+      });
     }
     seriesMap.set(wallDay, point);
-    if (isPaidStatus(appt.status)) {
+    if (countsTowardStats(appt)) {
       if (wallDay === date) dayCents += appt.priceCents;
       if (wallDay >= weekStart && wallDay < weekEnd) weekCents += appt.priceCents;
       if (wallDay >= monthStart && wallDay <= date) monthCents += appt.priceCents;
@@ -487,6 +515,9 @@ export function aggregateStats(
     takingsByBarber: [...barberTakings.values()].sort((a, b) => b.cents - a.cents),
     appointmentsOverTime: sortedSeries,
     revenueOverTime: sortedSeries.map((p) => ({ date: p.date, count: p.count, revenueCents: p.revenueCents })),
+    paidTransactions: paidTransactions.sort((a, b) =>
+      `${b.dateLabel}${b.timeLabel}`.localeCompare(`${a.dateLabel}${a.timeLabel}`),
+    ),
   };
 }
 
@@ -510,6 +541,7 @@ export function toCrmAppointment(row: {
   price_cents: number;
   is_walk_in: boolean;
   notes: string | null;
+  exclude_from_stats?: boolean | null;
 }): CrmAppointment {
   return {
     id: row.id,
@@ -529,5 +561,6 @@ export function toCrmAppointment(row: {
     priceCents: row.price_cents,
     isWalkIn: row.is_walk_in,
     notes: row.notes,
+    excludeFromStats: Boolean(row.exclude_from_stats),
   };
 }

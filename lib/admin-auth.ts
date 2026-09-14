@@ -5,6 +5,7 @@ import {
   ADMIN_SESSION_MAX_AGE_SEC,
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_ADMIN_USER,
+  LEGACY_WEAK_ADMIN_PASSWORD,
 } from "./admin-auth-constants";
 
 export {
@@ -12,6 +13,7 @@ export {
   ADMIN_SESSION_MAX_AGE_SEC,
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_ADMIN_USER,
+  LEGACY_WEAK_ADMIN_PASSWORD,
 } from "./admin-auth-constants";
 
 function safeEqual(a: string, b: string) {
@@ -51,9 +53,10 @@ export function hasExplicitAdminCredentials() {
 /** True when credentials are the insecure local defaults (env unset, falling back). */
 export function isUsingDefaultAdminCredentials() {
   if (hasExplicitAdminCredentials()) return false;
+  // Only the historical admin/admin pair is treated as weak (blocked in production).
   return (
     getAdminUser().toLowerCase() === DEFAULT_ADMIN_USER &&
-    getAdminPassword() === DEFAULT_ADMIN_PASSWORD
+    getAdminPassword() === LEGACY_WEAK_ADMIN_PASSWORD
   );
 }
 

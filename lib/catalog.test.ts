@@ -63,7 +63,8 @@ describe("catalog", () => {
       "tintura-barba": 20,
     });
     expect(SERVICES.every((s) => s.durationKnown && s.active !== false)).toBe(true);
-    expect(servicesAreOnlineBookable(SERVICES)).toBe(true);
+    expect(servicesAreOnlineBookable(SERVICES.filter((s) => !s.whatsAppOnly))).toBe(true);
+    expect(servicesAreOnlineBookable(SERVICES)).toBe(false);
   });
 
   it("does not treat Razor Taper, Skin Fade, combo or consulenza as bookable services", () => {

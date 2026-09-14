@@ -280,9 +280,11 @@ export function GestionalePanel() {
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••"
+              placeholder="Password gestionale"
+              required
             />
           </label>
+          <p className="slot-status">Accesso riservato al salone.</p>
           {error ? <p className="field-error">{error}</p> : null}
           <button type="submit" className="btn btn-gold">
             Entra
@@ -392,7 +394,9 @@ export function GestionalePanel() {
           />
         ) : null}
         {tab === "agenda" ? (
-          <AgendaView
+          <>
+            <BlockTimePanel date={date} onChanged={() => void load()} />
+            <AgendaView
             agenda={agenda}
             date={date}
             view={agendaView}
@@ -447,6 +451,7 @@ export function GestionalePanel() {
               setNotifyFor(match);
             }}
           />
+          </>
         ) : null}
         {tab === "listino" ? <ServicesAdminPanel /> : null}
         {tab === "clienti" ? (
@@ -471,7 +476,14 @@ export function GestionalePanel() {
           />
         ) : null}
         {tab === "statistiche" ? (
-          <StatsView stats={stats} date={date} weekStart={agenda?.weekStart} period={statsPeriod} onPeriodChange={setStatsPeriod} />
+          <StatsView
+            stats={stats}
+            date={date}
+            weekStart={agenda?.weekStart}
+            period={statsPeriod}
+            onPeriodChange={setStatsPeriod}
+            onReload={() => void load()}
+          />
         ) : null}
         {tab === "storico" ? (
           <StoricoView
@@ -1200,19 +1212,148 @@ function ClientiView({
   );
 }
 
+function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => void }) {
+  const [blockDate, setBlockDate] = useState(date);
+  const [start, setStart] = useState("13:00");
+  const [end, setEnd] = useState("14:00");
+  const [label, setLabel] = useState("Blocco orario");
+  const [barberId, setBarberId] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [blocks, setBlocks] = useState<
+    { id: string; date?: string | null; start: string; end: string; label?: string; barberId?: string | null }[]
+  >([]);
+
+  const refresh = useCallback(async () => {
+    const res = await fetch("/api/admin/calendar-blocks");
+    const json = (await res.json()) as { blocks?: typeof blocks };
+    if (res.ok) setBlocks(json.blocks || []);
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    setBlockDate(date);
+  }, [date]);
+
+  async function saveBlock() {
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/calendar-blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: blockDate,
+          start,
+          end,
+          label,
+          barberId: barberId || null,
+        }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(json.error || "Blocco non salvato.");
+        return;
+      }
+      await refresh();
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeBlock(id: string) {
+    const res = await fetch(`/api/admin/calendar-blocks?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      await refresh();
+      onChanged();
+    }
+  }
+
+  return (
+    <section className="crm-card block-time-panel">
+      <h2 className="font-serif">Blocca Orario</h2>
+      <p className="slot-status">
+        Impedisce le prenotazioni online sulla fascia scelta (permessi, servizi esterni). La pausa pranzo 13:00–14:00 è già esclusa di default.
+      </p>
+      <div className="block-time-form">
+        <label>
+          Data
+          <input className="input-lux" type="date" value={blockDate} onChange={(e) => setBlockDate(e.target.value)} />
+        </label>
+        <label>
+          Inizio
+          <input className="input-lux" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+        </label>
+        <label>
+          Fine
+          <input className="input-lux" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+        </label>
+        <label>
+          Barbiere
+          <select className="input-lux" value={barberId} onChange={(e) => setBarberId(e.target.value)}>
+            <option value="">Tutti</option>
+            {getRealBarbers().map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Motivo
+          <input className="input-lux" value={label} onChange={(e) => setLabel(e.target.value)} />
+        </label>
+        <button type="button" className="btn btn-gold" disabled={saving} onClick={() => void saveBlock()}>
+          {saving ? "…" : "Blocca Orario"}
+        </button>
+      </div>
+      {error ? <p className="field-error">{error}</p> : null}
+      {blocks.length ? (
+        <ul className="crm-list">
+          {blocks.map((b) => (
+            <li key={b.id}>
+              <strong>
+                {b.date || "ricorrente"} · {b.start}–{b.end}
+              </strong>
+              <span>
+                {b.label || "Blocco"}
+                {b.barberId ? ` · ${b.barberId}` : " · tutti"}
+              </span>
+              <button type="button" className="btn btn-outline" onClick={() => void removeBlock(b.id)}>
+                Rimuovi
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="slot-status">Nessun blocco personalizzato salvato.</p>
+      )}
+    </section>
+  );
+}
+
 function StatsView({
   stats,
   date,
   weekStart,
   period,
   onPeriodChange,
+  onReload,
 }: {
   stats: CrmStats | null;
   date: string;
   weekStart?: string;
   period: StatsPeriod;
   onPeriodChange: (p: StatsPeriod) => void;
+  onReload: () => void;
 }) {
+  const [excludingId, setExcludingId] = useState<string | null>(null);
   const periods: { id: StatsPeriod; label: string }[] = [
     { id: "today", label: "Oggi" },
     { id: "7d", label: "7 giorni" },
@@ -1222,6 +1363,27 @@ function StatsView({
   ];
   const maxAppt = Math.max(...(stats?.appointmentsOverTime.map((p) => p.count) || [1]), 1);
   const maxRev = Math.max(...(stats?.revenueOverTime.map((p) => p.revenueCents) || [1]), 1);
+
+  async function excludeTransaction(id: string) {
+    if (!window.confirm("Escludere questo incasso dalle statistiche? (soft delete)")) return;
+    setExcludingId(id);
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ excludeFromStats: true }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        window.alert(json.error || "Operazione non riuscita.");
+        return;
+      }
+      onReload();
+    } finally {
+      setExcludingId(null);
+    }
+  }
+
   return (
     <div className="crm-stack">
       <div className="crm-toolbar">
@@ -1246,6 +1408,51 @@ function StatsView({
         <Kpi label="Tasso disdetta" value={pct(stats?.cancelRate || 0)} hint={`${stats?.cancelledCount ?? 0} su ${stats?.totalVisits ?? 0}`} />
         <Kpi label="Incasso giorno" value={formatEuroCents(stats?.takings.dayCents || 0)} hint={formatItalianDate(date)} />
         <Kpi label="Incasso settimana" value={formatEuroCents(stats?.takings.weekCents || 0)} hint={weekStart ? `da lunedì ${weekStart}` : undefined} />
+      </section>
+      <section className="crm-card">
+        <h2 className="font-serif">Incassi singoli</h2>
+        <p className="slot-status">Elimina (soft) una voce per sottrarla dai totali senza cancellare l&apos;appuntamento dall&apos;agenda.</p>
+        {stats?.paidTransactions?.length ? (
+          <div className="crm-table-wrap">
+            <table className="crm-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Ora</th>
+                  <th>Cliente</th>
+                  <th>Servizio</th>
+                  <th>Barbiere</th>
+                  <th>Importo</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {stats.paidTransactions.map((t) => (
+                  <tr key={t.id}>
+                    <td data-label="Data">{t.dateLabel}</td>
+                    <td data-label="Ora">{t.timeLabel}</td>
+                    <td data-label="Cliente">{t.customerName}</td>
+                    <td data-label="Servizio">{t.serviceNames}</td>
+                    <td data-label="Barbiere">{t.barberName}</td>
+                    <td data-label="Importo">{formatEuroCents(t.priceCents)}</td>
+                    <td data-label="Azioni">
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        disabled={excludingId === t.id}
+                        onClick={() => void excludeTransaction(t.id)}
+                      >
+                        {excludingId === t.id ? "…" : "Elimina incasso"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="slot-status">Nessun incasso nel periodo.</p>
+        )}
       </section>
       <div className="crm-split">
         <section className="crm-card">

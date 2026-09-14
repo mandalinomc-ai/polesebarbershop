@@ -294,6 +294,12 @@ export function getWhatsAppUrl(message?: string): string {
   return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
 }
 
+/** CTA listino: «Salve vorrei una consulenza per [Trattamento]». */
+export function getWhatsAppConsulenzaUrl(treatmentName: string): string {
+  const name = treatmentName.trim() || "un trattamento";
+  return getWhatsAppUrl(`Salve vorrei una consulenza per ${name}`);
+}
+
 /** Direct chat QR / link — no prefilled text. */
 export function getWhatsAppChatUrl(): string {
   return `https://wa.me/${SITE.whatsapp}`;

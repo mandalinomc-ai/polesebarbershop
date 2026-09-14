@@ -35,17 +35,18 @@ describe("admin /gestionale credentials", () => {
     resetRateLimitStore();
   });
 
-  it("defaults to admin / admin when env is unset", () => {
+  it("defaults to admin / smda2026 when env is unset", () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
     expect(getAdminUser()).toBe("admin");
-    expect(getAdminPassword()).toBe("admin");
+    expect(getAdminPassword()).toBe("smda2026");
     expect(isAdminConfigured()).toBe(true);
-    expect(isUsingDefaultAdminCredentials()).toBe(true);
-    expect(verifyAdminCredentials("admin", "admin")).toBe(true);
-    expect(verifyAdminCredentials("Admin", "admin")).toBe(true);
+    expect(isUsingDefaultAdminCredentials()).toBe(false);
+    expect(verifyAdminCredentials("admin", "smda2026")).toBe(true);
+    expect(verifyAdminCredentials("Admin", "smda2026")).toBe(true);
+    expect(verifyAdminCredentials("admin", "admin")).toBe(false);
     expect(verifyAdminCredentials("admin", "wrong")).toBe(false);
-    expect(verifyAdminCredentials("nope", "admin")).toBe(false);
+    expect(verifyAdminCredentials("nope", "smda2026")).toBe(false);
     const token = createAdminToken();
     expect(token).toBeTruthy();
     expect(isAdminTokenValid(token)).toBe(true);
@@ -118,11 +119,11 @@ describe("POST /api/admin/login", () => {
     );
   }
 
-  it("accepts username admin and password admin by default outside Vercel production", async () => {
+  it("accepts username admin and password smda2026 by default outside Vercel production", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
     delete process.env.VERCEL_ENV;
-    const res = await login({ username: "admin", password: "admin" });
+    const res = await login({ username: "admin", password: "smda2026" });
     expect(res.status).toBe(200);
     const json = (await res.json()) as { ok: boolean };
     expect(json.ok).toBe(true);
@@ -134,7 +135,7 @@ describe("POST /api/admin/login", () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
     delete process.env.VERCEL_ENV;
-    const res = await login({ id: "admin", password: "admin" });
+    const res = await login({ id: "admin", password: "smda2026" });
     expect(res.status).toBe(200);
   });
 
@@ -152,12 +153,20 @@ describe("POST /api/admin/login", () => {
     expect(res.status).toBe(401);
   });
 
-  it("blocks default credentials in Vercel production", async () => {
+  it("rejects legacy admin/admin when defaults are smda2026", async () => {
     delete process.env.ADMIN_USER;
     delete process.env.ADMIN_PASSWORD;
     process.env.VERCEL_ENV = "production";
     const res = await login({ username: "admin", password: "admin" });
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(401);
+  });
+
+  it("accepts default smda2026 in production", async () => {
+    delete process.env.ADMIN_USER;
+    delete process.env.ADMIN_PASSWORD;
+    process.env.VERCEL_ENV = "production";
+    const res = await login({ username: "admin", password: "smda2026" });
+    expect(res.status).toBe(200);
   });
 
   it("accepts explicit admin/admin env in Vercel production", async () => {
