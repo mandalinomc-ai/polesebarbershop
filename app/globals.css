@@ -1560,6 +1560,7 @@ a.btn-whatsapp.contact-wa,
   border-color: var(--ink);
   background: rgba(0, 0, 0, 0.04);
 }
+.block-time-form {
   display: grid;
   gap: 0.65rem;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
