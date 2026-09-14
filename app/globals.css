@@ -1436,15 +1436,36 @@ a.btn-whatsapp.contact-wa,
   text-transform: uppercase;
   color: var(--silk);
 }
-.booking-mini-cart {
+/* Dock above FABs/cookie — carts stack, never overlap each other */
+.booking-mini-cart-dock {
   position: fixed;
   z-index: 260;
   right: max(0.85rem, var(--safe-right, 0px));
-  bottom: max(6.75rem, calc(var(--safe-bottom, 0px) + 5.75rem));
-  width: min(22rem, calc(100vw - 1.25rem));
+  bottom: max(7.25rem, calc(var(--safe-bottom, 0px) + 6.25rem));
+  width: min(22rem, calc(100vw - 1.5rem));
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.55rem;
+  max-height: min(68dvh, calc(100dvh - 8.5rem));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  pointer-events: none;
+}
+.booking-mini-cart {
+  position: relative;
+  right: auto;
+  left: auto;
+  bottom: auto;
+  width: 100%;
+  z-index: auto;
   transform: translateY(0);
   opacity: 1;
   pointer-events: auto;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column-reverse; /* panel above toggle — no overlap into sibling cart */
+  gap: 0.45rem;
 }
 .booking-mini-cart.is-rise {
   animation: mini-cart-magnetic 0.48s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1455,9 +1476,10 @@ a.btn-whatsapp.contact-wa,
   100% { transform: translateY(0); opacity: 1; }
 }
 .booking-mini-cart--consult {
+  /* same dock column — no absolute left/right that overlaps the online cart */
   right: auto;
-  left: max(0.85rem, var(--safe-left, 0px));
-  z-index: 261;
+  left: auto;
+  z-index: auto;
 }
 .booking-mini-cart-toggle {
   width: 100%;
@@ -1479,13 +1501,16 @@ a.btn-whatsapp.contact-wa,
   border-color: #0e6b60;
 }
 .booking-mini-cart-panel {
-  margin-top: 0.45rem;
+  margin: 0;
   padding: 0.95rem;
   background: #fff;
   border: 1px solid var(--line);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
   display: grid;
   gap: 0.65rem;
+  max-height: min(38dvh, 20rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .booking-mini-cart-panel header {
   display: flex;
@@ -1504,14 +1529,12 @@ a.btn-whatsapp.contact-wa,
 .walkin-chip--consult { border-style: dashed; }
 .fresha-cat--sub { opacity: 0.75; font-size: 0.78rem; }
 @media (max-width: 720px) {
-  .booking-mini-cart {
+  .booking-mini-cart-dock {
     width: calc(100vw - 1rem);
     right: 0.5rem;
     left: 0.5rem;
-    bottom: max(5.25rem, calc(var(--safe-bottom, 0px) + 4.5rem));
-  }
-  .booking-mini-cart--consult {
-    bottom: max(11.5rem, calc(var(--safe-bottom, 0px) + 10.5rem));
+    bottom: max(6.5rem, calc(var(--safe-bottom, 0px) + 5.75rem));
+    max-height: min(62dvh, calc(100dvh - 7.5rem));
   }
 }
 .block-time-panel { margin-bottom: 1rem; }
