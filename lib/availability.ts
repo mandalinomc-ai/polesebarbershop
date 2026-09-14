@@ -99,6 +99,8 @@ export type OccupancyCell = {
   barberId: string;
   occupied: boolean;
   label: string;
+  /** Appointment id when the cell is the start of a booked block. */
+  appointmentId?: string;
   /** Continuous block height in table rows (multi-service / long visits). */
   rowSpan: number;
   /** Covered by a previous cell's rowSpan — do not render a <td>. */
@@ -849,6 +851,7 @@ export function getOccupancyGrid(input: {
         barberId: barber.id,
         occupied: true,
         label: hit.label || "",
+        appointmentId: hit.id,
         rowSpan: span,
         skip: false,
       };

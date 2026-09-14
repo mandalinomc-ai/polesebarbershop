@@ -19,10 +19,10 @@ describe("gestionale half-hour unavailable + listino split", () => {
     expect(src).toMatch(/step=\{OCCUPANCY_STEP_MINUTES \* 60\}/);
   });
 
-  it("keeps prenota-ora as the four calendar services only", () => {
+  it("keeps prenota-ora calendar services including Taglio Bambino", () => {
     expect(onlineBookableServices().map((s) => s.id).sort()).toEqual(
-      ["acconciatura", "barba-pro", "barba-standard", "taglio-standard"].sort(),
+      ["acconciatura", "barba-pro", "barba-standard", "taglio-bambino", "taglio-standard"].sort(),
     );
-    expect(SERVICES.filter((s) => s.whatsAppOnly).length).toBe(6);
+    expect(SERVICES.filter((s) => s.whatsAppOnly).length).toBe(5);
   });
 });

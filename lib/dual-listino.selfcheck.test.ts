@@ -10,9 +10,9 @@ describe("dual listino + consultation cart + reschedule notify", () => {
     const online = onlineBookableServices();
     const consult = SERVICES.filter((s) => s.whatsAppOnly);
     expect(online.map((s) => s.id).sort()).toEqual(
-      ["acconciatura", "barba-pro", "barba-standard", "taglio-standard"].sort(),
+      ["acconciatura", "barba-pro", "barba-standard", "taglio-bambino", "taglio-standard"].sort(),
     );
-    expect(consult.length).toBe(6);
+    expect(consult.length).toBe(5);
     expect(online.every((s) => !isWhatsAppOnlyService(s.id))).toBe(true);
     expect(consult.every((s) => isWhatsAppOnlyService(s.id))).toBe(true);
   });

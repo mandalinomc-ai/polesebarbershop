@@ -31,10 +31,9 @@ describe("master update self-check", () => {
   });
 
   it("marks consulenza services as WhatsApp-only; prenota-ora stays calendar", () => {
-    const onlineIds = ["taglio-standard", "barba-standard", "barba-pro", "acconciatura"];
+    const onlineIds = ["taglio-standard", "taglio-bambino", "barba-standard", "barba-pro", "acconciatura"];
     const consultIds = [
       "taglio-pro",
-      "taglio-bambino",
       "decolorazione-meches",
       "decolorazione-cutanea",
       "tintura-capelli",

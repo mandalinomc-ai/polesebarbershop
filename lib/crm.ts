@@ -34,7 +34,9 @@ export type ClientHistoryItem = {
   cancelled: boolean;
   serviceNames: string;
   serviceIds: string[];
+  barberId?: string;
   barberName: string;
+  timeLabel?: string;
   priceCents: number;
   isWalkIn: boolean;
 };
@@ -55,6 +57,10 @@ export type ClientRecord = {
   topService: string | null;
   lastServiceIds: string[];
   lastService: string | null;
+  /** Preferito / ultima poltrona (id barbiere). */
+  lastBarberId: string | null;
+  /** Orario HH:mm dell'ultima visita non annullata. */
+  lastTimeLabel: string | null;
   topBarber: string | null;
   crmNotes: string;
   incomplete: boolean;
@@ -266,6 +272,8 @@ export function aggregateClients(
           topService: null,
           lastServiceIds: [],
           lastService: null,
+          lastBarberId: null,
+          lastTimeLabel: null,
           topBarber: null,
           crmNotes: notesMap[key] || "",
           incomplete: true,
@@ -294,7 +302,9 @@ export function aggregateClients(
       cancelled: isCancelledStatus(appt.status),
       serviceNames: appt.serviceNames,
       serviceIds: [...(appt.serviceIds || [])],
+      barberId: appt.barberId,
       barberName: appt.barberName,
+      timeLabel: appt.timeLabel || formatWallTime(new Date(appt.startsAt)),
       priceCents: appt.priceCents,
       isWalkIn: appt.isWalkIn,
     });
@@ -317,6 +327,10 @@ export function aggregateClients(
       ? [...lastPaid.serviceIds]
       : [];
     rec.lastService = lastPaid?.serviceNames || null;
+    rec.lastBarberId = lastPaid?.barberId || null;
+    rec.lastTimeLabel =
+      lastPaid?.timeLabel ||
+      (lastPaid?.startsAt ? formatWallTime(new Date(lastPaid.startsAt)) : null);
     const barberCounts = new Map<string, number>();
     for (const h of rec.history.filter((x) => !x.cancelled)) {
       barberCounts.set(h.barberName, (barberCounts.get(h.barberName) || 0) + 1);
@@ -382,6 +396,8 @@ export function mergeCustomerProfiles(
       topService: null,
       lastServiceIds: [],
       lastService: null,
+      lastBarberId: null,
+      lastTimeLabel: null,
       topBarber: null,
       crmNotes: notesMap[key] || notesMap[p.clientKey] || "",
       incomplete: isIncompleteContact({ phone, email }),

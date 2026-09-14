@@ -25,7 +25,7 @@
 | Taglio Pro | 50 | 25€ | unchanged |
 | Taglio Standard | 30 | 15€ | unchanged |
 | Acconciatura | **10** | 5€ | was 15 |
-| Taglio Bambino | 20 | 10€ | confirmed |
+| Taglio Bambino | 20 | 12€ | confirmed |
 | Barba Pro | 20 | 15€ | unchanged |
 | Barba Standard | 15 | 5€ | unchanged |
 | Decolorazione Meches | **150** | 40–100€ | was 90 (2h30) |
