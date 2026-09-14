@@ -6,7 +6,7 @@ import { customerCancelEmail, ownerCancelEmail, sendCancelEmails } from "@/lib/e
 import { buildIcs, icsFilename } from "@/lib/ics";
 import { isManageTokenFormat } from "@/lib/manage-token";
 import { RATE_LIMITS, rateLimit, rateLimitResponse } from "@/lib/rate-limit";
-import { SITE, CANCEL_NOTICE_IT, canCancelAppointment, getSiteUrl } from "@/lib/site-config";
+import { SITE, CANCEL_NOTICE_IT, canCancelAppointment, getSiteUrl, getIcsUidDomain } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -45,7 +45,7 @@ export async function GET(request: Request, ctx: RouteCtx) {
       const cancelled = !shouldAttachCalendarReminder(row.status);
       const manageUrl = `${getSiteUrl()}/appuntamento/${row.manage_token}`;
       const ics = buildIcs({
-        uid: `${row.manage_token}@polesebarbershop.it`,
+        uid: `${row.manage_token}@${getIcsUidDomain()}`,
         startsAt: new Date(row.starts_at),
         endsAt: new Date(row.ends_at),
         summary: `${SITE.name} — ${names}`,
@@ -98,7 +98,7 @@ export async function DELETE(request: Request, ctx: RouteCtx) {
       slotFreed: true,
       reminderCancelled: true,
       ics: buildIcs({
-        uid: `${row.manage_token}@polesebarbershop.it`,
+        uid: `${row.manage_token}@${getIcsUidDomain()}`,
         startsAt: new Date(row.starts_at),
         endsAt: new Date(row.ends_at),
         summary: `${SITE.name} — ${namesFromSnapshot(row.services_snapshot)}`,
@@ -126,7 +126,7 @@ export async function DELETE(request: Request, ctx: RouteCtx) {
     const names = namesFromSnapshot(row.services_snapshot);
     const manageUrl = `${getSiteUrl()}/appuntamento/${row.manage_token}`;
     const cancelIcs = buildIcs({
-      uid: `${row.manage_token}@polesebarbershop.it`,
+      uid: `${row.manage_token}@${getIcsUidDomain()}`,
       startsAt: new Date(row.starts_at),
       endsAt: new Date(row.ends_at),
       summary: `${SITE.name} — ${names}`,

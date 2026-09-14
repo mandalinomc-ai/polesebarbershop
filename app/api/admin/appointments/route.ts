@@ -23,7 +23,7 @@ import { buildStaffCancelCopy, buildStaffRescheduleCopy, waMeUrl } from "@/lib/c
 import { getBarber } from "@/lib/catalog";
 import { sendEmail, staffCancelCustomerEmail, staffRescheduleCustomerEmail } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
-import { SITE, getSiteUrl } from "@/lib/site-config";
+import { SITE, getSiteUrl, getIcsUidDomain } from "@/lib/site-config";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { sendCustomerWhatsApp, isWhatsAppConfigured } from "@/lib/whatsapp-outbound";
 import { adminAppointmentsQuerySchema, flattenZodError } from "@/lib/validations";
@@ -193,7 +193,7 @@ async function notifyClientOfStaffCancel(row: AppointmentRow) {
   });
   const manageUrl = `${getSiteUrl()}/appuntamento/${row.manage_token}`;
   const cancelIcs = buildIcs({
-    uid: `${row.manage_token}@polesebarbershop.it`,
+    uid: `${row.manage_token}@${getIcsUidDomain()}`,
     startsAt: new Date(row.starts_at),
     endsAt: new Date(row.ends_at),
     summary: `${SITE.name} — ${serviceNames}`,
@@ -274,7 +274,7 @@ async function notifyClientOfStaffReschedule(
   });
   const manageUrl = `${getSiteUrl()}/appuntamento/${updated.manage_token}`;
   const icsContent = buildIcs({
-    uid: `${updated.manage_token}@polesebarbershop.it`,
+    uid: `${updated.manage_token}@${getIcsUidDomain()}`,
     startsAt: newStart,
     endsAt: new Date(updated.ends_at),
     summary: `${SITE.name} — ${serviceNames}`,
