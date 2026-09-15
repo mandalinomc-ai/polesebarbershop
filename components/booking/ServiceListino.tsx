@@ -225,9 +225,13 @@ export function BookingMiniCart() {
   if (!items.length) return null;
 
   function goBook() {
-    document.getElementById("prenota")?.scrollIntoView({ behavior: "smooth" });
+    setOpen(false);
     window.dispatchEvent(new CustomEvent(BOOKING_GO_CALENDAR_EVENT));
-    setOpen(true);
+    const target =
+      document.getElementById("prenota") ||
+      document.querySelector(".booking-layout") ||
+      document.getElementById("main-content");
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function remove(id: string) {
@@ -239,7 +243,7 @@ export function BookingMiniCart() {
   return (
     <div
       key={riseKey}
-      className={`booking-mini-cart booking-mini-cart--online is-open is-rise`}
+      className={`booking-mini-cart booking-mini-cart--online${open ? " is-open" : ""} is-rise`}
       role="complementary"
       aria-label="Anteprima carrello prenotazione"
     >

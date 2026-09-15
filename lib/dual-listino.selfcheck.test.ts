@@ -31,6 +31,8 @@ describe("dual listino + consultation cart + reschedule notify", () => {
     expect(listino).toMatch(/Listino consulenza/);
     expect(listino).toMatch(/ConsultationMiniCart/);
     expect(listino).toMatch(/Prenota sul calendario/);
+    expect(listino).toMatch(/setOpen\(false\)/);
+    expect(listino).toMatch(/BOOKING_GO_CALENDAR_EVENT|polese-booking-go-calendar/);
     expect(listino).toMatch(/is-rise/);
     expect(CONSULTATION_SELECTION_SYNC_EVENT).toMatch(/consultation/);
   });
