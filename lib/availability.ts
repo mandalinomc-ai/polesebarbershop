@@ -10,6 +10,7 @@ import {
   BOOKING_BUFFER_MINUTES,
   DEFAULT_OPTIMIZATION_MODE,
   ONLINE_DISPLAY_INTERVAL_MINUTES,
+  onlineDisplayIntervalForDuration,
   SLOT_INTERVAL_MINUTES,
   TIME_SLOT_INTERVAL_MINUTES,
   blockEndFromStart,
@@ -48,6 +49,7 @@ export {
   SLOT_INTERVAL_MINUTES,
   TIME_SLOT_INTERVAL_MINUTES,
   ONLINE_DISPLAY_INTERVAL_MINUTES,
+  onlineDisplayIntervalForDuration,
   DEFAULT_OPTIMIZATION_MODE,
 };
 /** @deprecated Prefer SLOT_INTERVAL_MINUTES — kept for existing imports. */
@@ -487,7 +489,7 @@ export function getScheduleSlots(input: GetAvailableSlotsInput): ScheduleSlot[] 
       ? input.displayIntervalMinutes
       : fullSearch
         ? null
-        : ONLINE_DISPLAY_INTERVAL_MINUTES;
+        : onlineDisplayIntervalForDuration(durationMinutes);
 
   if (!date || durationMinutes <= 0) return [];
   if (date < getFirstBookableDate(now)) return [];
@@ -579,6 +581,7 @@ export function summarizeSchedule(
  */
 export function getAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
   const fullSearch = input.fullSearch ?? input.displayIntervalMinutes === undefined;
+  const durationMinutes = input.durationMinutes;
   return getScheduleSlots({
     ...input,
     fullSearch,
@@ -587,18 +590,18 @@ export function getAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
         ? input.displayIntervalMinutes
         : fullSearch
           ? null
-          : ONLINE_DISPLAY_INTERVAL_MINUTES,
+          : onlineDisplayIntervalForDuration(durationMinutes),
   }).filter((s) => s.available);
 }
 
-/** Online-facing smart starts (thinned). */
+/** Online-facing smart starts (thinned to half hours). */
 export function getSmartAvailableSlots(input: GetAvailableSlotsInput): Slot[] {
   return getAvailableSlots({
     ...input,
     fullSearch: false,
     displayIntervalMinutes:
       input.displayIntervalMinutes === undefined
-        ? ONLINE_DISPLAY_INTERVAL_MINUTES
+        ? onlineDisplayIntervalForDuration(input.durationMinutes)
         : input.displayIntervalMinutes,
   });
 }

@@ -9,6 +9,16 @@ describe("gestionale half-hour unavailable + listino split", () => {
     expect(OCCUPANCY_STEP_MINUTES).toBe(30);
   });
 
+  it("online public starts are half-hour only", async () => {
+    const { ONLINE_DISPLAY_INTERVAL_MINUTES, onlineDisplayIntervalForDuration } = await import(
+      "./booking/constants"
+    );
+    expect(ONLINE_DISPLAY_INTERVAL_MINUTES).toBe(30);
+    expect(onlineDisplayIntervalForDuration(30)).toBe(30);
+    expect(onlineDisplayIntervalForDuration(15)).toBe(30);
+    expect(onlineDisplayIntervalForDuration(150)).toBe(30);
+  });
+
   it("exposes Non disp. quick block and half-hour presets in gestionale", () => {
     const src = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(src).toMatch(/onQuickBlock/);

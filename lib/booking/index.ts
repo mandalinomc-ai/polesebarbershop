@@ -7,6 +7,7 @@ export {
   SLOT_INTERVAL_MINUTES,
   TIME_SLOT_INTERVAL_MINUTES,
   ONLINE_DISPLAY_INTERVAL_MINUTES,
+  onlineDisplayIntervalForDuration,
   DEFAULT_OPTIMIZATION_MODE,
   normalizeOptimizationMode,
   type OptimizationMode,
