@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin-auth";
+import {
+  applyExcludeFromStatsNote,
+  appointmentExcludedFromStats,
+} from "@/lib/crm";
 import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT } from "@/lib/supabase";
 
@@ -9,6 +13,10 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const idSchema = z.string().uuid();
+
+function isMissingExcludeColumnError(message: string | null | undefined): boolean {
+  return /exclude_from_stats|schema cache|Could not find/i.test(message || "");
+}
 
 export async function DELETE(
   _request: Request,
@@ -89,24 +97,48 @@ export async function PATCH(
     return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
   }
 
+  const exclude = body.data.excludeFromStats;
   const { data, error } = await db
     .from("appointments")
-    .update({ exclude_from_stats: body.data.excludeFromStats })
+    .update({ exclude_from_stats: exclude })
     .eq("id", parsed.data)
-    .select("id, exclude_from_stats")
+    .select("id, exclude_from_stats, notes")
     .maybeSingle();
 
   if (error) {
-    if (/exclude_from_stats|schema cache|Could not find/i.test(error.message || "")) {
-      return NextResponse.json(
-        {
-          error:
-            "Colonna exclude_from_stats assente. Esegui supabase/migrations/013_exclude_from_stats.sql nel SQL Editor.",
-        },
-        { status: 503 },
-      );
+    if (!isMissingExcludeColumnError(error.message)) {
+      return NextResponse.json({ error: "Aggiornamento non riuscito." }, { status: 500 });
     }
-    return NextResponse.json({ error: "Aggiornamento non riuscito." }, { status: 500 });
+
+    // Column 013 missing — persist soft-exclude in notes.
+    const { data: existing, error: loadErr } = await db
+      .from("appointments")
+      .select("id, notes")
+      .eq("id", parsed.data)
+      .maybeSingle();
+    if (loadErr) {
+      return NextResponse.json({ error: "Aggiornamento non riuscito." }, { status: 500 });
+    }
+    if (!existing) {
+      return NextResponse.json({ error: "Appuntamento non trovato." }, { status: 404 });
+    }
+    const nextNotes = applyExcludeFromStatsNote(existing.notes, exclude);
+    const { data: updated, error: noteErr } = await db
+      .from("appointments")
+      .update({ notes: nextNotes })
+      .eq("id", parsed.data)
+      .select("id, notes")
+      .maybeSingle();
+    if (noteErr || !updated) {
+      return NextResponse.json({ error: "Aggiornamento non riuscito." }, { status: 500 });
+    }
+    revalidateBookingPaths();
+    return NextResponse.json({
+      ok: true,
+      id: updated.id,
+      excludeFromStats: appointmentExcludedFromStats(updated),
+      mode: "notes-fallback",
+    });
   }
   if (!data) {
     return NextResponse.json({ error: "Appuntamento non trovato." }, { status: 404 });
@@ -115,6 +147,7 @@ export async function PATCH(
   return NextResponse.json({
     ok: true,
     id: data.id,
-    excludeFromStats: Boolean(data.exclude_from_stats),
+    excludeFromStats: appointmentExcludedFromStats(data),
+    mode: "column",
   });
 }

@@ -2810,11 +2810,22 @@ function SubscriptionPanel({
       error?: string;
     };
     if (!res.ok) {
-      setWarning(json.error || "");
+      // Never surface migration/SQL-editor messages — abbonamenti have appointments fallback.
+      const msg = json.error || "";
+      if (/014_booking|migrat|SQL Editor|booking_subscriptions/i.test(msg)) {
+        setWarning("");
+        setSubs([]);
+        return;
+      }
+      setWarning(msg);
       return;
     }
     setSubs(json.subscriptions || []);
-    setWarning(json.warning || "");
+    setWarning(
+      json.warning && !/014_booking|migrat|SQL Editor|booking_subscriptions/i.test(json.warning)
+        ? json.warning
+        : "",
+    );
   }
 
   useEffect(() => {

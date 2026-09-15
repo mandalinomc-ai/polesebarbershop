@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { servicesSnapshot } from "@/lib/appointments";
@@ -6,7 +7,16 @@ import { resolveEffectiveServiceDuration } from "@/lib/booking";
 import { getBarber, totalsForServices } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT } from "@/lib/supabase";
-import { listSubscriptionDates, subscriptionInsertRows } from "@/lib/subscriptions";
+import {
+  formatSubscriptionSeriesNote,
+  isMissingSubscriptionsTableError,
+  listSubscriptionDates,
+  parseSubscriptionSeriesId,
+  reconstructSubscriptionsFromAppointments,
+  serializeSubscriptionRow,
+  subscriptionInsertRows,
+  type SerializedSubscription,
+} from "@/lib/subscriptions";
 import { flattenZodError } from "@/lib/validations";
 
 export const runtime = "nodejs";
@@ -29,25 +39,23 @@ const createSchema = z.object({
   notes: z.string().trim().max(500).optional(),
 });
 
-function serializeSub(row: Record<string, unknown>) {
-  return {
-    id: row.id,
-    active: row.active,
-    firstName: row.customer_first_name,
-    lastName: row.customer_last_name,
-    phone: row.customer_phone,
-    email: row.customer_email,
-    barberId: row.barber_id,
-    serviceIds: row.service_ids,
-    weekday: row.weekday,
-    startTime: String(row.start_time).slice(0, 5),
-    durationMin: row.duration_min,
-    durationOverrideMin: row.duration_override_min,
-    priceCents: row.price_cents,
-    startsOn: row.starts_on,
-    endsOn: row.ends_on,
-    notes: row.notes,
-  };
+async function listLegacySubscriptions(
+  db: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
+): Promise<SerializedSubscription[]> {
+  const { data, error } = await db
+    .from("appointments")
+    .select(
+      "id, customer_first_name, customer_last_name, customer_phone, customer_email, barber_id, service_ids, starts_at, duration_min, duration_override_min, price_cents, notes, status",
+    )
+    .ilike("notes", "%[series:%")
+    .neq("status", "cancelled")
+    .order("starts_at", { ascending: true })
+    .limit(800);
+
+  if (error || !data) return [];
+  return reconstructSubscriptionsFromAppointments(
+    data as Parameters<typeof reconstructSubscriptionsFromAppointments>[0],
+  );
 }
 
 export async function GET() {
@@ -68,17 +76,19 @@ export async function GET() {
     .limit(100);
 
   if (error) {
-    if (/booking_subscriptions|schema cache|Could not find/i.test(error.message || "")) {
-      return NextResponse.json({
-        subscriptions: [],
-        warning: "Tabella abbonamenti non ancora migrata su Supabase (014_booking_subscriptions).",
-      });
-    }
-    return NextResponse.json({ error: "Impossibile caricare abbonamenti." }, { status: 500 });
+    // Table 014 optional — always degrade to appointments series, never block UI.
+    const subscriptions = await listLegacySubscriptions(db);
+    return NextResponse.json({
+      subscriptions,
+      mode: "appointments-fallback",
+    });
   }
 
   return NextResponse.json({
-    subscriptions: (data || []).map((r) => serializeSub(r as Record<string, unknown>)),
+    subscriptions: (data || []).map((r) =>
+      serializeSubscriptionRow(r as Record<string, unknown>),
+    ),
+    mode: "table",
   });
 }
 
@@ -139,6 +149,26 @@ export async function POST(request: Request) {
   const priceCents =
     body.priceEuro != null ? Math.round(body.priceEuro * 100) : Math.round(totals.priceEuro * 100);
 
+  const draft = {
+    firstName: body.firstName,
+    lastName: body.lastName || "",
+    phone: body.phone,
+    email: body.email,
+    barberId: body.barberId,
+    serviceIds: body.serviceIds,
+    weekday: body.weekday,
+    startTime: body.startTime,
+    startsOn: body.startsOn,
+    endsOn: body.endsOn,
+    durationOverrideMin: body.durationOverrideMin,
+    notes: body.notes,
+  };
+
+  let subscriptionId = "";
+  let subscription: SerializedSubscription | null = null;
+  let omitSubscriptionId = false;
+  let mode: "table" | "appointments-fallback" = "table";
+
   const { data: sub, error: subErr } = await db
     .from("booking_subscriptions")
     .insert({
@@ -163,38 +193,54 @@ export async function POST(request: Request) {
     .single();
 
   if (subErr || !sub) {
-    if (/booking_subscriptions|schema cache|Could not find/i.test(subErr?.message || "")) {
+    const missing = isMissingSubscriptionsTableError(
+      subErr?.message,
+      (subErr as { code?: string } | null)?.code,
+    );
+    // Prefer appointments-fallback whenever the subscriptions table path fails.
+    // Service-role insert errors are almost always missing schema (014), not data bugs.
+    if (!missing && subErr?.message && !/booking_subscriptions|PGRST|schema|relation/i.test(subErr.message)) {
       return NextResponse.json(
-        {
-          error:
-            "Abbonamenti non disponibili: applica la migration 014_booking_subscriptions su Supabase.",
-        },
-        { status: 503 },
+        { error: "Impossibile creare l'abbonamento." },
+        { status: 500 },
       );
     }
-    return NextResponse.json({ error: "Impossibile creare l'abbonamento." }, { status: 500 });
+    // Table 014 not applied yet — create the series as linked appointments only.
+    subscriptionId = randomUUID();
+    omitSubscriptionId = true;
+    mode = "appointments-fallback";
+    subscription = {
+      id: subscriptionId,
+      active: true,
+      firstName: body.firstName.trim(),
+      lastName: (body.lastName || "").trim(),
+      phone: (body.phone || "").trim(),
+      email: (body.email || "").trim(),
+      barberId: body.barberId,
+      serviceIds: services.map((s) => s.id),
+      weekday: body.weekday,
+      startTime: body.startTime,
+      durationMin: totals.durationMin,
+      durationOverrideMin: body.durationOverrideMin ?? null,
+      priceCents,
+      startsOn: body.startsOn,
+      endsOn: body.endsOn,
+      notes: formatSubscriptionSeriesNote(subscriptionId, body.notes),
+      legacy: true,
+    };
+  } else {
+    subscriptionId = String(sub.id);
+    subscription = serializeSubscriptionRow(sub as Record<string, unknown>);
   }
 
   const rows = subscriptionInsertRows({
-    subscriptionId: sub.id as string,
-    draft: {
-      firstName: body.firstName,
-      lastName: body.lastName || "",
-      phone: body.phone,
-      email: body.email,
-      barberId: body.barberId,
-      serviceIds: body.serviceIds,
-      weekday: body.weekday,
-      startTime: body.startTime,
-      startsOn: body.startsOn,
-      endsOn: body.endsOn,
-      durationOverrideMin: body.durationOverrideMin,
-      notes: body.notes,
-    },
+    subscriptionId,
+    draft,
     services,
     dates,
     durationMin: resolved.durationMin,
     priceCents,
+    omitSubscriptionId,
   });
   if (!rows) {
     return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
@@ -207,12 +253,13 @@ export async function POST(request: Request) {
     let { error } = await db.from("appointments").insert(row);
     if (error && /subscription_id|schema cache|Could not find/i.test(error.message || "")) {
       const fallback = { ...row };
-      delete (fallback as { subscription_id?: string }).subscription_id;
+      delete fallback.subscription_id;
+      fallback.notes = formatSubscriptionSeriesNote(subscriptionId, body.notes);
       ({ error } = await db.from("appointments").insert(fallback));
     }
     if (error) {
       skipped += 1;
-      conflicts.push(row.starts_at.slice(0, 16));
+      conflicts.push(String(row.starts_at).slice(0, 16));
       continue;
     }
     created += 1;
@@ -220,11 +267,12 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    subscription: serializeSub(sub as Record<string, unknown>),
+    subscription,
     created,
     skipped,
     conflicts: conflicts.slice(0, 12),
     dates: dates.length,
+    mode,
   });
 }
 
@@ -257,24 +305,60 @@ export async function PATCH(request: Request) {
   const { id, active, cancelFuture } = parsed.data;
 
   if (active === false || cancelFuture) {
-    await db.from("booking_subscriptions").update({ active: false }).eq("id", id);
+    const { error: subUpdateErr } = await db
+      .from("booking_subscriptions")
+      .update({ active: false })
+      .eq("id", id);
+    const tableMissing =
+      Boolean(subUpdateErr) &&
+      isMissingSubscriptionsTableError(
+        subUpdateErr?.message,
+        (subUpdateErr as { code?: string } | null)?.code,
+      );
+
     const nowIso = new Date().toISOString();
-    const { data: future } = await db
+    let cancelledFuture = 0;
+
+    if (!tableMissing) {
+      const { data: future } = await db
+        .from("appointments")
+        .select("id")
+        .eq("subscription_id", id)
+        .gte("starts_at", nowIso)
+        .neq("status", "cancelled");
+      if (future?.length) {
+        await db
+          .from("appointments")
+          .update({ status: "cancelled", cancelled_at: nowIso })
+          .in(
+            "id",
+            future.map((f) => f.id),
+          );
+        cancelledFuture = future.length;
+      }
+    }
+
+    // Always also cancel by series note (covers pre-014 / missing subscription_id column).
+    const { data: noted } = await db
       .from("appointments")
-      .select("id")
-      .eq("subscription_id", id)
+      .select("id, notes, starts_at, status")
+      .ilike("notes", `%[series:${id}]%`)
       .gte("starts_at", nowIso)
       .neq("status", "cancelled");
-    if (future?.length) {
+
+    const noteIds = (noted || [])
+      .filter((row) => parseSubscriptionSeriesId(row.notes) === id)
+      .map((row) => row.id as string);
+
+    if (noteIds.length) {
       await db
         .from("appointments")
         .update({ status: "cancelled", cancelled_at: nowIso })
-        .in(
-          "id",
-          future.map((f) => f.id),
-        );
+        .in("id", noteIds);
+      cancelledFuture = Math.max(cancelledFuture, noteIds.length);
     }
-    return NextResponse.json({ ok: true, cancelledFuture: future?.length || 0 });
+
+    return NextResponse.json({ ok: true, cancelledFuture });
   }
 
   return NextResponse.json({ ok: true });
