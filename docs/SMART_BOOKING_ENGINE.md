@@ -20,7 +20,7 @@ Single calendar for the public site and gestionale (same Supabase `appointments`
 | Constant | Role |
 |----------|------|
 | **SERVICE_DURATION** | From `resolveEffectiveServiceDuration()` — override, processing config, or known catalog sum. Never invented. |
-| **BUFFER** (`BOOKING_BUFFER_MINUTES = 5`) | Internal chair occupancy after service. Hidden from client emails/ICS. |
+| **BUFFER** (`BOOKING_BUFFER_MINUTES = 0`) | No padding after service; chair free at service end. |
 | **TIME_SLOT_INTERVAL** (`TIME_SLOT_INTERVAL_MINUTES = 5`) | Search/display step **inside** free windows only. Does **not** round free-window starts. |
 
 Online UI also uses `ONLINE_DISPLAY_INTERVAL_MINUTES = 15` to thin candidates (always keeps continuous free-window starts).

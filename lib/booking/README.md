@@ -14,7 +14,7 @@ SHOP_HOURS − calendar blocks − busy(ends_at)
 | Concept | Constant / API |
 |---------|----------------|
 | Service duration | `resolveEffectiveServiceDuration()` |
-| Buffer | `BOOKING_BUFFER_MINUTES = 5` |
+| Buffer | `BOOKING_BUFFER_MINUTES = 0` |
 | Search step | `TIME_SLOT_INTERVAL_MINUTES = 5` (not a forced grid snap) |
 | Modes | `FLEXIBLE` \| `REDUCE_GAPS` \| `ELIMINATE_GAPS` |
 

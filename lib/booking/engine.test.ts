@@ -42,7 +42,7 @@ const nowBefore = wallTimeToUtc("2026-08-31", "09:00");
 
 describe("booking constants", () => {
   it("distinguishes buffer vs time-slot interval", () => {
-    expect(BOOKING_BUFFER_MINUTES).toBe(5);
+    expect(BOOKING_BUFFER_MINUTES).toBe(0);
     expect(SLOT_INTERVAL_MINUTES).toBe(5);
     expect(TIME_SLOT_INTERVAL_MINUTES).toBe(5);
   });
@@ -67,35 +67,35 @@ describe("overlaps — semi-open [start, end)", () => {
 });
 
 describe("buffer math", () => {
-  it("Taglio Pro 50 min → client 50, chair block 55", () => {
+  it("Taglio Pro 30 min → client 30, chair block 30 (no buffer)", () => {
     const taglioPro = getService("taglio-pro");
-    expect(taglioPro).toMatchObject({ priceEuro: 25, durationMin: 50 });
-    expect(chairBlockMinutes(taglioPro!.durationMin)).toBe(55);
+    expect(taglioPro).toMatchObject({ priceEuro: 25, durationMin: 30 });
+    expect(chairBlockMinutes(taglioPro!.durationMin)).toBe(30);
     const start = wallTimeToUtc(TUESDAY, "10:00");
-    expect(clientEndFromStart(start, 50).toISOString()).toBe(
-      wallTimeToUtc(TUESDAY, "10:50").toISOString(),
+    expect(clientEndFromStart(start, 30).toISOString()).toBe(
+      wallTimeToUtc(TUESDAY, "10:30").toISOString(),
     );
-    expect(blockEndFromStart(start, 50).toISOString()).toBe(
-      wallTimeToUtc(TUESDAY, "10:55").toISOString(),
+    expect(blockEndFromStart(start, 30).toISOString()).toBe(
+      wallTimeToUtc(TUESDAY, "10:30").toISOString(),
     );
   });
 
-  it("multi-service sums catalog durations then adds one buffer", () => {
+  it("multi-service sums catalog durations with zero buffer", () => {
     const services = resolveServices(["taglio-pro", "barba-pro"]);
     expect(services).not.toBeNull();
     const totals = totalsForServices(services!);
-    expect(totals.durationMin).toBe(70);
-    expect(totals.durationLabel).toBe("Durata prevista: 70 min");
-    expect(chairBlockMinutes(totals.durationMin)).toBe(75);
+    expect(totals.durationMin).toBe(50);
+    expect(totals.durationLabel).toBe("Durata prevista: 50 min");
+    expect(chairBlockMinutes(totals.durationMin)).toBe(50);
   });
 
   it("durationOverride changes occupancy without mutating catalog", () => {
     const catalog = getService("taglio-pro")!;
-    expect(catalog.durationMin).toBe(50);
+    expect(catalog.durationMin).toBe(30);
     expect(effectiveServiceDurationMin(catalog.durationMin, 40)).toBe(40);
-    expect(effectiveServiceDurationMin(catalog.durationMin, null)).toBe(50);
-    expect(getService("taglio-pro")!.durationMin).toBe(50);
-    expect(chairBlockMinutes(effectiveServiceDurationMin(50, 40))).toBe(45);
+    expect(effectiveServiceDurationMin(catalog.durationMin, null)).toBe(30);
+    expect(getService("taglio-pro")!.durationMin).toBe(30);
+    expect(chairBlockMinutes(effectiveServiceDurationMin(30, 40))).toBe(40);
   });
 });
 
@@ -117,7 +117,7 @@ describe("free windows", () => {
   });
 
   it("NO 5-MINUTE BUG: next start after occupancy end is continuous, not forced +5 grid", () => {
-    // Service visually ends 09:37; ends_at already includes +5 buffer → free at 09:42.
+    // Service end equals ends_at when buffer is 0.
     const starts = freeWindowStarts({
       open: "08:30",
       close: "19:00",
@@ -173,12 +173,12 @@ describe("free windows", () => {
 });
 
 describe("candidate starts", () => {
-  it("fits block (service+buffer) inside open hours every 5 min (empty day)", () => {
+  it("fits service block inside open hours every 5 min (empty day, no buffer)", () => {
     const labels = candidateStartLabels("08:30", "19:00", 50);
     expect(labels[0]).toBe("08:30");
-    expect(labels.at(-1)).toBe("18:05");
+    expect(labels.at(-1)).toBe("18:10");
     expect(labels).toContain("10:00");
-    expect(labels).not.toContain("18:10");
+    expect(labels).toContain("18:10");
   });
 });
 
@@ -234,18 +234,18 @@ describe("smart engine integration", () => {
   });
 
   it("duration override shortens occupancy so earlier next start opens", () => {
-    // Catalog 50+5=55 would block until 10:55; override 30+5=35 → free at 10:35
+    // Catalog 30 + 0 buffer; override 30 → free at 10:30
     const start = wallTimeToUtc(TUESDAY, "10:00");
-    const overrideBlockEnd = blockEndFromStart(start, effectiveServiceDurationMin(50, 30));
-    expect(overrideBlockEnd.toISOString()).toBe(wallTimeToUtc(TUESDAY, "10:35").toISOString());
+    const overrideBlockEnd = blockEndFromStart(start, effectiveServiceDurationMin(30, 30));
+    expect(overrideBlockEnd.toISOString()).toBe(wallTimeToUtc(TUESDAY, "10:30").toISOString());
     const labels = getAvailableSlots({
       date: TUESDAY,
       barberId: "felice",
-      durationMinutes: 50,
+      durationMinutes: 30,
       now: nowBefore,
       appointments: [{ barberId: "felice", startsAt: start, endsAt: overrideBlockEnd }],
     }).map((s) => s.label);
-    expect(labels).toContain("10:35");
+    expect(labels).toContain("10:30");
     expect(labels).not.toContain("10:00");
   });
 
@@ -283,7 +283,7 @@ describe("smart engine integration", () => {
     expect(atNew.map((s) => s.label)).toContain("14:00");
   });
 
-  it("client-facing endIso is service-only; blockEndIso includes buffer", () => {
+  it("client-facing endIso equals blockEndIso when buffer is zero", () => {
     const slots = getScheduleSlots({
       date: TUESDAY,
       barberId: "felice",
@@ -293,7 +293,7 @@ describe("smart engine integration", () => {
     });
     const ten = slots.find((s) => s.label === "10:00");
     expect(ten?.endIso).toBe(wallTimeToUtc(TUESDAY, "10:50").toISOString());
-    expect(ten?.blockEndIso).toBe(wallTimeToUtc(TUESDAY, "10:55").toISOString());
+    expect(ten?.blockEndIso).toBe(wallTimeToUtc(TUESDAY, "10:50").toISOString());
   });
 
   it("assigns the free chair when anyone is selected", () => {
@@ -357,9 +357,10 @@ describe("smart engine integration", () => {
     expect(after.map((s) => s.label)).not.toContain("14:00");
   });
 
-  it("multi-service block fits only when 75 min remain before close", () => {
+  it("multi-service block fits only when 50 min remain before close", () => {
     const services = resolveServices(["taglio-pro", "barba-pro"])!;
     const duration = totalsForServices(services).durationMin;
+    expect(duration).toBe(50);
     const slots = getAvailableSlots({
       date: TUESDAY,
       barberId: "felice",
@@ -367,7 +368,7 @@ describe("smart engine integration", () => {
       now: nowBefore,
     });
     expect(slots[0]?.label).toBe("09:00");
-    expect(slots.at(-1)?.label).toBe("17:45");
+    expect(slots.at(-1)?.label).toBe("18:10");
     expect(slots.at(-1)?.blockEndIso).toBe(
       wallTimeToUtc(TUESDAY, "19:00").toISOString(),
     );
@@ -464,7 +465,7 @@ describe("resolveEffectiveServiceDuration", () => {
     });
     expect(r.durationMin).toBe(40);
     expect(r.source).toBe("override");
-    expect(getService("taglio-pro")!.durationMin).toBe(50);
+    expect(getService("taglio-pro")!.durationMin).toBe(30);
   });
 
   it("blocks unknown duration without override (no invented default)", () => {
@@ -507,7 +508,7 @@ describe("resolveEffectiveServiceDuration", () => {
     const r = resolveEffectiveServiceDuration({
       services: [getService("taglio-pro")!, getService("decolorazione-meches")!],
     });
-    expect(r).toMatchObject({ ok: true, durationMin: 200, onlineBookable: false });
+    expect(r).toMatchObject({ ok: true, durationMin: 180, onlineBookable: false });
   });
 
   it("keeps catalog duration for WhatsApp-only but blocks onlineBookable", () => {
@@ -516,7 +517,7 @@ describe("resolveEffectiveServiceDuration", () => {
     });
     expect(r).toMatchObject({
       ok: true,
-      durationMin: 50,
+      durationMin: 30,
       source: "catalog",
       onlineBookable: false,
     });
@@ -600,7 +601,7 @@ describe("gap modes FLEXIBLE | REDUCE_GAPS | ELIMINATE_GAPS", () => {
 });
 
 describe("processing occupancy", () => {
-  it("barber free during processing leaves a free gap; buffer stays after finish", () => {
+  it("barber free during processing leaves a free gap; no buffer segment when buffer is 0", () => {
     const start = wallTimeToUtc(TUESDAY, "10:00");
     const processing: ServiceProcessing = {
       servicingBeforeMin: 15,
@@ -608,11 +609,11 @@ describe("processing occupancy", () => {
       servicingAfterMin: 15,
       barberFreeDuringProcessing: true,
     };
-    const segs = barberBusySegments({ start, processing, bufferMinutes: 5 });
-    expect(segs.map((s) => s.kind)).toEqual(["servicing", "servicing", "buffer"]);
+    const segs = barberBusySegments({ start, processing, bufferMinutes: 0 });
+    expect(segs.map((s) => s.kind)).toEqual(["servicing", "servicing"]);
     expect(segs[0]!.end.toISOString()).toBe(wallTimeToUtc(TUESDAY, "10:15").toISOString());
     expect(segs[1]!.start.toISOString()).toBe(wallTimeToUtc(TUESDAY, "10:45").toISOString());
-    expect(segs[2]!.end.toISOString()).toBe(wallTimeToUtc(TUESDAY, "11:05").toISOString());
+    expect(segs[1]!.end.toISOString()).toBe(wallTimeToUtc(TUESDAY, "11:00").toISOString());
   });
 
   it("without free-during-processing, mid segment is busy", () => {
@@ -625,8 +626,9 @@ describe("processing occupancy", () => {
         servicingAfterMin: 10,
         barberFreeDuringProcessing: false,
       },
+      bufferMinutes: 0,
     });
-    expect(segs.map((s) => s.kind)).toEqual(["servicing", "processing", "servicing", "buffer"]);
+    expect(segs.map((s) => s.kind)).toEqual(["servicing", "processing", "servicing"]);
   });
 });
 

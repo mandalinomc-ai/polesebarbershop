@@ -19,7 +19,7 @@ describe("runtime catalog", () => {
   it("resolves active services and rejects unknown ids", async () => {
     invalidateRuntimeCatalogCache();
     const ok = await resolveRuntimeServices(["taglio-pro", "tintura-barba"]);
-    expect(ok?.map((s) => s.durationMin)).toEqual([50, 20]);
+    expect(ok?.map((s) => s.durationMin)).toEqual([30, 20]);
     expect(await resolveRuntimeServices(["razor-taper"])).toBeNull();
     expect(await resolveRuntimeServices([])).toBeNull();
   });

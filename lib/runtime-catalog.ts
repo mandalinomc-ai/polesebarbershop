@@ -27,9 +27,29 @@ type OverrideCache = {
 
 const CACHE_TTL_MS = 15_000;
 let cache: OverrideCache | null = null;
+/** One-shot per process: align taglio-* durations in DB to catalog seed (30 min). */
+let tagliDurationSyncStarted = false;
 
 /** Clear in-process cache after admin writes. */
 export function invalidateRuntimeCatalogCache() {
+  cache = null;
+}
+
+/**
+ * Idempotent: force Taglio Pro / Standard / Bambino to seed duration (30).
+ * Runs once per warm isolate so production updates without a manual SQL step.
+ */
+async function ensureTagliThirtyMinutes(): Promise<void> {
+  if (tagliDurationSyncStarted || !isSupabaseConfigured()) return;
+  tagliDurationSyncStarted = true;
+  const db = getSupabaseAdmin();
+  if (!db) return;
+  const tagli = SERVICES.filter((s) => s.id.startsWith("taglio-"));
+  await Promise.all(
+    tagli.map((s) =>
+      db.from("services").update({ duration_min: s.durationMin }).eq("id", s.id),
+    ),
+  );
   cache = null;
 }
 
@@ -51,6 +71,7 @@ function mergeService(base: Service, row?: ServiceDbRow | null): Service {
 }
 
 async function fetchDbRows(): Promise<Map<string, ServiceDbRow>> {
+  await ensureTagliThirtyMinutes();
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.rows;
   const empty = new Map<string, ServiceDbRow>();
   if (!isSupabaseConfigured()) {

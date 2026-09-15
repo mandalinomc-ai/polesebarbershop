@@ -43,9 +43,9 @@ describe("production official durations (all 10)", () => {
       fullSearch: true,
     });
     expect(slots[0]?.label).toBe("09:00");
-    // 150 + 5 buffer = 155 → last start that fits before 19:00 is 16:25
+    // 150 + 0 buffer = 150 → last start that fits before 19:00 is 16:30
     const last = slots.at(-1)!;
-    expect(last.label <= "16:25").toBe(true);
+    expect(last.label <= "16:30").toBe(true);
     const endMs = last.start.getTime() + (150 + BOOKING_BUFFER_MINUTES) * 60_000;
     const close = wallTimeToUtc(TUESDAY, "19:00").getTime();
     expect(endMs).toBeLessThanOrEqual(close);
@@ -53,14 +53,14 @@ describe("production official durations (all 10)", () => {
 
   it("sums multi-service Taglio Pro + Barba Pro (WA-only combo) and keeps chairs independent", () => {
     const services = resolveServices(["taglio-pro", "barba-pro"])!;
-    expect(totalsForServices(services).durationMin).toBe(70);
+    expect(totalsForServices(services).durationMin).toBe(50);
     // Taglio Pro is WhatsApp-only — online cart blocks; gestionale still uses duration.
     expect(servicesAreOnlineBookable(services)).toBe(false);
     const duration = resolveEffectiveServiceDuration({ services }).durationMin!;
-    expect(duration).toBe(70);
+    expect(duration).toBe(50);
 
     const busyStart = wallTimeToUtc(TUESDAY, "10:00");
-    const busyEnd = wallTimeToUtc(TUESDAY, "11:15"); // 70+5
+    const busyEnd = wallTimeToUtc(TUESDAY, "10:50"); // 50 + 0 buffer
     const felice = getAvailableSlots({
       date: TUESDAY,
       barberId: "felice",

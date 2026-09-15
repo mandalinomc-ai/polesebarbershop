@@ -104,9 +104,10 @@ describe("freeMinutesFromStart + Fresha fit", () => {
     expect(free).toBe(0);
   });
 
-  it("treats service+buffer as total block for new bookings", () => {
+  it("treats service duration as total block when buffer is zero", () => {
     expect(newBookingBlockMinutes(50)).toBe(50 + BOOKING_BUFFER_MINUTES);
     expect(serviceFitsInFreeMinutes(50, 60)).toBe(true);
-    expect(serviceFitsInFreeMinutes(50, 50)).toBe(false);
+    expect(serviceFitsInFreeMinutes(50, 50)).toBe(true);
+    expect(serviceFitsInFreeMinutes(50, 49)).toBe(false);
   });
 });
