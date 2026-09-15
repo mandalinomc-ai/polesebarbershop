@@ -14,24 +14,31 @@ export const revalidate = 0;
 /** Public catalog — same source booking/slots use (catalog seed + DB overlays). */
 export async function GET() {
   const services = await loadCatalogServices({ includeInactive: false });
-  return NextResponse.json({
-    categories: SERVICE_CATEGORIES.map((id) => ({
-      id,
-      label: SERVICE_CATEGORY_LABEL[id],
-    })),
-    services: services.map((s) => ({
-      id: s.id,
-      name: s.name,
-      category: s.category,
-      priceEuro: s.priceEuro,
-      priceMaxEuro: s.priceMaxEuro,
-      isVariablePrice: s.isVariablePrice,
-      durationMin: s.durationMin,
-      durationKnown: s.durationKnown,
-      active: s.active !== false,
-      description: s.description,
-      priceLabel: formatPrice(s),
-      durationLabel: formatDuration(s),
-    })),
-  });
+  return NextResponse.json(
+    {
+      categories: SERVICE_CATEGORIES.map((id) => ({
+        id,
+        label: SERVICE_CATEGORY_LABEL[id],
+      })),
+      services: services.map((s) => ({
+        id: s.id,
+        name: s.name,
+        category: s.category,
+        priceEuro: s.priceEuro,
+        priceMaxEuro: s.priceMaxEuro,
+        isVariablePrice: s.isVariablePrice,
+        durationMin: s.durationMin,
+        durationKnown: s.durationKnown,
+        active: s.active !== false,
+        description: s.description,
+        priceLabel: formatPrice(s),
+        durationLabel: formatDuration(s),
+      })),
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      },
+    },
+  );
 }

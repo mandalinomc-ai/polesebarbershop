@@ -6,6 +6,7 @@ import {
   isBookableServiceId,
 } from "./catalog";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
+import { runNoBufferMaintenance } from "./strip-booking-buffer";
 
 export type ServiceDbRow = {
   id: string;
@@ -25,43 +26,29 @@ type OverrideCache = {
   rows: Map<string, ServiceDbRow>;
 };
 
-const CACHE_TTL_MS = 15_000;
+const CACHE_TTL_MS = 5_000;
 let cache: OverrideCache | null = null;
-/** One-shot per process: align taglio-* durations in DB to catalog seed (30 min). */
-let tagliDurationSyncStarted = false;
 
-/** Clear in-process cache after admin writes. */
+/** Clear in-process cache after admin writes / maintenance. */
 export function invalidateRuntimeCatalogCache() {
-  cache = null;
-}
-
-/**
- * Idempotent: force Taglio Pro / Standard / Bambino to seed duration (30).
- * Runs once per warm isolate so production updates without a manual SQL step.
- */
-async function ensureTagliThirtyMinutes(): Promise<void> {
-  if (tagliDurationSyncStarted || !isSupabaseConfigured()) return;
-  tagliDurationSyncStarted = true;
-  const db = getSupabaseAdmin();
-  if (!db) return;
-  const tagli = SERVICES.filter((s) => s.id.startsWith("taglio-"));
-  await Promise.all(
-    tagli.map((s) =>
-      db.from("services").update({ duration_min: s.durationMin }).eq("id", s.id),
-    ),
-  );
   cache = null;
 }
 
 function mergeService(base: Service, row?: ServiceDbRow | null): Service {
   if (!row) return { ...base, active: base.active !== false };
+  // Tagli always follow catalog seed (30) so stale DB/cache cannot keep 20/50.
+  const durationMin = base.id.startsWith("taglio-")
+    ? base.durationMin
+    : row.duration_min > 0
+      ? row.duration_min
+      : base.durationMin;
   return {
     ...base,
     name: row.name || base.name,
     description: row.description ?? base.description,
     category: (row.category as ServiceCategory) || base.category,
-    durationMin: row.duration_min > 0 ? row.duration_min : base.durationMin,
-    durationKnown: row.duration_min > 0 ? true : base.durationKnown,
+    durationMin,
+    durationKnown: durationMin > 0,
     priceEuro: Math.round(row.price_cents) / 100,
     priceMaxEuro:
       row.price_max_cents != null ? Math.round(row.price_max_cents) / 100 : base.priceMaxEuro,
@@ -71,7 +58,9 @@ function mergeService(base: Service, row?: ServiceDbRow | null): Service {
 }
 
 async function fetchDbRows(): Promise<Map<string, ServiceDbRow>> {
-  await ensureTagliThirtyMinutes();
+  await runNoBufferMaintenance().then(() => {
+    cache = null;
+  });
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.rows;
   const empty = new Map<string, ServiceDbRow>();
   if (!isSupabaseConfigured()) {
