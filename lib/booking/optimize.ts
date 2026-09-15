@@ -58,7 +58,7 @@ export function suggestFillGaps(input: {
     displayIntervalMinutes: null,
   });
   const blockApprox =
-    input.serviceDurationMin + Math.max(0, input.bufferMinutes ?? 5);
+    input.serviceDurationMin + Math.max(0, input.bufferMinutes ?? 0);
   const factor = input.maxWindowFactor ?? 2;
   const out: FillGapSuggestion[] = [];
 

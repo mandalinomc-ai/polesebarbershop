@@ -1,5 +1,5 @@
-/** Operational buffer after each booking — occupies the chair, hidden from the client. */
-export const BOOKING_BUFFER_MINUTES = 5;
+/** Operational buffer after each booking — occupies the chair, hidden from the client. Zero = no padding. */
+export const BOOKING_BUFFER_MINUTES = 0;
 
 /**
  * Search / display step inside free windows.

@@ -8,7 +8,7 @@
 
 1. **Migration 007 applied** on production Supabase — `appointments.duration_override_min`
 2. Column + check constraint verified; override insert/update/delete path OK (test row deleted)
-3. Live `/api/availability` returns smart slots (Taglio Pro 50 min; blockEnd includes +5 buffer)
+3. Live `/api/availability` returns smart slots (Taglio Pro 30 min; blockEnd = service, no +5 buffer)
 4. Taglio Pro live + DB: **25 € / 50 min**
 5. Site health: homepage/prenota/gestionale 200 — redeploy not needed (DB-only)
 

@@ -27,7 +27,8 @@ describe("master update self-check", () => {
     expect(getService("taglio-standard")?.durationMin).toBe(30);
     expect(OFFICIAL_DURATION_MIN["taglio-standard"]).toBe(30);
     // Client-facing end = service only; operational buffer stays internal/hidden.
-    expect(chairBlockMinutes(30)).toBe(30 + BOOKING_BUFFER_MINUTES);
+    expect(BOOKING_BUFFER_MINUTES).toBe(0);
+    expect(chairBlockMinutes(30)).toBe(30);
   });
 
   it("marks consulenza services as WhatsApp-only; prenota-ora stays calendar", () => {

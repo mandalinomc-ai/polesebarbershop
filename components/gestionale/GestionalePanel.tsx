@@ -2302,7 +2302,8 @@ function WalkInModal({
             Trattamenti
             <em className="walkin-gap-hint">
               {" "}
-              · libero {freeMinutes} min · blocco {neededBlockMin || "—"} min (+{BOOKING_BUFFER_MINUTES} buffer)
+              · libero {freeMinutes} min · blocco {neededBlockMin || "—"} min
+              {BOOKING_BUFFER_MINUTES > 0 ? ` (+${BOOKING_BUFFER_MINUTES} buffer)` : ""}
             </em>
           </span>
           <div className="walkin-chip-grid walkin-chip-grid--xl">
@@ -2326,7 +2327,9 @@ function WalkInModal({
                     {formatPrice(s)}
                     {!s.durationKnown
                       ? " · durata?"
-                      : ` · ${s.durationMin}+${BOOKING_BUFFER_MINUTES}=${block} min`}
+                      : BOOKING_BUFFER_MINUTES > 0
+                        ? ` · ${s.durationMin}+${BOOKING_BUFFER_MINUTES}=${block} min`
+                        : ` · ${s.durationMin} min`}
                   </small>
                 </button>
               );
