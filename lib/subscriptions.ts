@@ -73,8 +73,12 @@ export function parseSubscriptionSeriesId(
 
 export function isMissingSubscriptionsTableError(
   message: string | null | undefined,
+  code?: string | null,
 ): boolean {
-  return /booking_subscriptions|schema cache|Could not find/i.test(message || "");
+  if (code === "PGRST205" || code === "42P01") return true;
+  return /booking_subscriptions|schema cache|Could not find|does not exist|PGRST205|relation/i.test(
+    message || "",
+  );
 }
 
 /** Weekly dates matching weekday from startsOn through endsOn, skipping closed days. */

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { wallTimeToUtc } from "@/lib/booking";
 import {
   formatSubscriptionSeriesNote,
+  isMissingSubscriptionsTableError,
   listSubscriptionDates,
   parseSubscriptionSeriesId,
   reconstructSubscriptionsFromAppointments,
@@ -69,5 +70,15 @@ describe("subscription series notes (pre-014 fallback)", () => {
     expect(subs[0]?.weekday).toBe(1);
     expect(subs[0]?.startTime).toBe("10:00");
     expect(subs[0]?.legacy).toBe(true);
+  });
+
+  it("detects missing booking_subscriptions table errors", () => {
+    expect(
+      isMissingSubscriptionsTableError(
+        "Could not find the table 'public.booking_subscriptions' in the schema cache",
+      ),
+    ).toBe(true);
+    expect(isMissingSubscriptionsTableError("ok", "PGRST205")).toBe(true);
+    expect(isMissingSubscriptionsTableError("unique violation")).toBe(false);
   });
 });

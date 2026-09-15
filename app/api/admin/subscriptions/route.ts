@@ -76,14 +76,12 @@ export async function GET() {
     .limit(100);
 
   if (error) {
-    if (isMissingSubscriptionsTableError(error.message)) {
-      const subscriptions = await listLegacySubscriptions(db);
-      return NextResponse.json({
-        subscriptions,
-        mode: "appointments-fallback",
-      });
-    }
-    return NextResponse.json({ error: "Impossibile caricare abbonamenti." }, { status: 500 });
+    // Table 014 optional — always degrade to appointments series, never block UI.
+    const subscriptions = await listLegacySubscriptions(db);
+    return NextResponse.json({
+      subscriptions,
+      mode: "appointments-fallback",
+    });
   }
 
   return NextResponse.json({
@@ -195,8 +193,17 @@ export async function POST(request: Request) {
     .single();
 
   if (subErr || !sub) {
-    if (!isMissingSubscriptionsTableError(subErr?.message)) {
-      return NextResponse.json({ error: "Impossibile creare l'abbonamento." }, { status: 500 });
+    const missing = isMissingSubscriptionsTableError(
+      subErr?.message,
+      (subErr as { code?: string } | null)?.code,
+    );
+    // Prefer appointments-fallback whenever the subscriptions table path fails.
+    // Service-role insert errors are almost always missing schema (014), not data bugs.
+    if (!missing && subErr?.message && !/booking_subscriptions|PGRST|schema|relation/i.test(subErr.message)) {
+      return NextResponse.json(
+        { error: "Impossibile creare l'abbonamento." },
+        { status: 500 },
+      );
     }
     // Table 014 not applied yet — create the series as linked appointments only.
     subscriptionId = randomUUID();
@@ -302,7 +309,12 @@ export async function PATCH(request: Request) {
       .from("booking_subscriptions")
       .update({ active: false })
       .eq("id", id);
-    const tableMissing = isMissingSubscriptionsTableError(subUpdateErr?.message);
+    const tableMissing =
+      Boolean(subUpdateErr) &&
+      isMissingSubscriptionsTableError(
+        subUpdateErr?.message,
+        (subUpdateErr as { code?: string } | null)?.code,
+      );
 
     const nowIso = new Date().toISOString();
     let cancelledFuture = 0;
