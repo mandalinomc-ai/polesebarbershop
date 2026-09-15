@@ -23,7 +23,7 @@ Single calendar for the public site and gestionale (same Supabase `appointments`
 | **BUFFER** (`BOOKING_BUFFER_MINUTES = 0`) | No padding after service; chair free at service end. |
 | **TIME_SLOT_INTERVAL** (`TIME_SLOT_INTERVAL_MINUTES = 5`) | Search/display step **inside** free windows only. Does **not** round free-window starts. |
 
-Online UI also uses `ONLINE_DISPLAY_INTERVAL_MINUTES = 15` to thin candidates (always keeps continuous free-window starts).
+Online UI also uses `ONLINE_DISPLAY_INTERVAL_MINUTES = 30` (half-hour starts :00 / :30; occupancy still = real service duration).
 
 ## 3. Free-windows pipeline (not primary 5-min grid)
 

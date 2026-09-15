@@ -5,7 +5,7 @@ import {
   getScheduleSlots,
   isClosedDay,
   summarizeSchedule,
-  ONLINE_DISPLAY_INTERVAL_MINUTES,
+  onlineDisplayIntervalForDuration,
   type ScheduleSlot,
 } from "@/lib/availability";
 import {
@@ -206,7 +206,7 @@ export async function GET(request: Request) {
     durationMinutes,
     appointments,
     fullSearch: false,
-    displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
+    displayIntervalMinutes: onlineDisplayIntervalForDuration(durationMinutes),
     calendarBlocks,
   });
   const occupancy = summarizeSchedule(date, slots, { openDay: true });
@@ -223,7 +223,7 @@ export async function GET(request: Request) {
         durationMinutes,
         appointments,
         fullSearch: false,
-        displayIntervalMinutes: ONLINE_DISPLAY_INTERVAL_MINUTES,
+        displayIntervalMinutes: onlineDisplayIntervalForDuration(durationMinutes),
         calendarBlocks,
       }),
       { openDay: true },

@@ -10,10 +10,21 @@ export const TIME_SLOT_INTERVAL_MINUTES = 5;
 export const SLOT_INTERVAL_MINUTES = TIME_SLOT_INTERVAL_MINUTES;
 
 /**
- * Online UI thinning: within a large free window, show starts at this cadence
- * (always still includes the continuous free-window start).
+ * Online UI thinning: only half-hour starts (:00 / :30).
+ * Service duration still drives chair occupancy (e.g. taglio 30 min).
+ * Shorter services also start on the half-hour grid — the barber manages gaps/delays.
  */
-export const ONLINE_DISPLAY_INTERVAL_MINUTES = 15;
+export const ONLINE_DISPLAY_INTERVAL_MINUTES = 30;
+
+/**
+ * Relative online cadence from service duration.
+ * Keeps the public calendar on half hours for equilibrium across mixed services.
+ */
+export function onlineDisplayIntervalForDuration(durationMin: number): number {
+  if (!(durationMin > 0)) return ONLINE_DISPLAY_INTERVAL_MINUTES;
+  // Always half hours online: occupancy = real duration; start grid = 30.
+  return ONLINE_DISPLAY_INTERVAL_MINUTES;
+}
 
 /**
  * Gap optimization — internal default for Felice (no confusing UI toggle).
