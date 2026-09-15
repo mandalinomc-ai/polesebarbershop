@@ -69,6 +69,12 @@ export {
   type FillGapSuggestion,
 } from "./optimize";
 export {
+  LAST_MINUTE_MAX_DURATION_MIN,
+  LAST_MINUTE_SAME_DAY_ONLY,
+  isLastMinuteEligibleDuration,
+  filterLastMinuteGapTips,
+} from "./last-minute";
+export {
   CALENDAR_UNAVAILABLE_IT,
   CLOSED_DAY_IT,
   NO_SLOTS_IT,
