@@ -138,6 +138,35 @@ export function isPaidStatus(status: string) {
   return status === "confirmed" || status === "walk_in" || status === "completed";
 }
 
+/** Notes marker when column exclude_from_stats is missing (pre-013). */
+export const EXCLUDE_FROM_STATS_NOTE_TAG = "[exclude_from_stats]";
+
+export function hasExcludeFromStatsNote(notes: string | null | undefined): boolean {
+  return Boolean(notes && notes.includes(EXCLUDE_FROM_STATS_NOTE_TAG));
+}
+
+export function applyExcludeFromStatsNote(
+  notes: string | null | undefined,
+  exclude: boolean,
+): string | null {
+  const raw = (notes || "").trim();
+  const without = raw
+    .replace(EXCLUDE_FROM_STATS_NOTE_TAG, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s·\s·/g, " · ")
+    .trim();
+  if (!exclude) return without || null;
+  if (hasExcludeFromStatsNote(raw)) return raw;
+  return without ? `${without} ${EXCLUDE_FROM_STATS_NOTE_TAG}` : EXCLUDE_FROM_STATS_NOTE_TAG;
+}
+
+export function appointmentExcludedFromStats(row: {
+  exclude_from_stats?: boolean | null;
+  notes?: string | null;
+}): boolean {
+  return Boolean(row.exclude_from_stats) || hasExcludeFromStatsNote(row.notes);
+}
+
 export function countsTowardStats(appt: { status: string; excludeFromStats?: boolean }) {
   return isPaidStatus(appt.status) && !appt.excludeFromStats;
 }
@@ -577,6 +606,6 @@ export function toCrmAppointment(row: {
     priceCents: row.price_cents,
     isWalkIn: row.is_walk_in,
     notes: row.notes,
-    excludeFromStats: Boolean(row.exclude_from_stats),
+    excludeFromStats: appointmentExcludedFromStats(row),
   };
 }

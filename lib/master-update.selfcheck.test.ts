@@ -12,7 +12,7 @@ import {
 } from "@/lib/catalog";
 import { getWhatsAppConsulenzaUrl } from "@/lib/site-config";
 import { getAdminPassword, isAdminConfigured, verifyAdminCredentials } from "@/lib/admin-auth";
-import { countsTowardStats } from "@/lib/crm";
+import { applyExcludeFromStatsNote, appointmentExcludedFromStats, countsTowardStats } from "@/lib/crm";
 
 describe("master update self-check", () => {
   it("hardcodes lunch 13:00–14:00 on open weekdays", () => {
@@ -73,6 +73,13 @@ describe("master update self-check", () => {
     expect(countsTowardStats({ status: "confirmed", excludeFromStats: false })).toBe(true);
     expect(countsTowardStats({ status: "confirmed", excludeFromStats: true })).toBe(false);
     expect(countsTowardStats({ status: "pending" })).toBe(false);
+  });
+
+  it("soft-excludes via notes marker when column 013 is absent", () => {
+    expect(appointmentExcludedFromStats({ notes: "[exclude_from_stats]" })).toBe(true);
+    expect(appointmentExcludedFromStats({ notes: "ok", exclude_from_stats: false })).toBe(false);
+    expect(applyExcludeFromStatsNote("ciao", true)).toContain("[exclude_from_stats]");
+    expect(applyExcludeFromStatsNote("ciao [exclude_from_stats]", false)).toBe("ciao");
   });
 
   it("keeps other catalog services online-bookable", () => {
