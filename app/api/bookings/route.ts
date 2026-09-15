@@ -165,7 +165,7 @@ export async function POST(request: Request) {
         service_ids: services.map((s) => s.id),
         services_snapshot: servicesSnapshot(services),
         starts_at: slot.startIso,
-        // Chair occupation includes internal BOOKING_BUFFER_MINUTES.
+        // Chair occupation = service duration only (BOOKING_BUFFER_MINUTES = 0).
         ends_at: slot.blockEndIso,
         duration_min: occupancyDuration,
         price_cents: totals.priceEuro * 100,

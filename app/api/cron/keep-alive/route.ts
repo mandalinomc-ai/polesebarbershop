@@ -46,5 +46,8 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({ status: "ok" }, { status: 200 });
+  const { runNoBufferMaintenance } = await import("@/lib/strip-booking-buffer");
+  const maintenance = await runNoBufferMaintenance();
+
+  return NextResponse.json({ status: "ok", maintenance }, { status: 200 });
 }
