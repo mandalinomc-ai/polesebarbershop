@@ -1354,6 +1354,25 @@ a.btn-whatsapp.contact-wa,
   text-transform: uppercase;
   color: var(--smoke);
 }
+.last-minute-block {
+  margin-top: 1.1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+.last-minute-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.last-minute-note {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.slot-btn.last-minute {
+  border-style: dashed;
+}
 .slot-status { color: var(--muted); padding: 0.85rem 0; }
 .customer-fields { display: flex; flex-direction: column; gap: 0.65rem; }
 .input-lux {
