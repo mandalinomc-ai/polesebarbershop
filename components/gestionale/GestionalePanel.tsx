@@ -795,18 +795,14 @@ function AgendaView({
       cancelled = true;
     };
   }, [date, agenda]);
-  const occupancy = useMemo(
-    () =>
-      getOccupancyGrid({
-        date,
-        appointments: occupying,
-        calendarBlocks: [
-          ...CONFIG_CALENDAR_BLOCKS,
-          ...calendarBlocks.filter((b) => b.date === date),
-        ],
-      }),
-    [date, occupying, calendarBlocks],
-  );
+  const occupancy = useMemo(() => {
+    const dayBlocks: CalendarBlock[] = calendarBlocks.filter((b) => b.date === date);
+    return getOccupancyGrid({
+      date,
+      appointments: occupying,
+      calendarBlocks: [...CONFIG_CALENDAR_BLOCKS, ...dayBlocks],
+    });
+  }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
   return (
     <div className="crm-stack">
