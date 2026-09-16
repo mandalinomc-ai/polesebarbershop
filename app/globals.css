@@ -1887,32 +1887,30 @@ a.btn-whatsapp.contact-wa,
   color: var(--smoke);
   font-weight: 600;
 }
-.occupancy-barber-head {
-  display: flex;
-  flex-direction: column;
+.offline-day-bar {
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
 }
-.operator-offline-btn {
+.offline-day-bar > button {
   appearance: none;
   border: 1px solid var(--line);
   background: var(--white);
-  color: var(--smoke);
+  color: var(--ink);
   font: inherit;
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
-  padding: 0.2rem 0.45rem;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
   cursor: pointer;
-  line-height: 1.2;
 }
-.operator-offline-btn.is-off {
+.offline-day-bar > button.active {
   border-color: var(--ink);
+  background: var(--surface);
+}
+.offline-day-btn.is-off {
   background: var(--ink);
   color: var(--white);
-}
-.operator-offline-btn:disabled {
-  opacity: 0.6;
-  cursor: wait;
+  border-color: var(--ink);
 }
 .occupancy-table td.free { background: var(--white); color: var(--smoke); }
 .agenda-columns { display: grid; gap: 1rem; }

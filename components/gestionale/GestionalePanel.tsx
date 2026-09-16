@@ -758,7 +758,8 @@ function AgendaView({
   onReload: () => void;
 }) {
   const [offlineIds, setOfflineIds] = useState<string[]>([]);
-  const [offlineBusy, setOfflineBusy] = useState<string | null>(null);
+  const [offlineBusy, setOfflineBusy] = useState(false);
+  const [offlineWho, setOfflineWho] = useState("felice");
 
   const refreshOffline = useCallback(async () => {
     const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
@@ -770,21 +771,21 @@ function AgendaView({
     void refreshOffline();
   }, [refreshOffline, agenda]);
 
-  async function toggleOffline(barberId: string) {
+  async function toggleOfflineDay() {
     if (offlineBusy) return;
-    setOfflineBusy(barberId);
+    setOfflineBusy(true);
     try {
-      const offline = !offlineIds.includes(barberId);
+      const offline = !offlineIds.includes(offlineWho);
       const res = await fetch("/api/admin/operator-offline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, barberId, offline }),
+        body: JSON.stringify({ date, barberId: offlineWho, offline }),
       });
       if (!res.ok) return;
       await refreshOffline();
       onReload();
     } finally {
-      setOfflineBusy(null);
+      setOfflineBusy(false);
     }
   }
 
@@ -848,6 +849,27 @@ function AgendaView({
             Settimana
           </button>
         </div>
+        <div className="offline-day-bar" aria-label="Offline giornata">
+          {getRealBarbers().map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              className={offlineWho === b.id ? "active" : ""}
+              onClick={() => setOfflineWho(b.id)}
+            >
+              {b.name}
+              {offlineIds.includes(b.id) ? " · off" : ""}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`offline-day-btn${offlineIds.includes(offlineWho) ? " is-off" : ""}`}
+            disabled={offlineBusy}
+            onClick={() => void toggleOfflineDay()}
+          >
+            {offlineBusy ? "…" : "Offline"}
+          </button>
+        </div>
         {view === "week" && agenda?.rangeFrom ? (
           <p className="slot-status">
             {formatItalianDate(agenda.rangeFrom)} — {formatItalianDate(agenda.rangeTo || agenda.rangeFrom)}
@@ -879,29 +901,9 @@ function AgendaView({
               <thead>
                 <tr>
                   <th>Ora</th>
-                  {getRealBarbers().map((b) => {
-                    const off = offlineIds.includes(b.id);
-                    return (
-                      <th key={b.id}>
-                        <div className="occupancy-barber-head">
-                          <span>{b.name}</span>
-                          <button
-                            type="button"
-                            className={`operator-offline-btn${off ? " is-off" : ""}`}
-                            disabled={offlineBusy === b.id}
-                            title={
-                              off
-                                ? `Riattiva ${b.name} per questa giornata`
-                                : `${b.name} offline — blocca tutti gli orari oggi`
-                            }
-                            onClick={() => void toggleOffline(b.id)}
-                          >
-                            {offlineBusy === b.id ? "…" : off ? "Offline" : "Operatore offline"}
-                          </button>
-                        </div>
-                      </th>
-                    );
-                  })}
+                  {getRealBarbers().map((b) => (
+                    <th key={b.id}>{b.name}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
