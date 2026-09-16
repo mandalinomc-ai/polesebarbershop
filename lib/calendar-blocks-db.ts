@@ -6,6 +6,12 @@ import {
   CONFIG_CALENDAR_BLOCKS,
   type CalendarBlock,
 } from "@/lib/booking/calendar-blocks";
+import {
+  isOperatorOfflineBlock,
+  isRealOperatorId,
+  OPERATOR_OFFLINE_LABEL,
+  shopHoursForDate,
+} from "@/lib/operator-offline";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 
 type BlockRow = {
@@ -122,4 +128,52 @@ export async function deleteCalendarBlock(
   const { error } = await db.from("calendar_blocks").delete().eq("id", id);
   if (error) return { ok: false, error: error.message || "Eliminazione non riuscita." };
   return { ok: true };
+}
+
+/**
+ * Full-day offline for one real barber (Felice / Davide).
+ * Uses calendar_blocks so public availability + gestionale share the same source.
+ */
+export async function setOperatorOfflineDay(input: {
+  date: string;
+  barberId: string;
+  offline: boolean;
+}): Promise<
+  | { ok: true; offline: boolean; block?: CalendarBlock }
+  | { ok: false; error: string }
+> {
+  if (!isRealOperatorId(input.barberId)) {
+    return { ok: false, error: "Seleziona Felice o Davide." };
+  }
+  const hours = shopHoursForDate(input.date);
+  if (!hours) {
+    return { ok: false, error: "Il salone è chiuso in questa data." };
+  }
+  if (!isSupabaseConfigured()) {
+    return { ok: false, error: "Database non collegato." };
+  }
+
+  const existing = await listDbCalendarBlocks();
+  const toRemove = existing.filter((b) =>
+    isOperatorOfflineBlock(b, input.date, input.barberId),
+  );
+  for (const b of toRemove) {
+    const del = await deleteCalendarBlock(b.id);
+    if (!del.ok) return del;
+  }
+
+  if (!input.offline) {
+    return { ok: true, offline: false };
+  }
+
+  const result = await insertCalendarBlock({
+    date: input.date,
+    start: hours.open,
+    end: hours.close,
+    barberId: input.barberId,
+    label: OPERATOR_OFFLINE_LABEL,
+    kind: "closed",
+  });
+  if (!result.ok) return result;
+  return { ok: true, offline: true, block: result.block };
 }

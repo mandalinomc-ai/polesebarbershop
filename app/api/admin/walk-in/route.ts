@@ -6,6 +6,7 @@ import {
   wallTimeToUtc,
 } from "@/lib/availability";
 import { blockEndFromStart, resolveEffectiveServiceDuration } from "@/lib/booking";
+import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
 import { getBarber, totalsForServices } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
 import {
@@ -123,6 +124,7 @@ export async function POST(request: Request) {
     );
   }
 
+  const calendarBlocks = await loadMergedCalendarBlocks();
   const slots = getAvailableSlots({
     date: body.date,
     barberId: body.barberId,
@@ -131,6 +133,7 @@ export async function POST(request: Request) {
     minNoticeMinutes: 0,
     now: new Date(0),
     fullSearch: true,
+    calendarBlocks,
   });
   let slot = findSlot(slots, startsAt);
   const force = Boolean(body.force);

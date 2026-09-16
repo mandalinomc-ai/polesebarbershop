@@ -22,6 +22,7 @@ import {
   workingWindowsFromHours,
   busyMinutesFromBlocks,
   CONFIG_CALENDAR_BLOCKS,
+  blocksForDate,
   type CalendarBlock,
   freeWindowStarts,
   suggestFillGaps,
@@ -107,6 +108,8 @@ export type OccupancyCell = {
   rowSpan: number;
   /** Covered by a previous cell's rowSpan — do not render a <td>. */
   skip: boolean;
+  /** Calendar block (pause / operatore offline) — not an appointment. */
+  blocked?: boolean;
 };
 
 export type OccupancyRow = {
@@ -798,6 +801,7 @@ export function getOccupancyGrid(input: {
   barbers?: Barber[];
   stepMinutes?: number;
   timeZone?: string;
+  calendarBlocks?: CalendarBlock[];
 }): OccupancyRow[] {
   const {
     date,
@@ -805,6 +809,7 @@ export function getOccupancyGrid(input: {
     barbers = BARBERS,
     stepMinutes = OCCUPANCY_STEP_MINUTES,
     timeZone = TIMEZONE,
+    calendarBlocks = CONFIG_CALENDAR_BLOCKS,
   } = input;
   if (isClosedDay(date)) return [];
   const real = getRealBarbers(barbers);
@@ -856,6 +861,32 @@ export function getOccupancyGrid(input: {
         label: hit.label || "",
         appointmentId: hit.id,
         rowSpan: span,
+        skip: false,
+      };
+    }
+
+    // Calendar blocks (operatore offline / custom) — only fill still-free cells.
+    const busy = busyMinutesFromBlocks(date, calendarBlocks, barber.id);
+    const dayBlocks = blocksForDate(date, calendarBlocks, barber.id);
+    for (let i = 0; i < times.length; i += 1) {
+      const cell = rows[i]!.cells[bi]!;
+      if (cell.occupied) continue;
+      const startMin = timeToMinutes(times[i]!);
+      const endMin = startMin + stepMinutes;
+      const inBusy = busy.some((b) => startMin < b.endMin && endMin > b.startMin);
+      if (!inBusy) continue;
+      const block = dayBlocks.find((b) => {
+        const a = timeToMinutes(b.start);
+        const z = timeToMinutes(b.end);
+        return startMin < z && endMin > a;
+      });
+      rows[i]!.cells[bi] = {
+        time: times[i]!,
+        barberId: barber.id,
+        occupied: true,
+        blocked: true,
+        label: block?.label || "Non disponibile",
+        rowSpan: 1,
         skip: false,
       };
     }

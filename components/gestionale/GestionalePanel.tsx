@@ -26,7 +26,7 @@ import {
   OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
-import { BOOKING_BUFFER_MINUTES } from "@/lib/booking";
+import { BOOKING_BUFFER_MINUTES, CONFIG_CALENDAR_BLOCKS, type CalendarBlock } from "@/lib/booking";
 import {
   formatAgendaBlockLabel,
   formatFreeSlotLabel,
@@ -432,6 +432,7 @@ export function GestionalePanel() {
         ) : null}
         {tab === "agenda" ? (
           <>
+            <OperatorOfflinePanel date={date} onChanged={() => void load()} />
             <BlockTimePanel date={date} onChanged={() => void load()} />
             <SubscriptionPanel date={date} clients={clients} onChanged={() => void load()} />
             <AgendaView
@@ -782,10 +783,26 @@ function AgendaView({
         }),
     [agenda, date],
   );
-  const occupancy = useMemo(
-    () => getOccupancyGrid({ date, appointments: occupying }),
-    [date, occupying],
-  );
+  const [calendarBlocks, setCalendarBlocks] = useState<CalendarBlock[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch("/api/admin/calendar-blocks");
+      const json = (await res.json()) as { blocks?: CalendarBlock[] };
+      if (!cancelled && res.ok) setCalendarBlocks(json.blocks || []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [date, agenda]);
+  const occupancy = useMemo(() => {
+    const dayBlocks: CalendarBlock[] = calendarBlocks.filter((b) => b.date === date);
+    return getOccupancyGrid({
+      date,
+      appointments: occupying,
+      calendarBlocks: [...CONFIG_CALENDAR_BLOCKS, ...dayBlocks],
+    });
+  }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
   return (
     <div className="crm-stack">
@@ -843,13 +860,24 @@ function AgendaView({
                         <td
                           key={cell.barberId}
                           rowSpan={cell.occupied ? cell.rowSpan : 1}
-                          className={cell.occupied ? "taken" : "free"}
+                          className={
+                            cell.occupied
+                              ? cell.blocked
+                                ? "taken blocked"
+                                : "taken"
+                              : "free"
+                          }
                         >
                           {cell.occupied ? (
                             <div
                               className="occupancy-taken"
-                              title="Doppio click per modificare / spostare"
+                              title={
+                                cell.blocked
+                                  ? cell.label || "Non disponibile"
+                                  : "Doppio click per modificare / spostare"
+                              }
                               onDoubleClick={() => {
+                                if (cell.blocked || !cell.appointmentId) return;
                                 const appt = (agenda?.appointments || []).find(
                                   (a) => a.id === cell.appointmentId,
                                 );
@@ -1376,6 +1404,102 @@ function ClientiView({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function OperatorOfflinePanel({
+  date,
+  onChanged,
+}: {
+  date: string;
+  onChanged: () => void;
+}) {
+  const operators = useMemo(() => getRealBarbers(), []);
+  const [barberId, setBarberId] = useState(operators[0]?.id || "felice");
+  const [offlineIds, setOfflineIds] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const refresh = useCallback(async () => {
+    const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
+    const json = (await res.json()) as { offlineBarberIds?: string[]; error?: string };
+    if (!res.ok) {
+      setError(json.error || "");
+      return;
+    }
+    setOfflineIds(json.offlineBarberIds || []);
+    setError("");
+  }, [date]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const isOffline = offlineIds.includes(barberId);
+  const barberName = operators.find((b) => b.id === barberId)?.name || barberId;
+
+  async function toggle() {
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/operator-offline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, barberId, offline: !isOffline }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(json.error || "Operazione non riuscita.");
+        return;
+      }
+      await refresh();
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="crm-card operator-offline-panel" aria-label="Operatore offline">
+      <h2 className="font-serif">Operatore offline</h2>
+      <p className="slot-status">
+        Disattiva Felice o Davide per <strong>{formatItalianDate(date)}</strong>: tutte le fasce
+        diventano non prenotabili sul sito e in gestionale.
+      </p>
+      <div className="operator-offline-row">
+        <label className="operator-offline-select">
+          Operatore
+          <select
+            className="input-lux"
+            value={barberId}
+            onChange={(e) => setBarberId(e.target.value)}
+            disabled={saving}
+          >
+            {operators.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+                {offlineIds.includes(b.id) ? " · offline" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          className={isOffline ? "btn btn-gold" : "btn btn-outline"}
+          disabled={saving}
+          onClick={() => void toggle()}
+        >
+          {saving ? "…" : isOffline ? `Riattiva ${barberName}` : "Operatore offline"}
+        </button>
+      </div>
+      {isOffline ? (
+        <p className="crm-warning">
+          {barberName} è offline per questa giornata — orari bloccati su front e gestionale.
+        </p>
+      ) : null}
+      {error ? <p className="field-error">{error}</p> : null}
+    </section>
   );
 }
 
