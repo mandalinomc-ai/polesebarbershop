@@ -22,14 +22,11 @@ import { WEEKDAY_OPTIONS_IT } from "@/lib/subscriptions";
 import {
   formatItalianDate,
   getFirstBookableDate,
-  getOccupancyGrid,
   OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
-import { BOOKING_BUFFER_MINUTES, CONFIG_CALENDAR_BLOCKS, type CalendarBlock } from "@/lib/booking";
+import { BOOKING_BUFFER_MINUTES } from "@/lib/booking";
 import {
-  formatAgendaBlockLabel,
-  formatFreeSlotLabel,
   formatTimeRange,
   freeMinutesFromStart,
   INSUFFICIENT_AGENDA_TIME_IT,
@@ -144,9 +141,8 @@ export function GestionalePanel() {
   const [history, setHistory] = useState<HistoryAppt[]>([]);
   const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
   const [bellTick, setBellTick] = useState(0);
-  const [offlineWho, setOfflineWho] = useState<"felice" | "davide">("felice");
   const [offlineIds, setOfflineIds] = useState<string[]>([]);
-  const [offlineBusy, setOfflineBusy] = useState(false);
+  const [offlineBusy, setOfflineBusy] = useState<string | null>(null);
 
   const refreshOffline = useCallback(async () => {
     const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
@@ -235,21 +231,21 @@ export function GestionalePanel() {
     }
   }, [loadAgenda, loadCrm, loadHistory]);
 
-  async function toggleOfflineDay() {
+  async function toggleOfflineDay(barberId: "felice" | "davide") {
     if (offlineBusy) return;
-    setOfflineBusy(true);
+    setOfflineBusy(barberId);
     try {
-      const offline = !offlineIds.includes(offlineWho);
+      const offline = !offlineIds.includes(barberId);
       const res = await fetch("/api/admin/operator-offline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, barberId: offlineWho, offline }),
+        body: JSON.stringify({ date, barberId, offline }),
       });
       if (!res.ok) return;
       await refreshOffline();
       await loadAgenda();
     } finally {
-      setOfflineBusy(false);
+      setOfflineBusy(null);
     }
   }
 
@@ -281,28 +277,6 @@ export function GestionalePanel() {
       body: JSON.stringify({ id, ...body }),
     });
     if (res.ok) void load();
-  }
-
-  /** Mark a specific half-hour as unavailable (blocks online booking for that chair). */
-  async function quickBlockHalfHour(day: string, barberId: string, startTime: string) {
-    const endTime = addMinutesHhMm(startTime, OCCUPANCY_STEP_MINUTES);
-    const res = await fetch("/api/admin/calendar-blocks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        date: day,
-        start: startTime,
-        end: endTime,
-        barberId,
-        label: "Non disponibile",
-      }),
-    });
-    const json = (await res.json()) as { error?: string };
-    if (!res.ok) {
-      setError(json.error || "Impossibile bloccare la fascia.");
-      return;
-    }
-    void load();
   }
 
   const filteredClients = useMemo(() => {
@@ -424,28 +398,22 @@ export function GestionalePanel() {
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
-            <div className="offline-day-bar" aria-label="Offline giornata">
+            <div className="offline-day-bar">
               <button
                 type="button"
-                className={offlineWho === "felice" ? "active" : ""}
-                onClick={() => setOfflineWho("felice")}
+                className={`offline-day-btn${offlineIds.includes("felice") ? " is-off" : ""}`}
+                disabled={offlineBusy === "felice"}
+                onClick={() => void toggleOfflineDay("felice")}
               >
-                Felice
+                {offlineBusy === "felice" ? "…" : "Felice Offline"}
               </button>
               <button
                 type="button"
-                className={offlineWho === "davide" ? "active" : ""}
-                onClick={() => setOfflineWho("davide")}
+                className={`offline-day-btn${offlineIds.includes("davide") ? " is-off" : ""}`}
+                disabled={offlineBusy === "davide"}
+                onClick={() => void toggleOfflineDay("davide")}
               >
-                Davide
-              </button>
-              <button
-                type="button"
-                className={`offline-day-btn${offlineIds.includes(offlineWho) ? " is-off" : ""}`}
-                disabled={offlineBusy}
-                onClick={() => void toggleOfflineDay()}
-              >
-                {offlineBusy ? "…" : "Offline"}
+                {offlineBusy === "davide" ? "…" : "Davide Offline"}
               </button>
             </div>
             <button
@@ -497,13 +465,6 @@ export function GestionalePanel() {
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
-            onQuickWalkIn={(barberId, startTime) => {
-              setWalkPreset({ barberId, startTime });
-              setWalkOpen(true);
-            }}
-            onQuickBlock={(barberId, startTime) => {
-              void quickBlockHalfHour(date, barberId, startTime);
-            }}
             onNotify={(appt) => {
               const match =
                 clients.find(
@@ -797,8 +758,6 @@ function AgendaView({
   onPatch,
   onMove,
   onNotify,
-  onQuickWalkIn,
-  onQuickBlock,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -807,57 +766,7 @@ function AgendaView({
   onPatch: (id: string, body: Record<string, unknown>) => void;
   onMove: (a: AdminAppt) => void;
   onNotify: (a: AdminAppt) => void;
-  onQuickWalkIn: (barberId: string, startTime: string) => void;
-  onQuickBlock: (barberId: string, startTime: string) => void;
 }) {
-  const occupying = useMemo(
-    () =>
-      (agenda?.appointments || [])
-        .filter((a) => a.status !== "cancelled")
-        .map((a) => {
-          const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
-          const block = resolveAppointmentBlock({
-            startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
-            endsAt: a.endsAt,
-            durationMin: dur,
-            bufferTime: a.bufferTime,
-          });
-          const name = `${a.firstName} ${a.lastName}`.trim();
-          const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
-          return {
-            id: a.id,
-            barberId: a.barberId,
-            startsAt: block.start,
-            endsAt: block.end,
-            label: formatAgendaBlockLabel(
-              block.start,
-              block.end,
-              `${name || "Cliente"} - ${services || "Servizio"}`,
-            ),
-          };
-        }),
-    [agenda, date],
-  );
-  const [calendarBlocks, setCalendarBlocks] = useState<CalendarBlock[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const res = await fetch("/api/admin/calendar-blocks");
-      const json = (await res.json()) as { blocks?: CalendarBlock[] };
-      if (!cancelled && res.ok) setCalendarBlocks(json.blocks || []);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [date, agenda]);
-  const occupancy = useMemo(() => {
-    const dayBlocks: CalendarBlock[] = calendarBlocks.filter((b) => b.date === date);
-    return getOccupancyGrid({
-      date,
-      appointments: occupying,
-      calendarBlocks: [...CONFIG_CALENDAR_BLOCKS, ...dayBlocks],
-    });
-  }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
   return (
     <div className="crm-stack">
@@ -887,126 +796,6 @@ function AgendaView({
           <strong>{formatEuroCents(agenda?.takings.weekCents || 0)}</strong>
           <small>da lunedì {agenda?.weekStart}</small>
         </article>
-      </section>
-      <section className="occupancy-wrap" aria-label="Occupazione poltrone">
-        <h2 className="font-serif">Tabella orari</h2>
-        <p className="slot-status occupancy-legend">
-          Tocca <strong>Libero</strong> per prenotare. Su una prenotazione: <strong>Elimina</strong> o doppio click / <strong>Modifica</strong> per spostarla (anche singola occorrenza di abbonamento).
-        </p>
-        {occupancy.length === 0 ? (
-          <p className="slot-status">Nessuna fascia oraria: salone chiuso o data non valida.</p>
-        ) : (
-          <div className="crm-table-wrap occupancy-scroll">
-            <table className="crm-table occupancy-table">
-              <thead>
-                <tr>
-                  <th>Ora</th>
-                  {getRealBarbers().map((b) => (
-                    <th key={b.id}>{b.name}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {occupancy.map((row) => (
-                  <tr key={row.time}>
-                    <th scope="row">{row.time}</th>
-                    {row.cells.map((cell) =>
-                      cell.skip ? null : (
-                        <td
-                          key={cell.barberId}
-                          rowSpan={cell.occupied ? cell.rowSpan : 1}
-                          className={
-                            cell.occupied
-                              ? cell.blocked
-                                ? "taken blocked"
-                                : "taken"
-                              : "free"
-                          }
-                        >
-                          {cell.occupied ? (
-                            <div
-                              className="occupancy-taken"
-                              title={
-                                cell.blocked
-                                  ? cell.label || "Non disponibile"
-                                  : "Doppio click per modificare / spostare"
-                              }
-                              onDoubleClick={() => {
-                                if (cell.blocked || !cell.appointmentId) return;
-                                const appt = (agenda?.appointments || []).find(
-                                  (a) => a.id === cell.appointmentId,
-                                );
-                                if (appt) onMove(appt);
-                              }}
-                            >
-                              <span className="occupancy-block">{cell.label || "Prenotato"}</span>
-                              {cell.appointmentId ? (
-                                <div className="occupancy-taken-actions">
-                                  <button
-                                    type="button"
-                                    className="occupancy-edit-btn"
-                                    onClick={() => {
-                                      const appt = (agenda?.appointments || []).find(
-                                        (a) => a.id === cell.appointmentId,
-                                      );
-                                      if (appt) onMove(appt);
-                                    }}
-                                  >
-                                    Modifica
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="occupancy-remove-btn"
-                                    onClick={() => {
-                                      if (
-                                        !window.confirm(
-                                          "Rimuovere questa prenotazione confermata dall'agenda?",
-                                        )
-                                      ) {
-                                        return;
-                                      }
-                                      onPatch(cell.appointmentId!, { status: "cancelled" });
-                                    }}
-                                  >
-                                    Elimina
-                                  </button>
-                                </div>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <div className="occupancy-free-actions">
-                              <button
-                                type="button"
-                                className="occupancy-free-btn"
-                                onClick={() => onQuickWalkIn(cell.barberId, row.time)}
-                              >
-                                <span className="occupancy-free-plus" aria-hidden>
-                                  +
-                                </span>
-                                <span className="occupancy-free-label">
-                                  {formatFreeSlotLabel(row.time, OCCUPANCY_STEP_MINUTES)}
-                                </span>
-                                <span className="occupancy-free-hint">Prenota</span>
-                              </button>
-                              <button
-                                type="button"
-                                className="occupancy-block-btn"
-                                title={`Non disponibile ${row.time}–${addMinutesHhMm(row.time, OCCUPANCY_STEP_MINUTES)}`}
-                                onClick={() => onQuickBlock(cell.barberId, row.time)}
-                              >
-                                Non disp.
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      ),
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
       <section className="agenda-columns">
         {getRealBarbers().map((b) => (
