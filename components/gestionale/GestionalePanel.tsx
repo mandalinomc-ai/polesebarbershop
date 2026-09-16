@@ -144,6 +144,20 @@ export function GestionalePanel() {
   const [history, setHistory] = useState<HistoryAppt[]>([]);
   const [moveAppt, setMoveAppt] = useState<AdminAppt | null>(null);
   const [bellTick, setBellTick] = useState(0);
+  const [offlineWho, setOfflineWho] = useState<"felice" | "davide">("felice");
+  const [offlineIds, setOfflineIds] = useState<string[]>([]);
+  const [offlineBusy, setOfflineBusy] = useState(false);
+
+  const refreshOffline = useCallback(async () => {
+    const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
+    const json = (await res.json()) as { offlineBarberIds?: string[] };
+    if (res.ok) setOfflineIds(json.offlineBarberIds || []);
+  }, [date]);
+
+  useEffect(() => {
+    if (auth !== "ok") return;
+    void refreshOffline();
+  }, [auth, refreshOffline, agenda]);
 
   const loadAgenda = useCallback(async () => {
     try {
@@ -220,6 +234,24 @@ export function GestionalePanel() {
       setBellTick((n) => n + 1);
     }
   }, [loadAgenda, loadCrm, loadHistory]);
+
+  async function toggleOfflineDay() {
+    if (offlineBusy) return;
+    setOfflineBusy(true);
+    try {
+      const offline = !offlineIds.includes(offlineWho);
+      const res = await fetch("/api/admin/operator-offline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, barberId: offlineWho, offline }),
+      });
+      if (!res.ok) return;
+      await refreshOffline();
+      await loadAgenda();
+    } finally {
+      setOfflineBusy(false);
+    }
+  }
 
   useEffect(() => {
     void load();
@@ -392,6 +424,30 @@ export function GestionalePanel() {
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
+            <div className="offline-day-bar" aria-label="Offline giornata">
+              <button
+                type="button"
+                className={offlineWho === "felice" ? "active" : ""}
+                onClick={() => setOfflineWho("felice")}
+              >
+                Felice
+              </button>
+              <button
+                type="button"
+                className={offlineWho === "davide" ? "active" : ""}
+                onClick={() => setOfflineWho("davide")}
+              >
+                Davide
+              </button>
+              <button
+                type="button"
+                className={`offline-day-btn${offlineIds.includes(offlineWho) ? " is-off" : ""}`}
+                disabled={offlineBusy}
+                onClick={() => void toggleOfflineDay()}
+              >
+                {offlineBusy ? "…" : "Offline"}
+              </button>
+            </div>
             <button
               type="button"
               className="btn btn-gold"
@@ -441,7 +497,6 @@ export function GestionalePanel() {
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
-            onReload={() => void load()}
             onQuickWalkIn={(barberId, startTime) => {
               setWalkPreset({ barberId, startTime });
               setWalkOpen(true);
@@ -744,7 +799,6 @@ function AgendaView({
   onNotify,
   onQuickWalkIn,
   onQuickBlock,
-  onReload,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -755,40 +809,7 @@ function AgendaView({
   onNotify: (a: AdminAppt) => void;
   onQuickWalkIn: (barberId: string, startTime: string) => void;
   onQuickBlock: (barberId: string, startTime: string) => void;
-  onReload: () => void;
 }) {
-  const [offlineIds, setOfflineIds] = useState<string[]>([]);
-  const [offlineBusy, setOfflineBusy] = useState(false);
-  const [offlineWho, setOfflineWho] = useState("felice");
-
-  const refreshOffline = useCallback(async () => {
-    const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
-    const json = (await res.json()) as { offlineBarberIds?: string[] };
-    if (res.ok) setOfflineIds(json.offlineBarberIds || []);
-  }, [date]);
-
-  useEffect(() => {
-    void refreshOffline();
-  }, [refreshOffline, agenda]);
-
-  async function toggleOfflineDay() {
-    if (offlineBusy) return;
-    setOfflineBusy(true);
-    try {
-      const offline = !offlineIds.includes(offlineWho);
-      const res = await fetch("/api/admin/operator-offline", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, barberId: offlineWho, offline }),
-      });
-      if (!res.ok) return;
-      await refreshOffline();
-      onReload();
-    } finally {
-      setOfflineBusy(false);
-    }
-  }
-
   const occupying = useMemo(
     () =>
       (agenda?.appointments || [])
@@ -847,27 +868,6 @@ function AgendaView({
           </button>
           <button type="button" className={view === "week" ? "active" : ""} onClick={() => onViewChange("week")}>
             Settimana
-          </button>
-        </div>
-        <div className="offline-day-bar" aria-label="Offline giornata">
-          {getRealBarbers().map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              className={offlineWho === b.id ? "active" : ""}
-              onClick={() => setOfflineWho(b.id)}
-            >
-              {b.name}
-              {offlineIds.includes(b.id) ? " · off" : ""}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={`offline-day-btn${offlineIds.includes(offlineWho) ? " is-off" : ""}`}
-            disabled={offlineBusy}
-            onClick={() => void toggleOfflineDay()}
-          >
-            {offlineBusy ? "…" : "Offline"}
           </button>
         </div>
         {view === "week" && agenda?.rangeFrom ? (
