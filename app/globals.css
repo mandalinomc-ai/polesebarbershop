@@ -1890,27 +1890,26 @@ a.btn-whatsapp.contact-wa,
 .offline-day-bar {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  margin-left: 0.5rem;
+  gap: 0.35rem;
 }
-.offline-day-bar > button {
+.offline-day-btn {
   appearance: none;
   border: 1px solid var(--line);
   background: var(--white);
   color: var(--ink);
   font: inherit;
   font-size: 0.85rem;
-  padding: 0.35rem 0.65rem;
+  padding: 0.4rem 0.7rem;
   cursor: pointer;
-}
-.offline-day-bar > button.active {
-  border-color: var(--ink);
-  background: var(--surface);
 }
 .offline-day-btn.is-off {
   background: var(--ink);
   color: var(--white);
   border-color: var(--ink);
+}
+.offline-day-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 .occupancy-table td.free { background: var(--white); color: var(--smoke); }
 .agenda-columns { display: grid; gap: 1rem; }
