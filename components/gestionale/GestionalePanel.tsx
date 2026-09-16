@@ -22,11 +22,14 @@ import { WEEKDAY_OPTIONS_IT } from "@/lib/subscriptions";
 import {
   formatItalianDate,
   getFirstBookableDate,
+  getOccupancyGrid,
   OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
-import { BOOKING_BUFFER_MINUTES } from "@/lib/booking";
+import { BOOKING_BUFFER_MINUTES, CONFIG_CALENDAR_BLOCKS, type CalendarBlock } from "@/lib/booking";
 import {
+  formatAgendaBlockLabel,
+  formatFreeSlotLabel,
   formatTimeRange,
   freeMinutesFromStart,
   INSUFFICIENT_AGENDA_TIME_IT,
@@ -279,6 +282,28 @@ export function GestionalePanel() {
     if (res.ok) void load();
   }
 
+  /** Mark a specific half-hour as unavailable (blocks online booking for that chair). */
+  async function quickBlockHalfHour(day: string, barberId: string, startTime: string) {
+    const endTime = addMinutesHhMm(startTime, OCCUPANCY_STEP_MINUTES);
+    const res = await fetch("/api/admin/calendar-blocks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: day,
+        start: startTime,
+        end: endTime,
+        barberId,
+        label: "Non disponibile",
+      }),
+    });
+    const json = (await res.json()) as { error?: string };
+    if (!res.ok) {
+      setError(json.error || "Impossibile bloccare la fascia.");
+      return;
+    }
+    void load();
+  }
+
   const filteredClients = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return clients;
@@ -456,7 +481,6 @@ export function GestionalePanel() {
         ) : null}
         {tab === "agenda" ? (
           <>
-            <BlockTimePanel date={date} onChanged={() => void load()} />
             <SubscriptionPanel date={date} clients={clients} onChanged={() => void load()} />
             <AgendaView
             agenda={agenda}
@@ -465,6 +489,13 @@ export function GestionalePanel() {
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
+            onQuickWalkIn={(barberId, startTime) => {
+              setWalkPreset({ barberId, startTime });
+              setWalkOpen(true);
+            }}
+            onQuickBlock={(barberId, startTime) => {
+              void quickBlockHalfHour(date, barberId, startTime);
+            }}
             onNotify={(appt) => {
               const match =
                 clients.find(
@@ -758,6 +789,8 @@ function AgendaView({
   onPatch,
   onMove,
   onNotify,
+  onQuickWalkIn,
+  onQuickBlock,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -766,7 +799,57 @@ function AgendaView({
   onPatch: (id: string, body: Record<string, unknown>) => void;
   onMove: (a: AdminAppt) => void;
   onNotify: (a: AdminAppt) => void;
+  onQuickWalkIn: (barberId: string, startTime: string) => void;
+  onQuickBlock: (barberId: string, startTime: string) => void;
 }) {
+  const occupying = useMemo(
+    () =>
+      (agenda?.appointments || [])
+        .filter((a) => a.status !== "cancelled")
+        .map((a) => {
+          const dur = a.effectiveDurationMin || a.durationOverrideMin || a.durationMin;
+          const block = resolveAppointmentBlock({
+            startsAt: a.startsAt || wallTimeToUtc(date, a.timeLabel),
+            endsAt: a.endsAt,
+            durationMin: dur,
+            bufferTime: a.bufferTime,
+          });
+          const name = `${a.firstName} ${a.lastName}`.trim();
+          const services = (a.serviceNames || "").replace(/\s*\+\s*/g, " + ");
+          return {
+            id: a.id,
+            barberId: a.barberId,
+            startsAt: block.start,
+            endsAt: block.end,
+            label: formatAgendaBlockLabel(
+              block.start,
+              block.end,
+              `${name || "Cliente"} - ${services || "Servizio"}`,
+            ),
+          };
+        }),
+    [agenda, date],
+  );
+  const [calendarBlocks, setCalendarBlocks] = useState<CalendarBlock[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch("/api/admin/calendar-blocks");
+      const json = (await res.json()) as { blocks?: CalendarBlock[] };
+      if (!cancelled && res.ok) setCalendarBlocks(json.blocks || []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [date, agenda]);
+  const occupancy = useMemo(() => {
+    const dayBlocks: CalendarBlock[] = calendarBlocks.filter((b) => b.date === date);
+    return getOccupancyGrid({
+      date,
+      appointments: occupying,
+      calendarBlocks: [...CONFIG_CALENDAR_BLOCKS, ...dayBlocks],
+    });
+  }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
   return (
     <div className="crm-stack">
@@ -796,6 +879,126 @@ function AgendaView({
           <strong>{formatEuroCents(agenda?.takings.weekCents || 0)}</strong>
           <small>da lunedì {agenda?.weekStart}</small>
         </article>
+      </section>
+      <section className="occupancy-wrap" aria-label="Occupazione poltrone">
+        <h2 className="font-serif">Tabella orari</h2>
+        <p className="slot-status occupancy-legend">
+          Tocca <strong>Libero</strong> per prenotare. Su una prenotazione: <strong>Elimina</strong> o doppio click / <strong>Modifica</strong> per spostarla (anche singola occorrenza di abbonamento).
+        </p>
+        {occupancy.length === 0 ? (
+          <p className="slot-status">Nessuna fascia oraria: salone chiuso o data non valida.</p>
+        ) : (
+          <div className="crm-table-wrap occupancy-scroll">
+            <table className="crm-table occupancy-table">
+              <thead>
+                <tr>
+                  <th>Ora</th>
+                  {getRealBarbers().map((b) => (
+                    <th key={b.id}>{b.name}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {occupancy.map((row) => (
+                  <tr key={row.time}>
+                    <th scope="row">{row.time}</th>
+                    {row.cells.map((cell) =>
+                      cell.skip ? null : (
+                        <td
+                          key={cell.barberId}
+                          rowSpan={cell.occupied ? cell.rowSpan : 1}
+                          className={
+                            cell.occupied
+                              ? cell.blocked
+                                ? "taken blocked"
+                                : "taken"
+                              : "free"
+                          }
+                        >
+                          {cell.occupied ? (
+                            <div
+                              className="occupancy-taken"
+                              title={
+                                cell.blocked
+                                  ? cell.label || "Non disponibile"
+                                  : "Doppio click per modificare / spostare"
+                              }
+                              onDoubleClick={() => {
+                                if (cell.blocked || !cell.appointmentId) return;
+                                const appt = (agenda?.appointments || []).find(
+                                  (a) => a.id === cell.appointmentId,
+                                );
+                                if (appt) onMove(appt);
+                              }}
+                            >
+                              <span className="occupancy-block">{cell.label || "Prenotato"}</span>
+                              {cell.appointmentId ? (
+                                <div className="occupancy-taken-actions">
+                                  <button
+                                    type="button"
+                                    className="occupancy-edit-btn"
+                                    onClick={() => {
+                                      const appt = (agenda?.appointments || []).find(
+                                        (a) => a.id === cell.appointmentId,
+                                      );
+                                      if (appt) onMove(appt);
+                                    }}
+                                  >
+                                    Modifica
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="occupancy-remove-btn"
+                                    onClick={() => {
+                                      if (
+                                        !window.confirm(
+                                          "Rimuovere questa prenotazione confermata dall'agenda?",
+                                        )
+                                      ) {
+                                        return;
+                                      }
+                                      onPatch(cell.appointmentId!, { status: "cancelled" });
+                                    }}
+                                  >
+                                    Elimina
+                                  </button>
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <div className="occupancy-free-actions">
+                              <button
+                                type="button"
+                                className="occupancy-free-btn"
+                                onClick={() => onQuickWalkIn(cell.barberId, row.time)}
+                              >
+                                <span className="occupancy-free-plus" aria-hidden>
+                                  +
+                                </span>
+                                <span className="occupancy-free-label">
+                                  {formatFreeSlotLabel(row.time, OCCUPANCY_STEP_MINUTES)}
+                                </span>
+                                <span className="occupancy-free-hint">Prenota</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="occupancy-block-btn"
+                                title={`Non disponibile ${row.time}–${addMinutesHhMm(row.time, OCCUPANCY_STEP_MINUTES)}`}
+                                onClick={() => onQuickBlock(cell.barberId, row.time)}
+                              >
+                                Non disp.
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      ),
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
       <section className="agenda-columns">
         {getRealBarbers().map((b) => (
@@ -1257,189 +1460,6 @@ function addMinutesHhMm(time: string, minutes: number): string {
   const hh = Math.floor(total / 60) % 24;
   const mm = total % 60;
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
-}
-
-function BlockTimePanel({ date, onChanged }: { date: string; onChanged: () => void }) {
-  const [blockDate, setBlockDate] = useState(date);
-  const [start, setStart] = useState("10:00");
-  const [end, setEnd] = useState("10:30");
-  const [label, setLabel] = useState("Non disponibile");
-  const [barberId, setBarberId] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [blocks, setBlocks] = useState<
-    { id: string; date?: string | null; start: string; end: string; label?: string; barberId?: string | null }[]
-  >([]);
-
-  const refresh = useCallback(async () => {
-    const res = await fetch("/api/admin/calendar-blocks");
-    const json = (await res.json()) as { blocks?: typeof blocks };
-    if (res.ok) setBlocks(json.blocks || []);
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  useEffect(() => {
-    setBlockDate(date);
-  }, [date]);
-
-  function setStartAndHalfHour(nextStart: string) {
-    setStart(nextStart);
-    setEnd(addMinutesHhMm(nextStart, OCCUPANCY_STEP_MINUTES));
-  }
-
-  async function saveBlock(overrides?: {
-    start?: string;
-    end?: string;
-    barberId?: string;
-    label?: string;
-  }) {
-    setSaving(true);
-    setError("");
-    const s = overrides?.start ?? start;
-    const e = overrides?.end ?? end;
-    try {
-      const res = await fetch("/api/admin/calendar-blocks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: blockDate,
-          start: s,
-          end: e,
-          label: overrides?.label ?? label,
-          barberId: (overrides?.barberId ?? barberId) || null,
-        }),
-      });
-      const json = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        setError(json.error || "Blocco non salvato.");
-        return;
-      }
-      await refresh();
-      onChanged();
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function removeBlock(id: string) {
-    const res = await fetch(`/api/admin/calendar-blocks?id=${encodeURIComponent(id)}`, {
-      method: "DELETE",
-    });
-    if (res.ok) {
-      await refresh();
-      onChanged();
-    }
-  }
-
-  const dayBlocks = blocks.filter((b) => b.date === blockDate);
-  const halfHourPresets = useMemo(() => {
-    // Shop-typical half hours for quick tap (open days).
-    const out: string[] = [];
-    for (let min = 8 * 60; min < 21 * 60; min += OCCUPANCY_STEP_MINUTES) {
-      const hh = String(Math.floor(min / 60)).padStart(2, "0");
-      const mm = String(min % 60).padStart(2, "0");
-      out.push(`${hh}:${mm}`);
-    }
-    return out;
-  }, []);
-
-  return (
-    <section className="crm-card block-time-panel">
-      <h2 className="font-serif">Blocca Orario</h2>
-      <p className="slot-status">
-        Segna <strong>non disponibile</strong> a scatti di {OCCUPANCY_STEP_MINUTES} min (servizio esterno, permesso).
-        La pausa pranzo 13:00–14:00 è già esclusa. Puoi anche toccare «Non disp.» sulle celle libere in agenda.
-      </p>
-      <div className="block-time-presets" aria-label="Mezzore rapide">
-        {halfHourPresets.map((t) => (
-          <button
-            key={t}
-            type="button"
-            className={`btn btn-outline block-time-chip${start === t ? " is-on" : ""}`}
-            disabled={saving}
-            onClick={() => {
-              setStartAndHalfHour(t);
-              void saveBlock({
-                start: t,
-                end: addMinutesHhMm(t, OCCUPANCY_STEP_MINUTES),
-                label: "Non disponibile",
-              });
-            }}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-      <div className="block-time-form">
-        <label>
-          Data
-          <input className="input-lux" type="date" value={blockDate} onChange={(e) => setBlockDate(e.target.value)} />
-        </label>
-        <label>
-          Inizio
-          <input
-            className="input-lux"
-            type="time"
-            step={OCCUPANCY_STEP_MINUTES * 60}
-            value={start}
-            onChange={(e) => setStartAndHalfHour(e.target.value.slice(0, 5))}
-          />
-        </label>
-        <label>
-          Fine
-          <input
-            className="input-lux"
-            type="time"
-            step={OCCUPANCY_STEP_MINUTES * 60}
-            value={end}
-            onChange={(e) => setEnd(e.target.value.slice(0, 5))}
-          />
-        </label>
-        <label>
-          Barbiere
-          <select className="input-lux" value={barberId} onChange={(e) => setBarberId(e.target.value)}>
-            <option value="">Tutti</option>
-            {getRealBarbers().map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Motivo
-          <input className="input-lux" value={label} onChange={(e) => setLabel(e.target.value)} />
-        </label>
-        <button type="button" className="btn btn-gold" disabled={saving} onClick={() => void saveBlock()}>
-          {saving ? "…" : "Non disponibile"}
-        </button>
-      </div>
-      {error ? <p className="field-error">{error}</p> : null}
-      {dayBlocks.length ? (
-        <ul className="crm-list">
-          {dayBlocks.map((b) => (
-            <li key={b.id}>
-              <strong>
-                {b.start}–{b.end}
-              </strong>
-              <span>
-                {b.label || "Blocco"}
-                {b.barberId ? ` · ${b.barberId}` : " · tutti"}
-              </span>
-              <button type="button" className="btn btn-outline" onClick={() => void removeBlock(b.id)}>
-                Rimuovi
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="slot-status">Nessun blocco personalizzato per questa data.</p>
-      )}
-    </section>
-  );
 }
 
 function StatsView({
