@@ -32,10 +32,27 @@ describe("dual listino + consultation cart + reschedule notify", () => {
     expect(listino).toMatch(/ConsultationMiniCart/);
     expect(listino).toMatch(/Prenota sul calendario/);
     expect(listino).toMatch(/setOpen\(false\)/);
+    expect(listino).toMatch(/parkedRef|parked/);
+    expect(listino).toMatch(/scrollToBookingWizard|booking-wizard/);
     expect(listino).toMatch(/BOOKING_GO_CALENDAR_EVENT|polese-booking-go-calendar/);
     expect(listino).toMatch(/detail:\s*\{\s*ids:/);
     expect(listino).toMatch(/is-rise/);
     expect(CONSULTATION_SELECTION_SYNC_EVENT).toMatch(/consultation/);
+  });
+
+  it("go-calendar advances Fresha wizard to barber step synchronously", () => {
+    const wizard = readFileSync(
+      join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"),
+      "utf8",
+    );
+    expect(wizard).toMatch(/polese-booking-go-calendar/);
+    // Primary path (event with ids): sync setStep(2) — no microtask race.
+    expect(wizard).toMatch(
+      /if \(fromEvent\.length\) \{[\s\S]*?setStep\(2\);[\s\S]*?return;/,
+    );
+    expect(wizard).toMatch(/no microtask race/);
+    // Sync from listino must not force step 1 (would undo calendar CTA).
+    expect(wizard).toMatch(/Do not force step 1/);
   });
 
   it("reschedule copy mentions old and new times without inventing a second booking", () => {
