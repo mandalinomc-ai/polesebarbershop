@@ -1,7 +1,7 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { occupiesSlot } from "@/lib/appointments";
 import { SHOP_HOURS } from "@/lib/catalog";
-import { formatWallDate, formatWallTime, wallTimeToUtc } from "@/lib/availability";
+import { addDays, formatWallDate, formatWallTime, wallTimeToUtc } from "@/lib/availability";
 
 export const CONFLICT_NOTE = "[Da confermare: ex Davide — orario già occupato da Felice]";
 let maintenanceStarted = false;
@@ -57,7 +57,6 @@ export function findHoldingSlot(
   const dur = Math.max(5, durationMin);
   while (cursor + dur <= closeMin) {
     const endMin = cursor + dur;
-    // skip lunch 13:00–14:00
     if (!(endMin <= 13 * 60 || cursor >= 14 * 60)) {
       cursor += 15;
       continue;
@@ -69,6 +68,21 @@ export function findHoldingSlot(
     const hit = busy.some((b) => rangesOverlap(starts_at, ends_at, b.starts_at, b.ends_at));
     if (!hit) return { starts_at, ends_at };
     cursor += 15;
+  }
+  return null;
+}
+
+/** Search the original day then up to 21 following calendar days. */
+export function findHoldingSlotNearby(
+  startDay: string,
+  durationMin: number,
+  busy: Array<{ starts_at: string; ends_at: string }>,
+): { starts_at: string; ends_at: string; day: string } | null {
+  let day = startDay;
+  for (let i = 0; i < 22; i++) {
+    const hold = findHoldingSlot(day, durationMin, busy);
+    if (hold) return { ...hold, day };
+    day = addDays(day, 1);
   }
   return null;
 }
@@ -184,7 +198,7 @@ export async function runSoloFeliceMigration(): Promise<SoloFeliceMigrateResult>
 
     const day = formatWallDate(new Date(row.starts_at));
     const originalLabel = `${day} ${formatWallTime(new Date(row.starts_at))}`;
-    const hold = findHoldingSlot(day, durationMin, feliceBusy);
+    const hold = findHoldingSlotNearby(day, durationMin, feliceBusy);
     const notes = [
       row.notes?.trim(),
       CONFLICT_NOTE,
@@ -213,20 +227,32 @@ export async function runSoloFeliceMigration(): Promise<SoloFeliceMigrateResult>
           status: "pending",
         });
       } else {
+        await db.from("appointments").update({ status: "cancelled" }).eq("id", row.id);
         const { error: e2 } = await db
           .from("appointments")
-          .update({ status: "pending", notes })
+          .update({
+            barber_id: "felice",
+            status: "pending",
+            starts_at: hold.starts_at,
+            ends_at: hold.ends_at,
+            notes,
+            cancelled_at: null,
+          })
           .eq("id", row.id);
-        if (!e2) result.conflictsPending += 1;
-        else result.remainingDavide += 1;
+        if (!e2) {
+          result.conflictsPending += 1;
+          feliceBusy.push({
+            id: row.id,
+            starts_at: hold.starts_at,
+            ends_at: hold.ends_at,
+            status: "pending",
+          });
+        } else {
+          result.remainingDavide += 1;
+        }
       }
     } else {
-      const { error } = await db
-        .from("appointments")
-        .update({ status: "pending", notes })
-        .eq("id", row.id);
-      if (!error) result.conflictsPending += 1;
-      else result.remainingDavide += 1;
+      result.remainingDavide += 1;
     }
   }
 
@@ -237,7 +263,7 @@ export async function runSoloFeliceMigration(): Promise<SoloFeliceMigrateResult>
     .from("appointments")
     .select("id", { count: "exact", head: true })
     .eq("barber_id", "davide");
-  result.remainingDavide = Math.max(result.remainingDavide, count || 0);
+  result.remainingDavide = count || 0;
   if ((count || 0) === 0) maintenanceStarted = true;
   return result;
 }
