@@ -230,6 +230,10 @@ describe("public copy vs official identity", () => {
     expect(crm).toMatch(/Felice Offline/);
     expect(crm).not.toMatch(/Davide Offline/);
     expect(crm).toMatch(/Da confermare/);
+    expect(crm).toMatch(/Scegli orario/);
+    expect(crm).toMatch(/wantedTimeFromNotes|Orario richiesto/);
+    expect(crm).not.toMatch(/Gestisci orario/);
+    expect(crm).not.toMatch(/Appuntamenti ex Davide/);
     expect(crm).toMatch(/Incassi per barbiere/);
     expect(crm).toMatch(/getRealBarbers\(\)/);
     const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
