@@ -227,6 +227,11 @@ describe("public copy vs official identity", () => {
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);
     expect(crm).toMatch(/niente Twilio/);
+    expect(crm).toMatch(/Felice Offline/);
+    expect(crm).not.toMatch(/Davide Offline/);
+    expect(crm).toMatch(/Da confermare/);
+    expect(crm).toMatch(/Incassi per barbiere/);
+    expect(crm).toMatch(/getRealBarbers\(\)/);
     const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
@@ -260,7 +265,7 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/section-dark/);
   });
 
-  it("keeps bio+Felice video, then reels, then one listino and contact", () => {
+  it("keeps prenota first, then bio+Felice video, reels, social and contact", () => {
     const landing = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(landing).not.toMatch(/Consulenza in sede/);
     expect(landing).not.toMatch(/id="consulenza"/);
@@ -295,9 +300,10 @@ describe("public copy vs official identity", () => {
     const socialIdx = landing.indexOf('id="social"');
     const contactIdx = landing.indexOf('id="contact"');
     expect(aboutIdx).toBeGreaterThan(-1);
+    expect(prenotaIdx).toBeGreaterThan(-1);
+    expect(prenotaIdx).toBeLessThan(aboutIdx);
     expect(videoIdx).toBeGreaterThan(aboutIdx);
-    expect(prenotaIdx).toBeGreaterThan(videoIdx);
-    expect(socialIdx).toBeGreaterThan(prenotaIdx);
+    expect(socialIdx).toBeGreaterThan(videoIdx);
     expect(contactIdx).toBeGreaterThan(socialIdx);
     expect(landing).toMatch(/SocialQrGrid/);
     expect(landing).toMatch(/Resta in contatto/);
@@ -308,7 +314,11 @@ describe("public copy vs official identity", () => {
     expect(wizard).toMatch(/BOOKING_SERVICE_EVENT/);
     expect(wizard).toMatch(/Seleziona i servizi per aggiungerli o rimuoverli/);
     expect(wizard).not.toMatch(/nel wizard/i);
-    expect(wizard).toMatch(/Qualsiasi disponibilità/);
+    expect(wizard).toMatch(/getRealBarbers\(\)/);
+    expect(wizard).toMatch(/useState\("felice"\)/);
+    expect(wizard).toMatch(/>Felice</);
+    expect(wizard).toMatch(/Poltrona unica/);
+    expect(wizard).not.toMatch(/Davide/);
     expect(wizard).toMatch(/booking-note-headline/);
     expect(wizard).toMatch(/booking-note-blocks/);
     expect(wizard).toMatch(/booking-note-block/);
@@ -404,12 +414,15 @@ describe("public copy vs official identity", () => {
     expect(SITE.hours.tuesday).toBe("Mar · 09:00 — 19:00");
     expect(SITE.hours.wednesday).toBe("Mer · 09:00 — 19:00");
     expect(SITE.hours.thursday).toBe("Gio · 09:00 — 20:00");
-    expect(SITE.hours.friday).toBe("Ven · 09:00 — 21:00");
-    expect(SITE.hours.saturday).toBe("Sab · 09:00 — 21:00");
+    expect(SITE.hours.friday).toBe("Ven · 09:00 — 20:00");
+    expect(SITE.hours.saturday).toBe("Sab · 09:00 — 20:00");
     expect(SITE.hours.sunday).toMatch(/Chiuso/);
     expect(SITE.hours.weekdays).toMatch(/09:00/);
     expect(SITE.hours.weekdays).toMatch(/09:00—19:00/);
-    expect(SITE.hours.weekdays).toMatch(/09:00—21:00/);
+    expect(SITE.hours.weekdays).toMatch(/09:00—20:00/);
+    expect(SITE.hours.weekdays).toBe(
+      "Lun–Mer 09:00—19:00 · Gio–Sab 09:00—20:00 · Dom chiuso",
+    );
     expect(SITE.instagramHandle).toBe("@felicepolese_barber");
     expect(SITE.instagram).toBe("https://instagram.com/felicepolese_barber");
     expect(getWhatsAppChatUrl()).toBe("https://wa.me/393270156225");

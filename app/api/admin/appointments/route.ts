@@ -21,7 +21,7 @@ import {
 import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
 import { isPaidStatus } from "@/lib/crm";
 import { buildStaffCancelCopy, buildStaffRescheduleCopy, waMeUrl } from "@/lib/crm-notify";
-import { getBarber } from "@/lib/catalog";
+import { barberDisplayName } from "@/lib/catalog";
 import { sendEmail, staffCancelCustomerEmail, staffRescheduleCustomerEmail } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
 import { SITE, getSiteUrl, getIcsUidDomain } from "@/lib/site-config";
@@ -56,7 +56,7 @@ function serialize(row: AppointmentRow) {
     id: row.id,
     status: row.status,
     barberId: row.barber_id,
-    barberName: getBarber(row.barber_id)?.name || row.barber_id,
+    barberName: barberDisplayName(row.barber_id),
     serviceNames: namesFromSnapshot(row.services_snapshot),
     firstName: row.customer_first_name,
     lastName: row.customer_last_name,
@@ -186,7 +186,7 @@ async function notifyClientOfStaffCancel(row: AppointmentRow) {
   const dateLabel = formatItalianDate(formatWallDate(start));
   const timeLabel = formatWallTime(start);
   const serviceNames = namesFromSnapshot(row.services_snapshot);
-  const barberName = getBarber(row.barber_id)?.name || row.barber_id;
+  const barberName = barberDisplayName(row.barber_id);
   const copy = buildStaffCancelCopy({
     firstName: row.customer_first_name,
     serviceNames,
@@ -265,7 +265,7 @@ async function notifyClientOfStaffReschedule(
   const newDateLabel = formatItalianDate(formatWallDate(newStart));
   const newTimeLabel = formatWallTime(newStart);
   const serviceNames = namesFromSnapshot(updated.services_snapshot);
-  const barberName = getBarber(updated.barber_id)?.name || updated.barber_id;
+  const barberName = barberDisplayName(updated.barber_id);
   const copy = buildStaffRescheduleCopy({
     firstName: updated.customer_first_name,
     serviceNames,

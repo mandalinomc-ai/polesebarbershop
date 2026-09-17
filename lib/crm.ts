@@ -1,6 +1,6 @@
 import { addDays, formatWallDate, formatWallTime, mondayOfWeek } from "@/lib/availability";
 import { namesFromSnapshot } from "@/lib/appointments";
-import { getBarber } from "@/lib/catalog";
+import { barberDisplayName } from "@/lib/catalog";
 
 export type CrmAppointment = {
   id: string;
@@ -519,7 +519,7 @@ export function aggregateStats(
       totalCents += appt.priceCents;
       const barber = barberTakings.get(appt.barberId) || {
         barberId: appt.barberId,
-        name: appt.barberName || getBarber(appt.barberId)?.name || appt.barberId,
+        name: appt.barberName || barberDisplayName(appt.barberId),
         cents: 0,
         count: 0,
       };
@@ -592,7 +592,7 @@ export function toCrmAppointment(row: {
     id: row.id,
     status: row.status,
     barberId: row.barber_id,
-    barberName: getBarber(row.barber_id)?.name || row.barber_id,
+    barberName: barberDisplayName(row.barber_id),
     serviceIds: row.service_ids || [],
     serviceNames: namesFromSnapshot(row.services_snapshot),
     firstName: row.customer_first_name,

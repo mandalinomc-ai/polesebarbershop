@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
@@ -18,6 +18,17 @@ import {
 } from "@/lib/site-config";
 
 const BOOKING_GO_CALENDAR_EVENT = "polese-booking-go-calendar";
+
+/** Scroll to the wizard (barber/date/time), not the listino above it on mobile. */
+function scrollToBookingWizard() {
+  const target =
+    document.getElementById("booking-wizard") ||
+    document.querySelector(".booking-flow-wrap") ||
+    document.getElementById("prenota") ||
+    document.querySelector(".booking-layout") ||
+    document.getElementById("main-content");
+  target?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 function broadcastOnline(ids: string[]) {
   window.dispatchEvent(new CustomEvent(BOOKING_SELECTION_SYNC_EVENT, { detail: ids }));
@@ -147,11 +158,7 @@ export function ServiceListino() {
           window.dispatchEvent(
             new CustomEvent(BOOKING_GO_CALENDAR_EVENT, { detail: { ids: next } }),
           );
-          const target =
-            document.getElementById("prenota") ||
-            document.querySelector(".booking-layout") ||
-            document.getElementById("main-content");
-          target?.scrollIntoView({ behavior: "smooth", block: "start" });
+          scrollToBookingWizard();
         }
       });
       return next;
@@ -205,11 +212,12 @@ export function MiniCartDock() {
   );
 }
 
-/** Magnetic cart — calendar booking. Opens automatically on selection. */
+/** Magnetic cart — calendar booking. Parks (collapsed) when entering the wizard. */
 export function BookingMiniCart() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [riseKey, setRiseKey] = useState(0);
+  const parkedRef = useRef(false);
 
   useEffect(() => {
     const onSync = (event: Event) => {
@@ -217,14 +225,23 @@ export function BookingMiniCart() {
       if (!Array.isArray(ids)) return;
       const next = ids.filter((id) => !isWhatsAppOnlyService(id));
       setSelectedIds(next);
-      if (next.length) {
-        setOpen(true);
-        setRiseKey((k) => k + 1);
-      } else {
+      if (!next.length) {
+        parkedRef.current = false;
         setOpen(false);
+        return;
       }
+      // Stay parked after «Prenota sul calendario» — sync echo must not reopen the panel.
+      if (parkedRef.current) {
+        setOpen(false);
+        return;
+      }
+      setOpen(true);
+      setRiseKey((k) => k + 1);
     };
-    const onGoCalendar = () => setOpen(false);
+    const onGoCalendar = () => {
+      parkedRef.current = true;
+      setOpen(false);
+    };
     window.addEventListener(BOOKING_SELECTION_SYNC_EVENT, onSync);
     window.addEventListener(BOOKING_GO_CALENDAR_EVENT, onGoCalendar);
     return () => {
@@ -241,15 +258,12 @@ export function BookingMiniCart() {
   if (!items.length) return null;
 
   function goBook() {
+    parkedRef.current = true;
     setOpen(false);
     window.dispatchEvent(
       new CustomEvent(BOOKING_GO_CALENDAR_EVENT, { detail: { ids: selectedIds } }),
     );
-    const target =
-      document.getElementById("prenota") ||
-      document.querySelector(".booking-layout") ||
-      document.getElementById("main-content");
-    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollToBookingWizard();
   }
 
   function remove(id: string) {
@@ -268,7 +282,13 @@ export function BookingMiniCart() {
       <button
         type="button"
         className="booking-mini-cart-toggle"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => {
+            const next = !v;
+            if (next) parkedRef.current = false;
+            return next;
+          });
+        }}
         aria-expanded={open}
       >
         <span>

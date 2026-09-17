@@ -10,8 +10,8 @@ export const SHOP_HOURS: Record<number, DayHours> = {
   2: { open: "09:00", close: "19:00" },
   3: { open: "09:00", close: "19:00" },
   4: { open: "09:00", close: "20:00" },
-  5: { open: "09:00", close: "21:00" },
-  6: { open: "09:00", close: "21:00" },
+  5: { open: "09:00", close: "20:00" },
+  6: { open: "09:00", close: "20:00" },
 };
 
 export type ServiceCategory = "capelli" | "barba" | "colore";
@@ -238,20 +238,27 @@ export const ANYONE_BARBER_ID = "anyone";
 export const BARBERS: Barber[] = [
   {
     id: ANYONE_BARBER_ID,
-    name: "Qualsiasi disponibilità",
-    title: "Assegniamo la poltrona libera tra Felice e Davide",
+    name: "Felice",
+    title: "Poltrona di Felice",
     virtual: true,
     hours: SHOP_HOURS,
   },
   { id: "felice", name: "Felice", title: "Master barber · " + SITE.name, virtual: false, hours: SHOP_HOURS },
-  { id: "davide", name: "Davide", title: "Barber · poltrona indipendente", virtual: false, hours: SHOP_HOURS },
 ];
+
+/** Display name for archived / legacy barber ids still present on old rows. */
+export const ARCHIVED_BARBER_LABEL: Record<string, string> = {
+  davide: "Davide (archiviato)",
+};
 
 export function getService(id: string) {
   return SERVICES.find((s) => s.id === id);
 }
 export function getBarber(id: string) {
   return BARBERS.find((b) => b.id === id);
+}
+export function barberDisplayName(id: string): string {
+  return getBarber(id)?.name || ARCHIVED_BARBER_LABEL[id] || id;
 }
 export function getRealBarbers(barbers: Barber[] = BARBERS) {
   return barbers.filter((b) => !b.virtual);

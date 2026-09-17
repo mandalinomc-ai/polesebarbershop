@@ -51,7 +51,7 @@ describe("production official durations (all 10)", () => {
     expect(endMs).toBeLessThanOrEqual(close);
   });
 
-  it("sums multi-service Taglio Pro + Barba Pro (WA-only combo) and keeps chairs independent", () => {
+  it("sums multi-service Taglio Pro + Barba Pro (WA-only combo); solo Felice blocks anyone too", () => {
     const services = resolveServices(["taglio-pro", "barba-pro"])!;
     expect(totalsForServices(services).durationMin).toBe(50);
     // Taglio Pro is WhatsApp-only — online cart blocks; gestionale still uses duration.
@@ -61,22 +61,24 @@ describe("production official durations (all 10)", () => {
 
     const busyStart = wallTimeToUtc(TUESDAY, "10:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "10:50"); // 50 + 0 buffer
+    const appointments = [{ barberId: "felice" as const, startsAt: busyStart, endsAt: busyEnd }];
     const felice = getAvailableSlots({
       date: TUESDAY,
       barberId: "felice",
       durationMinutes: duration,
       now,
-      appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
+      appointments,
     });
-    const davide = getAvailableSlots({
+    const anyone = getAvailableSlots({
       date: TUESDAY,
-      barberId: "davide",
+      barberId: "anyone",
       durationMinutes: duration,
       now,
-      appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
+      appointments,
     });
     expect(felice.map((s) => s.label)).not.toContain("10:00");
-    expect(davide.map((s) => s.label)).toContain("10:00");
+    expect(anyone.map((s) => s.label)).not.toContain("10:00");
+    expect(anyone.find((s) => s.label === "10:50")?.barberId).toBe("felice");
   });
 });
 

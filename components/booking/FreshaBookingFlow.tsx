@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  BARBERS,
+  getBarber,
+  getRealBarbers,
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
   SERVICES,
@@ -93,7 +94,7 @@ export function FreshaBookingFlow({
 }) {
   const [step, setStep] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [barberId, setBarberId] = useState("anyone");
+  const [barberId, setBarberId] = useState("felice");
   const firstBookable = useMemo(() => getFirstBookableDate(), []);
   const days = useMemo(() => listOpenDayChips(BOOKING_UI_DAYS), []);
   const [date, setDate] = useState(days[0]?.date || firstBookable);
@@ -148,7 +149,7 @@ export function FreshaBookingFlow({
     () => onlineBookingBlockReason(selectedServices),
     [selectedServices],
   );
-  const barber = BARBERS.find((b) => b.id === barberId);
+  const barber = getBarber(barberId);
 
   useEffect(() => {
     const apply = (iso: string | null) => {
@@ -204,12 +205,14 @@ export function FreshaBookingFlow({
         ? detail.ids.filter(
             (id) => SERVICES.some((s) => s.id === id) && !isWhatsAppOnlyService(id),
           )
-        : null;
-      if (fromEvent?.length) {
+        : [];
+      if (fromEvent.length) {
         setSelectedIds(fromEvent);
-        queueMicrotask(() => setStep(2));
+        // Sync: barber step immediately — no microtask race with selection sync.
+        setStep(2);
         return;
       }
+      // Legacy callers without ids: advance only if wizard already has bookable selection.
       setSelectedIds((curr) => {
         const services = SERVICES.filter((s) => curr.includes(s.id));
         if (curr.length && servicesAreOnlineBookable(services)) {
@@ -658,7 +661,7 @@ export function FreshaBookingFlow({
           <>
             <h3>Scegli il barbiere</h3>
             <div className="barber-grid">
-              {BARBERS.map((b) => (
+              {getRealBarbers().map((b) => (
                 <button
                   key={b.id}
                   type="button"
@@ -999,9 +1002,9 @@ export function BookingSectionNote() {
           <p className="booking-note-sub">Apertura ufficiale</p>
         </div>
         <div className="booking-note-block" role="listitem">
-          <span className="booking-note-label">Barbieri</span>
-          <p>Felice · Davide</p>
-          <p className="booking-note-sub">o Qualsiasi disponibilità</p>
+          <span className="booking-note-label">Barbiere</span>
+          <p>Felice</p>
+          <p className="booking-note-sub">Poltrona unica</p>
         </div>
         <div className="booking-note-block" role="listitem">
           <span className="booking-note-label">Disponibilità</span>

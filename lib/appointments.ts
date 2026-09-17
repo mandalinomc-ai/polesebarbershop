@@ -1,5 +1,5 @@
 import { formatItalianDate, formatWallDate, formatWallTime, wallTimeToUtc } from "@/lib/availability";
-import { getBarber, type Service } from "@/lib/catalog";
+import { barberDisplayName, type Service } from "@/lib/catalog";
 import { effectiveServiceDurationMin, CALENDAR_UNAVAILABLE_IT } from "@/lib/booking";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/supabase-query";
@@ -148,7 +148,7 @@ export function publicAppointment(row: AppointmentRow) {
     email: row.customer_email,
     phone: row.customer_phone,
     barberId: row.barber_id,
-    barberName: getBarber(row.barber_id)?.name || row.barber_id,
+    barberName: barberDisplayName(row.barber_id),
     serviceNames: namesFromSnapshot(row.services_snapshot),
     durationMinutes: row.duration_min,
     durationOverrideMin: row.duration_override_min ?? null,

@@ -12,17 +12,20 @@ import {
   resolveServices,
   getBarber,
   BARBERS,
+  SHOP_HOURS,
   isBookableServiceId,
   servicesAreOnlineBookable,
 } from "./catalog";
 
 describe("catalog", () => {
-  it("contains Felice and Davide as distinct chairs plus Qualsiasi disponibilità", () => {
-    expect(BARBERS.map((b) => b.id).sort()).toEqual(["anyone", "davide", "felice"].sort());
+  it("contains only Felice as real chair (anyone is virtual alias)", () => {
+    expect(BARBERS.map((b) => b.id).sort()).toEqual(["anyone", "felice"].sort());
     expect(getBarber("felice")?.virtual).toBe(false);
-    expect(getBarber("davide")?.virtual).toBe(false);
+    expect(getBarber("davide")).toBeUndefined();
     expect(getBarber("anyone")?.virtual).toBe(true);
-    expect(getBarber("anyone")?.name).toBe("Qualsiasi disponibilità");
+    expect(getBarber("anyone")?.name).toBe("Felice");
+    expect(SHOP_HOURS[5]?.close).toBe("20:00");
+    expect(SHOP_HOURS[6]?.close).toBe("20:00");
   });
 
   it("lists exactly the 10 official listino services with fixed operational durations", () => {

@@ -41,17 +41,17 @@ export const SITE = {
     tuesday: "Mar · 09:00 — 19:00",
     wednesday: "Mer · 09:00 — 19:00",
     thursday: "Gio · 09:00 — 20:00",
-    friday: "Ven · 09:00 — 21:00",
-    saturday: "Sab · 09:00 — 21:00",
+    friday: "Ven · 09:00 — 20:00",
+    saturday: "Sab · 09:00 — 20:00",
     sunday: "Dom · Chiuso",
     weekdays:
-      "Lun–Mer 09:00—19:00 · Gio 09:00—20:00 · Ven–Sab 09:00—21:00 · Dom chiuso",
+      "Lun–Mer 09:00—19:00 · Gio–Sab 09:00—20:00 · Dom chiuso",
   },
   seo: {
     keywords:
-      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Davide, Corso Dante Alighieri 44",
+      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Corso Dante Alighieri 44",
     description:
-      "Felice Polese Barber Shop — Felice e Davide. Barberia d'élite a Benevento, Corso Dante Alighieri, 44. Prenota online.",
+      "Felice Polese Barber Shop — barberia d'élite a Benevento, Corso Dante Alighieri, 44. Prenota online.",
   },
 } as const;
 
@@ -282,7 +282,7 @@ export const SALON_CONTACT = {
   id: "scrivici",
   title: "Scrivici",
   eyebrow: "Contatti",
-  body: "Info, orari, prezzi o un consiglio — Felice e Davide rispondono dal salone su WhatsApp o email.",
+  body: "Info, orari, prezzi o un consiglio — Felice risponde dal salone su WhatsApp o email.",
   cta: "WhatsApp",
   prefill: SALON_CONTACT_MESSAGE,
 } as const;

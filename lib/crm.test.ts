@@ -42,8 +42,8 @@ describe("CRM stats aggregation", () => {
       lastName: "Bianchi",
       phone: "+393339998877",
       email: "luca@example.com",
-      barberId: "davide",
-      barberName: "Davide",
+      barberId: "felice",
+      barberName: "Felice",
       serviceIds: ["barba-standard"],
       serviceNames: "Rifinitura barba",
       isWalkIn: true,
@@ -73,8 +73,8 @@ describe("CRM stats aggregation", () => {
     expect(stats.mostFrequentServices[0]?.count).toBe(1);
     expect(stats.takings.dayCents).toBe(500);
     expect(stats.takings.weekCents).toBe(2000);
-    expect(stats.takingsByBarber.find((b) => b.barberId === "davide")?.cents).toBe(500);
-    expect(stats.takingsByBarber.find((b) => b.barberId === "felice")?.cents).toBe(1500);
+    expect(stats.takingsByBarber.find((b) => b.barberId === "felice")?.cents).toBe(2000);
+    expect(stats.takingsByBarber.map((b) => b.barberId)).toEqual(["felice"]);
   });
 
   it("returns empty-state zeros with no appointments", () => {

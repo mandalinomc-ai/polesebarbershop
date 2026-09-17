@@ -296,7 +296,7 @@ describe("smart engine integration", () => {
     expect(ten?.blockEndIso).toBe(wallTimeToUtc(TUESDAY, "10:50").toISOString());
   });
 
-  it("assigns the free chair when anyone is selected", () => {
+  it("anyone has no slot when Felice (only chair) is busy", () => {
     const busyStart = wallTimeToUtc(TUESDAY, "11:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "11:55");
     const slot = getAvailableSlots({
@@ -306,7 +306,15 @@ describe("smart engine integration", () => {
       now: nowBefore,
       appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
     }).find((s) => s.label === "11:00");
-    expect(slot?.barberId).toBe("davide");
+    expect(slot).toBeUndefined();
+    const free = getAvailableSlots({
+      date: TUESDAY,
+      barberId: "anyone",
+      durationMinutes: 50,
+      now: nowBefore,
+      appointments: [],
+    }).find((s) => s.label === "11:00");
+    expect(free?.barberId).toBe("felice");
   });
 
   it("returns no slots on closed Sunday", () => {

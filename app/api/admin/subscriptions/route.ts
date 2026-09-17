@@ -120,7 +120,7 @@ export async function POST(request: Request) {
 
   const barber = getBarber(body.barberId);
   if (!barber || barber.virtual) {
-    return NextResponse.json({ error: "Seleziona Felice o Davide." }, { status: 400 });
+    return NextResponse.json({ error: "Seleziona Felice." }, { status: 400 });
   }
 
   const services = await resolveRuntimeServices(body.serviceIds);

@@ -1,6 +1,6 @@
 import { formatWallDate, formatWallTime } from "@/lib/availability";
 import { namesFromSnapshot } from "@/lib/appointments";
-import { getBarber } from "@/lib/catalog";
+import { barberDisplayName } from "@/lib/catalog";
 import type { AppointmentRow } from "@/lib/supabase";
 
 export const CRM_BELL_SEEN_KEY = "fp-gestionale-bell-seen-v1";
@@ -23,7 +23,7 @@ export type CrmNotification = {
 export function notificationFromAppointment(row: AppointmentRow): CrmNotification {
   const name = `${row.customer_first_name} ${row.customer_last_name}`.trim() || "Cliente";
   const services = namesFromSnapshot(row.services_snapshot) || "Servizio";
-  const barber = getBarber(row.barber_id)?.name || row.barber_id;
+  const barber = barberDisplayName(row.barber_id);
   const start = new Date(row.starts_at);
   const date = formatWallDate(start);
   const when = `${date} ${formatWallTime(start)}`;

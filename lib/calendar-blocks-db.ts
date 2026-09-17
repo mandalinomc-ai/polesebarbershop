@@ -131,7 +131,7 @@ export async function deleteCalendarBlock(
 }
 
 /**
- * Full-day offline for one real barber (Felice / Davide).
+ * Full-day offline for Felice (sole real chair).
  * Uses calendar_blocks so public availability + gestionale share the same source.
  */
 export async function setOperatorOfflineDay(input: {
@@ -143,7 +143,7 @@ export async function setOperatorOfflineDay(input: {
   | { ok: false; error: string }
 > {
   if (!isRealOperatorId(input.barberId)) {
-    return { ok: false, error: "Seleziona Felice o Davide." };
+    return { ok: false, error: "Seleziona Felice." };
   }
   const hours = shopHoursForDate(input.date);
   if (!hours) {
