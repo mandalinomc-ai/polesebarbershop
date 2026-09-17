@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   BarChart3,
   CalendarDays,
@@ -136,6 +137,70 @@ function wantedTimeFromNotes(notes?: string | null): string | null {
 
 function pct(n: number) {
   return `${(n * 100).toLocaleString("it-IT", { maximumFractionDigits: 1 })} %`;
+}
+
+/** Bottom tabs pinned to the visual viewport (iOS Safari safe). */
+function CrmBottomNav({
+  tab,
+  onTab,
+}: {
+  tab: Tab;
+  onTab: (id: Tab) => void;
+}) {
+  const navRef = useRef<HTMLElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    document.documentElement.classList.add("crm-gestionale");
+    document.body.classList.add("crm-gestionale");
+    const nav = () => navRef.current;
+    const sync = () => {
+      const el = nav();
+      if (!el) return;
+      const vv = window.visualViewport;
+      if (!vv) {
+        el.style.transform = "translate3d(0,0,0)";
+        return;
+      }
+      // Keep bar glued to the visible bottom when Safari chrome resizes/scrolls.
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      el.style.transform = `translate3d(0, ${-inset}px, 0)`;
+    };
+    sync();
+    window.visualViewport?.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("scroll", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      document.documentElement.classList.remove("crm-gestionale");
+      document.body.classList.remove("crm-gestionale");
+      window.visualViewport?.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, []);
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
+    <nav ref={navRef} className="crm-bottom" aria-label="Sezioni gestionale">
+      {TABS.map((t) => {
+        const Icon = t.icon;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            className={tab === t.id ? "active" : ""}
+            onClick={() => onTab(t.id)}
+          >
+            <Icon size={18} aria-hidden />
+            {t.label}
+          </button>
+        );
+      })}
+    </nav>,
+    document.body,
+  );
 }
 
 export function GestionalePanel() {
@@ -610,17 +675,7 @@ export function GestionalePanel() {
         ) : null}
       </div>
 
-      <nav className="crm-bottom" aria-label="Sezioni gestionale">
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          return (
-            <button key={t.id} type="button" className={tab === t.id ? "active" : ""} onClick={() => setTab(t.id)}>
-              <Icon size={18} aria-hidden />
-              {t.label}
-            </button>
-          );
-        })}
-      </nav>
+      <CrmBottomNav tab={tab} onTab={setTab} />
 
       {walkOpen ? (
         <WalkInModal
