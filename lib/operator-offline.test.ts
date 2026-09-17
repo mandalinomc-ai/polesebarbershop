@@ -13,7 +13,7 @@ describe("operator offline", () => {
     expect(shopHoursForDate("2026-09-13")).toBeNull(); // Sun
   });
 
-  it("detects offline blocks per barber", () => {
+  it("detects offline blocks for Felice only", () => {
     const blocks = [
       {
         id: "1",
@@ -26,13 +26,13 @@ describe("operator offline", () => {
       },
     ];
     expect(isOperatorOfflineBlock(blocks[0]!, "2026-09-15", "felice")).toBe(true);
-    expect(isOperatorOfflineBlock(blocks[0]!, "2026-09-15", "davide")).toBe(false);
+    expect(isOperatorOfflineBlock(blocks[0]!, "2026-09-15", "anyone")).toBe(false);
     expect(offlineOperatorsForDate(blocks, "2026-09-15").map((o) => o.barberId)).toEqual([
       "felice",
     ]);
   });
 
-  it("marks occupancy cells blocked for offline barber", () => {
+  it("marks occupancy cells blocked for offline Felice (sole chair)", () => {
     const grid = getOccupancyGrid({
       date: "2026-09-15",
       appointments: [],
@@ -48,11 +48,8 @@ describe("operator offline", () => {
         },
       ],
     });
-    const feliceCells = grid.flatMap((r) => r.cells.filter((c) => c.barberId === "felice"));
-    const davideFree = grid.some((r) =>
-      r.cells.some((c) => c.barberId === "davide" && !c.occupied),
-    );
-    expect(feliceCells.every((c) => c.occupied && c.blocked)).toBe(true);
-    expect(davideFree).toBe(true);
+    const allCells = grid.flatMap((r) => r.cells);
+    expect(allCells.every((c) => c.barberId === "felice")).toBe(true);
+    expect(allCells.every((c) => c.occupied && c.blocked)).toBe(true);
   });
 });

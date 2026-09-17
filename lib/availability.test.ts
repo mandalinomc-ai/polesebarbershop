@@ -35,7 +35,7 @@ describe("timezone helpers", () => {
 describe("getAvailableSlots", () => {
   it("returns no slots on Sunday or before opening", () => {
     expect(getAvailableSlots({ date: MONDAY_PRE_OPENING, barberId: "felice", durationMinutes: 25, now: nowBeforeOpening })).toEqual([]);
-    expect(getAvailableSlots({ date: SUNDAY, barberId: "davide", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
+    expect(getAvailableSlots({ date: SUNDAY, barberId: "felice", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
     expect(getAvailableSlots({ date: "2026-08-29", barberId: "felice", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
   });
   it("generates Monday slots from 09:00; last 25-min (no buffer) slot is 18:35", () => {
@@ -49,29 +49,28 @@ describe("getAvailableSlots", () => {
     expect(slots.at(-1)?.label).toBe("18:35");
     expect(slots.every((s) => s.barberId === "felice")).toBe(true);
   });
-  it("blocks overlap but allows adjacent and anyone uses the free chair", () => {
+  it("blocks overlap but allows adjacent; anyone has no slot when Felice is busy", () => {
     const busyStart = wallTimeToUtc(TUESDAY, "10:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "10:25");
     const felice = getAvailableSlots({ date: TUESDAY, barberId: "felice", durationMinutes: 25, now: nowBeforeOpening, appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }] });
     expect(felice.map((s) => s.label)).not.toContain("10:00");
     expect(felice.map((s) => s.label)).toContain("10:25");
     const anyone = getAvailableSlots({ date: TUESDAY, barberId: "anyone", durationMinutes: 25, now: nowBeforeOpening, barbers: BARBERS, appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }] });
-    expect(anyone.find((s) => s.label === "10:00")?.barberId).toBe("davide");
+    expect(anyone.find((s) => s.label === "10:00")).toBeUndefined();
   });
-  it("hides a slot when both chairs are busy", () => {
+  it("hides a slot when the only chair (Felice) is busy", () => {
     const busyStart = wallTimeToUtc(TUESDAY, "11:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "11:25");
     const anyone = getAvailableSlots({
       date: TUESDAY, barberId: "anyone", durationMinutes: 25, now: nowBeforeOpening,
       appointments: [
         { barberId: "felice", startsAt: busyStart, endsAt: busyEnd },
-        { barberId: "davide", startsAt: busyStart, endsAt: busyEnd },
       ],
     });
     expect(anyone.map((s) => s.label)).not.toContain("11:00");
   });
 
-  it("a 30 min booking at 10:00 blocks overlapping starts on the same barber, not the other chair", () => {
+  it("a 30 min booking at 10:00 blocks overlapping starts; anyone has no alternate chair", () => {
     const busyStart = wallTimeToUtc(TUESDAY, "10:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "10:30");
     const appointments = [{ barberId: "felice" as const, startsAt: busyStart, endsAt: busyEnd }];
@@ -86,16 +85,6 @@ describe("getAvailableSlots", () => {
     expect(felice).not.toContain("10:00");
     expect(felice).not.toContain("10:15");
     expect(felice).toContain("10:30");
-    const davide = getAvailableSlots({
-      date: TUESDAY,
-      barberId: "davide",
-      durationMinutes: 30,
-      now: nowBeforeOpening,
-      appointments,
-      fullSearch: true,
-    }).map((s) => s.label);
-    expect(davide).toContain("10:00");
-    expect(davide).toContain("10:15");
     const anyone = getAvailableSlots({
       date: TUESDAY,
       barberId: "anyone",
@@ -104,10 +93,11 @@ describe("getAvailableSlots", () => {
       appointments,
       fullSearch: true,
     });
-    expect(anyone.find((s) => s.label === "10:00")).toMatchObject({
+    expect(anyone.find((s) => s.label === "10:00")).toBeUndefined();
+    expect(anyone.find((s) => s.label === "10:30")).toMatchObject({
       available: true,
       booked: false,
-      barberId: "davide",
+      barberId: "felice",
     });
   });
 
@@ -152,7 +142,7 @@ describe("getScheduleSlots occupancy grid", () => {
     });
   });
 
-  it("marks anyone-slot booked only when both chairs are busy", () => {
+  it("omits anyone-slot when Felice (only chair) is busy", () => {
     const busyStart = wallTimeToUtc(TUESDAY, "11:00");
     const busyEnd = wallTimeToUtc(TUESDAY, "11:25");
     const oneBusy = getScheduleSlots({
@@ -163,24 +153,19 @@ describe("getScheduleSlots occupancy grid", () => {
       appointments: [{ barberId: "felice", startsAt: busyStart, endsAt: busyEnd }],
       fullSearch: true,
     });
-    expect(oneBusy.find((s) => s.label === "11:00")).toMatchObject({
-      available: true,
-      booked: false,
-      barberId: "davide",
-    });
-    const bothBusy = getAvailableSlots({
+    // Free-windows engine: no invented booked micro-slot — start simply absent.
+    expect(oneBusy.find((s) => s.label === "11:00")).toBeUndefined();
+    const busy = getAvailableSlots({
       date: TUESDAY,
       barberId: "anyone",
       durationMinutes: 25,
       now: nowBeforeOpening,
       appointments: [
         { barberId: "felice", startsAt: busyStart, endsAt: busyEnd },
-        { barberId: "davide", startsAt: busyStart, endsAt: busyEnd },
       ],
       fullSearch: true,
     });
-    // Free-windows engine: no invented booked micro-slot — start simply absent.
-    expect(bothBusy.find((s) => s.label === "11:00")).toBeUndefined();
+    expect(busy.find((s) => s.label === "11:00")).toBeUndefined();
   });
 
   it("does not invent a booked grid on closed days or before opening", () => {
@@ -214,13 +199,13 @@ describe("getOccupancyGrid", () => {
     expect(grid[0]?.time).toBe("09:00");
     const ten = grid.find((row) => row.time === "10:00");
     const tenThirty = grid.find((row) => row.time === "10:30");
+    expect(ten?.cells.map((c) => c.barberId)).toEqual(["felice"]);
     expect(ten?.cells.find((c) => c.barberId === "felice")).toMatchObject({
       occupied: true,
       label: "Mario Rossi",
       rowSpan: 1,
       skip: false,
     });
-    expect(ten?.cells.find((c) => c.barberId === "davide")?.occupied).toBe(false);
     expect(tenThirty?.cells.find((c) => c.barberId === "felice")?.occupied).toBe(false);
     expect(getOccupancyGrid({ date: SUNDAY })).toEqual([]);
     expect(getOccupancyGrid({ date: MONDAY_OPEN })[0]?.time).toBe("09:00");
