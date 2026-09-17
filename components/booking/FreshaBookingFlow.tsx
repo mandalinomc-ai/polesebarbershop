@@ -99,6 +99,7 @@ export function FreshaBookingFlow({
   const [date, setDate] = useState(days[0]?.date || firstBookable);
   const [month, setMonth] = useState(startOfMonth(days[0]?.date || firstBookable));
   const [slots, setSlots] = useState<ApiSlot[]>([]);
+  const [lastMinuteSlots, setLastMinuteSlots] = useState<ApiSlot[]>([]);
   const [dayOccupancy, setDayOccupancy] = useState<Record<string, DayOccupancyChip>>(
     {},
   );
@@ -230,6 +231,7 @@ export function FreshaBookingFlow({
       const res = await fetch(`/api/availability?${params.toString()}`);
       const json = (await res.json()) as {
         slots?: ApiSlot[];
+        lastMinuteSlots?: ApiSlot[];
         days?: { date: string; full?: boolean }[];
         error?: string;
         warning?: string;
@@ -237,6 +239,7 @@ export function FreshaBookingFlow({
       };
       if (!res.ok || json.sourceUnavailable) {
         setSlots([]);
+        setLastMinuteSlots([]);
         setSlot(null);
         setSlotsState("error");
         setSlotsWarning(
@@ -248,10 +251,21 @@ export function FreshaBookingFlow({
       const incoming = Array.isArray(json.slots) ? json.slots : [];
       // Smart available starts only — no endless booked micro-slots.
       const availableOnly = incoming.filter((s) => !isSlotTaken(s));
+      const lastMinuteIncoming = Array.isArray(json.lastMinuteSlots)
+        ? json.lastMinuteSlots.filter((s) => !isSlotTaken(s))
+        : [];
+      // Avoid duplicating a start already shown in the half-hour grid.
+      const regularStarts = new Set(availableOnly.map((s) => s.start));
+      const lastMinuteOnly = lastMinuteIncoming.filter(
+        (s) => !regularStarts.has(s.start),
+      );
       setSlots(availableOnly);
+      setLastMinuteSlots(lastMinuteOnly);
       setSlot((curr) => {
         if (!curr) return curr;
-        const match = availableOnly.find((s) => s.start === curr.start);
+        const match =
+          availableOnly.find((s) => s.start === curr.start) ||
+          lastMinuteOnly.find((s) => s.start === curr.start);
         if (!match) return null;
         return match;
       });
@@ -266,6 +280,7 @@ export function FreshaBookingFlow({
       setSlotsState("ready");
     } catch {
       setSlots([]);
+      setLastMinuteSlots([]);
       setSlot(null);
       setSlotsState("error");
       setSlotsWarning(CALENDAR_UNAVAILABLE_IT);
@@ -745,7 +760,10 @@ export function FreshaBookingFlow({
                 Riprova
               </button>
             ) : null}
-            {slotsState === "ready" && slots.length === 0 && !slotsWarning && (
+            {slotsState === "ready" &&
+              slots.length === 0 &&
+              lastMinuteSlots.length === 0 &&
+              !slotsWarning && (
               <p className="slot-status">{NO_SLOTS_IT}</p>
             )}
             {slots.length > 0 && (
@@ -764,6 +782,35 @@ export function FreshaBookingFlow({
                   </button>
                   );
                 })}
+              </div>
+            )}
+            {lastMinuteSlots.length > 0 && (
+              <div className="last-minute-block">
+                <p className="last-minute-title">Last minute — buchi liberi</p>
+                <p className="last-minute-note">
+                  Minuti residui tra appuntamenti: si prenota solo se il servizio ci
+                  sta senza creare disordine in salone.
+                </p>
+                <div
+                  className="slot-grid"
+                  role="list"
+                  aria-label="Orari last minute"
+                >
+                  {lastMinuteSlots.map((s) => {
+                    const selected = slot?.start === s.start;
+                    return (
+                      <button
+                        key={`lm-${s.start}`}
+                        type="button"
+                        className={`slot-btn last-minute${selected ? " selected" : ""}`}
+                        aria-label={`Last minute ${s.label}`}
+                        onClick={() => setSlot(s)}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </>
