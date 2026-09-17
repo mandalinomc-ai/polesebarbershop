@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const services = await resolveRuntimeServices(body.serviceIds);
   if (!services) return NextResponse.json({ error: "Servizi non validi." }, { status: 400 });
   const barber = getBarber(body.barberId);
-  if (!barber || barber.virtual) return NextResponse.json({ error: "Seleziona Felice o Davide." }, { status: 400 });
+  if (!barber || barber.virtual) return NextResponse.json({ error: "Seleziona Felice." }, { status: 400 });
   const totals = totalsForServices(services);
   const durationOverride = body.durationOverrideMin ?? null;
   const resolved = resolveEffectiveServiceDuration({

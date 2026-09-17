@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { formatWallDate, formatWallTime } from "@/lib/availability";
 import { namesFromSnapshot } from "@/lib/appointments";
-import { getBarber } from "@/lib/catalog";
+import { barberDisplayName } from "@/lib/catalog";
 import { getSupabaseAdmin, isSupabaseConfigured, type AppointmentRow } from "@/lib/supabase";
 import { fetchAllPages } from "@/lib/supabase-query";
 
@@ -40,7 +40,7 @@ export async function GET() {
       status: row.status,
       statusLabel: STATUS_IT[row.status] || row.status,
       barberId: row.barber_id,
-      barberName: getBarber(row.barber_id)?.name || row.barber_id,
+      barberName: barberDisplayName(row.barber_id),
       serviceNames: namesFromSnapshot(row.services_snapshot),
       customerName: `${row.customer_first_name} ${row.customer_last_name}`.trim(),
       phone: row.customer_phone,

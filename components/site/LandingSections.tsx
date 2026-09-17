@@ -12,6 +12,22 @@ import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
 export function LandingSections() {
   return (
     <>
+      <section id="prenota" className="section-pad bg-marble-light marble-accent">
+        <div className="eyebrow reveal">Listino &amp; prenotazione</div>
+        <h2 className="section-title font-serif reveal reveal-d1">I nostri servizi</h2>
+        <div className="booking-layout-grid">
+          <ServiceListino />
+          <div className="booking-flow-wrap glass-card">
+            <BookingSectionNote />
+            <FreshaBookingFlow listinoBeside />
+          </div>
+        </div>
+        <MiniCartDock />
+        <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>
+          {SITE.pricesIncludeVat}
+        </p>
+      </section>
+
       <section id="about" className="section-pad bg-marble-light marble-accent">
         <h2 className="section-title font-serif reveal reveal-d1">Felice Polese</h2>
         <div className="about-grid">
@@ -27,8 +43,8 @@ export function LandingSections() {
               <strong>{SITE.address}</strong>, {SITE.city}.
             </p>
             <p className="prose reveal reveal-d3">
-              In salone lavorano <strong>Felice</strong> e <strong>Davide</strong>{" "}
-              su due poltrone indipendenti: taglio, barba e colore.
+              In salone trovi <strong>Felice</strong> alla poltrona: taglio, barba e
+              colore.
             </p>
             <p className="prose reveal reveal-d3">
               <a
@@ -51,22 +67,6 @@ export function LandingSections() {
       </section>
 
       <VideoReelGrid />
-
-      <section id="prenota" className="section-pad bg-marble-light marble-accent">
-        <div className="eyebrow reveal">Listino &amp; prenotazione</div>
-        <h2 className="section-title font-serif reveal reveal-d1">I nostri servizi</h2>
-        <div className="booking-layout-grid">
-          <ServiceListino />
-          <div className="booking-flow-wrap glass-card">
-            <BookingSectionNote />
-            <FreshaBookingFlow listinoBeside />
-          </div>
-        </div>
-        <MiniCartDock />
-        <p className="booking-open-note reveal" style={{ marginTop: "1.5rem" }}>
-          {SITE.pricesIncludeVat}
-        </p>
-      </section>
 
       <section id="social" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow reveal">Social</div>

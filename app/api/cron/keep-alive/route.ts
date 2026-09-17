@@ -48,6 +48,8 @@ export async function GET(request: Request) {
 
   const { runNoBufferMaintenance } = await import("@/lib/strip-booking-buffer");
   const maintenance = await runNoBufferMaintenance();
+  const { runSoloFeliceMigration } = await import("@/lib/solo-felice-migrate");
+  const soloFelice = await runSoloFeliceMigration();
 
-  return NextResponse.json({ status: "ok", maintenance }, { status: 200 });
+  return NextResponse.json({ status: "ok", maintenance, soloFelice }, { status: 200 });
 }

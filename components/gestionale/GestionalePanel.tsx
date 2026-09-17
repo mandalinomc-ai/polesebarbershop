@@ -70,6 +70,7 @@ type AdminAppt = {
   isWalkIn: boolean;
   startsAt?: string;
   endsAt?: string;
+  notes?: string | null;
 };
 
 type Agenda = {
@@ -111,7 +112,7 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
 ];
 
 const STATUS_IT: Record<string, string> = {
-  pending: "In attesa",
+  pending: "Da confermare",
   confirmed: "Confermato",
   completed: "Completato",
   cancelled: "Annullato",
@@ -234,7 +235,7 @@ export function GestionalePanel() {
     }
   }, [loadAgenda, loadCrm, loadHistory]);
 
-  async function toggleOfflineDay(barberId: "felice" | "davide") {
+  async function toggleOfflineDay(barberId: "felice") {
     if (offlineBusy) return;
     setOfflineBusy(barberId);
     try {
@@ -326,7 +327,7 @@ export function GestionalePanel() {
         <form className="crm-login" onSubmit={onLogin}>
           <p className="eyebrow">Gestionale</p>
           <h1 className="font-serif">{SITE.name}</h1>
-          <p className="crm-login-sub">Pannello interno · Felice e Davide</p>
+          <p className="crm-login-sub">Pannello interno · Felice</p>
           <label>
             Utente
             <input
@@ -431,14 +432,6 @@ export function GestionalePanel() {
                 onClick={() => void toggleOfflineDay("felice")}
               >
                 {offlineBusy === "felice" ? "…" : "Felice Offline"}
-              </button>
-              <button
-                type="button"
-                className={`offline-day-btn${offlineIds.includes("davide") ? " is-off" : ""}`}
-                disabled={offlineBusy === "davide"}
-                onClick={() => void toggleOfflineDay("davide")}
-              >
-                {offlineBusy === "davide" ? "…" : "Davide Offline"}
               </button>
             </div>
             <button
@@ -851,6 +844,9 @@ function AgendaView({
     });
   }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
+  const toConfirm = (agenda?.appointments || []).filter(
+    (a) => a.status === "pending" || a.barberId === "davide",
+  );
   return (
     <div className="crm-stack">
       <div className="crm-toolbar">
@@ -868,6 +864,37 @@ function AgendaView({
           </p>
         ) : null}
       </div>
+      {toConfirm.length ? (
+        <section className="crm-card" aria-label="Da confermare">
+          <h2 className="font-serif">Da confermare</h2>
+          <p className="slot-status">
+            Appuntamenti ex Davide in conflitto o in attesa — spostali o conferma quando hai chiaro l&apos;orario.
+          </p>
+          <ul className="crm-list">
+            {toConfirm.map((a) => (
+              <li key={`pending-${a.id}`}>
+                <strong>
+                  {a.timeLabel} · {a.firstName} {a.lastName}
+                </strong>
+                <span>
+                  {a.serviceNames} · {a.barberName || a.barberId}
+                  {a.notes ? ` · ${a.notes}` : ""}
+                </span>
+                <span className="crm-row-actions">
+                  <button type="button" className="btn btn-gold" onClick={() => onMove(a)}>
+                    Gestisci orario
+                  </button>
+                  {a.barberId === "felice" ? (
+                    <button type="button" className="btn btn-outline" onClick={() => onPatch(a.id, { status: "confirmed" })}>
+                      Conferma
+                    </button>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <section className="takings">
         <article>
           <span>Incasso giorno</span>
@@ -1645,7 +1672,7 @@ function StatsView({
           )}
         </section>
         <section className="crm-card">
-          <h2 className="font-serif">Felice vs Davide</h2>
+          <h2 className="font-serif">Incassi per barbiere</h2>
           {stats?.takingsByBarber.length ? (
             <ul className="crm-list">
               {stats.takingsByBarber.map((b) => (

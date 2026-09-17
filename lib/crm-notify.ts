@@ -36,12 +36,12 @@ export function buildNotifyCopy(template: NotifyTemplate, opts: NotifyCopyInput)
   if (template === "promo") {
     return {
       subject: `Un invito da ${SITE.name}`,
-      text: `Ciao ${nome}, da ${SITE.name} ti aspettiamo per un taglio o un trattamento. Prenota quando vuoi su ${SITE.siteUrl.replace(/\/$/, "")}/#prenota oppure scrivici al ${SITE.phone}. Felice e Davide.`,
+      text: `Ciao ${nome}, da ${SITE.name} ti aspettiamo per un taglio o un trattamento. Prenota quando vuoi su ${SITE.siteUrl.replace(/\/$/, "")}/#prenota oppure scrivici al ${SITE.phone}. Felice.`,
     };
   }
   return {
     subject: `Grazie da ${SITE.name}`,
-    text: `Ciao ${nome}, è stato un piacere vederti da ${SITE.name}. Se vuoi, prenota il prossimo appuntamento online o scrivici su WhatsApp. A presto, Felice e Davide.`,
+    text: `Ciao ${nome}, è stato un piacere vederti da ${SITE.name}. Se vuoi, prenota il prossimo appuntamento online o scrivici su WhatsApp. A presto, Felice.`,
   };
 }
 
