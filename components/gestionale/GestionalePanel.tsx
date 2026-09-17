@@ -119,6 +119,21 @@ const STATUS_IT: Record<string, string> = {
   walk_in: "Prenota in sede",
 };
 
+/** Extract "HH:MM" (or "YYYY-MM-DD HH:MM" → readable) from migration notes. */
+function wantedTimeFromNotes(notes?: string | null): string | null {
+  if (!notes) return null;
+  const m = notes.match(/\[Orario richiesto:\s*(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\]/);
+  if (m) {
+    try {
+      return `${formatItalianDate(m[1]!)} · ${m[2]}`;
+    } catch {
+      return `${m[2]}`;
+    }
+  }
+  const t = notes.match(/\[Orario richiesto:\s*(\d{2}:\d{2})\]/);
+  return t?.[1] || null;
+}
+
 function pct(n: number) {
   return `${(n * 100).toLocaleString("it-IT", { maximumFractionDigits: 1 })} %`;
 }
@@ -865,33 +880,38 @@ function AgendaView({
         ) : null}
       </div>
       {toConfirm.length ? (
-        <section className="crm-card" aria-label="Da confermare">
-          <h2 className="font-serif">Da confermare</h2>
-          <p className="slot-status">
-            Appuntamenti ex Davide in conflitto o in attesa — spostali o conferma quando hai chiaro l&apos;orario.
-          </p>
-          <ul className="crm-list">
-            {toConfirm.map((a) => (
-              <li key={`pending-${a.id}`}>
-                <strong>
-                  {a.timeLabel} · {a.firstName} {a.lastName}
-                </strong>
-                <span>
-                  {a.serviceNames} · {a.barberName || a.barberId}
-                  {a.notes ? ` · ${a.notes}` : ""}
-                </span>
-                <span className="crm-row-actions">
-                  <button type="button" className="btn btn-gold" onClick={() => onMove(a)}>
-                    Gestisci orario
+        <section className="crm-card crm-confirm-box" aria-label="Da confermare">
+          <h2 className="font-serif">Da confermare · {toConfirm.length}</h2>
+          <p className="crm-confirm-lead">Orario in conflitto — scegli tu quando farli.</p>
+          <ul className="crm-confirm-list">
+            {toConfirm.map((a) => {
+              const wanted = wantedTimeFromNotes(a.notes);
+              return (
+                <li key={`pending-${a.id}`} className="crm-confirm-item">
+                  <div className="crm-confirm-main">
+                    <strong>
+                      {a.firstName} {a.lastName}
+                    </strong>
+                    <span className="crm-confirm-svc">{a.serviceNames || "Servizio"}</span>
+                    <span className="crm-confirm-when">
+                      {wanted ? (
+                        <>
+                          Voleva <em>{wanted}</em>
+                          {a.timeLabel && wanted !== a.timeLabel ? (
+                            <> · ora in agenda {a.timeLabel}</>
+                          ) : null}
+                        </>
+                      ) : (
+                        <>In agenda <em>{a.timeLabel || "—"}</em></>
+                      )}
+                    </span>
+                  </div>
+                  <button type="button" className="btn btn-gold crm-confirm-btn" onClick={() => onMove(a)}>
+                    Scegli orario
                   </button>
-                  {a.barberId === "felice" ? (
-                    <button type="button" className="btn btn-outline" onClick={() => onPatch(a.id, { status: "confirmed" })}>
-                      Conferma
-                    </button>
-                  ) : null}
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}
