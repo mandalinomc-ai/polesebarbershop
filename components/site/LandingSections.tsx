@@ -5,6 +5,7 @@ import {
 } from "@/components/booking/FreshaBookingFlow";
 import { ServiceListino, MiniCartDock } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
+import { ProductVetrina } from "@/components/site/ProductVetrina";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import { SocialQrGrid } from "@/components/site/SocialQr";
 import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
@@ -67,6 +68,8 @@ export function LandingSections() {
           {SITE.pricesIncludeVat}
         </p>
       </section>
+
+      <ProductVetrina />
 
       <section id="social" className="section-pad bg-marble-light marble-accent">
         <div className="eyebrow reveal">Social</div>
