@@ -194,11 +194,22 @@ export function FreshaBookingFlow({
         if (curr.join("|") === clean.join("|")) return curr;
         return clean;
       });
-      if (clean.length) setStep(1);
+      // Do not force step 1 — listino / mini-cart drive calendar via go-calendar.
     };
     window.addEventListener(BOOKING_SERVICE_EVENT, onPick);
     window.addEventListener(BOOKING_SELECTION_SYNC_EVENT, onSync);
-    const onGoCalendar = () => {
+    const onGoCalendar = (event: Event) => {
+      const detail = (event as CustomEvent<{ ids?: string[] }>).detail;
+      const fromEvent = Array.isArray(detail?.ids)
+        ? detail.ids.filter(
+            (id) => SERVICES.some((s) => s.id === id) && !isWhatsAppOnlyService(id),
+          )
+        : null;
+      if (fromEvent?.length) {
+        setSelectedIds(fromEvent);
+        queueMicrotask(() => setStep(2));
+        return;
+      }
       setSelectedIds((curr) => {
         const services = SERVICES.filter((s) => curr.includes(s.id));
         if (curr.length && servicesAreOnlineBookable(services)) {

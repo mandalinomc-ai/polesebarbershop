@@ -134,7 +134,8 @@ export function ServiceListino() {
   const toggleOnline = useCallback((id: string) => {
     if (isWhatsAppOnlyService(id)) return;
     setOnlineIds((curr) => {
-      const next = curr.includes(id) ? curr.filter((x) => x !== id) : [...curr, id];
+      const adding = !curr.includes(id);
+      const next = adding ? [...curr, id] : curr.filter((x) => x !== id);
       queueMicrotask(() => {
         broadcastOnline(next);
         const url = new URL(window.location.href);
@@ -142,6 +143,16 @@ export function ServiceListino() {
         else url.searchParams.delete("servizio");
         url.hash = "prenota";
         window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        if (adding && next.length) {
+          window.dispatchEvent(
+            new CustomEvent(BOOKING_GO_CALENDAR_EVENT, { detail: { ids: next } }),
+          );
+          const target =
+            document.getElementById("prenota") ||
+            document.querySelector(".booking-layout") ||
+            document.getElementById("main-content");
+          target?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       });
       return next;
     });
@@ -213,8 +224,13 @@ export function BookingMiniCart() {
         setOpen(false);
       }
     };
+    const onGoCalendar = () => setOpen(false);
     window.addEventListener(BOOKING_SELECTION_SYNC_EVENT, onSync);
-    return () => window.removeEventListener(BOOKING_SELECTION_SYNC_EVENT, onSync);
+    window.addEventListener(BOOKING_GO_CALENDAR_EVENT, onGoCalendar);
+    return () => {
+      window.removeEventListener(BOOKING_SELECTION_SYNC_EVENT, onSync);
+      window.removeEventListener(BOOKING_GO_CALENDAR_EVENT, onGoCalendar);
+    };
   }, []);
 
   const items = useMemo(
@@ -226,7 +242,9 @@ export function BookingMiniCart() {
 
   function goBook() {
     setOpen(false);
-    window.dispatchEvent(new CustomEvent(BOOKING_GO_CALENDAR_EVENT));
+    window.dispatchEvent(
+      new CustomEvent(BOOKING_GO_CALENDAR_EVENT, { detail: { ids: selectedIds } }),
+    );
     const target =
       document.getElementById("prenota") ||
       document.querySelector(".booking-layout") ||

@@ -1070,7 +1070,7 @@ a.btn-whatsapp.contact-wa,
   position: fixed;
   right: calc(1rem + var(--safe-right));
   bottom: calc(5.5rem + var(--safe-bottom));
-  z-index: 130;
+  z-index: 140;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -1436,17 +1436,18 @@ a.btn-whatsapp.contact-wa,
   text-transform: uppercase;
   color: var(--silk);
 }
-/* Dock above FABs/cookie — carts stack, never overlap each other */
+/* Dock: left on mobile (FABs stay right); compact, above content without covering WA/Maps */
 .booking-mini-cart-dock {
   position: fixed;
-  z-index: 260;
-  right: max(0.85rem, var(--safe-right, 0px));
-  bottom: max(7.25rem, calc(var(--safe-bottom, 0px) + 6.25rem));
-  width: min(22rem, calc(100vw - 1.5rem));
+  z-index: 120;
+  left: max(0.75rem, var(--safe-left, 0px));
+  right: auto;
+  bottom: max(1rem, calc(var(--safe-bottom, 0px) + 0.85rem));
+  width: min(20rem, calc(100vw - 5.75rem));
   display: flex;
   flex-direction: column-reverse;
   gap: 0.55rem;
-  max-height: min(68dvh, calc(100dvh - 8.5rem));
+  max-height: min(58dvh, calc(100dvh - 6rem));
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1487,8 +1488,8 @@ a.btn-whatsapp.contact-wa,
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
-  min-height: 52px;
-  padding: 0.75rem 1rem;
+  min-height: 48px;
+  padding: 0.65rem 0.9rem;
   border: 1px solid var(--ink);
   background: var(--ink);
   color: #fff;
@@ -1530,11 +1531,19 @@ a.btn-whatsapp.contact-wa,
 .fresha-cat--sub { opacity: 0.75; font-size: 0.78rem; }
 @media (max-width: 720px) {
   .booking-mini-cart-dock {
-    width: calc(100vw - 1rem);
-    right: 0.5rem;
-    left: 0.5rem;
+    left: 0.65rem;
+    right: auto;
+    width: min(16.5rem, calc(100vw - 5.25rem));
+    bottom: max(0.75rem, calc(var(--safe-bottom, 0px) + 0.65rem));
+    max-height: min(55dvh, calc(100dvh - 5.5rem));
+  }
+}
+@media (min-width: 721px) {
+  .booking-mini-cart-dock {
+    left: auto;
+    right: max(0.85rem, var(--safe-right, 0px));
+    width: min(20rem, calc(100vw - 6rem));
     bottom: max(6.5rem, calc(var(--safe-bottom, 0px) + 5.75rem));
-    max-height: min(62dvh, calc(100dvh - 7.5rem));
   }
 }
 .block-time-panel { margin-bottom: 1rem; }
