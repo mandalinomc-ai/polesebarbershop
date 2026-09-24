@@ -3,10 +3,10 @@ import { SITE } from "./site-config";
 export type DayHours = { open: string; close: string } | null;
 
 /** JS weekday: 0 Sunday … 6 Saturday. Sunday closed (hours not provided). */
-/** First bookable cut is 09:00 every open day (Sun closed). */
+/** Mon 15:00–19:00; Tue–Wed 09:00–19:00; Thu–Sat 09:00–20:00. */
 export const SHOP_HOURS: Record<number, DayHours> = {
   0: null,
-  1: { open: "09:00", close: "19:00" },
+  1: { open: "15:00", close: "19:00" },
   2: { open: "09:00", close: "19:00" },
   3: { open: "09:00", close: "19:00" },
   4: { open: "09:00", close: "20:00" },
