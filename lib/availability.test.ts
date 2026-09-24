@@ -12,7 +12,7 @@ describe("timezone helpers", () => {
   it("maps Europe/Rome wall time to UTC (CEST = UTC+2)", () => {
     expect(wallTimeToUtc(TUESDAY, "09:30").toISOString()).toBe("2026-09-08T07:30:00.000Z");
   });
-  it("knows closed days — only Sunday; Monday is open 09:00–19:00", () => {
+  it("knows closed days — only Sunday; Monday is open 15:00–19:00", () => {
     expect(weekdayOfDate(MONDAY_PRE_OPENING)).toBe(1);
     expect(isClosedDay(MONDAY_PRE_OPENING)).toBe(false);
     expect(isClosedDay(MONDAY_OPEN)).toBe(false);
@@ -25,7 +25,7 @@ describe("timezone helpers", () => {
     expect(getFirstBookableDate(wallTimeToUtc("2026-08-31", "18:00"))).toBe("2026-09-07");
     expect(getFirstBookableDate(wallTimeToUtc("2026-09-08", "08:00"))).toBe("2026-09-08");
   });
-  it("lists open day chips from opening Monday 7/9 (now open 09:00–19:00)", () => {
+  it("lists open day chips from opening Monday 7/9 (now open 15:00–19:00)", () => {
     const chips = listOpenDayChips(3, wallTimeToUtc("2026-08-31", "18:00"));
     expect(chips.map((c) => c.date)).toEqual(["2026-09-07", "2026-09-08", "2026-09-09"]);
     expect(chips[0]?.dow.toLowerCase()).toMatch(/lun/);
@@ -38,10 +38,11 @@ describe("getAvailableSlots", () => {
     expect(getAvailableSlots({ date: SUNDAY, barberId: "felice", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
     expect(getAvailableSlots({ date: "2026-08-29", barberId: "felice", durationMinutes: 15, now: nowBeforeOpening })).toEqual([]);
   });
-  it("generates Monday slots from 09:00; last 25-min (no buffer) slot is 18:35", () => {
+  it("generates Monday slots from 15:00; last 25-min (no buffer) slot is 18:35", () => {
     const slots = getAvailableSlots({ date: MONDAY_OPEN, barberId: "felice", durationMinutes: 25, now: nowBeforeOpening });
-    expect(slots[0]?.label).toBe("09:00");
+    expect(slots[0]?.label).toBe("15:00");
     expect(slots.at(-1)?.label).toBe("18:35");
+    expect(slots.every((s) => s.label >= "15:00")).toBe(true);
   });
   it("generates Tuesday slots from 09:00; last 25-min (no buffer) slot is 18:35", () => {
     const slots = getAvailableSlots({ date: TUESDAY, barberId: "felice", durationMinutes: 25, now: nowBeforeOpening });
@@ -208,7 +209,7 @@ describe("getOccupancyGrid", () => {
     });
     expect(tenThirty?.cells.find((c) => c.barberId === "felice")?.occupied).toBe(false);
     expect(getOccupancyGrid({ date: SUNDAY })).toEqual([]);
-    expect(getOccupancyGrid({ date: MONDAY_OPEN })[0]?.time).toBe("09:00");
+    expect(getOccupancyGrid({ date: MONDAY_OPEN })[0]?.time).toBe("15:00");
   });
 
   it("merges multi-slot visits into one continuous rowspan block", () => {
