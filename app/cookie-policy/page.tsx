@@ -58,11 +58,12 @@ export default function CookiePolicyPage() {
 
           <h2>Servizi di terze parti (non cookie di marketing)</h2>
           <ul>
-            <li>Vercel — hosting</li>
-            <li>Supabase — database prenotazioni</li>
+            <li>Hosting VPS (Aruba Cloud) / reverse proxy Nginx — consegna del sito</li>
+            <li>Supabase — database prenotazioni (nessun cookie di marketing)</li>
             <li>Gmail SMTP — email di conferma</li>
             <li>Google Maps — link/mappa per raggiungere il salone</li>
             <li>Tipografie — self-hosted via next/font (nessun CDN Google Fonts)</li>
+            <li>Let&apos;s Encrypt — certificato HTTPS</li>
           </ul>
           <p>
             L&apos;uso di Google Maps può comportare connessioni verso Google.

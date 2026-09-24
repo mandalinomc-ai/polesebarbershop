@@ -8,10 +8,15 @@ node_modules
 .env
 .env.local
 .env.*.local
+.env.production
 .next
 out
 coverage
 *.log
 tsconfig.tsbuildinfo
 .env*
+!.env.example
+!.env.production.example
 backups/
+deploy/certbot/conf/
+deploy/certbot/www/

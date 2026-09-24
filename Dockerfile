@@ -1,7 +1,8 @@
-# FELICE_POLESE_BARBERSHOP_LIVE_2026_09_10
-# Multi-stage Next.js 15 standalone image (Node 20).
-# Build: docker build -t felice-polese-live .
-# Run:   docker run --rm -p 3000:3000 --env-file .env.local felice-polese-live
+# FELICE_POLESE_BARBERSHOP — Next.js 15 standalone (Node 20)
+# Build: docker compose build
+# Run:   docker compose up -d
+#
+# NON tocca Supabase: solo legge SUPABASE_* da env a runtime.
 
 FROM node:20-alpine AS deps
 WORKDIR /app
@@ -16,8 +17,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-# Public build-time placeholders (override at runtime via env for Site URL).
-ARG NEXT_PUBLIC_SITE_URL=https://www.felicepolese.it
+ARG NEXT_PUBLIC_SITE_URL=https://felicepolesebarbershop.it
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 RUN npm run build
 

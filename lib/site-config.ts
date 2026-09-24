@@ -14,7 +14,7 @@ export const SITE = {
   heroHeadline: "MODERN BARBERING & FADE STUDIO",
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://felicepolesebarbershop.vercel.app",
+    "https://felicepolesebarbershop.it",
   address: "Corso Dante Alighieri, 44",
   addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
   streetAddress: "Corso Dante Alighieri, 44",
