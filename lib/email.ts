@@ -1,6 +1,7 @@
 import {
   isGmailSmtpConfigured,
   sendViaGmail,
+  sendViaResend,
 } from "./mail-providers";
 import {
   CANCEL_NOTICE_IT,
@@ -46,8 +47,13 @@ export function isGmailConfigured() {
   return Boolean(getGmailUser() && getGmailAppPassword());
 }
 
-/** @deprecated alias — use isGmailConfigured */
-export const isResendConfigured = isGmailConfigured;
+export function isResendConfigured() {
+  return Boolean(process.env.RESEND_API_KEY?.trim());
+}
+
+function mailReplyTo(): string {
+  return process.env.MAIL_REPLY_TO?.trim() || getAdminEmail();
+}
 
 function logEmailError(message: string, extra: Record<string, unknown>) {
   console.error(`[email] ${message}`, extra);
@@ -59,11 +65,29 @@ export async function sendEmail(opts: {
   html: string;
   text?: string;
   ics?: { filename: string; content: string };
-  /** Ignored — Gmail SMTP is the only transport. */
+  /** Ignored — kept for call-site compatibility. */
   salonFallback?: boolean;
 }): Promise<EmailSendResult> {
+  const replyTo = mailReplyTo();
+
+  if (isResendConfigured()) {
+    const resend = await sendViaResend({
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      replyTo,
+    });
+    if (resend.ok) {
+      console.info("[email] inviata via Resend", { to: opts.to, subject: opts.subject, id: resend.id });
+      return { ok: true, id: resend.id };
+    }
+    logEmailError("Resend ha rifiutato l'invio", { to: opts.to, error: resend.error });
+    // Fall through to Gmail if available.
+  }
+
   if (!isGmailSmtpConfigured() && !isGmailConfigured()) {
-    console.warn("[email] GMAIL_USER / GMAIL_APP_PASSWORD assente: invio saltato", {
+    console.warn("[email] nessun provider email configurato: invio saltato", {
       to: opts.to,
       subject: opts.subject,
     });
@@ -75,7 +99,7 @@ export async function sendEmail(opts: {
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
-    replyTo: getAdminEmail(),
+    replyTo,
     ics: opts.ics,
   });
   if (gmail.ok) {

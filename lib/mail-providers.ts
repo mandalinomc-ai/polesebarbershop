@@ -250,17 +250,28 @@ export async function sendViaResend(opts: {
   subject: string;
   html: string;
   text?: string;
+  replyTo?: string;
 }): Promise<ProviderSendResult> {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return { ok: false, provider: "resend", error: "RESEND_API_KEY mancante" };
-  const from = process.env.RESEND_FROM || `${SITE.name} <onboarding@resend.dev>`;
+  const from =
+    process.env.RESEND_FROM?.trim() ||
+    `${SITE.name} <prenotazioni@felicepolesebarbershop.it>`;
+  const replyTo = opts.replyTo?.trim() || process.env.MAIL_REPLY_TO?.trim() || getAdminEmail();
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: opts.to, subject: opts.subject, html: opts.html, text: opts.text }),
+      body: JSON.stringify({
+        from,
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+        text: opts.text,
+        reply_to: replyTo,
+      }),
     });
-    const data = await res.json();
+    const data = (await res.json()) as { id?: string; message?: string };
     if (res.ok && data.id) return { ok: true, provider: "resend", id: data.id };
     return { ok: false, provider: "resend", error: data.message || `HTTP ${res.status}` };
   } catch (error) {
