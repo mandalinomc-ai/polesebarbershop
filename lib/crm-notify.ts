@@ -79,15 +79,19 @@ export type StaffCancelCopyInput = {
 
 /** Automatic message when the salon cancels from the gestionale. */
 export function buildStaffCancelCopy(opts: StaffCancelCopyInput) {
-  const nome = (opts.firstName || "").trim() || "ciao";
-  const barber = opts.barberName ? ` con ${opts.barberName}` : "";
+  const nome = (opts.firstName || "").trim() || "Ciao";
   const bookUrl = `${SITE.siteUrl.replace(/\/$/, "")}/#prenota`;
   const text =
-    `Ciao ${nome}, il tuo appuntamento da ${SITE.name} per ${opts.serviceNames}${barber} ` +
-    `del ${opts.dateLabel} alle ${opts.timeLabel} è stato annullato dal salone. ` +
-    `Lo slot è di nuovo libero. Per riprenotare: ${bookUrl} oppure WhatsApp ${SITE.phone}.`;
+    `Ciao ${nome},\n\n` +
+    `ti informiamo che l'appuntamento del ${opts.dateLabel} alle ${opts.timeLabel} ` +
+    `per ${opts.serviceNames} presso ${SITE.name} è stato annullato` +
+    (opts.barberName ? ` (barber: ${opts.barberName})` : "") +
+    `.\n\n` +
+    `Ci scusiamo per l'inconveniente. Per scegliere un nuovo orario puoi prenotare ` +
+    `direttamente dal nostro sito web:\n${bookUrl}\n\n` +
+    `Oppure WhatsApp ${SITE.phone}.`;
   return {
-    subject: `Appuntamento annullato dal salone — ${SITE.name}`,
+    subject: `Appuntamento annullato — ${SITE.name}`,
     text,
   };
 }

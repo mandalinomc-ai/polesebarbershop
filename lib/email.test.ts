@@ -153,6 +153,29 @@ describe("booking email copy", () => {
     expect(owner.text).toContain(CANCEL_NOTICE_IT);
   });
 
+  it("staff cancel template greets by name and links the site to rebook", async () => {
+    const { staffCancelCustomerEmail } = await import("./email");
+    const mail = staffCancelCustomerEmail({
+      firstName: "Mario",
+      service: "Taglio Pro",
+      date: "giovedì 25 settembre 2026",
+      time: "10:30",
+      barber: "Felice",
+      bookUrl: "https://felicepolesebarbershop.it",
+    });
+    expect(mail.subject).toMatch(/Appuntamento annullato/);
+    expect(mail.text).toMatch(/^Ciao Mario,/);
+    expect(mail.text).toMatch(/giovedì 25 settembre 2026/);
+    expect(mail.text).toMatch(/10:30/);
+    expect(mail.text).toMatch(/Taglio Pro/);
+    expect(mail.text).toMatch(/Ci scusiamo per l'inconveniente/);
+    expect(mail.text).toContain("https://felicepolesebarbershop.it");
+    expect(mail.html).toMatch(/Ciao Mario/);
+    expect(mail.html).toMatch(/annullato/);
+    expect(mail.html).toContain("https://felicepolesebarbershop.it");
+    expect(mail.html).toMatch(/Prenota di nuovo/);
+  });
+
   it("opens the customer request mail with Ciao {nome} and 30 minuti di anticipo", async () => {
     const { customerConfirmEmail } = await import("./email");
     const mail = customerConfirmEmail({

@@ -219,6 +219,7 @@ async function notifyClientOfStaffCancel(row: AppointmentRow) {
       time: timeLabel,
       barber: barberName,
       bodyText: copy.text,
+      bookUrl: getSiteUrl(),
     });
     const result = await sendEmail({
       to: row.customer_email,

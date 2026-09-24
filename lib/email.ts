@@ -10,6 +10,7 @@ import {
   SITE,
   getAdminEmail,
   getBookingNotificationEmail,
+  getSiteUrl,
 } from "./site-config";
 
 export type EmailSendResult =
@@ -293,21 +294,62 @@ export function staffCancelCustomerEmail(opts: {
   date: string;
   time: string;
   barber?: string;
-  bodyText: string;
+  /** Optional override; if omitted, a standard body is generated. */
+  bodyText?: string;
+  bookUrl?: string;
 }) {
-  const barber = opts.barber?.trim()
-    ? `<br/>👤 Barber: <strong>${escapeHtml(opts.barber)}</strong>`
+  const nome = (opts.firstName || "").trim() || "Ciao";
+  const bookUrl = (opts.bookUrl || getSiteUrl()).replace(/\/$/, "");
+  const bookHref = escapeHtml(bookUrl);
+  const barberLine = opts.barber?.trim()
+    ? `\n👤 Barber: ${opts.barber.trim()}`
     : "";
+  const barberHtml = opts.barber?.trim()
+    ? `<br/>👤 Barber: <strong>${escapeHtml(opts.barber.trim())}</strong>`
+    : "";
+
+  const text =
+    opts.bodyText?.trim() ||
+    [
+      `Ciao ${nome},`,
+      "",
+      `ti informiamo che l'appuntamento del ${opts.date} alle ${opts.time} per ${opts.service} presso ${SITE.name} è stato annullato.${barberLine}`,
+      "",
+      "Ci scusiamo per l'inconveniente. Per scegliere un nuovo orario puoi prenotare direttamente dal nostro sito web:",
+      bookUrl,
+      "",
+      `Oppure WhatsApp ${SITE.phone}.`,
+      "",
+      SITE.name,
+      SITE.addressFull,
+    ].join("\n");
+
   return {
-    subject: `Appuntamento annullato dal salone — ${SITE.name}`,
-    text: opts.bodyText,
+    subject: `Appuntamento annullato — ${SITE.name}`,
+    text,
     html: wrap(`
-      <p>Ciao ${escapeHtml(opts.firstName)},</p>
-      <p>il tuo appuntamento per <strong>${escapeHtml(opts.service)}</strong> del
-      <strong>${escapeHtml(opts.date)}</strong> alle <strong>${escapeHtml(opts.time)}</strong>
-      è stato <strong>annullato dal salone</strong>.${barber}</p>
-      <p>Lo slot è di nuovo libero. Puoi riprenotare online o su WhatsApp al ${SITE.phone}.</p>
-      <p style="font-size:13px;color:#B5B5B5;">Apri l'allegato .ics di disdetta per rimuovere l'evento dal calendario.</p>`),
+      <p style="font-size:18px;line-height:1.55;">Ciao ${escapeHtml(nome)},</p>
+      <p style="line-height:1.55;">
+        ti informiamo che l&apos;appuntamento del
+        <strong>${escapeHtml(opts.date)}</strong> alle
+        <strong>${escapeHtml(opts.time)}</strong> per
+        <strong>${escapeHtml(opts.service)}</strong>
+        è stato <strong>annullato</strong>.${barberHtml}
+      </p>
+      <p style="line-height:1.55;">
+        Ci scusiamo per l&apos;inconveniente. Per scegliere un nuovo orario puoi prenotare
+        direttamente dal nostro sito web.
+      </p>
+      <p style="margin:28px 0 8px;">
+        <a href="${bookHref}"
+           style="display:inline-block;padding:12px 22px;border:1px solid #C9A962;color:#C9A962;text-decoration:none;letter-spacing:0.12em;text-transform:uppercase;font-size:12px;">
+          Prenota di nuovo
+        </a>
+      </p>
+      <p style="font-size:13px;color:#B5B5B5;line-height:1.5;">
+        <a href="${bookHref}" style="color:#C9A962;">${bookHref}</a><br/>
+        WhatsApp / Tel. ${SITE.phone}
+      </p>`),
   };
 }
 
