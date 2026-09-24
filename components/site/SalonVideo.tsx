@@ -1,19 +1,28 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SiteVideo } from "@/lib/site-videos";
 
 type SalonVideoProps = {
   video: SiteVideo;
   className?: string;
+  /** When true, attach src immediately (above-the-fold / hero). */
+  eager?: boolean;
 };
 
 /**
  * Autoplay muted loop for iOS Safari + Android Chrome.
- * Explicit play() on mount/visibility — HTML autoPlay alone is unreliable on iOS.
+ * Below-fold clips attach `src` only when intersecting — cuts Fast Data Transfer.
  */
-export function SalonVideo({ video, className = "salon-video-player" }: SalonVideoProps) {
+export function SalonVideo({
+  video,
+  className = "salon-video-player",
+  eager = false,
+}: SalonVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [activeSrc, setActiveSrc] = useState<string | undefined>(
+    eager ? video.src : undefined,
+  );
 
   useEffect(() => {
     const el = ref.current;
@@ -26,11 +35,15 @@ export function SalonVideo({ video, className = "salon-video-player" }: SalonVid
     el.setAttribute("webkit-playsinline", "");
 
     const tryPlay = () => {
+      if (!el.getAttribute("src") && !el.currentSrc) return;
       const p = el.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
     };
 
-    tryPlay();
+    if (eager) {
+      setActiveSrc(video.src);
+      tryPlay();
+    }
 
     const onVisibility = () => {
       if (document.visibilityState === "visible") tryPlay();
@@ -42,36 +55,51 @@ export function SalonVideo({ video, className = "salon-video-player" }: SalonVid
       observer = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
-            if (entry.isIntersecting) tryPlay();
-            else el.pause();
+            if (entry.isIntersecting) {
+              setActiveSrc((prev) => prev || video.src);
+              // Defer play to next frame so src is applied.
+              requestAnimationFrame(tryPlay);
+            } else {
+              el.pause();
+            }
           }
         },
-        { threshold: 0.15 },
+        { rootMargin: eager ? "0px" : "120px 0px", threshold: 0.12 },
       );
       observer.observe(el);
+    } else if (!eager) {
+      setActiveSrc(video.src);
     }
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       observer?.disconnect();
     };
-  }, [video.src]);
+  }, [video.src, eager]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !activeSrc) return;
+    if (el.getAttribute("src") !== activeSrc) {
+      el.setAttribute("src", activeSrc);
+      el.load();
+    }
+    const p = el.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  }, [activeSrc]);
 
   return (
     <video
       ref={ref}
       className={className}
-      src={video.src}
       autoPlay
       muted
       loop
       playsInline
-      preload="metadata"
+      preload={eager ? "metadata" : "none"}
       disablePictureInPicture
       poster={video.posterSrc}
       aria-label={video.alt}
-    >
-      <source src={video.src} type="video/mp4" />
-    </video>
+    />
   );
 }

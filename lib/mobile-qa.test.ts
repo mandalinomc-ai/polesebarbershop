@@ -122,8 +122,11 @@ describe("mobile QA (390px)", () => {
     expect(salon).toMatch(/webkit-playsinline/);
     expect(salon).toMatch(/\.play\(\)/);
     expect(salon).toMatch(/el\.muted = true/);
+    expect(salon).toMatch(/preload=\{eager \? "metadata" : "none"\}/);
+    expect(salon).toMatch(/IntersectionObserver/);
     const hero = readFileSync(join(process.cwd(), "components/site/Hero.tsx"), "utf8");
     expect(hero).toMatch(/SalonVideo/);
+    expect(hero).toMatch(/eager=\{index === 0\}/);
   });
 
   it("stacks Maps above WhatsApp with 44px mobile taps and safe-area", () => {

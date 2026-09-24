@@ -44,7 +44,7 @@ describe("site-videos", () => {
     }
 
     expect(SALONE_GENERALE_VIDEO.src).toBe(`${VIDEO_BASE}/salone-generale.mp4`);
-    expect(MECHES_VIDEO.src).toBe(`${VIDEO_BASE}/meches.mp4`);
+    expect(MECHES_VIDEO.src).toBe(`${VIDEO_BASE}/colorazione-01.mp4`);
     expect(DECOLORAZIONE_CUTANEA_VIDEO.src).toBe(
       `${VIDEO_BASE}/decolorazione-cutanea.mp4`,
     );
@@ -73,7 +73,7 @@ describe("site-videos", () => {
     ]);
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "decolorazione-meches")?.src,
-    ).toBe(`${VIDEO_BASE}/meches.mp4`);
+    ).toBe(`${VIDEO_BASE}/colorazione-01.mp4`);
     expect(
       SERVICE_SHOWCASE_VIDEOS.find((v) => v.serviceId === "decolorazione-cutanea")?.src,
     ).toBe(`${VIDEO_BASE}/decolorazione-cutanea.mp4`);

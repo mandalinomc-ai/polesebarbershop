@@ -9,7 +9,8 @@ describe("security headers config", () => {
     expect(global).toBeTruthy();
     const map = Object.fromEntries(global!.headers.map((h) => [h.key, h.value]));
     expect(map["Content-Security-Policy"]).toMatch(/default-src 'self'/);
-    expect(map["Content-Security-Policy"]).toMatch(/fonts\.gstatic\.com/);
+    expect(map["Content-Security-Policy"]).toMatch(/font-src 'self'/);
+    expect(map["Content-Security-Policy"]).not.toMatch(/fonts\.gstatic\.com|fonts\.googleapis\.com/);
     expect(map["X-Frame-Options"]).toBe("DENY");
     expect(map["X-Content-Type-Options"]).toBe("nosniff");
     expect(map["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");

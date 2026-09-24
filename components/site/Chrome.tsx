@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CookieBanner, ManageCookiesButton } from "@/components/site/CookieBanner";
+import { SiteLogo } from "@/components/site/SiteImage";
 import {
   HERO_SLOT_CTA,
   SCISSORS_INTRO_FINISHED_EVENT,
@@ -79,12 +80,11 @@ export function Header() {
         className={`site-header${scrolled ? " header-scrolled" : ""}${hidden && !open ? " header-hidden" : ""}`}
       >
         <a href="/#hero" className="header-logo">
-          <img
-            src="/assets/images/logo.svg"
+          <SiteLogo
             alt="Felice Polese — Felice Polese Barber Shop"
             className="brand-logo brand-logo--crest"
-            width={1115}
-            height={725}
+            sizes="(max-width: 899px) 40px, 56px"
+            priority
           />
           <span className="header-logo-name">{SITE.name}</span>
         </a>

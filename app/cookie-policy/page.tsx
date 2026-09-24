@@ -61,11 +61,12 @@ export default function CookiePolicyPage() {
             <li>Vercel — hosting</li>
             <li>Supabase — database prenotazioni</li>
             <li>Gmail SMTP — email di conferma</li>
-            <li>Google Maps / Google Fonts — mappa e tipografie</li>
+            <li>Google Maps — link/mappa per raggiungere il salone</li>
+            <li>Tipografie — self-hosted via next/font (nessun CDN Google Fonts)</li>
           </ul>
           <p>
-            L&apos;uso di Google Fonts e Google Maps può comportare connessioni
-            verso Google. Maggiori dettagli nella{" "}
+            L&apos;uso di Google Maps può comportare connessioni verso Google.
+            Maggiori dettagli nella{" "}
             <a href="/privacy-policy">Privacy policy</a>.
           </p>
         </div>

@@ -6,7 +6,7 @@ type SiteLogoProps = Omit<ImageProps, "src" | "width" | "height" | "alt"> & {
 };
 
 /** Brand logo with correct intrinsic dimensions and responsive object-fit. */
-export function SiteLogo({ alt, className, sizes, priority, ...rest }: SiteLogoProps) {
+export function SiteLogo({ alt, className, sizes, priority, quality = 80, ...rest }: SiteLogoProps) {
   return (
     <Image
       src={SITE_LOGO.src}
@@ -15,6 +15,7 @@ export function SiteLogo({ alt, className, sizes, priority, ...rest }: SiteLogoP
       height={SITE_LOGO.height}
       className={className}
       sizes={sizes ?? "(max-width: 420px) 48px, 64px"}
+      quality={quality}
       priority={priority}
       {...rest}
     />
@@ -30,7 +31,7 @@ export function FillCoverImage({
   alt,
   className,
   sizes,
-  quality = 85,
+  quality = 78,
   priority,
   loading,
   ...rest
@@ -40,7 +41,7 @@ export function FillCoverImage({
       alt={alt}
       fill
       className={className}
-      sizes={sizes}
+      sizes={sizes ?? "(max-width: 768px) 100vw, 33vw"}
       quality={quality}
       priority={priority}
       loading={priority ? undefined : loading ?? "lazy"}

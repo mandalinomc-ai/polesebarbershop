@@ -79,8 +79,8 @@ export default function PrivacyPage() {
               (il click apre i servizi Google).
             </li>
             <li>
-              <strong>Google Fonts</strong> — tipografie caricate da Google per
-              la resa grafica del sito.
+              <strong>Tipografie</strong> — font self-hosted via Next.js
+              (<code>next/font</code>), senza connessioni a Google Fonts CDN.
             </li>
           </ul>
           <p>

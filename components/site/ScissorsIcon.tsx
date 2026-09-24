@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type ScissorsIconProps = {
   className?: string;
   variant?: "countdown" | "intro";
@@ -10,15 +12,15 @@ export function ScissorsIcon({ className, variant = "countdown" }: ScissorsIconP
       .filter(Boolean)
       .join(" ");
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         className={rootClass}
         src="/assets/3d/shear-intro.png"
         alt=""
         width={420}
         height={380}
-        decoding="async"
-        fetchPriority="high"
+        sizes="(max-width: 768px) 70vw, 420px"
+        quality={78}
+        priority
         aria-hidden="true"
       />
     );

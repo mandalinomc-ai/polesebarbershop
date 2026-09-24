@@ -7,10 +7,10 @@ const csp = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "media-src 'self' blob:",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
   "frame-src 'self' https://maps.google.com https://www.google.com https://www.google.com/maps",
   "upgrade-insecure-requests",
@@ -41,6 +41,8 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 30,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [64, 96, 128, 256, 384],
   },
   async redirects() {
     return [{ source: "/admin", destination: "/gestionale", permanent: false }];
@@ -81,6 +83,10 @@ const nextConfig: NextConfig = {
         headers: [immutableAsset],
       },
       {
+        source: "/assets/videos/:path*",
+        headers: [immutableAsset],
+      },
+      {
         source: "/video/:path*",
         headers: [immutableAsset],
       },
@@ -89,12 +95,30 @@ const nextConfig: NextConfig = {
         headers: [immutableAsset],
       },
       {
+        source: "/_next/image",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         source: "/_next/static/:path*",
         headers: [immutableAsset],
       },
       {
         source: "/fonts/:path*",
         headers: [immutableAsset],
+      },
+      {
+        source: "/site.webmanifest",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400",
+          },
+        ],
       },
       {
         source: "/:path*.(jpg|jpeg|png|gif|webp|avif|svg|ico|mp4|webm|mov)",

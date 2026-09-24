@@ -57,7 +57,7 @@ $Mappings = [ordered]@{
     "taper fade"             = Join-Path $ReelDir "taper-fade.mp4"
     "burst fade"             = Join-Path $ReelDir "burst-fade.mp4"
     "video felice polese bio" = Join-Path $ReelDir "video-felice-polese-bio.mp4"
-    "meches"                 = Join-Path $ReelDir "meches.mp4"
+    # meches is identical to colorazione-01 — site serves colorazione-01.mp4 for both
     "decolorazione cute"     = Join-Path $ReelDir "decolorazione-cutanea.mp4"
 }
 

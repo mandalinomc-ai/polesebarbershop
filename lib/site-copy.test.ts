@@ -66,7 +66,8 @@ describe("public copy vs official identity", () => {
     expect(SITE.tagline).toBe("MODERN BARBERING & FADE STUDIO");
     const layout = readFileSync(join(process.cwd(), "app/layout.tsx"), "utf8");
     expect(layout).toMatch(/Plus_Jakarta_Sans/);
-    expect(layout).toMatch(/fonts\.googleapis\.com/);
+    expect(layout).toMatch(/next\/font\/google/);
+    expect(layout).not.toMatch(/fonts\.googleapis\.com/);
     expect(layout).toMatch(/SITE_DOCUMENT_TITLE/);
   });
 

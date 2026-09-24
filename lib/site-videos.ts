@@ -55,9 +55,13 @@ export const COLORAZIONE_VIDEOS: SiteVideo[] = [
   },
 ];
 
+/**
+ * Meches clip is byte-identical to colorazione-01 — reuse that URL so clients
+ * cache one download instead of shipping a duplicate ~2.5 MB asset.
+ */
 export const MECHES_VIDEO: SiteVideo = {
   id: "meches",
-  src: `${VIDEO_BASE}/meches.mp4`,
+  src: `${VIDEO_BASE}/colorazione-01.mp4`,
   alt: "Meches in salone — Felice Polese Barber Shop",
   label: "Meches",
 };
@@ -78,7 +82,7 @@ export const SALONE_GENERALE_VIDEO: SiteVideo = {
 
 /**
  * Felice beside bio — Drive clip at the midnight (43c7824) public URL.
- * Identical file also lives at public/assets/videos/felice-working.mp4.
+ * Identical legacy copy under public/assets/videos/ was removed to cut bandwidth.
  */
 export const FELICE_BIO_SOURCE_BASENAME = "video felice polese bio" as const;
 
@@ -215,7 +219,7 @@ export const SERVICE_SHOWCASE_VIDEOS: ServiceShowcaseVideo[] = [
     src: MECHES_VIDEO.src,
     alt: "Decolorazione Meches — clip reale dal salone Felice Polese",
     label: "Decolorazione Meches",
-    sourceFile: "meches.mp4",
+    sourceFile: "colorazione-01.mp4",
   },
   {
     serviceId: "decolorazione-cutanea",
@@ -253,7 +257,6 @@ export const REQUIRED_VIDEO_FILES = [
   "colorazione-01.mp4",
   "colorazione-02.mp4",
   "colorazione-03.mp4",
-  "meches.mp4",
   "decolorazione-cutanea.mp4",
   "video-felice-polese-bio.mp4",
 ] as const;

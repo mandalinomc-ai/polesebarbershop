@@ -16,12 +16,14 @@ import { SalonVideo } from "@/components/site/SalonVideo";
 
 function HeroMediaCell({
   video,
+  eager = false,
 }: {
   video: (typeof HERO_VIDEOS)[number];
+  eager?: boolean;
 }) {
   return (
     <div className="hero-media-cell">
-      <SalonVideo video={video} />
+      <SalonVideo video={video} eager={eager} />
     </div>
   );
 }
@@ -56,8 +58,8 @@ export function Hero() {
           </div>
         </div>
         <div className="hero-media" data-parallax="0.06">
-          {HERO_VIDEOS.map((video) => (
-            <HeroMediaCell key={video.id} video={video} />
+          {HERO_VIDEOS.map((video, index) => (
+            <HeroMediaCell key={video.id} video={video} eager={index === 0} />
           ))}
         </div>
       </div>
