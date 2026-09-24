@@ -106,12 +106,25 @@ export async function isAdminRequest() {
 export function adminCookieOptions() {
   const secure =
     process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+  /** Share session across apex + www so agenda/storico load after login. */
+  let domain: string | undefined;
+  try {
+    const host = new URL(
+      process.env.NEXT_PUBLIC_SITE_URL || "https://felicepolesebarbershop.it",
+    ).hostname.replace(/^www\./, "");
+    if (host === "felicepolesebarbershop.it") {
+      domain = ".felicepolesebarbershop.it";
+    }
+  } catch {
+    /* ignore invalid SITE_URL */
+  }
   return {
     httpOnly: true,
     secure,
     sameSite: "lax" as const,
     path: "/",
     maxAge: ADMIN_SESSION_MAX_AGE_SEC,
+    ...(domain ? { domain } : {}),
   };
 }
 
