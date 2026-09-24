@@ -1,7 +1,9 @@
 import {
   isGmailSmtpConfigured,
+  isSmtpConfigured,
   sendViaGmail,
   sendViaResend,
+  sendViaSmtp,
 } from "./mail-providers";
 import {
   CANCEL_NOTICE_IT,
@@ -70,6 +72,24 @@ export async function sendEmail(opts: {
 }): Promise<EmailSendResult> {
   const replyTo = mailReplyTo();
 
+  // 1) SMTP Aruba / generico (produzione VPS)
+  if (isSmtpConfigured()) {
+    const smtp = await sendViaSmtp({
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      replyTo,
+      ics: opts.ics,
+    });
+    if (smtp.ok) {
+      console.info("[email] inviata via SMTP", { to: opts.to, subject: opts.subject, id: smtp.id });
+      return { ok: true, id: smtp.id };
+    }
+    logEmailError("SMTP ha rifiutato l'invio", { to: opts.to, error: smtp.error });
+  }
+
+  // 2) Resend (opzionale)
   if (isResendConfigured()) {
     const resend = await sendViaResend({
       to: opts.to,
@@ -83,9 +103,9 @@ export async function sendEmail(opts: {
       return { ok: true, id: resend.id };
     }
     logEmailError("Resend ha rifiutato l'invio", { to: opts.to, error: resend.error });
-    // Fall through to Gmail if available.
   }
 
+  // 3) Gmail app password (fallback)
   if (!isGmailSmtpConfigured() && !isGmailConfigured()) {
     console.warn("[email] nessun provider email configurato: invio saltato", {
       to: opts.to,

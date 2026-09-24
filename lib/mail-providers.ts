@@ -37,8 +37,8 @@ export function isResendAllowedRecipient(to: string): boolean {
 }
 
 export type ProviderSendResult =
-  | { ok: true; id?: string; provider: "gmail" | "mailgun" | "formsubmit" | "resend" }
-  | { ok: false; error: string; provider: "gmail" | "mailgun" | "formsubmit" | "resend" };
+  | { ok: true; id?: string; provider: "gmail" | "smtp" | "mailgun" | "formsubmit" | "resend" }
+  | { ok: false; error: string; provider: "gmail" | "smtp" | "mailgun" | "formsubmit" | "resend" };
 
 export function gmailSmtpUser(): string {
   return process.env.GMAIL_USER?.trim() || getAdminEmail();
@@ -49,6 +49,67 @@ export function isGmailSmtpConfigured(): boolean {
   const pass = (process.env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
   const user = gmailSmtpUser();
   return pass.length >= 8 && user.includes("@");
+}
+
+/** Aruba (or generic) SMTP — SMTP_HOST + SMTP_USER + SMTP_PASS. */
+export function isSmtpConfigured(): boolean {
+  const host = process.env.SMTP_HOST?.trim() || "";
+  const user = process.env.SMTP_USER?.trim() || "";
+  const pass = process.env.SMTP_PASS?.trim() || "";
+  return Boolean(host && user.includes("@") && pass.length >= 4);
+}
+
+export function smtpFromAddress(): string {
+  const from = process.env.SMTP_FROM?.trim() || "";
+  if (from.includes("@")) return from;
+  const user = process.env.SMTP_USER?.trim() || "";
+  return user ? `${SITE.name} <${user}>` : `${SITE.name} <noreply@localhost>`;
+}
+
+export async function sendViaSmtp(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  replyTo?: string;
+  ics?: { filename: string; content: string };
+}): Promise<ProviderSendResult> {
+  if (!isSmtpConfigured()) {
+    return { ok: false, provider: "smtp", error: "SMTP non configurato." };
+  }
+  const host = process.env.SMTP_HOST!.trim();
+  const port = Number(process.env.SMTP_PORT || "465");
+  const secureRaw = (process.env.SMTP_SECURE || "true").trim().toLowerCase();
+  const secure = secureRaw === "true" || secureRaw === "1" || port === 465;
+  const user = process.env.SMTP_USER!.trim();
+  const pass = process.env.SMTP_PASS!.trim();
+  try {
+    const transporter = nodemailer.createTransport({
+      host,
+      port: Number.isFinite(port) ? port : 465,
+      secure,
+      auth: { user, pass },
+    });
+    const info = await transporter.sendMail({
+      from: smtpFromAddress(),
+      to: opts.to,
+      replyTo: opts.replyTo || process.env.MAIL_REPLY_TO?.trim() || getAdminEmail(),
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      attachments: opts.ics
+        ? [{
+            filename: opts.ics.filename,
+            content: opts.ics.content,
+            contentType: "text/calendar; charset=utf-8",
+          }]
+        : undefined,
+    });
+    return { ok: true, provider: "smtp", id: info.messageId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invio SMTP fallito";
+    return { ok: false, provider: "smtp", error: message };
+  }
 }
 
 export async function sendViaGmail(opts: {
