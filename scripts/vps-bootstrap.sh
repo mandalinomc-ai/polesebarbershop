@@ -76,6 +76,14 @@ if [[ -z "$SUPABASE_CHECK" || "$SUPABASE_CHECK" == *"YOUR_PROJECT_REF"* ]]; then
 fi
 echo "    Supabase URL (verifica): $SUPABASE_CHECK"
 
+SERVICE_KEY="$(grep -E '^SUPABASE_SERVICE_ROLE_KEY=' .env.production | cut -d= -f2- | tr -d '"' || true)"
+if [[ -z "$SERVICE_KEY" || "$SERVICE_KEY" == YOUR_* || "$SERVICE_KEY" == CHANGE_* ]]; then
+  echo "ERRORE: manca SUPABASE_SERVICE_ROLE_KEY reale in .env.production"
+  echo "Dashboard Supabase → Project Settings → API → service_role (o sb_secret_…)."
+  echo "Senza questa chiave prenotazioni e gestionale non funzionano (i dati restano intatti)."
+  exit 1
+fi
+
 mkdir -p deploy/certbot/conf deploy/certbot/www
 # Partenza HTTP (ACME)
 cp -f deploy/nginx.http-bootstrap.conf deploy/nginx.active.conf
@@ -96,10 +104,15 @@ docker compose run --rm --entrypoint certbot certbot certonly \
 
 echo "==> [7/7] Abilita HTTPS + stack completo"
 cp -f deploy/nginx.conf deploy/nginx.active.conf
+# Allinea anche la copia in root (documentazione)
+cp -f deploy/nginx.conf nginx.conf
 docker compose up -d
+docker compose exec -T nginx nginx -t
+docker compose exec -T nginx nginx -s reload || docker compose restart nginx
 docker compose ps
 
 echo ""
-echo "OK — https://${DOMAIN}"
+echo "OK — https://${DOMAIN}  |  https://${WWW_DOMAIN}"
 echo "Supabase invariato: ${SUPABASE_CHECK}"
 echo "Checklist: /  /#prenota  /gestionale  /privacy-policy  /cookie-policy"
+echo "GDPR: CookieBanner attivo via Footer/Chrome"

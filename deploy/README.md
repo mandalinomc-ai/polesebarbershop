@@ -35,4 +35,10 @@ sudo bash scripts/vps-bootstrap.sh
 | `.env.production.example` | Template variabili |
 | `scripts/vps-bootstrap.sh` | Installazione automatica VPS |
 
+## Supabase (produzione)
+
+- **Project ref:** `dbbncprluqjrofjemfbg`
+- **URL:** `https://dbbncprluqjrofjemfbg.supabase.co`
+- Serve anche `SUPABASE_SERVICE_ROLE_KEY` (server-only) per prenotazioni/gestionale.
+
 Privacy `/privacy-policy`, cookie `/cookie-policy` e banner consenso sono già nel codice sito.
