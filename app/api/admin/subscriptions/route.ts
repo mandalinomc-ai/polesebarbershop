@@ -18,6 +18,7 @@ import {
   type SerializedSubscription,
 } from "@/lib/subscriptions";
 import { flattenZodError } from "@/lib/validations";
+import { normalizeItalianPhone } from "@/lib/phone";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,16 @@ export const revalidate = 0;
 const createSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().max(80).optional().default(""),
-  phone: z.string().trim().max(40).optional().default(""),
+  phone: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .default("")
+    .transform((value) => {
+      if (!value) return "";
+      return normalizeItalianPhone(value) || value;
+    }),
   email: z.string().trim().max(120).optional().default(""),
   barberId: z.string().min(1),
   serviceIds: z.array(z.string().min(1)).min(1).max(8),

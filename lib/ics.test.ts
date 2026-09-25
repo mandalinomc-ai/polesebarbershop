@@ -43,9 +43,9 @@ describe("ics", () => {
   it("includes the manage URL on confirmed events", () => {
     const ics = buildIcs({
       ...base,
-      url: "https://polesebarbershop.vercel.app/appuntamento/abc123",
+      url: "https://felicepolesebarbershop.it/appuntamento/abc123",
     });
-    expect(ics).toContain("https://polesebarbershop.vercel.app/appuntamento/abc123");
+    expect(ics).toContain("https://felicepolesebarbershop.it/appuntamento/abc123");
     expect(ics).toContain("TRIGGER:-PT30M");
   });
 

@@ -58,13 +58,16 @@ describe("admin /gestionale credentials", () => {
     expect(isAdminTokenValid(token, pastExpiry)).toBe(false);
   });
 
-  it("sets HttpOnly Secure cookie options on Vercel", () => {
-    process.env.VERCEL = "1";
+  it("sets HttpOnly Secure cookie options in production", () => {
+    const prev = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    delete process.env.VERCEL;
     const opts = adminCookieOptions();
     expect(opts.httpOnly).toBe(true);
     expect(opts.secure).toBe(true);
     expect(opts.sameSite).toBe("lax");
     expect(opts.maxAge).toBe(ADMIN_SESSION_MAX_AGE_SEC);
+    process.env.NODE_ENV = prev;
   });
 
   it("uses ADMIN_USER and ADMIN_PASSWORD when set", () => {
@@ -154,10 +157,10 @@ describe("POST /api/admin/login", () => {
     expect(res.status).toBe(401);
   });
 
-  it("accepts explicit credentials in Vercel production", async () => {
+  it("accepts explicit credentials in production", async () => {
     process.env.ADMIN_USER = "admin";
     process.env.ADMIN_PASSWORD = "prod-secret-99";
-    process.env.VERCEL_ENV = "production";
+    delete process.env.VERCEL_ENV;
     const res = await login({ username: "admin", password: "prod-secret-99" });
     expect(res.status).toBe(200);
     const json = (await res.json()) as { ok: boolean };

@@ -4,7 +4,7 @@
 
 ## What went wrong
 
-A GitHub production deploy of **current main** (scissors intro, title `Felice Polese Barber Shop — MODERN BARBERING…`) was aliased onto **https://felicepolesebarbershop.vercel.app**. That overwrote the marble page the client liked.
+A GitHub production deploy of **current main** (scissors intro, title `Felice Polese Barber Shop — MODERN BARBERING…`) was aliased onto **https://felicepolesebarbershop.it**. That overwrote the marble page the client liked.
 
 Hobby Vercel cannot `vercel rollback` past the previous production (402). The live domain was pointed back to the oldest remaining production on `temporary-prompt-quasar-rndxhgh`:
 
@@ -18,7 +18,7 @@ Closest in-repo visual: commit `0da4547` (Plus Jakarta, `hero-media-cell`, white
 
 ## D1 — One public URL
 
-**https://felicepolesebarbershop.vercel.app** on Vercel project **`temporary-prompt-quasar-rndxhgh`**.
+**https://felicepolesebarbershop.it** on Vercel project **`temporary-prompt-quasar-rndxhgh`**.
 
 Do not deploy current scissors `main` onto this project until the client agrees the marble look is back.
 

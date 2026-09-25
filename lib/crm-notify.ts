@@ -1,5 +1,5 @@
 import { SITE } from "@/lib/site-config";
-import { normalizeItalianPhone } from "@/lib/phone";
+import { sanitizeWhatsAppPhone } from "@/lib/phone";
 
 export const NOTIFY_TEMPLATES = ["reminder", "promo", "followup"] as const;
 export type NotifyTemplate = (typeof NOTIFY_TEMPLATES)[number];
@@ -47,7 +47,7 @@ export function buildNotifyCopy(template: NotifyTemplate, opts: NotifyCopyInput)
 
 /** Digits only, with country code, for https://wa.me/<digits> */
 export function waMeDigits(phone: string): string | null {
-  const e164 = normalizeItalianPhone(phone);
+  const e164 = sanitizeWhatsAppPhone(phone);
   if (!e164) return null;
   const digits = e164.replace(/\D/g, "");
   return digits.length >= 8 ? digits : null;

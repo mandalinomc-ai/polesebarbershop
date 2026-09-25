@@ -21,16 +21,10 @@ export const GMAIL_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
 /**
- * EMERGENCY OFF (2026-09-04) — booking confirmation emails disabled on production.
- *
- * ROOT CAUSE: Vercel env `GMAIL_APP_PASSWORD` is empty (secret present but no value).
- * Gmail SMTP auth therefore fails for every outbound message. Customer confirmation
- * and salon alert to felicepolese550@gmail.com never leave the server.
- *
- * Re-enable after setting a 16-char Google App Password on Vercel Production + Preview.
- * Until then: WhatsApp (wa.me/393270156225) + .ics calendar replace email on success.
+ * Booking confirmation emails ON for production (Aruba SMTP on VPS).
+ * Set true only for emergency WhatsApp-only fallback.
  */
-export const BOOKING_EMAIL_DISABLED = true;
+export const BOOKING_EMAIL_DISABLED = false;
 
 /** @deprecated kept as alias for compatibility */
 export const RESEND_MISSING_IT = GMAIL_MISSING_IT;
@@ -84,7 +78,12 @@ export async function sendEmail(opts: {
       ics: opts.ics,
     });
     if (smtp.ok) {
-      console.info("[email] inviata via SMTP", { to: opts.to, subject: opts.subject, id: smtp.id });
+      console.info("[email] inviata via SMTP", {
+        to: opts.to,
+        subject: opts.subject,
+        replyTo,
+        id: smtp.id,
+      });
       return { ok: true, id: smtp.id };
     }
     logEmailError("SMTP ha rifiutato l'invio", { to: opts.to, error: smtp.error });
@@ -436,11 +435,12 @@ export async function sendBookingEmails(opts: {
 }) {
   if (BOOKING_EMAIL_DISABLED) {
     console.warn(
-      "[email] GMAIL_APP_PASSWORD empty on Vercel → SMTP cannot auth; booking emails skipped (BOOKING_EMAIL_DISABLED)",
+      "[email] booking confirmation emails skipped (BOOKING_EMAIL_DISABLED) — WhatsApp + .ics only",
     );
     const skipped = { ok: true as const, skipped: true };
     return { customer: skipped, admin: skipped, owner: { results: [], ok: true } };
   }
+  console.info("[email] booking confirm — Reply-To", mailReplyTo());
   const customer = await sendEmail({ to: opts.customerEmail, ...opts.customer, ics: opts.ics });
   const owner = await sendOwnerEmails({ owner: opts.owner, ics: opts.ics });
   const admin = owner.results[0]?.result ?? { ok: false, error: "Nessun destinatario salone configurato." };

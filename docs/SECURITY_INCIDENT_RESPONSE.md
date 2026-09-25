@@ -30,7 +30,7 @@ Signs: unexpected gestionale logins, mass booking spam, customer reports of phis
 
 - Invalidate sessions (password change already invalidates derived session secret).
 - Review Supabase rows for spam appointments; cancel/delete with care.
-- Confirm https://felicepolesebarbershop.vercel.app health (home, prenota, gestionale login).
+- Confirm https://felicepolesebarbershop.it health (home, prenota, gestionale login).
 
 ## 6. Post-incident
 

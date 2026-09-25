@@ -35,6 +35,21 @@ sudo bash scripts/vps-bootstrap.sh
 | `.env.production.example` | Template variabili |
 | `scripts/vps-bootstrap.sh` | Installazione automatica VPS |
 
+## Aggiornamento stack
+
+```bash
+cd /var/www/felice-polese
+git fetch origin && git pull --ff-only
+docker compose down && docker compose up -d --build
+docker compose ps
+```
+
+## Cron keep-alive (sostituisce Vercel Cron)
+
+```cron
+0 3 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://felicepolesebarbershop.it/api/cron/keep-alive >/dev/null 2>&1
+```
+
 ## Supabase (produzione)
 
 - **Project ref:** `dbbncprluqjrofjemfbg`
@@ -42,3 +57,5 @@ sudo bash scripts/vps-bootstrap.sh
 - Serve anche `SUPABASE_SERVICE_ROLE_KEY` (server-only) per prenotazioni/gestionale.
 
 Privacy `/privacy-policy`, cookie `/cookie-policy` e banner consenso sono già nel codice sito.
+
+**Nota:** Vercel non è più target di produzione — nessun webhook/callback Vercel.

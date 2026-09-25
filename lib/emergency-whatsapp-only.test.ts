@@ -16,11 +16,13 @@ const FLOW = readFileSync(
 );
 
 describe("emergency WhatsApp-only booking success", () => {
-  it("disables booking confirmation email sends", () => {
-    expect(BOOKING_EMAIL_DISABLED).toBe(true);
+  it("keeps booking confirmation emails enabled for production SMTP", () => {
+    expect(BOOKING_EMAIL_DISABLED).toBe(false);
   });
 
-  it("skips SMTP when booking emails are disabled", async () => {
+  it("attempts send path when booking emails are enabled (no disable short-circuit)", async () => {
+    // Without SMTP/Gmail credentials in unit tests, sendEmail degrades (ok:false skipped).
+    // The BOOKING_EMAIL_DISABLED short-circuit would return ok:true + skipped instead.
     const result = await sendBookingEmails({
       customerEmail: "mario@example.com",
       customer: {
@@ -35,9 +37,7 @@ describe("emergency WhatsApp-only booking success", () => {
       },
       ics: { filename: "test.ics", content: "BEGIN:VCALENDAR" },
     });
-    expect(result.customer.ok).toBe(true);
-    expect(result.customer.skipped).toBe(true);
-    expect(result.owner.ok).toBe(true);
+    expect(result.customer.ok && result.customer.skipped).toBeFalsy();
   });
 
   it("counts down to 19:00 Europe/Rome on opening day", () => {
@@ -62,7 +62,7 @@ describe("emergency WhatsApp-only booking success", () => {
       priceLabel: "65 €",
       durationMin: 70,
       notes: "Sponde basse",
-      manageUrl: "https://felicepolesebarbershop.vercel.app/appuntamento/abc",
+      manageUrl: "https://felicepolesebarbershop.it/appuntamento/abc",
     });
     expect(summary).toContain("NUOVA PRENOTAZIONE");
     expect(summary).toContain("Nome: Mario");

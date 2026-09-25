@@ -66,7 +66,7 @@ describe("booking email copy", () => {
       barber: "Felice",
       date: "martedì 1 settembre 2026",
       time: "09:30",
-      manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
+      manageUrl: "https://felicepolesebarbershop.it/appuntamento/abc",
       priceLabel: "25 €",
       durationLabel: "50 min",
     });
@@ -85,7 +85,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain(`almeno ${CANCEL_NOTICE_IT} di anticipo`);
     expect(mail.text).toContain("sovrapposizioni o necessità organizzative");
     expect(mail.text).not.toMatch(/è confermata|Prenotazione confermata/i);
-    expect(mail.text).toContain("Gestisci o disdici: https://polesebarbershop.vercel.app/appuntamento/abc");
+    expect(mail.text).toContain("Gestisci o disdici: https://felicepolesebarbershop.it/appuntamento/abc");
     expect(mail.text).not.toMatch(/24h|24 ore|3 ore/);
     expect(mail.html).toContain("Felice Polese Barber Shop");
     expect(mail.html).toContain("Gestisci o disdici");
@@ -113,7 +113,7 @@ describe("booking email copy", () => {
       time: "09:30",
       priceLabel: "65 €",
       notes: "Allergia al nichel",
-      manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
+      manageUrl: "https://felicepolesebarbershop.it/appuntamento/abc",
       customerWhatsAppUrl: "https://wa.me/393331112233?text=Ciao",
     });
     expect(mail.subject).toMatch(/^NUOVA PRENOTAZIONE/);
@@ -128,7 +128,7 @@ describe("booking email copy", () => {
     expect(mail.text).toContain("Data: martedì 1 settembre 2026");
     expect(mail.text).toContain("Ora: 09:30");
     expect(mail.text).toContain("Note: Allergia al nichel");
-    expect(mail.text).toContain("Gestisci: https://polesebarbershop.vercel.app/appuntamento/abc");
+    expect(mail.text).toContain("Gestisci: https://felicepolesebarbershop.it/appuntamento/abc");
     expect(mail.text).not.toContain("Scrivi al cliente su WhatsApp");
     expect(mail.html).not.toContain("wa.me/393331112233");
   });
@@ -184,7 +184,7 @@ describe("booking email copy", () => {
       barber: "Felice",
       date: "martedì 1 settembre 2026",
       time: "09:30",
-      manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
+      manageUrl: "https://felicepolesebarbershop.it/appuntamento/abc",
       priceLabel: "da 25 €",
     });
     expect(mail.text).toMatch(/^Ciao Mario,/);
@@ -214,7 +214,7 @@ describe("booking email copy", () => {
       time: "09:30",
       priceLabel: "da 25 €",
       notes: "Sponde basse",
-      manageUrl: "https://polesebarbershop.vercel.app/appuntamento/abc",
+      manageUrl: "https://felicepolesebarbershop.it/appuntamento/abc",
     });
     expect(mail.subject).toMatch(/Mario Rossi/);
     for (const value of [

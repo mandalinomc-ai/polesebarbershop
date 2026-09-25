@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { clientKeyFromContact, normalizePersonName } from "@/lib/crm";
+import { normalizeItalianPhone } from "@/lib/phone";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -18,7 +19,15 @@ const contactSchema = z.object({
 });
 
 function digits(phone: string) {
+  const e164 = normalizeItalianPhone(phone);
+  if (e164) return e164.replace(/\D/g, "");
   return phone.replace(/\D/g, "");
+}
+
+function sanitizeStoredPhone(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  return normalizeItalianPhone(trimmed) || trimmed;
 }
 
 function tableMissing(error: { code?: string; message?: string } | null) {
@@ -87,7 +96,7 @@ export async function POST(request: Request) {
 
   const firstName = parsed.data.firstName.trim();
   const lastName = parsed.data.lastName.trim();
-  const phone = parsed.data.phone.trim();
+  const phone = sanitizeStoredPhone(parsed.data.phone);
   const email = parsed.data.email.trim().toLowerCase();
   if (digits(phone).length < 8 && !email.includes("@")) {
     return NextResponse.json({ error: "Inserisci almeno un telefono valido o un’email." }, { status: 400 });
@@ -144,7 +153,7 @@ export async function PATCH(request: Request) {
   const parsed = contactSchema.safeParse(raw);
   if (!parsed.success) return NextResponse.json({ error: "Dati non validi." }, { status: 400 });
 
-  const phone = parsed.data.phone.trim();
+  const phone = sanitizeStoredPhone(parsed.data.phone);
   const email = parsed.data.email.trim().toLowerCase();
   if (digits(phone).length < 8 && !email.includes("@")) {
     return NextResponse.json({ error: "Inserisci almeno telefono o email." }, { status: 400 });
