@@ -7,10 +7,11 @@ export const revalidate = 0;
 
 /**
  * Lightweight Supabase ping so free-tier projects stay warm.
- * Schedule: vercel.json crons → daily 03:00 UTC.
+ * Schedule on the VPS (host cron or container), e.g. daily 03:00 UTC:
+ *   curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://felicepolesebarbershop.it/api/cron/keep-alive
  *
- * Auth: if `CRON_SECRET` is set, require `Authorization: Bearer <CRON_SECRET>`
- * (Vercel Cron sends this automatically). If unset, GET is allowed (local/dev).
+ * Auth: if `CRON_SECRET` is set, require `Authorization: Bearer <CRON_SECRET>`.
+ * If unset, GET is allowed (local/dev).
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET?.trim();

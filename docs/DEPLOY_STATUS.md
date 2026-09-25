@@ -34,7 +34,7 @@ After merge: single `vercel --prod` on `temporary-prompt-quasar-rndxhgh`.
 **Branch:** `cursor/client-ux-polish-56a6`  
 **Tip:** `ac5749cadb17c2ca52af69ad98a296053fe37217`  
 **PR:** https://github.com/mandalinomc-ai/polesebarbershop/pull/27  
-**Target:** Vercel project `temporary-prompt-quasar-rndxhgh` → https://felicepolesebarbershop.vercel.app  
+**Target:** Vercel project `temporary-prompt-quasar-rndxhgh` → https://felicepolesebarbershop.it  
 **Do not deploy to:** `polesebarbershop`
 
 ## Verdict (2026-09-04 ~08:25 UTC): **NO-GO for live UX polish**

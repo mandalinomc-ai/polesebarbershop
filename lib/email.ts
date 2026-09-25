@@ -21,14 +21,9 @@ export const GMAIL_MISSING_IT =
   `Invio email non configurato. Scarica il file .ics oppure chiama il ${SITE.phone}.`;
 
 /**
- * EMERGENCY OFF (2026-09-04) — booking confirmation emails disabled on production.
- *
- * ROOT CAUSE: Vercel env `GMAIL_APP_PASSWORD` is empty (secret present but no value).
- * Gmail SMTP auth therefore fails for every outbound message. Customer confirmation
- * and salon alert to felicepolese550@gmail.com never leave the server.
- *
- * Re-enable after setting a 16-char Google App Password on Vercel Production + Preview.
- * Until then: WhatsApp (wa.me/393270156225) + .ics calendar replace email on success.
+ * Booking confirmation emails temporarily off — customers get WhatsApp + .ics.
+ * Staff cancel/reschedule still send via Aruba SMTP (see notify paths).
+ * Re-enable after Step 4 E2E confirms SMTP on VPS for all booking mails.
  */
 export const BOOKING_EMAIL_DISABLED = true;
 
@@ -436,7 +431,7 @@ export async function sendBookingEmails(opts: {
 }) {
   if (BOOKING_EMAIL_DISABLED) {
     console.warn(
-      "[email] GMAIL_APP_PASSWORD empty on Vercel → SMTP cannot auth; booking emails skipped (BOOKING_EMAIL_DISABLED)",
+      "[email] booking confirmation emails skipped (BOOKING_EMAIL_DISABLED) — WhatsApp + .ics only",
     );
     const skipped = { ok: true as const, skipped: true };
     return { customer: skipped, admin: skipped, owner: { results: [], ok: true } };

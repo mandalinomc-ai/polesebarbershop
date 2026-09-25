@@ -104,8 +104,7 @@ export async function isAdminRequest() {
 }
 
 export function adminCookieOptions() {
-  const secure =
-    process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+  const secure = process.env.NODE_ENV === "production";
   /** Share session across apex + www so agenda/storico load after login. */
   let domain: string | undefined;
   try {

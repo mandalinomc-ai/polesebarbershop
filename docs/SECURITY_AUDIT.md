@@ -1,6 +1,6 @@
 # SECURITY_AUDIT — Felice Polese Barber Shop
 
-**Site:** https://felicepolesebarbershop.vercel.app  
+**Site:** https://felicepolesebarbershop.it  
 **Scope:** this repository only (Felice Polese). Do not treat `polesebarbershop` as deploy target.  
 **Date:** 2026-09-04  
 **Claim level:** hardening measures applied — not a penetration-test certificate.

@@ -22,6 +22,7 @@ import {
 } from "@/lib/gestionale/agenda-block";
 import { getSupabaseAdmin, isSupabaseConfigured, SUPABASE_MISSING_IT, type AppointmentRow } from "@/lib/supabase";
 import { flattenZodError, walkInSchema } from "@/lib/validations";
+import { normalizeItalianPhone } from "@/lib/phone";
 import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 import { z } from "zod";
 
@@ -79,7 +80,8 @@ export async function POST(request: Request) {
   const startsAt = wallTimeToUtc(body.date, body.startTime);
   const firstName = (body.firstName || "Walk-in").trim() || "Walk-in";
   const lastName = (body.lastName || "").trim();
-  const phone = (body.phone || "").trim();
+  const rawPhone = (body.phone || "").trim();
+  const phone = rawPhone ? normalizeItalianPhone(rawPhone) || rawPhone : "";
   const email = (body.email || "").trim();
   const isIncomplete = phone.replace(/\D/g, "").length < 8 && !email.includes("@");
 

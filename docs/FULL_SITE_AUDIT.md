@@ -5,7 +5,7 @@
 **Claim:** review fattuale sul codice — **non** pentest, **non** “100% GDPR”.  
 **Legal gap list:** `docs/LEGAL_TODO.md`
 
-**Live (docs):** `https://felicepolesebarbershop.vercel.app`  
+**Live (docs):** `https://felicepolesebarbershop.it`  
 **Config:** `lib/site-config.ts` → `SITE.siteUrl` / `NEXT_PUBLIC_SITE_URL`  
 **White-label:** `docs/WHITE_LABEL_TEMPLATE.md` · export `npm run backup:offline`
 

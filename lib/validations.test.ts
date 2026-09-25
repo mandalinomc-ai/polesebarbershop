@@ -1,12 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { bookingSchema, walkInSchema, adminLoginSchema } from "./validations";
-import { normalizeItalianPhone, resolveBookingPhone } from "./phone";
+import {
+  normalizeItalianPhone,
+  normalizeWhatsAppNumber,
+  resolveBookingPhone,
+  sanitizeWhatsAppPhone,
+} from "./phone";
 
 describe("phone + booking validation", () => {
-  it("normalises Italian mobiles to +39", () => {
+  it("sanitises Italian mobiles to +39 (spaces, dashes, trunk zero)", () => {
+    expect(sanitizeWhatsAppPhone("3331234567")).toBe("+393331234567");
+    expect(normalizeWhatsAppNumber("333-123-4567")).toBe("+393331234567");
     expect(normalizeItalianPhone("327 015 6225")).toBe("+393270156225");
     expect(normalizeItalianPhone("+39 327 015 6225")).toBe("+393270156225");
     expect(normalizeItalianPhone("03270156225")).toBe("+393270156225");
+    expect(normalizeItalianPhone("0039 333 111 2233")).toBe("+393331112233");
+    expect(normalizeItalianPhone("(333) 111.22.33")).toBe("+393331112233");
+    expect(normalizeItalianPhone("393331112233")).toBe("+393331112233");
+  });
+
+  it("keeps already-prefixed international numbers", () => {
+    expect(sanitizeWhatsAppPhone("+393331234567")).toBe("+393331234567");
+    expect(sanitizeWhatsAppPhone("+41 79 123 45 67")).toBe("+41791234567");
+  });
+
+  it("rejects unusable scraps", () => {
+    expect(sanitizeWhatsAppPhone("")).toBeNull();
+    expect(sanitizeWhatsAppPhone("12")).toBeNull();
+    expect(sanitizeWhatsAppPhone("abc")).toBeNull();
   });
 
   it("resolves wizard phone without doubling +39", () => {

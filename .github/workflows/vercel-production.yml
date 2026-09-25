@@ -1,68 +1,18 @@
-# Optional CLI production deploy. Vercel Git integration already builds
-# every push to main; this workflow only runs when GitHub secrets exist.
-#
-# Required GitHub repository secrets (Settings → Secrets and variables → Actions):
-#   VERCEL_TOKEN          — https://vercel.com/account/tokens
-#   VERCEL_ORG_ID         — Team/User ID (vercel whoami → id, or Project Settings → General)
-#   VERCEL_PROJECT_ID     — prj_E4dMpfR7ExzCAwNGH2MwO30jsqAf
-#
-# Required Vercel production env vars (Project → Settings → Environment Variables):
-#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, GMAIL_USER, GMAIL_APP_PASSWORD,
-#   BOOKING_NOTIFICATION_EMAIL, ADMIN_PASSWORD, ADMIN_EMAIL, OWNER_EMAIL,
-#   NEXT_PUBLIC_SITE_URL=https://polesebarbershop.vercel.app
+# DEPRECATED — production runs on VPS (94.177.161.26 / felicepolesebarbershop.it).
+# This workflow is disabled so pushes to main never redeploy to Vercel.
+# Use Docker Compose on the VPS instead: docker compose down && docker compose up -d
 
-name: Vercel production
+name: Vercel production (disabled)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    # Manual only — do not auto-deploy to Vercel.
 
 jobs:
-  check-creds:
+  skip:
     runs-on: ubuntu-latest
-    outputs:
-      has_creds: ${{ steps.creds.outputs.has_creds }}
     steps:
-      - name: Check Vercel secrets
-        id: creds
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - name: Production is on VPS
         run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "has_creds=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::VERCEL_TOKEN is not set. Skipping CLI deploy. Vercel Git still builds from main (github.autoAlias)."
-          else
-            echo "has_creds=true" >> "$GITHUB_OUTPUT"
-          fi
-
-  deploy:
-    needs: check-creds
-    if: needs.check-creds.outputs.has_creds == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel project settings
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build with Vercel
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to production
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          echo "Vercel deploy is disabled. Production: https://felicepolesebarbershop.it (VPS 94.177.161.26)."
+          exit 0

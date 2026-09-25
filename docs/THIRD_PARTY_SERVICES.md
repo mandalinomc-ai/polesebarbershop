@@ -2,14 +2,16 @@
 
 | Service | Role | Data involved | Where configured |
 |---------|------|---------------|------------------|
-| **Vercel** | Hosting / CDN / serverless | Request logs, env secrets | Project `temporary-prompt-quasar-rndxhgh` → alias felicepolesebarbershop |
+| **VPS Aruba** | Hosting / Docker / Nginx / TLS | Request logs, env secrets | `94.177.161.26` → https://felicepolesebarbershop.it |
 | **Supabase** | Postgres + API | Appointments, customer fields, CRM notes | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (server) |
-| **Gmail SMTP** | Transactional email + .ics | Customer/owner email content | `GMAIL_USER`, `GMAIL_APP_PASSWORD` |
+| **Aruba SMTP** | Transactional email + .ics | Customer/owner email content | `SMTP_*` / `MAIL_*` |
+| **WhatsApp (Meta/Sinch)** | Outbound notify | Customer phone E.164 +39 | `WHATSAPP_*` / `SINCH_*` |
 | **Google Maps** | Directions / map links | User click opens Google | Public URLs in UI |
 | **Google Fonts** | Typography CSS | Browser connection to Google | `layout.tsx` + `next/font` |
 
-## Not used
+## Not used (production)
 
+- Vercel hosting / Vercel Cron / Vercel webhooks  
 - Twilio / SMS gateways  
 - QStash / Upstash queues  
 - Google Analytics / Tag Manager  
@@ -19,5 +21,5 @@
 
 ## Deploy note
 
-Public production URL: **https://felicepolesebarbershop.vercel.app**  
+Public production URL: **https://felicepolesebarbershop.it**  
 Do not deploy this branch to the legacy `polesebarbershop` project.

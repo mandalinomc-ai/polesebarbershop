@@ -1,6 +1,6 @@
 # COMPLIANCE_AUDIT — Felice Polese Barber Shop
 
-**Site:** https://felicepolesebarbershop.vercel.app  
+**Site:** https://felicepolesebarbershop.it  
 **Date:** 2026-09-04  
 
 > This document is an internal checklist. It does **not** claim “100% GDPR compliant”.

@@ -1,6 +1,7 @@
 import { addDays, formatWallDate, formatWallTime, mondayOfWeek } from "@/lib/availability";
 import { namesFromSnapshot } from "@/lib/appointments";
 import { barberDisplayName } from "@/lib/catalog";
+import { normalizeWhatsAppNumber } from "./phone";
 
 export type CrmAppointment = {
   id: string;
@@ -182,6 +183,8 @@ export function formatEuroCents(cents: number) {
 }
 
 function digits(phone: string) {
+  const e164 = normalizeWhatsAppNumber(phone);
+  if (e164) return e164.replace(/\D/g, "");
   return phone.replace(/\D/g, "");
 }
 

@@ -1,4 +1,4 @@
-import { normalizeWhatsAppNumber } from "./phone";
+import { normalizeWhatsAppNumber, sanitizeWhatsAppPhone } from "./phone";
 
 export const TIMEZONE = "Europe/Rome";
 
@@ -253,7 +253,7 @@ export function getSalonToCustomerWhatsAppUrl(
 }
 
 export function whatsAppMeUrl(phone: string, message: string): string | null {
-  const e164 = normalizeWhatsAppNumber(phone);
+  const e164 = sanitizeWhatsAppPhone(phone);
   if (!e164) return null;
   const digits = e164.replace(/\D/g, "");
   if (digits.length < 8) return null;

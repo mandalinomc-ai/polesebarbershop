@@ -1,4 +1,4 @@
-import { normalizeWhatsAppNumber } from "./phone";
+import { sanitizeWhatsAppPhone } from "./phone";
 import { getSalonNotifyWhatsApp } from "./site-config";
 
 export type WhatsAppSendResult =
@@ -117,9 +117,10 @@ async function sendViaSinch(e164: string, text: string): Promise<WhatsAppSendRes
 
 /**
  * Server-side WhatsApp to any E.164 number. Never opens wa.me.
+ * Customer numbers are always sanitized (strip noise, add +39 if missing).
  */
 export async function sendWhatsApp(phone: string, text: string): Promise<WhatsAppSendResult> {
-  const e164 = normalizeWhatsAppNumber(phone);
+  const e164 = sanitizeWhatsAppPhone(phone);
   if (!e164) return { ok: false, error: "Numero non valido." };
   if (!isWhatsAppConfigured()) {
     return { ok: false, skipped: true, error: "WhatsApp Business non configurato." };

@@ -62,7 +62,7 @@ describe("emergency WhatsApp-only booking success", () => {
       priceLabel: "65 €",
       durationMin: 70,
       notes: "Sponde basse",
-      manageUrl: "https://felicepolesebarbershop.vercel.app/appuntamento/abc",
+      manageUrl: "https://felicepolesebarbershop.it/appuntamento/abc",
     });
     expect(summary).toContain("NUOVA PRENOTAZIONE");
     expect(summary).toContain("Nome: Mario");
