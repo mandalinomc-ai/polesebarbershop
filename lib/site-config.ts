@@ -197,7 +197,7 @@ export type BookingConfirmCopy = {
   manageUrl?: string;
 };
 
-/** Same plain-text summary as ownerNewBookingEmail — used for WhatsApp to the salon. */
+/** Same plain-text summary as ownerNewBookingEmail — salon/owner notify only. */
 export function getBookingWhatsAppSummaryMessage(opts: BookingConfirmCopy): string {
   const notes = opts.notes?.trim() || "";
   const lines = [
@@ -219,14 +219,43 @@ export function getBookingWhatsAppSummaryMessage(opts: BookingConfirmCopy): stri
   return lines.join("\n");
 }
 
-/** @deprecated use getBookingWhatsAppSummaryMessage */
-export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
-  return getBookingWhatsAppSummaryMessage(opts);
+/**
+ * Customer-facing WhatsApp: confirmed booking as riepilogo/promemoria.
+ * Never asks the salon for confirmation — the appointment is already confirmed.
+ */
+export function getBookingReminderMessage(opts: BookingConfirmCopy): string {
+  const lines = [
+    "PROMEMORIA PRENOTAZIONE",
+    "",
+    `Prenotazione confermata da ${SITE.name}.`,
+    "",
+    `Servizio/i: ${opts.service}`,
+  ];
+  if (opts.durationMin != null) lines.push(`Durata: ${opts.durationMin} min`);
+  else if (opts.durationLabel?.trim()) lines.push(`Durata: ${opts.durationLabel.trim()}`);
+  if (opts.priceLabel?.trim()) lines.push(`Prezzo: ${opts.priceLabel.trim()}`);
+  if (opts.barberName?.trim()) lines.push(`Barbiere: ${opts.barberName.trim()}`);
+  lines.push(`Data: ${opts.dateLabel}`);
+  lines.push(`Ora: ${opts.timeLabel}`);
+  lines.push(`Indirizzo: ${SITE.addressFull}`);
+  if (opts.firstName?.trim() || opts.lastName?.trim()) {
+    lines.push(
+      `Cliente: ${[opts.firstName?.trim(), opts.lastName?.trim()].filter(Boolean).join(" ")}`,
+    );
+  }
+  if (opts.notes?.trim()) lines.push(`Note: ${opts.notes.trim()}`);
+  lines.push("", `Per modifiche o disdette: ${SITE.phone}`);
+  return lines.join("\n");
 }
 
-/** Cliente → salone (wa.me/393270156225). Prefills the same summary as the owner email. */
+/** @deprecated use getBookingReminderMessage */
+export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
+  return getBookingReminderMessage(opts);
+}
+
+/** Cliente → salone: wa.me with confirmed riepilogo/promemoria (not a confirmation request). */
 export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
-  return getWhatsAppUrl(getBookingWhatsAppSummaryMessage(opts));
+  return getWhatsAppUrl(getBookingReminderMessage(opts));
 }
 
 /** Testo WhatsApp salone → cliente: promemoria (prenotazione già confermata). */

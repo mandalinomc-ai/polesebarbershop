@@ -54,7 +54,7 @@ export function publicBookingWarnings(warnings: string[]): string[] {
       // Persistence / mail infra failures → one gentle line max.
       if (/database|supabase|salvata|schema/i.test(text)) {
         const gentle =
-          "La prenotazione potrebbe non essere in agenda: chiama il salone per confermare.";
+          "La prenotazione potrebbe non essere in agenda: chiama il salone.";
         if (!out.includes(gentle)) out.push(gentle);
       }
       continue;

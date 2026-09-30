@@ -447,7 +447,8 @@ export function FreshaBookingFlow({
         <div className="fresha-body success-box">
           <h3 className="font-serif">Prenotazione confermata</h3>
           <p className="prose">
-            Ecco il riepilogo. Ti aspettiamo in salone all&apos;orario scelto.
+            Ecco il riepilogo della prenotazione confermata. Ti aspettiamo in
+            salone all&apos;orario scelto.
           </p>
           <ul className="success-details">
             <li>
@@ -485,7 +486,7 @@ export function FreshaBookingFlow({
               Invia il promemoria
             </a>
             <p className="booking-open-note">
-              Apre WhatsApp con orario e dettagli già compilati.
+              Apre WhatsApp con il riepilogo/promemoria già compilato.
             </p>
           </div>
           <div className="success-actions" aria-label="Aggiungi il promemoria al tuo calendario">
@@ -521,8 +522,7 @@ export function FreshaBookingFlow({
             </p>
           ) : (
             <p className="booking-open-note">
-              Lo slot non è ancora in agenda: chiama il {SITE.phone} per
-              confermare o disdire.
+              Se non trovi lo slot in agenda, chiama il {SITE.phone}.
             </p>
           )}
         </div>
@@ -918,9 +918,9 @@ export function FreshaBookingFlow({
             </ul>
             {submitError ? <p className="field-error">{submitError}</p> : null}
             <p className="booking-open-note" style={{ marginTop: "1rem" }}>
-              Dopo la conferma aggiungi l&apos;appuntamento al calendario (.ics)
-              e invia il riepilogo al salone su WhatsApp. Promemoria unico: 30
-              minuti prima. Puoi disdire dal link di gestione.
+              Dopo la prenotazione vedi subito il riepilogo: puoi inviare il
+              promemoria su WhatsApp e aggiungerlo al calendario. Promemoria
+              unico: 30 minuti prima. Puoi disdire dal link di gestione.
               {" "}{SITE.pricesIncludeVat}
             </p>
           </>

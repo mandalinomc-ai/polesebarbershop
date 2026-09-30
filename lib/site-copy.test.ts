@@ -187,8 +187,11 @@ describe("public copy vs official identity", () => {
       priceLabel: "25 €",
     });
     expect(confirm).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
-    expect(confirm).toContain(encodeURIComponent("NUOVA PRENOTAZIONE"));
-    expect(confirm).toContain(encodeURIComponent("Nome: Mario"));
+    expect(confirm).toContain(encodeURIComponent("PROMEMORIA PRENOTAZIONE"));
+    expect(confirm).toContain(encodeURIComponent("Prenotazione confermata"));
+    expect(confirm).toContain(encodeURIComponent("Servizio/i: Taglio classico"));
+    expect(confirm).not.toContain(encodeURIComponent("NUOVA PRENOTAZIONE"));
+    expect(confirm).not.toContain(encodeURIComponent("Attendi"));
     const toClient = getSalonToCustomerWhatsAppUrl("+39 333 111 2233", {
       firstName: "Mario",
       service: "Taglio classico",
@@ -218,12 +221,16 @@ describe("public copy vs official identity", () => {
     expect(wizard).not.toMatch(/postSalonBookingRelay/);
     expect(wizard).not.toMatch(/Conferma su WhatsApp/);
     expect(wizard).toMatch(/Prenotazione confermata/);
+    expect(wizard).toMatch(/Ecco il riepilogo della prenotazione confermata/);
     expect(wizard).toMatch(/Invia il promemoria/);
     expect(wizard).toMatch(/Aggiungi il promemoria al tuo calendario/);
     expect(wizard).not.toMatch(/Attendi la conferma su WhatsApp/);
+    expect(wizard).not.toMatch(/Attendi/);
+    expect(wizard).not.toMatch(/riepilogo al salone/);
     expect(wizard).not.toMatch(/twilio/i);
     const manage = readFileSync(join(process.cwd(), "app/appuntamento/[token]/ManageAppointment.tsx"), "utf8");
     expect(manage).toMatch(/Confermata/);
+    expect(manage).toMatch(/ecco il riepilogo/);
     expect(manage).not.toMatch(/Attendi la conferma su WhatsApp/);
     expect(manage).toMatch(/Aggiungi il promemoria al tuo calendario/);
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");

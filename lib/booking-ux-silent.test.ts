@@ -168,7 +168,7 @@ describe("public booking messages (no engine jargon)", () => {
     expect(cleaned.some((w) => /database|supabase|inventat|durationUnknown/i.test(w))).toBe(
       false,
     );
-    expect(cleaned.some((w) => /agenda|confermare/i.test(w))).toBe(true);
+    expect(cleaned.some((w) => /agenda|chiama il salone/i.test(w))).toBe(true);
     expect(cleaned.some((w) => /email di conferma|avviso email/i.test(w))).toBe(false);
   });
 });

@@ -96,7 +96,8 @@ export function ManageAppointment({ token }: { token: string }) {
       <h1 className="section-title font-serif">Il tuo appuntamento</h1>
       {!cancelled ? (
         <p className="booking-open-note" style={{ marginTop: "0.75rem" }}>
-          Prenotazione confermata. Ti aspettiamo in salone all&apos;orario indicato.
+          Prenotazione confermata — ecco il riepilogo. Ti aspettiamo in salone
+          all&apos;orario indicato.
         </p>
       ) : null}
       <ul className="summary-list" style={{ marginTop: "1.5rem" }}>
