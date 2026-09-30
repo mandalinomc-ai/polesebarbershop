@@ -197,34 +197,35 @@ describe("public copy vs official identity", () => {
       barberName: "Felice",
     });
     expect(toClient).toMatch(/^https:\/\/wa\.me\/393331112233\?text=/);
-    expect(toClient).toContain(encodeURIComponent("abbiamo ricevuto la tua richiesta"));
+    expect(toClient).toContain(encodeURIComponent("è confermato"));
     expect(getCustomerConfirmMessage({
       firstName: "Mario",
       service: "Taglio classico",
       dateLabel: "martedì 1 settembre 2026",
       timeLabel: "09:30",
       barberName: "Felice",
-    })).toMatch(/abbiamo ricevuto la tua richiesta/);
+    })).toMatch(/è confermato/);
     expect(getCustomerConfirmMessage({
       firstName: "Mario",
       service: "Taglio classico",
       dateLabel: "martedì 1 settembre 2026",
       timeLabel: "09:30",
       barberName: "Felice",
-    })).not.toMatch(/è confermata|Prenotazione confermata/i);
+    })).not.toMatch(/Attendi la nostra conferma/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/getWhatsAppUrl/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).not.toMatch(/postSalonBookingRelay/);
     expect(wizard).not.toMatch(/Conferma su WhatsApp/);
-    expect(wizard).toMatch(/Richiesta di prenotazione ricevuta/);
-    expect(wizard).toMatch(/Attendi la conferma su WhatsApp/);
-    expect(wizard).not.toMatch(/Prenotazione confermata/);
+    expect(wizard).toMatch(/Prenotazione confermata/);
+    expect(wizard).toMatch(/Invia il promemoria/);
+    expect(wizard).toMatch(/Aggiungi il promemoria al tuo calendario/);
+    expect(wizard).not.toMatch(/Attendi la conferma su WhatsApp/);
     expect(wizard).not.toMatch(/twilio/i);
     const manage = readFileSync(join(process.cwd(), "app/appuntamento/[token]/ManageAppointment.tsx"), "utf8");
-    expect(manage).toMatch(/Richiesta inviata/);
-    expect(manage).not.toMatch(/Confermata/);
-    expect(manage).toMatch(/Attendi la conferma su WhatsApp/);
+    expect(manage).toMatch(/Confermata/);
+    expect(manage).not.toMatch(/Attendi la conferma su WhatsApp/);
+    expect(manage).toMatch(/Aggiungi il promemoria al tuo calendario/);
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);
     expect(crm).toMatch(/niente Twilio/);
@@ -238,6 +239,7 @@ describe("public copy vs official identity", () => {
     expect(crm).toMatch(/CrmBottomNav|createPortal|visualViewport/);
     expect(crm).toMatch(/Incassi per barbiere/);
     expect(crm).toMatch(/getRealBarbers\(\)/);
+    expect(crm).toMatch(/TeamAdminPanel/);
     const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
@@ -534,7 +536,7 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/Raggiungimi ora su Google Maps/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/btn btn-whatsapp appointment-sidebar-wa/);
-    expect(wizard).toMatch(/INVIA ORA IL PROMEMORIA APPUNTAMENTO/);
+    expect(wizard).toMatch(/Invia il promemoria/);
     const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(contact).toMatch(/btn btn-whatsapp contact-wa/);
     const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8");

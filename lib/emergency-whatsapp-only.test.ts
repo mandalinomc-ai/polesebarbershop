@@ -106,13 +106,13 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(successBlock).not.toMatch(/non recapitato/i);
     expect(successBlock).not.toMatch(/field-error/);
     expect(successBlock).toContain("btn btn-whatsapp");
-    expect(successBlock).toContain("INVIA ORA IL PROMEMORIA APPUNTAMENTO");
-    expect(successBlock).toContain("Aggiungi al tuo calendario");
+    expect(successBlock).toContain("Invia il promemoria");
+    expect(successBlock).toContain("Aggiungi il promemoria al tuo calendario");
     expect(successBlock.indexOf("success-whatsapp-row")).toBeLessThan(
       successBlock.indexOf("success-actions"),
     );
-    expect(successBlock).toContain("Apple Calendar (.ics)");
-    expect(successBlock).toContain("Google Calendar");
+    expect(successBlock).not.toContain("Apple Calendar (.ics)");
+    expect(successBlock).not.toContain("Google Calendar");
     expect(successBlock).toContain("success.whatsappUrl");
     expect(FLOW).toContain("getBookingConfirmWhatsAppUrl");
     expect(successBlock).not.toMatch(

@@ -22,6 +22,7 @@ import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
 import { isPaidStatus } from "@/lib/crm";
 import { buildStaffCancelCopy, buildStaffRescheduleCopy, waMeUrl } from "@/lib/crm-notify";
 import { barberDisplayName } from "@/lib/catalog";
+import { ensureRuntimeBarbers } from "@/lib/runtime-barbers";
 import { sendEmail, staffCancelCustomerEmail, staffRescheduleCustomerEmail } from "@/lib/email";
 import { buildIcs, icsFilename } from "@/lib/ics";
 import { SITE, getSiteUrl, getIcsUidDomain } from "@/lib/site-config";
@@ -78,6 +79,7 @@ function serialize(row: AppointmentRow) {
 
 export async function GET(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
+  await ensureRuntimeBarbers();
   const { searchParams } = new URL(request.url);
   const parsed = adminAppointmentsQuerySchema.safeParse({
     date: searchParams.get("date") || undefined,
@@ -339,6 +341,7 @@ async function notifyClientOfStaffReschedule(
 
 export async function PATCH(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
+  await ensureRuntimeBarbers();
   if (!isSupabaseConfigured()) return NextResponse.json({ error: SUPABASE_MISSING_IT }, { status: 503 });
   let raw: unknown;
   try {

@@ -1,19 +1,23 @@
 import { NextResponse } from "next/server";
 import { loadCatalogServices } from "@/lib/runtime-catalog";
+import { loadRuntimeBarbers } from "@/lib/runtime-barbers";
 import {
   SERVICE_CATEGORIES,
   SERVICE_CATEGORY_LABEL,
   formatDuration,
   formatPrice,
+  getRealBarbers,
 } from "@/lib/catalog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-/** Public catalog — same source booking/slots use (catalog seed + DB overlays). */
+/** Public catalog — services + barbers (seed + dipendenti DB). */
 export async function GET() {
+  await loadRuntimeBarbers();
   const services = await loadCatalogServices({ includeInactive: false });
+  const barbers = getRealBarbers();
   return NextResponse.json(
     {
       categories: SERVICE_CATEGORIES.map((id) => ({
@@ -33,6 +37,11 @@ export async function GET() {
         description: s.description,
         priceLabel: formatPrice(s),
         durationLabel: formatDuration(s),
+      })),
+      barbers: barbers.map((b) => ({
+        id: b.id,
+        name: b.name,
+        title: b.title,
       })),
     },
     {

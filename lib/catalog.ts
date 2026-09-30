@@ -231,6 +231,8 @@ export type Barber = {
   title: string;
   virtual: boolean;
   hours: Record<number, DayHours>;
+  /** When false, hidden from public booking / agenda columns. */
+  active?: boolean;
 };
 
 export const ANYONE_BARBER_ID = "anyone";
@@ -251,17 +253,33 @@ export const ARCHIVED_BARBER_LABEL: Record<string, string> = {
   davide: "Davide (archiviato)",
 };
 
+/** Populated by loadRuntimeBarbers() — DB staff + seed. */
+let runtimeBarbersOverlay: Barber[] | null = null;
+
+export function setRuntimeBarbersOverlay(barbers: Barber[] | null) {
+  runtimeBarbersOverlay = barbers;
+}
+
+export function getRuntimeBarbersOverlay(): Barber[] | null {
+  return runtimeBarbersOverlay;
+}
+
 export function getService(id: string) {
   return SERVICES.find((s) => s.id === id);
 }
-export function getBarber(id: string) {
-  return BARBERS.find((b) => b.id === id);
+
+function barbersSource(override?: Barber[]): Barber[] {
+  return override || runtimeBarbersOverlay || BARBERS;
 }
-export function barberDisplayName(id: string): string {
-  return getBarber(id)?.name || ARCHIVED_BARBER_LABEL[id] || id;
+
+export function getBarber(id: string, barbers?: Barber[]) {
+  return barbersSource(barbers).find((b) => b.id === id);
 }
-export function getRealBarbers(barbers: Barber[] = BARBERS) {
-  return barbers.filter((b) => !b.virtual);
+export function barberDisplayName(id: string, barbers?: Barber[]): string {
+  return getBarber(id, barbers)?.name || ARCHIVED_BARBER_LABEL[id] || id;
+}
+export function getRealBarbers(barbers?: Barber[]) {
+  return barbersSource(barbers).filter((b) => !b.virtual && b.active !== false);
 }
 
 export function isBookableServiceId(id: string): boolean {

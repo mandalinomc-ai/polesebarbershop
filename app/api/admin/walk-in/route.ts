@@ -9,6 +9,7 @@ import { blockEndFromStart, resolveEffectiveServiceDuration } from "@/lib/bookin
 import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
 import { getBarber, totalsForServices } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
+import { ensureRuntimeBarbers } from "@/lib/runtime-barbers";
 import {
   AppointmentsUnavailableError,
   loadDayAppointments,
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
   }
   const parsed = walkInWithOverride.safeParse(raw);
   if (!parsed.success) return NextResponse.json({ error: flattenZodError(parsed.error) }, { status: 400 });
+  await ensureRuntimeBarbers();
   const body = parsed.data;
   const services = await resolveRuntimeServices(body.serviceIds);
   if (!services) return NextResponse.json({ error: "Servizi non validi." }, { status: 400 });

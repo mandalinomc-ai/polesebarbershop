@@ -229,14 +229,14 @@ export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
   return getWhatsAppUrl(getBookingWhatsAppSummaryMessage(opts));
 }
 
-/** Testo automatico WhatsApp al cliente. */
+/** Testo WhatsApp salone → cliente: promemoria (prenotazione già confermata). */
 export function getCustomerConfirmMessage(opts: BookingConfirmCopy): string {
   const name = opts.firstName?.trim() || "";
   const barber = opts.barberName?.trim() ? ` con ${opts.barberName.trim()}` : "";
   const hello = name ? `Ciao ${name}` : "Ciao";
   const price = opts.priceLabel?.trim() ? ` · ${opts.priceLabel.trim()}` : "";
   const duration = opts.durationLabel?.trim() ? ` · ${opts.durationLabel.trim()}` : "";
-  return `${hello}, abbiamo ricevuto la tua richiesta per ${opts.service}${price}${duration} il ${opts.dateLabel} alle ${opts.timeLabel}${barber}. Ti contatteremo su WhatsApp per confermare l'appuntamento. Attendi la nostra conferma prima di considerarlo definitivo. Per modifiche o disdette chiama o scrivi al ${SITE.phone}.`;
+  return `${hello}, il tuo appuntamento da ${SITE.name} per ${opts.service}${price}${duration} è confermato: ${opts.dateLabel} alle ${opts.timeLabel}${barber}. Ti aspettiamo in ${SITE.addressFull}. Per modifiche o disdette chiama o scrivi al ${SITE.phone}.`;
 }
 
 /** Testo automatico WhatsApp al salone (numero ufficiale 327). */

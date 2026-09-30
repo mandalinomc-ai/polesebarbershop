@@ -20,6 +20,7 @@ import {
   servicesAreOnlineBookable,
 } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
+import { ensureRuntimeBarbers } from "@/lib/runtime-barbers";
 import {
   AppointmentsUnavailableError,
   loadAppointmentsBetween,
@@ -109,6 +110,7 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   }
+  await ensureRuntimeBarbers();
   const services = await resolveRuntimeServices(parsed.data.serviceIds);
   if (!services) {
     return NextResponse.json(

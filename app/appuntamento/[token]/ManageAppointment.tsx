@@ -92,12 +92,11 @@ export function ManageAppointment({ token }: { token: string }) {
 
   return (
     <div className="manage-card">
-      <p className="eyebrow">{cancelled ? "Annullata" : "Richiesta inviata"}</p>
+      <p className="eyebrow">{cancelled ? "Annullata" : "Confermata"}</p>
       <h1 className="section-title font-serif">Il tuo appuntamento</h1>
       {!cancelled ? (
         <p className="booking-open-note" style={{ marginTop: "0.75rem" }}>
-          Attendi la conferma su WhatsApp prima di considerare l&apos;appuntamento
-          definitivo.
+          Prenotazione confermata. Ti aspettiamo in salone all&apos;orario indicato.
         </p>
       ) : null}
       <ul className="summary-list" style={{ marginTop: "1.5rem" }}>
@@ -136,7 +135,7 @@ export function ManageAppointment({ token }: { token: string }) {
           </p>
           <div className="success-actions" style={{ justifyContent: "stretch" }}>
             <a className="btn btn-outline" href={icsHref}>
-              Scarica .ics (promemoria 30 min)
+              Aggiungi il promemoria al tuo calendario
             </a>
             <a
               className="btn btn-whatsapp"
@@ -150,7 +149,7 @@ export function ManageAppointment({ token }: { token: string }) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              WhatsApp salone
+              Invia il promemoria
             </a>
             <button
               type="button"
