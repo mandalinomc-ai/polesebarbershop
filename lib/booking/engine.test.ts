@@ -33,8 +33,13 @@ import {
   getSmartAvailableSlots,
   isClosedDay,
   suggestFillGapsForDay,
+  getLastMinuteGapSlots,
 } from "@/lib/availability";
 import { occupiesSlot } from "@/lib/appointments";
+import {
+  filterLastMinuteGapTips,
+  isLastMinuteEligibleDuration,
+} from "@/lib/booking/last-minute";
 
 const TUESDAY = "2026-09-08";
 const SUNDAY = "2026-09-06";
@@ -711,5 +716,88 @@ describe("trova migliore + riempi buco", () => {
       ],
     });
     expect(tips.some((t) => t.label === "10:00")).toBe(true);
+  });
+
+  it("last-minute eligibility is short services only", () => {
+    expect(isLastMinuteEligibleDuration(10)).toBe(true);
+    expect(isLastMinuteEligibleDuration(15)).toBe(true);
+    expect(isLastMinuteEligibleDuration(20)).toBe(true);
+    expect(isLastMinuteEligibleDuration(30)).toBe(false);
+  });
+
+  it("filterLastMinuteGapTips keeps only off half-hour leftovers", () => {
+    const kept = filterLastMinuteGapTips({
+      tips: [
+        {
+          startMin: 10 * 60 + 15,
+          label: "10:15",
+          windowStartMin: 10 * 60 + 15,
+          windowEndMin: 10 * 60 + 30,
+          gapMin: 15,
+          rank: "OPTIMAL",
+          reason: "buco",
+        },
+        {
+          startMin: 10 * 60,
+          label: "10:00",
+          windowStartMin: 10 * 60,
+          windowEndMin: 10 * 60 + 30,
+          gapMin: 30,
+          rank: "OPTIMAL",
+          reason: "buco",
+        },
+      ],
+    });
+    expect(kept.map((t) => t.label)).toEqual(["10:15"]);
+  });
+
+  it("getLastMinuteGapSlots offers leftover hole for acconciatura today only", () => {
+    const today = "2026-09-08";
+    const nowMorning = wallTimeToUtc(today, "08:00");
+    // Barba 15' dalle 09:00 → residuo 09:15–09:30 prima del taglio successivo.
+    const appointments = [
+      {
+        barberId: "felice",
+        startsAt: wallTimeToUtc(today, "09:00"),
+        endsAt: wallTimeToUtc(today, "09:15"),
+      },
+      {
+        barberId: "felice",
+        startsAt: wallTimeToUtc(today, "09:30"),
+        endsAt: wallTimeToUtc(today, "10:00"),
+      },
+    ];
+    const last = getLastMinuteGapSlots({
+      date: today,
+      barberId: "felice",
+      durationMinutes: 10,
+      appointments,
+      now: nowMorning,
+      minNoticeMinutes: 0,
+    });
+    expect(last.some((s) => s.label === "09:15" && s.available)).toBe(true);
+    expect(last.every((s) => s.label !== "09:00" && s.label !== "09:30")).toBe(
+      true,
+    );
+
+    const notToday = getLastMinuteGapSlots({
+      date: "2026-09-09",
+      barberId: "felice",
+      durationMinutes: 10,
+      appointments: [],
+      now: nowMorning,
+      minNoticeMinutes: 0,
+    });
+    expect(notToday).toEqual([]);
+
+    const taglio = getLastMinuteGapSlots({
+      date: today,
+      barberId: "felice",
+      durationMinutes: 30,
+      appointments,
+      now: nowMorning,
+      minNoticeMinutes: 0,
+    });
+    expect(taglio).toEqual([]);
   });
 });

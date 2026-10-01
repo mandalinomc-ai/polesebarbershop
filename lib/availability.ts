@@ -37,6 +37,9 @@ import {
   type SlotRank,
   type RankedStart,
   type FillGapSuggestion,
+  isLastMinuteEligibleDuration,
+  filterLastMinuteGapTips,
+  LAST_MINUTE_SAME_DAY_ONLY,
 } from "./booking";
 import {
   BOOKING_HORIZON_DAYS,
@@ -762,6 +765,106 @@ export function suggestFillGapsForDay(input: {
     bufferMinutes: input.bufferMinutes,
     mode: input.optimizationMode,
   });
+}
+
+/**
+ * Public last-minute starts: tight leftover gaps for short services (≤20 min).
+ * Excludes half-hour grid labels already shown as normal `slots`.
+ * Same civil day only (Europe/Rome) so far-ahead off-grid bookings stay closed.
+ */
+export function getLastMinuteGapSlots(
+  input: GetAvailableSlotsInput,
+): ScheduleSlot[] {
+  const {
+    date,
+    barberId,
+    durationMinutes,
+    appointments = [],
+    barbers = BARBERS,
+    now = new Date(),
+    minNoticeMinutes = MIN_NOTICE_MINUTES,
+    bufferMinutes = BOOKING_BUFFER_MINUTES,
+    timeZone = TIMEZONE,
+    optimizationMode = DEFAULT_OPTIMIZATION_MODE,
+    calendarBlocks = CONFIG_CALENDAR_BLOCKS,
+  } = input;
+
+  if (!isLastMinuteEligibleDuration(durationMinutes)) return [];
+  if (!date || date < getFirstBookableDate(now) || isClosedDay(date)) return [];
+  if (LAST_MINUTE_SAME_DAY_ONLY && date !== formatWallDate(now, timeZone)) {
+    return [];
+  }
+
+  const earliest = bookingAddMinutes(now, minNoticeMinutes);
+  const real = getRealBarbers(barbers);
+
+  const buildForBarber = (barber: Barber): ScheduleSlot[] => {
+    const tips = filterLastMinuteGapTips({
+      tips: suggestFillGapsForDay({
+        date,
+        barberId: barber.id,
+        durationMinutes,
+        appointments,
+        bufferMinutes,
+        optimizationMode,
+        calendarBlocks,
+      }),
+    });
+    if (!tips.length) return [];
+    const busy = appointmentsForBarber(appointments, barber.id);
+    const blockBusy = busyMinutesFromBlocks(date, calendarBlocks, barber.id).map(
+      (b) => ({
+        start: wallTimeToUtc(date, minutesToTime(b.startMin), timeZone),
+        end: wallTimeToUtc(date, minutesToTime(b.endMin), timeZone),
+      }),
+    );
+    const busyAll = [...busy, ...blockBusy];
+    const out: ScheduleSlot[] = [];
+    for (const tip of tips) {
+      const slot = evaluateBarberSlot({
+        date,
+        barber,
+        label: tip.label,
+        durationMinutes,
+        busy: busyAll,
+        earliest,
+        timeZone,
+        bufferMinutes,
+      });
+      if (slot && slot.available) out.push(slot);
+    }
+    return out;
+  };
+
+  if (barberId === ANYONE_BARBER_ID) {
+    const byLabel = new Map<string, ScheduleSlot>();
+    for (const barber of real) {
+      for (const slot of buildForBarber(barber)) {
+        const existing = byLabel.get(slot.label);
+        if (!existing) {
+          byLabel.set(slot.label, slot);
+          continue;
+        }
+        const current = barbers.find((b) => b.id === existing.barberId);
+        if (!current) {
+          byLabel.set(slot.label, slot);
+          continue;
+        }
+        const picked = pickLeastLoadedBarber(
+          [current, barber],
+          appointments,
+          date,
+          timeZone,
+        );
+        if (picked?.id === barber.id) byLabel.set(slot.label, slot);
+      }
+    }
+    return sortSlots([...byLabel.values()]);
+  }
+
+  const barber = barbers.find((b) => b.id === barberId && !b.virtual);
+  if (!barber) return [];
+  return sortSlots(buildForBarber(barber));
 }
 
 /**
