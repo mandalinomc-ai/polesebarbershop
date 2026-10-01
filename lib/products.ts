@@ -10,7 +10,8 @@ export const PRODUCTS: Product[] = [
   {
     id: "cera-lucida",
     name: "Cera Lucida",
-    description: "Lucentezza naturale, controllo totale.",
+    description:
+      "Lucentezza naturale, controllo totale. Tenuta flessibile, effetto disciplinante, idrata e protegge — non unge e non lascia residui.",
     image: "/assets/images/products/cera-lucida.jpg",
   },
   {
