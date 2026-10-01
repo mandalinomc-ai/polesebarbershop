@@ -197,7 +197,7 @@ export type BookingConfirmCopy = {
   manageUrl?: string;
 };
 
-/** Same plain-text summary as ownerNewBookingEmail — used for WhatsApp to the salon. */
+/** Same plain-text summary as ownerNewBookingEmail — salon/owner notify only. */
 export function getBookingWhatsAppSummaryMessage(opts: BookingConfirmCopy): string {
   const notes = opts.notes?.trim() || "";
   const lines = [
@@ -219,24 +219,53 @@ export function getBookingWhatsAppSummaryMessage(opts: BookingConfirmCopy): stri
   return lines.join("\n");
 }
 
-/** @deprecated use getBookingWhatsAppSummaryMessage */
+/**
+ * Customer-facing WhatsApp: confirmed booking as riepilogo/promemoria.
+ * Never asks the salon for confirmation — the appointment is already confirmed.
+ */
+export function getBookingReminderMessage(opts: BookingConfirmCopy): string {
+  const lines = [
+    "PROMEMORIA PRENOTAZIONE",
+    "",
+    `Prenotazione confermata da ${SITE.name}.`,
+    "",
+    `Servizio/i: ${opts.service}`,
+  ];
+  if (opts.durationMin != null) lines.push(`Durata: ${opts.durationMin} min`);
+  else if (opts.durationLabel?.trim()) lines.push(`Durata: ${opts.durationLabel.trim()}`);
+  if (opts.priceLabel?.trim()) lines.push(`Prezzo: ${opts.priceLabel.trim()}`);
+  if (opts.barberName?.trim()) lines.push(`Barbiere: ${opts.barberName.trim()}`);
+  lines.push(`Data: ${opts.dateLabel}`);
+  lines.push(`Ora: ${opts.timeLabel}`);
+  lines.push(`Indirizzo: ${SITE.addressFull}`);
+  if (opts.firstName?.trim() || opts.lastName?.trim()) {
+    lines.push(
+      `Cliente: ${[opts.firstName?.trim(), opts.lastName?.trim()].filter(Boolean).join(" ")}`,
+    );
+  }
+  if (opts.notes?.trim()) lines.push(`Note: ${opts.notes.trim()}`);
+  lines.push("", `Per modifiche o disdette: ${SITE.phone}`);
+  return lines.join("\n");
+}
+
+/** @deprecated use getBookingReminderMessage */
 export function getBookingConfirmMessage(opts: BookingConfirmCopy): string {
-  return getBookingWhatsAppSummaryMessage(opts);
+  return getBookingReminderMessage(opts);
 }
 
-/** Cliente → salone (wa.me/393270156225). Prefills the same summary as the owner email. */
+/** Cliente → salone: wa.me with confirmed riepilogo/promemoria (not a confirmation request). */
 export function getBookingConfirmWhatsAppUrl(opts: BookingConfirmCopy): string {
-  return getWhatsAppUrl(getBookingWhatsAppSummaryMessage(opts));
+  return getWhatsAppUrl(getBookingReminderMessage(opts));
 }
 
-/** Testo automatico WhatsApp al cliente. */
+/** Testo WhatsApp salone → cliente: promemoria (prenotazione già confermata). */
 export function getCustomerConfirmMessage(opts: BookingConfirmCopy): string {
   const name = opts.firstName?.trim() || "";
   const barber = opts.barberName?.trim() ? ` con ${opts.barberName.trim()}` : "";
   const hello = name ? `Ciao ${name}` : "Ciao";
   const price = opts.priceLabel?.trim() ? ` · ${opts.priceLabel.trim()}` : "";
   const duration = opts.durationLabel?.trim() ? ` · ${opts.durationLabel.trim()}` : "";
-  return `${hello}, abbiamo ricevuto la tua richiesta per ${opts.service}${price}${duration} il ${opts.dateLabel} alle ${opts.timeLabel}${barber}. Ti contatteremo su WhatsApp per confermare l'appuntamento. Attendi la nostra conferma prima di considerarlo definitivo. Per modifiche o disdette chiama o scrivi al ${SITE.phone}.`;
+  return `${hello}, il tuo appuntamento da ${SITE.name} per ${opts.service}${price}${duration} è confermato: ${opts.dateLabel} alle ${opts.timeLabel}${barber}. Ti aspettiamo in ${SITE.addressFull}. Per modifiche o disdette chiama o scrivi al ${SITE.phone}.`;
 }
 
 /** Testo automatico WhatsApp al salone (numero ufficiale 327). */

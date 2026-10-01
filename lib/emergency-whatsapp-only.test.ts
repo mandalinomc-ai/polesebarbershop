@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { BOOKING_EMAIL_DISABLED, sendBookingEmails } from "./email";
 import {
   getBookingConfirmWhatsAppUrl,
+  getBookingReminderMessage,
   getBookingWhatsAppSummaryMessage,
   isPreOpeningCountdownVisible,
   openingTargetMs,
@@ -49,7 +50,7 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(isPreOpeningCountdownVisible(new Date("2026-09-07T00:00:00+02:00"))).toBe(false);
   });
 
-  it("builds wa.me URL with owner-email summary fields", () => {
+  it("builds wa.me URL with confirmed riepilogo/promemoria (not NUOVA PRENOTAZIONE)", () => {
     const summary = getBookingWhatsAppSummaryMessage({
       firstName: "Mario",
       lastName: "Rossi",
@@ -78,6 +79,24 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(summary).toContain("Note: Sponde basse");
     expect(summary).not.toContain("Gestisci:");
 
+    const reminder = getBookingReminderMessage({
+      firstName: "Mario",
+      lastName: "Rossi",
+      phone: "+393331112233",
+      email: "mario@example.com",
+      service: "Taglio Pro",
+      dateLabel: "martedì 8 settembre 2026",
+      timeLabel: "09:30",
+      barberName: "Felice",
+      durationMin: 50,
+      priceLabel: "25 €",
+    });
+    expect(reminder).toContain("PROMEMORIA PRENOTAZIONE");
+    expect(reminder).toContain("Prenotazione confermata");
+    expect(reminder).toContain("Servizio/i: Taglio Pro");
+    expect(reminder).not.toContain("NUOVA PRENOTAZIONE");
+    expect(reminder).not.toMatch(/Attendi/i);
+
     const url = getBookingConfirmWhatsAppUrl({
       firstName: "Mario",
       lastName: "Rossi",
@@ -91,9 +110,10 @@ describe("emergency WhatsApp-only booking success", () => {
       priceLabel: "25 €",
     });
     expect(url).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
-    expect(url).toContain(encodeURIComponent("Nome: Mario"));
-    expect(url).toContain(encodeURIComponent("Cognome: Rossi"));
+    expect(url).toContain(encodeURIComponent("PROMEMORIA PRENOTAZIONE"));
+    expect(url).toContain(encodeURIComponent("Prenotazione confermata"));
     expect(url).toContain(encodeURIComponent("Servizio/i: Taglio Pro"));
+    expect(url).not.toContain(encodeURIComponent("NUOVA PRENOTAZIONE"));
     expect(SITE.whatsapp).toBe("393270156225");
   });
 
@@ -106,13 +126,13 @@ describe("emergency WhatsApp-only booking success", () => {
     expect(successBlock).not.toMatch(/non recapitato/i);
     expect(successBlock).not.toMatch(/field-error/);
     expect(successBlock).toContain("btn btn-whatsapp");
-    expect(successBlock).toContain("INVIA ORA IL PROMEMORIA APPUNTAMENTO");
-    expect(successBlock).toContain("Aggiungi al tuo calendario");
+    expect(successBlock).toContain("Invia il promemoria");
+    expect(successBlock).toContain("Aggiungi il promemoria al tuo calendario");
     expect(successBlock.indexOf("success-whatsapp-row")).toBeLessThan(
       successBlock.indexOf("success-actions"),
     );
-    expect(successBlock).toContain("Apple Calendar (.ics)");
-    expect(successBlock).toContain("Google Calendar");
+    expect(successBlock).not.toContain("Apple Calendar (.ics)");
+    expect(successBlock).not.toContain("Google Calendar");
     expect(successBlock).toContain("success.whatsappUrl");
     expect(FLOW).toContain("getBookingConfirmWhatsAppUrl");
     expect(successBlock).not.toMatch(

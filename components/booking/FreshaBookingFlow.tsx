@@ -39,7 +39,6 @@ import {
   readBookingServiceFromLocation,
 } from "@/lib/site-config";
 import { normalizeItalianPhone, resolveBookingPhone } from "@/lib/phone";
-import { icsDataUri } from "@/lib/ics";
 import {
   CALENDAR_UNAVAILABLE_IT,
   NO_SLOTS_IT,
@@ -48,6 +47,8 @@ import {
 } from "@/lib/booking";
 
 const STEPS = ["Servizio", "Barbiere", "Data", "Orario", "I tuoi dati", "Conferma"] as const;
+
+type PublicBarber = { id: string; name: string; title?: string };
 
 type ApiSlot = {
   start: string;
@@ -95,6 +96,9 @@ export function FreshaBookingFlow({
   const [step, setStep] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [barberId, setBarberId] = useState("felice");
+  const [staffBarbers, setStaffBarbers] = useState<PublicBarber[]>(() =>
+    getRealBarbers().map((b) => ({ id: b.id, name: b.name, title: b.title })),
+  );
   const firstBookable = useMemo(() => getFirstBookableDate(), []);
   const days = useMemo(() => listOpenDayChips(BOOKING_UI_DAYS), []);
   const [date, setDate] = useState(days[0]?.date || firstBookable);
@@ -149,7 +153,33 @@ export function FreshaBookingFlow({
     () => onlineBookingBlockReason(selectedServices),
     [selectedServices],
   );
-  const barber = getBarber(barberId);
+  const barber =
+    staffBarbers.find((b) => b.id === barberId) ||
+    getBarber(barberId) ||
+    null;
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/catalog", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = (await res.json()) as {
+          barbers?: PublicBarber[];
+        };
+        if (cancelled || !Array.isArray(json.barbers) || !json.barbers.length) return;
+        setStaffBarbers(json.barbers);
+        setBarberId((curr) =>
+          json.barbers!.some((b) => b.id === curr) ? curr : json.barbers![0]!.id,
+        );
+      } catch {
+        /* keep seed barbers */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const apply = (iso: string | null) => {
@@ -415,16 +445,10 @@ export function FreshaBookingFlow({
     return (
       <div className="fresha-booking" id="booking-wizard">
         <div className="fresha-body success-box">
-          <h3 className="font-serif">Richiesta di prenotazione ricevuta</h3>
+          <h3 className="font-serif">Prenotazione confermata</h3>
           <p className="prose">
-            Ecco il riepilogo. Invia subito la conferma WhatsApp al salone con
-            orario e dettagli.
-          </p>
-          <p className="prose">
-            <strong>
-              Attendi la conferma su WhatsApp prima di considerare
-              l&apos;appuntamento definitivo.
-            </strong>
+            Ecco il riepilogo della prenotazione confermata. Ti aspettiamo in
+            salone all&apos;orario scelto.
           </p>
           <ul className="success-details">
             <li>
@@ -459,38 +483,29 @@ export function FreshaBookingFlow({
               target="_blank"
               rel="noopener noreferrer"
             >
-              INVIA ORA IL PROMEMORIA APPUNTAMENTO
+              Invia il promemoria
             </a>
             <p className="booking-open-note">
-              Chat con orario e riepilogo già compilati.
+              Apre WhatsApp con il riepilogo/promemoria già compilato.
             </p>
           </div>
-          <p className="prose success-calendar-label">
-            Aggiungi al tuo calendario
-          </p>
-          <div className="success-actions" aria-label="Aggiungi al calendario">
+          <div className="success-actions" aria-label="Aggiungi il promemoria al tuo calendario">
             {success.ics ? (
               <button
                 type="button"
                 className="btn btn-dark"
                 onClick={() => downloadIcs(success.icsFilename, success.ics)}
               >
-                Apple Calendar (.ics)
+                Aggiungi il promemoria al tuo calendario
               </button>
-            ) : null}
-            {success.googleCalendarUrl ? (
+            ) : success.googleCalendarUrl ? (
               <a
-                className="btn btn-outline"
+                className="btn btn-dark"
                 href={success.googleCalendarUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Google Calendar
-              </a>
-            ) : null}
-            {success.ics ? (
-              <a className="btn btn-outline" href={icsDataUri(success.ics)} download={success.icsFilename}>
-                Scarica .ics
+                Aggiungi il promemoria al tuo calendario
               </a>
             ) : null}
           </div>
@@ -507,8 +522,7 @@ export function FreshaBookingFlow({
             </p>
           ) : (
             <p className="booking-open-note">
-              Lo slot non è ancora in agenda: chiama il {SITE.phone} per
-              confermare o disdire.
+              Se non trovi lo slot in agenda, chiama il {SITE.phone}.
             </p>
           )}
         </div>
@@ -661,18 +675,18 @@ export function FreshaBookingFlow({
           <>
             <h3>Scegli il barbiere</h3>
             <div className="barber-grid">
-              {getRealBarbers().map((b) => (
+              {staffBarbers.map((b) => (
                 <button
                   key={b.id}
                   type="button"
                   className={`barber-card${barberId === b.id ? " selected" : ""}`}
                   onClick={() => setBarberId(b.id)}
                 >
-                  <span className="barber-avatar">
-                    {b.virtual ? "✦" : initials(b.name)}
-                  </span>
+                  <span className="barber-avatar">{initials(b.name)}</span>
                   <strong>{b.name}</strong>
-                  <small style={{ color: "var(--silk)" }}>{b.title}</small>
+                  {b.title ? (
+                    <small style={{ color: "var(--silk)" }}>{b.title}</small>
+                  ) : null}
                 </button>
               ))}
             </div>
@@ -904,9 +918,9 @@ export function FreshaBookingFlow({
             </ul>
             {submitError ? <p className="field-error">{submitError}</p> : null}
             <p className="booking-open-note" style={{ marginTop: "1rem" }}>
-              Dopo la conferma aggiungi l&apos;appuntamento al calendario (.ics)
-              e invia il riepilogo al salone su WhatsApp. Promemoria unico: 30
-              minuti prima. Puoi disdire dal link di gestione.
+              Dopo la prenotazione vedi subito il riepilogo: puoi inviare il
+              promemoria su WhatsApp e aggiungerlo al calendario. Promemoria
+              unico: 30 minuti prima. Puoi disdire dal link di gestione.
               {" "}{SITE.pricesIncludeVat}
             </p>
           </>

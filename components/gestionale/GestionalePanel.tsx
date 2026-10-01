@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
-import { getRealBarbers, SERVICES, formatPrice, totalsForServices } from "@/lib/catalog";
+import { TeamAdminPanel } from "@/components/gestionale/TeamAdminPanel";
+import { getRealBarbers, SERVICES, formatPrice, totalsForServices, setRuntimeBarbersOverlay, SHOP_HOURS, type Barber } from "@/lib/catalog";
 import { WEEKDAY_OPTIONS_IT } from "@/lib/subscriptions";
 import {
   formatItalianDate,
@@ -49,7 +50,7 @@ import {
   type NotifyTemplate,
 } from "@/lib/crm-notify";
 
-type Tab = "dashboard" | "agenda" | "listino" | "clienti" | "statistiche" | "storico";
+type Tab = "dashboard" | "agenda" | "listino" | "team" | "clienti" | "statistiche" | "storico";
 
 type AdminAppt = {
   id: string;
@@ -107,6 +108,7 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "agenda", label: "Agenda", icon: CalendarDays },
   { id: "listino", label: "Listino", icon: Scissors },
+  { id: "team", label: "Team", icon: Users },
   { id: "clienti", label: "Clienti", icon: Users },
   { id: "statistiche", label: "Statistiche", icon: BarChart3 },
   { id: "storico", label: "Storico", icon: History },
@@ -238,6 +240,45 @@ export function GestionalePanel() {
     if (auth !== "ok") return;
     void refreshOffline();
   }, [auth, refreshOffline, agenda]);
+
+  useEffect(() => {
+    if (auth !== "ok") return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/admin/barbers", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const json = (await res.json()) as {
+          barbers?: { id: string; name: string; title: string; active: boolean }[];
+        };
+        const rows = (json.barbers || []).filter((b) => b.active);
+        const overlay: Barber[] = [
+          ...rows.map((r) => ({
+            id: r.id,
+            name: r.name,
+            title: r.title,
+            virtual: false as const,
+            hours: SHOP_HOURS,
+            active: true,
+          })),
+          {
+            id: "anyone",
+            name: "Felice",
+            title: "Poltrona di Felice",
+            virtual: true,
+            hours: SHOP_HOURS,
+            active: true,
+          },
+        ];
+        setRuntimeBarbersOverlay(overlay);
+      } catch {
+        /* seed barbers */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [auth, tab]);
 
   const loadAgenda = useCallback(async () => {
     try {
@@ -618,6 +659,7 @@ export function GestionalePanel() {
           </>
         ) : null}
         {tab === "listino" ? <ServicesAdminPanel /> : null}
+        {tab === "team" ? <TeamAdminPanel /> : null}
         {tab === "clienti" ? (
           <ClientiView
             clients={filteredClients}

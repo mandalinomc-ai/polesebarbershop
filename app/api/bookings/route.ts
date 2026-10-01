@@ -3,6 +3,7 @@ import { findSlot, formatItalianDate, formatWallTime, getAvailableSlots, getFirs
 import { resolveEffectiveServiceDuration, CALENDAR_UNAVAILABLE_IT, publicBookingWarnings } from "@/lib/booking";
 import { getBarber, onlineBookingBlockReason, totalsForServices } from "@/lib/catalog";
 import { resolveRuntimeServices } from "@/lib/runtime-catalog";
+import { ensureRuntimeBarbers } from "@/lib/runtime-barbers";
 import { getClientIp } from "@/lib/client-ip";
 import { customerConfirmEmail, ownerNewBookingEmail, sendBookingEmails } from "@/lib/email";
 import { buildIcs, googleCalendarUrl, icsFilename } from "@/lib/ics";
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
   }
 
   // Server resolves duration/price from catalog (+ DB overlays). Never trust client minutes/€.
+  await ensureRuntimeBarbers();
   const services = await resolveRuntimeServices(body.serviceIds);
   if (!services) return NextResponse.json({ error: "Seleziona almeno un servizio valido." }, { status: 400 });
   const blockReason = onlineBookingBlockReason(services);

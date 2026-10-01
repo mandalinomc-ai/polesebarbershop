@@ -187,8 +187,11 @@ describe("public copy vs official identity", () => {
       priceLabel: "25 €",
     });
     expect(confirm).toMatch(/^https:\/\/wa\.me\/393270156225\?text=/);
-    expect(confirm).toContain(encodeURIComponent("NUOVA PRENOTAZIONE"));
-    expect(confirm).toContain(encodeURIComponent("Nome: Mario"));
+    expect(confirm).toContain(encodeURIComponent("PROMEMORIA PRENOTAZIONE"));
+    expect(confirm).toContain(encodeURIComponent("Prenotazione confermata"));
+    expect(confirm).toContain(encodeURIComponent("Servizio/i: Taglio classico"));
+    expect(confirm).not.toContain(encodeURIComponent("NUOVA PRENOTAZIONE"));
+    expect(confirm).not.toContain(encodeURIComponent("Attendi"));
     const toClient = getSalonToCustomerWhatsAppUrl("+39 333 111 2233", {
       firstName: "Mario",
       service: "Taglio classico",
@@ -197,34 +200,39 @@ describe("public copy vs official identity", () => {
       barberName: "Felice",
     });
     expect(toClient).toMatch(/^https:\/\/wa\.me\/393331112233\?text=/);
-    expect(toClient).toContain(encodeURIComponent("abbiamo ricevuto la tua richiesta"));
+    expect(toClient).toContain(encodeURIComponent("è confermato"));
     expect(getCustomerConfirmMessage({
       firstName: "Mario",
       service: "Taglio classico",
       dateLabel: "martedì 1 settembre 2026",
       timeLabel: "09:30",
       barberName: "Felice",
-    })).toMatch(/abbiamo ricevuto la tua richiesta/);
+    })).toMatch(/è confermato/);
     expect(getCustomerConfirmMessage({
       firstName: "Mario",
       service: "Taglio classico",
       dateLabel: "martedì 1 settembre 2026",
       timeLabel: "09:30",
       barberName: "Felice",
-    })).not.toMatch(/è confermata|Prenotazione confermata/i);
+    })).not.toMatch(/Attendi la nostra conferma/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/getWhatsAppUrl/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).not.toMatch(/postSalonBookingRelay/);
     expect(wizard).not.toMatch(/Conferma su WhatsApp/);
-    expect(wizard).toMatch(/Richiesta di prenotazione ricevuta/);
-    expect(wizard).toMatch(/Attendi la conferma su WhatsApp/);
-    expect(wizard).not.toMatch(/Prenotazione confermata/);
+    expect(wizard).toMatch(/Prenotazione confermata/);
+    expect(wizard).toMatch(/Ecco il riepilogo della prenotazione confermata/);
+    expect(wizard).toMatch(/Invia il promemoria/);
+    expect(wizard).toMatch(/Aggiungi il promemoria al tuo calendario/);
+    expect(wizard).not.toMatch(/Attendi la conferma su WhatsApp/);
+    expect(wizard).not.toMatch(/Attendi/);
+    expect(wizard).not.toMatch(/riepilogo al salone/);
     expect(wizard).not.toMatch(/twilio/i);
     const manage = readFileSync(join(process.cwd(), "app/appuntamento/[token]/ManageAppointment.tsx"), "utf8");
-    expect(manage).toMatch(/Richiesta inviata/);
-    expect(manage).not.toMatch(/Confermata/);
-    expect(manage).toMatch(/Attendi la conferma su WhatsApp/);
+    expect(manage).toMatch(/Confermata/);
+    expect(manage).toMatch(/ecco il riepilogo/);
+    expect(manage).not.toMatch(/Attendi la conferma su WhatsApp/);
+    expect(manage).toMatch(/Aggiungi il promemoria al tuo calendario/);
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);
     expect(crm).toMatch(/niente Twilio/);
@@ -238,6 +246,7 @@ describe("public copy vs official identity", () => {
     expect(crm).toMatch(/CrmBottomNav|createPortal|visualViewport/);
     expect(crm).toMatch(/Incassi per barbiere/);
     expect(crm).toMatch(/getRealBarbers\(\)/);
+    expect(crm).toMatch(/TeamAdminPanel/);
     const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
@@ -300,8 +309,10 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/id="services"/);
     expect(landing).not.toMatch(/hero-bg\.jpg/);
     expect(landing).not.toMatch(/brand-products\.jpg/);
+    expect(landing).toMatch(/ProductVetrina/);
     const aboutIdx = landing.indexOf('id="about"');
     const videoIdx = landing.indexOf("<VideoReelGrid");
+    const prodottiIdx = landing.indexOf("<ProductVetrina");
     const prenotaIdx = landing.indexOf('id="prenota"');
     const socialIdx = landing.indexOf('id="social"');
     const contactIdx = landing.indexOf('id="contact"');
@@ -309,7 +320,8 @@ describe("public copy vs official identity", () => {
     expect(prenotaIdx).toBeGreaterThan(-1);
     expect(prenotaIdx).toBeLessThan(aboutIdx);
     expect(videoIdx).toBeGreaterThan(aboutIdx);
-    expect(socialIdx).toBeGreaterThan(videoIdx);
+    expect(prodottiIdx).toBeGreaterThan(videoIdx);
+    expect(socialIdx).toBeGreaterThan(prodottiIdx);
     expect(contactIdx).toBeGreaterThan(socialIdx);
     expect(landing).toMatch(/SocialQrGrid/);
     expect(landing).toMatch(/Resta in contatto/);
@@ -362,6 +374,7 @@ describe("public copy vs official identity", () => {
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/href: "\/#gallery", label: "Sfumature"/);
     expect(chrome).toMatch(/href: "\/#listino", label: "Listino"/);
+    expect(chrome).toMatch(/href: "\/#prodotti", label: "Prodotti"/);
     expect(chrome).not.toMatch(/label: "Fade"/);
     expect(chrome).not.toMatch(/label: "Consulenza"/);
     expect(chrome).toMatch(/href: "\/#about", label: "Servizi"/);
@@ -534,7 +547,7 @@ describe("public copy vs official identity", () => {
     expect(chrome).toMatch(/Raggiungimi ora su Google Maps/);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/btn btn-whatsapp appointment-sidebar-wa/);
-    expect(wizard).toMatch(/INVIA ORA IL PROMEMORIA APPUNTAMENTO/);
+    expect(wizard).toMatch(/Invia il promemoria/);
     const contact = readFileSync(join(process.cwd(), "components/site/LandingSections.tsx"), "utf8");
     expect(contact).toMatch(/btn btn-whatsapp contact-wa/);
     const terms = readFileSync(join(process.cwd(), "app/terms/page.tsx"), "utf8");
