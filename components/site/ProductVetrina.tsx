@@ -12,30 +12,42 @@ export function ProductVetrina() {
         WhatsApp per prezzi e disponibilità.
       </p>
       <div className="products-vetrina-grid">
-        {PRODUCTS.map((product) => (
-          <article key={product.id} className="product-vetrina-card reveal">
-            <div className="product-vetrina-media">
-              <FillCoverImage
-                src={product.image}
-                alt={`${product.name} — Felice Polese Barber Solutions`}
-                sizes="(max-width: 700px) 100vw, 50vw"
-                style={{ objectFit: "cover", objectPosition: "center center" }}
-              />
-            </div>
-            <div className="product-vetrina-copy">
-              <h3>{product.name}</h3>
-              <p>{product.description}</p>
-              <a
-                className="btn btn-whatsapp product-vetrina-cta"
-                href={getWhatsAppUrl(productOrderMessage(product.name))}
-                target="_blank"
-                rel="noopener noreferrer"
+        {PRODUCTS.map((product) => {
+          const fit = product.imageFit || "cover";
+          return (
+            <article key={product.id} className="product-vetrina-card reveal">
+              <div
+                className={
+                  fit === "contain"
+                    ? "product-vetrina-media product-vetrina-media--brand"
+                    : "product-vetrina-media"
+                }
               >
-                Accordo su WhatsApp
-              </a>
-            </div>
-          </article>
-        ))}
+                <FillCoverImage
+                  src={product.image}
+                  alt={`${product.name} — Felice Polese Barber Solutions`}
+                  sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+                  style={{
+                    objectFit: fit,
+                    objectPosition: "center center",
+                  }}
+                />
+              </div>
+              <div className="product-vetrina-copy">
+                <h3>{product.name}</h3>
+                <p>{product.description}</p>
+                <a
+                  className="btn btn-whatsapp product-vetrina-cta"
+                  href={getWhatsAppUrl(productOrderMessage(product.name))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Accordo su WhatsApp
+                </a>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
