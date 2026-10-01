@@ -309,8 +309,10 @@ describe("public copy vs official identity", () => {
     expect(landing).not.toMatch(/id="services"/);
     expect(landing).not.toMatch(/hero-bg\.jpg/);
     expect(landing).not.toMatch(/brand-products\.jpg/);
+    expect(landing).toMatch(/ProductVetrina/);
     const aboutIdx = landing.indexOf('id="about"');
     const videoIdx = landing.indexOf("<VideoReelGrid");
+    const prodottiIdx = landing.indexOf("<ProductVetrina");
     const prenotaIdx = landing.indexOf('id="prenota"');
     const socialIdx = landing.indexOf('id="social"');
     const contactIdx = landing.indexOf('id="contact"');
@@ -318,7 +320,8 @@ describe("public copy vs official identity", () => {
     expect(prenotaIdx).toBeGreaterThan(-1);
     expect(prenotaIdx).toBeLessThan(aboutIdx);
     expect(videoIdx).toBeGreaterThan(aboutIdx);
-    expect(socialIdx).toBeGreaterThan(videoIdx);
+    expect(prodottiIdx).toBeGreaterThan(videoIdx);
+    expect(socialIdx).toBeGreaterThan(prodottiIdx);
     expect(contactIdx).toBeGreaterThan(socialIdx);
     expect(landing).toMatch(/SocialQrGrid/);
     expect(landing).toMatch(/Resta in contatto/);
@@ -371,6 +374,7 @@ describe("public copy vs official identity", () => {
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).toMatch(/href: "\/#gallery", label: "Sfumature"/);
     expect(chrome).toMatch(/href: "\/#listino", label: "Listino"/);
+    expect(chrome).toMatch(/href: "\/#prodotti", label: "Prodotti"/);
     expect(chrome).not.toMatch(/label: "Fade"/);
     expect(chrome).not.toMatch(/label: "Consulenza"/);
     expect(chrome).toMatch(/href: "\/#about", label: "Servizi"/);

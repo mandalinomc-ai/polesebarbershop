@@ -35,6 +35,7 @@ const LINKS = [
   { href: "/#about", label: "Servizi" },
   { href: "/#gallery", label: "Sfumature" },
   { href: "/#listino", label: "Listino" },
+  { href: "/#prodotti", label: "Prodotti" },
   { href: "/#prenota", label: "Prenota" },
   { href: "/#contact", label: "Orari" },
   { href: "/#contact", label: "Contatti" },
