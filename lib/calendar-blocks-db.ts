@@ -134,8 +134,9 @@ export async function deleteCalendarBlock(
  * Full-day offline for a real barber (Felice / team).
  * Uses calendar_blocks so public availability + gestionale share the same source.
  *
- * offline=true  → clear that day's blocks for the barber, then insert one closed day block.
- * offline=false → clear ALL that day's blocks for the barber (Operatore offline + Non disponibile).
+ * Touches ONLY «Operatore offline» day blocks — never half-hour «Non disponibile».
+ * offline=true  → replace any existing Operatore offline with one closed day block.
+ * offline=false → remove Operatore offline only (Non disponibile slots stay).
  */
 export async function setOperatorOfflineDay(input: {
   date: string;
@@ -157,11 +158,9 @@ export async function setOperatorOfflineDay(input: {
   }
 
   const existing = await listDbCalendarBlocks();
-  // Remove every block owned by this barber on this day (offline label OR half-hour locks).
-  const toRemove = existing.filter(
-    (b) =>
-      b.date === input.date &&
-      (b.barberId === input.barberId || isOperatorOfflineBlock(b, input.date, input.barberId)),
+  // Only Operatore offline / closed day markers — leave Non disponibile alone.
+  const toRemove = existing.filter((b) =>
+    isOperatorOfflineBlock(b, input.date, input.barberId),
   );
   for (const b of toRemove) {
     const del = await deleteCalendarBlock(b.id);

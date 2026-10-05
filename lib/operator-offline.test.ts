@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getOccupancyGrid } from "@/lib/availability";
 import {
-  bookableSlotStarts,
   isBarberOfflineOnDate,
   isOperatorOfflineBlock,
   OPERATOR_OFFLINE_LABEL,
@@ -34,27 +33,39 @@ describe("operator offline", () => {
     ]);
   });
 
-  it("treats a day of Non disponibile half-hours as Felice offline", () => {
+  it("does not treat Non disponibile half-hours as day offline", () => {
     const date = "2026-10-06"; // Tue
-    const starts = bookableSlotStarts(date);
-    expect(starts.length).toBeGreaterThan(10);
-    expect(starts).not.toContain("13:00"); // lunch
-    const blocks = starts.map((start, i) => {
-      const [h, m] = start.split(":").map(Number) as [number, number];
-      const endMin = h * 60 + m + 30;
-      const end = `${String(Math.floor(endMin / 60)).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}`;
-      return {
-        id: `nd-${i}`,
+    const blocks = [
+      {
+        id: "nd-1",
         date,
         barberId: "felice",
-        start,
-        end,
+        start: "09:00",
+        end: "09:30",
         kind: "custom" as const,
         label: "Non disponibile",
-      };
-    });
-    expect(isBarberOfflineOnDate(blocks, date, "felice")).toBe(true);
-    expect(offlineOperatorsForDate(blocks, date).map((o) => o.barberId)).toEqual(["felice"]);
+      },
+      {
+        id: "nd-2",
+        date,
+        barberId: "felice",
+        start: "10:00",
+        end: "10:30",
+        kind: "custom" as const,
+        label: "Non disponibile",
+      },
+      {
+        id: "nd-all-morning",
+        date,
+        barberId: "felice",
+        start: "09:00",
+        end: "13:00",
+        kind: "custom" as const,
+        label: "Non disponibile",
+      },
+    ];
+    expect(isBarberOfflineOnDate(blocks, date, "felice")).toBe(false);
+    expect(offlineOperatorsForDate(blocks, date)).toEqual([]);
   });
 
   it("does not mark offline when only a few slots are blocked", () => {
