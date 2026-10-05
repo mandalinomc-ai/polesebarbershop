@@ -2315,7 +2315,8 @@ body.crm-gestionale {
   gap: 0.25rem;
 }
 .occupancy-edit-btn,
-.occupancy-remove-btn {
+.occupancy-remove-btn,
+.occupancy-unblock-btn {
   min-height: 30px;
   border: 1px solid var(--line);
   background: #fff;
@@ -2330,8 +2331,14 @@ body.crm-gestionale {
   border-color: #b42318;
   color: #b42318;
 }
+.occupancy-unblock-btn {
+  width: 100%;
+  border-color: #1a7a4c;
+  color: #1a7a4c;
+}
 .occupancy-edit-btn:hover,
-.occupancy-remove-btn:hover {
+.occupancy-remove-btn:hover,
+.occupancy-unblock-btn:hover {
   background: rgba(0, 0, 0, 0.04);
 }
 .subscription-panel {

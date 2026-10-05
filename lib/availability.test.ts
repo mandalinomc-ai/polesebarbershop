@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BARBERS } from "./catalog";
 import { getAvailableSlots, getFirstBookableDate, getOccupancyGrid, getScheduleSlots, summarizeSchedule, weekdayOfDate, wallTimeToUtc, isClosedDay, mondayOfWeek, listOpenDayChips, monthCalendarWeeks, addMonths, formatItalianMonth } from "./availability";
+import { CONFIG_CALENDAR_BLOCKS } from "./booking/calendar-blocks";
 
 const TUESDAY = "2026-09-08";
 const MONDAY_PRE_OPENING = "2026-08-31";
@@ -226,6 +227,35 @@ describe("getOccupancyGrid", () => {
     const tenThirty = grid.find((row) => row.time === "10:30")?.cells.find((c) => c.barberId === "felice");
     expect(ten).toMatchObject({ occupied: true, rowSpan: 2, skip: false });
     expect(tenThirty).toMatchObject({ occupied: true, skip: true });
+  });
+
+  it("marks Non disponibile half-hours with removable blockId", () => {
+    const blockId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    const grid = getOccupancyGrid({
+      date: TUESDAY,
+      calendarBlocks: [
+        ...CONFIG_CALENDAR_BLOCKS,
+        {
+          id: blockId,
+          date: TUESDAY,
+          barberId: "felice",
+          start: "10:00",
+          end: "10:30",
+          label: "Non disponibile",
+          kind: "custom",
+        },
+      ],
+    });
+    const ten = grid.find((row) => row.time === "10:00")?.cells.find((c) => c.barberId === "felice");
+    expect(ten).toMatchObject({
+      occupied: true,
+      blocked: true,
+      label: "Non disponibile",
+      blockId,
+    });
+    const lunch = grid.find((row) => row.time === "13:00")?.cells.find((c) => c.barberId === "felice");
+    expect(lunch?.blocked).toBe(true);
+    expect(lunch?.blockId).toMatch(/^lunch-/);
   });
 });
 

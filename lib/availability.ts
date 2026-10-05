@@ -110,6 +110,8 @@ export type OccupancyCell = {
   skip: boolean;
   /** Calendar block (pause / operatore offline) — not an appointment. */
   blocked?: boolean;
+  /** DB calendar_blocks.id when blocked by a removable row (not config lunch). */
+  blockId?: string;
 };
 
 export type OccupancyRow = {
@@ -875,17 +877,22 @@ export function getOccupancyGrid(input: {
       const endMin = startMin + stepMinutes;
       const inBusy = busy.some((b) => startMin < b.endMin && endMin > b.startMin);
       if (!inBusy) continue;
-      const block = dayBlocks.find((b) => {
+      const matching = dayBlocks.filter((b) => {
         const a = timeToMinutes(b.start);
         const z = timeToMinutes(b.end);
         return startMin < z && endMin > a;
       });
+      // Prefer a DB UUID block (removable) over config lunch ids when both match.
+      const block =
+        matching.find((b) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(b.id)) ||
+        matching[0];
       rows[i]!.cells[bi] = {
         time: times[i]!,
         barberId: barber.id,
         occupied: true,
         blocked: true,
         label: block?.label || "Non disponibile",
+        blockId: block?.id,
         rowSpan: 1,
         skip: false,
       };

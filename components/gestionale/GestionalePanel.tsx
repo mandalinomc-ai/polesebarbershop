@@ -431,6 +431,19 @@ export function GestionalePanel() {
     void load();
   }
 
+  /** Remove a DB calendar block so the half-hour is bookable again. */
+  async function quickUnblock(blockId: string) {
+    const res = await fetch(`/api/admin/calendar-blocks?id=${encodeURIComponent(blockId)}`, {
+      method: "DELETE",
+    });
+    const json = (await res.json()) as { error?: string };
+    if (!res.ok) {
+      setError(json.error || "Impossibile rendere disponibile la fascia.");
+      return;
+    }
+    void load();
+  }
+
   const filteredClients = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return clients;
@@ -625,6 +638,9 @@ export function GestionalePanel() {
             }}
             onQuickBlock={(barberId, startTime) => {
               void quickBlockHalfHour(date, barberId, startTime);
+            }}
+            onQuickUnblock={(blockId) => {
+              void quickUnblock(blockId);
             }}
             onNotify={(appt) => {
               const match =
@@ -912,6 +928,7 @@ function AgendaView({
   onNotify,
   onQuickWalkIn,
   onQuickBlock,
+  onQuickUnblock,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -922,6 +939,7 @@ function AgendaView({
   onNotify: (a: AdminAppt) => void;
   onQuickWalkIn: (barberId: string, startTime: string) => void;
   onQuickBlock: (barberId: string, startTime: string) => void;
+  onQuickUnblock: (blockId: string) => void;
 }) {
   const occupying = useMemo(
     () =>
@@ -1092,6 +1110,22 @@ function AgendaView({
                               }}
                             >
                               <span className="occupancy-block">{cell.label || "Prenotato"}</span>
+                              {cell.blocked &&
+                              cell.blockId &&
+                              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                                cell.blockId,
+                              ) ? (
+                                <div className="occupancy-taken-actions">
+                                  <button
+                                    type="button"
+                                    className="occupancy-unblock-btn"
+                                    title="Rendi di nuovo disponibile questa fascia"
+                                    onClick={() => onQuickUnblock(cell.blockId!)}
+                                  >
+                                    Disponibile
+                                  </button>
+                                </div>
+                              ) : null}
                               {cell.appointmentId ? (
                                 <div className="occupancy-taken-actions">
                                   <button
