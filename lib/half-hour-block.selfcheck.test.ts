@@ -19,14 +19,17 @@ describe("gestionale half-hour unavailable + listino split", () => {
     expect(onlineDisplayIntervalForDuration(150)).toBe(30);
   });
 
-  it("exposes Non disp. quick block and half-hour presets in gestionale", () => {
+  it("exposes Non disp. quick block and Rendi disponibile unblock in gestionale", () => {
     const src = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(src).toMatch(/onQuickBlock/);
+    expect(src).toMatch(/onQuickUnblock/);
     expect(src).toMatch(/Non disp\./);
     expect(src).toMatch(/Non disponibile/);
     expect(src).toMatch(/quickBlockHalfHour/);
-    expect(src).toMatch(/block-time-presets/);
-    expect(src).toMatch(/step=\{OCCUPANCY_STEP_MINUTES \* 60\}/);
+    expect(src).toMatch(/quickUnblock/);
+    expect(src).toMatch(/occupancy-unblock-btn/);
+    expect(src).toMatch(/Disponibile/);
+    expect(src).toMatch(/api\/admin\/calendar-blocks\?id=/);
   });
 
   it("keeps prenota-ora calendar services including Taglio Bambino", () => {
