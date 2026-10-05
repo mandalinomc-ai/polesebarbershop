@@ -2023,6 +2023,11 @@ a.btn-whatsapp.contact-wa,
   color: var(--white);
   border-color: var(--ink);
 }
+.offline-day-btn.is-on {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
 .offline-day-btn:disabled {
   opacity: 0.6;
   cursor: wait;
