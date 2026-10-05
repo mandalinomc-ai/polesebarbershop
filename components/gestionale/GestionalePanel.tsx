@@ -545,15 +545,26 @@ export function GestionalePanel() {
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
-            <div className="offline-day-bar">
-              <button
-                type="button"
-                className={`offline-day-btn${offlineIds.includes("felice") ? " is-off" : ""}`}
-                disabled={offlineBusy === "felice"}
-                onClick={() => void toggleOfflineDay("felice")}
-              >
-                {offlineBusy === "felice" ? "…" : "Felice Offline"}
-              </button>
+            <div className="offline-day-bar" aria-label="Stato operatore">
+              {offlineIds.includes("felice") ? (
+                <button
+                  type="button"
+                  className="offline-day-btn is-on"
+                  disabled={offlineBusy === "felice"}
+                  onClick={() => void toggleOfflineDay("felice")}
+                >
+                  {offlineBusy === "felice" ? "…" : "Rimetti Felice online"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="offline-day-btn"
+                  disabled={offlineBusy === "felice"}
+                  onClick={() => void toggleOfflineDay("felice")}
+                >
+                  {offlineBusy === "felice" ? "…" : "Felice Offline"}
+                </button>
+              )}
             </div>
             <button
               type="button"

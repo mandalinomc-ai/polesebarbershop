@@ -237,6 +237,7 @@ describe("public copy vs official identity", () => {
     expect(crm).toMatch(/waMeUrl/);
     expect(crm).toMatch(/niente Twilio/);
     expect(crm).toMatch(/Felice Offline/);
+    expect(crm).toMatch(/Rimetti Felice online/);
     expect(crm).not.toMatch(/Davide Offline/);
     expect(crm).toMatch(/Da confermare/);
     expect(crm).toMatch(/Scegli orario/);
