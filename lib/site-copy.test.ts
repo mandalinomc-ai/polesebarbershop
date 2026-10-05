@@ -236,8 +236,8 @@ describe("public copy vs official identity", () => {
     const crm = readFileSync(join(process.cwd(), "components/gestionale/GestionalePanel.tsx"), "utf8");
     expect(crm).toMatch(/waMeUrl/);
     expect(crm).toMatch(/niente Twilio/);
-    expect(crm).toMatch(/Felice Offline/);
-    expect(crm).toMatch(/Rimetti Felice online/);
+    expect(crm).toMatch(/Offline intera giornata/);
+    expect(crm).toMatch(/Online intera giornata/);
     expect(crm).toMatch(/Impossibile rimettere online/);
     expect(crm).not.toMatch(/Davide Offline/);
     expect(crm).toMatch(/Da confermare/);
