@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { getOccupancyGrid } from "@/lib/availability";
 import {
+  bookableSlotStarts,
+  isBarberOfflineOnDate,
   isOperatorOfflineBlock,
   OPERATOR_OFFLINE_LABEL,
   offlineOperatorsForDate,
@@ -30,6 +32,45 @@ describe("operator offline", () => {
     expect(offlineOperatorsForDate(blocks, "2026-09-15").map((o) => o.barberId)).toEqual([
       "felice",
     ]);
+  });
+
+  it("treats a day of Non disponibile half-hours as Felice offline", () => {
+    const date = "2026-10-06"; // Tue
+    const starts = bookableSlotStarts(date);
+    expect(starts.length).toBeGreaterThan(10);
+    expect(starts).not.toContain("13:00"); // lunch
+    const blocks = starts.map((start, i) => {
+      const [h, m] = start.split(":").map(Number) as [number, number];
+      const endMin = h * 60 + m + 30;
+      const end = `${String(Math.floor(endMin / 60)).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}`;
+      return {
+        id: `nd-${i}`,
+        date,
+        barberId: "felice",
+        start,
+        end,
+        kind: "custom" as const,
+        label: "Non disponibile",
+      };
+    });
+    expect(isBarberOfflineOnDate(blocks, date, "felice")).toBe(true);
+    expect(offlineOperatorsForDate(blocks, date).map((o) => o.barberId)).toEqual(["felice"]);
+  });
+
+  it("does not mark offline when only a few slots are blocked", () => {
+    const blocks = [
+      {
+        id: "one",
+        date: "2026-10-06",
+        barberId: "felice",
+        start: "09:00",
+        end: "09:30",
+        kind: "custom" as const,
+        label: "Non disponibile",
+      },
+    ];
+    expect(isBarberOfflineOnDate(blocks, "2026-10-06", "felice")).toBe(false);
+    expect(offlineOperatorsForDate(blocks, "2026-10-06")).toEqual([]);
   });
 
   it("marks occupancy cells blocked for offline Felice (sole chair)", () => {

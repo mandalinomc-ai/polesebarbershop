@@ -359,6 +359,7 @@ export function GestionalePanel() {
   async function toggleOfflineDay(barberId: "felice") {
     if (offlineBusy) return;
     setOfflineBusy(barberId);
+    setError("");
     try {
       const offline = !offlineIds.includes(barberId);
       const res = await fetch("/api/admin/operator-offline", {
@@ -366,7 +367,11 @@ export function GestionalePanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date, barberId, offline }),
       });
-      if (!res.ok) return;
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(json.error || (offline ? "Impossibile mettere offline." : "Impossibile rimettere online."));
+        return;
+      }
       await refreshOffline();
       await loadAgenda();
     } finally {

@@ -131,19 +131,22 @@ export async function deleteCalendarBlock(
 }
 
 /**
- * Full-day offline for Felice (sole real chair).
+ * Full-day offline for a real barber (Felice / team).
  * Uses calendar_blocks so public availability + gestionale share the same source.
+ *
+ * offline=true  → clear that day's blocks for the barber, then insert one closed day block.
+ * offline=false → clear ALL that day's blocks for the barber (Operatore offline + Non disponibile).
  */
 export async function setOperatorOfflineDay(input: {
   date: string;
   barberId: string;
   offline: boolean;
 }): Promise<
-  | { ok: true; offline: boolean; block?: CalendarBlock }
+  | { ok: true; offline: boolean; block?: CalendarBlock; removed: number }
   | { ok: false; error: string }
 > {
   if (!isRealOperatorId(input.barberId)) {
-    return { ok: false, error: "Seleziona Felice." };
+    return { ok: false, error: "Seleziona un barbiere reale." };
   }
   const hours = shopHoursForDate(input.date);
   if (!hours) {
@@ -154,8 +157,11 @@ export async function setOperatorOfflineDay(input: {
   }
 
   const existing = await listDbCalendarBlocks();
-  const toRemove = existing.filter((b) =>
-    isOperatorOfflineBlock(b, input.date, input.barberId),
+  // Remove every block owned by this barber on this day (offline label OR half-hour locks).
+  const toRemove = existing.filter(
+    (b) =>
+      b.date === input.date &&
+      (b.barberId === input.barberId || isOperatorOfflineBlock(b, input.date, input.barberId)),
   );
   for (const b of toRemove) {
     const del = await deleteCalendarBlock(b.id);
@@ -163,7 +169,7 @@ export async function setOperatorOfflineDay(input: {
   }
 
   if (!input.offline) {
-    return { ok: true, offline: false };
+    return { ok: true, offline: false, removed: toRemove.length };
   }
 
   const result = await insertCalendarBlock({
@@ -175,5 +181,5 @@ export async function setOperatorOfflineDay(input: {
     kind: "closed",
   });
   if (!result.ok) return result;
-  return { ok: true, offline: true, block: result.block };
+  return { ok: true, offline: true, block: result.block, removed: toRemove.length };
 }
