@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: flattenZodError(parsed.error) }, { status: 400 });
   }
   if (!isRealOperatorId(parsed.data.barberId)) {
-    return NextResponse.json({ error: "Seleziona Felice." }, { status: 400 });
+    return NextResponse.json({ error: "Seleziona un barbiere reale." }, { status: 400 });
   }
 
   const result = await setOperatorOfflineDay(parsed.data);
