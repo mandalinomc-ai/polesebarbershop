@@ -3,6 +3,7 @@ import {
   formatItalianDate,
   getFirstBookableDate,
   getScheduleSlots,
+  getLastMinuteGapSlots,
   isClosedDay,
   summarizeSchedule,
   onlineDisplayIntervalForDuration,
@@ -72,6 +73,7 @@ function emptyPayload(
   return {
     date,
     slots: [],
+    lastMinuteSlots: [],
     days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
     firstBookableDate: first,
     shopOpen: false,
@@ -156,6 +158,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       date,
       slots: [],
+      lastMinuteSlots: [],
       days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
       firstBookableDate: first,
       shopOpen: false,
@@ -168,6 +171,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       date,
       slots: [],
+      lastMinuteSlots: [],
       days: [{ date, availableCount: 0, bookedCount: 0, full: false }],
       firstBookableDate: first,
       shopOpen: false,
@@ -211,7 +215,16 @@ export async function GET(request: Request) {
     displayIntervalMinutes: onlineDisplayIntervalForDuration(durationMinutes),
     calendarBlocks,
   });
-  const occupancy = summarizeSchedule(date, slots, { openDay: true });
+  const lastMinuteSlots = getLastMinuteGapSlots({
+    date,
+    barberId,
+    durationMinutes,
+    appointments,
+    calendarBlocks,
+  });
+  const lastMinuteLabels = new Set(lastMinuteSlots.map((s) => s.label));
+  const publicSlots = slots.filter((s) => !lastMinuteLabels.has(s.label));
+  const occupancy = summarizeSchedule(date, publicSlots, { openDay: true });
   const days = summaryDates.map((iso) => {
     if (iso === date) return occupancy;
     if (iso < first || isClosedDay(iso)) {
@@ -241,7 +254,8 @@ export async function GET(request: Request) {
     bookedCount: occupancy.bookedCount,
     full: occupancy.full,
     days,
-    slots: slots.map(serializeSlot),
+    slots: publicSlots.map(serializeSlot),
+    lastMinuteSlots: lastMinuteSlots.map(serializeSlot),
     sourceUnavailable: false,
   });
 }
