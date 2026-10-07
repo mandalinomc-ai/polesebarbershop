@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "auth": "node save-auth.mjs",
-    "record": "node record-instagram-reel.mjs",
+    "demo": "node record-sales-demo.mjs",
+    "record": "node record-sales-demo.mjs",
     "postinstall": "npx playwright install chromium"
   },
   "engines": {

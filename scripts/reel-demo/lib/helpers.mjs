@@ -1,5 +1,5 @@
 /**
- * Shared helpers for slow, reel-friendly Playwright demos.
+ * Shared helpers for Felice Polese demo recordings.
  * Privacy-first: mock customer data only.
  */
 import { existsSync, readFileSync } from "node:fs";
@@ -12,51 +12,41 @@ export const MOCK_CUSTOMER = Object.freeze({
   phone: "3331234567",
 });
 
-/** Instagram Reel vertical canvas */
-export const REEL_VIEWPORT = Object.freeze({
-  width: 1080,
-  height: 1920,
+/** Desktop sales-presentation canvas (shows full layout + videos). */
+export const SALES_VIEWPORT = Object.freeze({
+  width: 1920,
+  height: 1080,
   deviceScaleFactor: 1,
 });
+
+/** @deprecated use SALES_VIEWPORT for presentation demos */
+export const REEL_VIEWPORT = SALES_VIEWPORT;
 
 export function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/** Ease-in-out cubic for human-like scroll. */
-function easeInOutCubic(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-}
-
 /**
- * Smooth scroll the page by deltaY over durationMs.
+ * Smooth scroll by deltaY.
+ * Uses stepped scrollBy from Node (not rAF) — headless Chromium throttles
+ * requestAnimationFrame so rAF loops can hang for minutes.
  */
 export async function smoothScrollBy(page, deltaY, durationMs = 2200) {
-  await page.evaluate(
-    async ({ deltaY, durationMs }) => {
-      const ease = (t) =>
-        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      const start = window.scrollY;
-      const t0 = performance.now();
-      await new Promise((resolve) => {
-        const tick = (now) => {
-          const p = Math.min(1, (now - t0) / durationMs);
-          window.scrollTo(0, start + deltaY * ease(p));
-          if (p < 1) requestAnimationFrame(tick);
-          else resolve();
-        };
-        requestAnimationFrame(tick);
-      });
-    },
-    { deltaY, durationMs },
-  );
-  await sleep(400);
+  const steps = Math.max(16, Math.round(durationMs / 40));
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  const start = await page.evaluate(() => window.scrollY);
+  for (let i = 1; i <= steps; i += 1) {
+    const y = start + deltaY * ease(i / steps);
+    await page.evaluate((next) => window.scrollTo(0, next), y);
+    await sleep(durationMs / steps);
+  }
+  await sleep(200);
 }
 
 /**
- * Smooth scroll until selector is near the vertical center (or top third).
+ * Smooth scroll until selector is near the top of the viewport.
  */
-export async function smoothScrollTo(page, selector, { durationMs = 2800, offset = 120 } = {}) {
+export async function smoothScrollTo(page, selector, { durationMs = 2800, offset = 72 } = {}) {
   const targetY = await page.evaluate(
     ({ selector, offset }) => {
       const el = document.querySelector(selector);
@@ -68,45 +58,59 @@ export async function smoothScrollTo(page, selector, { durationMs = 2800, offset
   );
   if (targetY == null) return false;
   const current = await page.evaluate(() => window.scrollY);
-  await smoothScrollBy(page, targetY - current, durationMs);
+  const delta = targetY - current;
+  if (Math.abs(delta) < 8) return true;
+  await smoothScrollBy(page, delta, durationMs);
   return true;
 }
 
-/** Type like a human: slow per-character delay. */
-export async function humanType(locator, text, { delayMs = 95 } = {}) {
-  await locator.click({ delay: 40 });
+/** Type like a human. */
+export async function humanType(locator, text, { delayMs = 70 } = {}) {
+  await locator.click({ delay: 30 });
   await locator.fill("");
   await locator.pressSequentially(text, { delay: delayMs });
 }
 
+/** Force autoplay videos in view to play (muted). Never await play() — it can hang. */
+export async function ensureVideosPlaying(page) {
+  await page.evaluate(() => {
+    for (const v of document.querySelectorAll("video")) {
+      try {
+        v.muted = true;
+        v.defaultMuted = true;
+        v.playsInline = true;
+        v.setAttribute("muted", "");
+        v.setAttribute("playsinline", "");
+        // Fire-and-forget — do NOT await; play() promises may never settle in headless.
+        const p = v.play();
+        if (p && typeof p.catch === "function") p.catch(() => null);
+      } catch {
+        /* ignore */
+      }
+    }
+  });
+}
+
 /**
- * Hide / blur revenue, client lists, and sensitive CRM chrome for filming.
- * Call after gestionale is visible.
+ * Hide / blur revenue and sensitive CRM chrome for filming.
  */
 export async function applyPrivacyMask(page) {
   await page.addStyleTag({
     content: `
-      /* Reel privacy mask — blur money & hide sensitive nav */
-      .crm-nav button, .crm-sidebar button, nav button {
-        /* refined below via data attribute */
-      }
-      [data-reel-hide="1"] {
-        display: none !important;
-      }
+      [data-reel-hide="1"] { display: none !important; }
       [data-reel-blur="1"],
-      .kpi, .crm-kpis, .subscription-panel,
-      [class*="incasso" i], [class*="takings" i] {
+      .kpi, .crm-kpis, .subscription-panel {
         filter: blur(14px) !important;
         user-select: none !important;
       }
-      .agenda-price, .crm-table td:nth-child(n+5) {
-        filter: blur(10px);
-      }
+      .agenda-price { filter: blur(10px); }
+      .fab-stack { opacity: 0 !important; pointer-events: none !important; }
+      .booking-mini-cart-dock { opacity: 0.35; }
     `,
   });
 
   await page.evaluate(() => {
-    const hideRe = /clienti|statistiche|dashboard|storico|incassi|team/i;
+    const hideRe = /clienti|statistiche|storico/i;
     const blurRe = /incasso|€|eur|revenue|previsto/i;
     document.querySelectorAll("button, a, [role='tab']").forEach((el) => {
       const t = (el.textContent || "").trim();
@@ -136,11 +140,8 @@ export function loadEnvFile(dir) {
     ) {
       val = val.slice(1, -1);
     }
-    // Prefer .env over empty inherited env (Cloud agents often set ADMIN_PASSWORD="").
     if (process.env[key] === undefined || process.env[key] === "") {
       process.env[key] = val;
     }
   }
 }
-
-export { easeInOutCubic };
