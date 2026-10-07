@@ -1,0 +1,19 @@
+{
+  "name": "felice-polese-reel-demo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Slow Instagram Reel demo automation for Felice Polese (Playwright, local, free)",
+  "type": "module",
+  "scripts": {
+    "auth": "node save-auth.mjs",
+    "demo": "node record-sales-demo.mjs",
+    "record": "node record-sales-demo.mjs",
+    "postinstall": "npx playwright install chromium"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}
