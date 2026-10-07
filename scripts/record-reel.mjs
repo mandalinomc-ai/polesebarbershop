@@ -347,6 +347,21 @@ async function recordAdmin(bookingMeta = {}) {
     recordVideo: { dir, size: { width: 1080, height: 1920 } },
   });
   await injectFakeCursor(context);
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem(
+        "polese_cookie_consent",
+        JSON.stringify({
+          necessary: true,
+          preferences: true,
+          updatedAt: new Date().toISOString(),
+          version: 1,
+        }),
+      );
+    } catch {
+      /* */
+    }
+  });
   const page = await context.newPage();
 
   await page.goto(`${BASE}/gestionale`, { waitUntil: "commit", timeout: 60_000 });
@@ -377,31 +392,18 @@ async function recordAdmin(bookingMeta = {}) {
   const maskNames = async () => {
     await page.evaluate(() => {
       const allow = /Mario Rossi|Cliente Demo/i;
-      const nameLike =
-        /^[A-ZÀ-Ü][A-Za-zÀ-ü'’.-]+(?:\s+[A-ZÀ-Ü][A-Za-zÀ-ü'’.-]+)+$/;
-      document.querySelectorAll("td, p, strong, span, div, button").forEach((el) => {
-        if (el.children.length > 3) return;
-        const raw = (el.textContent || "").trim().replace(/\s+/g, " ");
-        if (!raw || raw.length > 48) return;
-        // "Verify Fix - Taglio Standard" → mask leading person-like segment
-        const head = raw.split(/\s[-–—]\s/)[0] || raw;
-        if (allow.test(head)) return;
-        if (nameLike.test(head) || /Verify Fix/i.test(head)) {
-          if (el.children.length === 0) {
-            el.textContent = raw.includes(" - ")
-              ? raw.replace(head, "Cliente Demo")
-              : "Cliente Demo";
-          } else if (/Verify Fix|Mario|Rossi/i.test(raw) === false && nameLike.test(head)) {
-            /* leave nested */
-          } else {
-            for (const child of el.childNodes) {
-              if (child.nodeType === Node.TEXT_NODE && child.textContent) {
-                child.textContent = child.textContent.replace(head, "Cliente Demo");
-              }
-            }
-          }
-        }
-      });
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        const raw = (node.textContent || "").trim();
+        if (!raw || raw.length > 60) continue;
+        const m = raw.match(/^(.+?)\s+[-–—]\s+(Taglio|Barba|Acconciatura|Piega)/i);
+        if (!m) continue;
+        const head = m[1].trim();
+        if (allow.test(head)) continue;
+        node.textContent = raw.replace(head, "Cliente Demo");
+      }
     });
   };
   await maskNames();
