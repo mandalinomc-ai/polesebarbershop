@@ -17,6 +17,13 @@ tsconfig.tsbuildinfo
 .env*
 !.env.example
 !.env.production.example
+!.env.video.example
+.env.video
 backups/
 deploy/certbot/conf/
 deploy/certbot/www/
+
+# Reel automation (Playwright)
+.auth/
+video/
+reel.mp4
