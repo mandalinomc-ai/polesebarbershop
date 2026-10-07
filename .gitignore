@@ -20,3 +20,9 @@ tsconfig.tsbuildinfo
 backups/
 deploy/certbot/conf/
 deploy/certbot/www/
+
+# Reel demo local artifacts
+scripts/reel-demo/node_modules/
+scripts/reel-demo/output/
+scripts/reel-demo/.auth/
+scripts/reel-demo/.env

@@ -1,0 +1,7 @@
+node_modules/
+output/
+.auth/
+.env
+*.webm
+*.mp4
+playwright-report/
