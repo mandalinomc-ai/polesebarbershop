@@ -120,29 +120,45 @@ async function dismissCookies(page) {
 }
 
 async function injectPrivacyCss(page) {
-  await page.addStyleTag({
-    content: `
-      .crm-kpis,
-      .crm-kpi,
-      .takings,
-      .subscription-panel,
-      .fab-stack,
-      .booking-mini-cart-dock,
-      .agenda-price,
-      .cookie-banner { display: none !important; }
-    `,
-  });
-  await page.evaluate(() => {
-    const hide = /clienti|statistiche|storico|dashboard|incasso/i;
-    document.querySelectorAll("button, a, [role='tab'], section, article, div").forEach((el) => {
-      const t = (el.textContent || "").trim();
-      if (!t || t.length > 80) return;
-      if (/^Incasso/i.test(t) || (hide.test(t) && t.length < 40)) {
-        const card = el.closest(".kpi-card, .crm-kpis, section, article") || el;
-        card.style.setProperty("display", "none", "important");
-      }
+  try {
+    await page.addStyleTag({
+      content: `
+        .crm-kpis,
+        .crm-kpi,
+        .takings,
+        .subscription-panel,
+        .fab-stack,
+        .booking-mini-cart-dock,
+        .agenda-price,
+        .cookie-banner { display: none !important; }
+      `,
     });
-  });
+  } catch {
+    await page.evaluate(() => {
+      if (!document.head) return;
+      const id = "reel-privacy-css";
+      if (document.getElementById(id)) return;
+      const s = document.createElement("style");
+      s.id = id;
+      s.textContent =
+        ".crm-kpis,.crm-kpi,.takings,.subscription-panel,.fab-stack,.booking-mini-cart-dock,.agenda-price,.cookie-banner{display:none!important}";
+      document.head.appendChild(s);
+    }).catch(() => null);
+  }
+  await page
+    .evaluate(() => {
+      if (!document.body) return;
+      const hide = /clienti|statistiche|storico|dashboard|incasso/i;
+      document.querySelectorAll("button, a, [role='tab'], section, article, div").forEach((el) => {
+        const t = (el.textContent || "").trim();
+        if (!t || t.length > 80) return;
+        if (/^Incasso/i.test(t) || (hide.test(t) && t.length < 40)) {
+          const card = el.closest(".kpi-card, .crm-kpis, .takings, section, article") || el;
+          card.style.setProperty("display", "none", "important");
+        }
+      });
+    })
+    .catch(() => null);
 }
 
 async function humanType(locator, text) {
@@ -272,10 +288,12 @@ async function recordSite() {
   await page.goto(`${BASE}/`, { waitUntil: "commit", timeout: 60_000 });
   await page.waitForSelector("#hero", { timeout: 30_000 });
   await dismissCookies(page);
-  await sleep(2000);
   await page.waitForFunction(() => /Felice Polese/i.test(document.title || ""), null, {
     timeout: 10_000,
   });
+  // Hold hero so the reel doesn't open on a blank paint frame
+  await page.waitForSelector("#hero, header, .site-header", { timeout: 15_000 }).catch(() => null);
+  await sleep(3500);
 
   await slowScrollBy(page, 420, 2400);
   await sleep(600);
@@ -396,13 +414,19 @@ async function recordAdmin(bookingMeta = {}) {
       const nodes = [];
       while (walker.nextNode()) nodes.push(walker.currentNode);
       for (const node of nodes) {
-        const raw = (node.textContent || "").trim();
-        if (!raw || raw.length > 60) continue;
-        const m = raw.match(/^(.+?)\s+[-–—]\s+(Taglio|Barba|Acconciatura|Piega)/i);
-        if (!m) continue;
-        const head = m[1].trim();
-        if (allow.test(head)) continue;
-        node.textContent = raw.replace(head, "Cliente Demo");
+        let text = node.textContent || "";
+        if (!text.trim()) continue;
+        // Rewrite "Someone - Taglio…" / "Verify Fix — …" but keep Mario Rossi
+        text = text.replace(
+          /([A-ZÀ-Ü][\wÀ-ü'’. -]{1,40}?)\s*[-–—]\s*(Taglio|Barba|Acconciatura|Piega)/gi,
+          (full, head, svc) => {
+            const h = String(head).trim();
+            if (allow.test(h)) return full;
+            return `Cliente Demo — ${svc}`;
+          },
+        );
+        text = text.replace(/\bVerify Fix\b/gi, "Cliente Demo");
+        if (text !== node.textContent) node.textContent = text;
       }
     });
   };
@@ -460,7 +484,10 @@ async function recordAdmin(bookingMeta = {}) {
     el.style.transition = "transform 1.8s ease";
     el.style.transform = "scale(1.06)";
   });
-  await sleep(3500);
+  await maskNames();
+  await injectPrivacyCss(page);
+  await sleep(4000);
+  await maskNames();
 
   await page.close();
   await context.close();
