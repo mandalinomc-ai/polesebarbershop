@@ -112,13 +112,13 @@ export function FreshaBookingFlow({
   >("idle");
   const [slotsWarning, setSlotsWarning] = useState("");
   const [slot, setSlot] = useState<ApiSlot | null>(null);
+  /** HH:MM locked when the client picks an orario — survives slot reloads. */
+  const [lockedStartTime, setLockedStartTime] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [gdpr, setGdpr] = useState(false);
-  /** Invisible honeypot — leave empty; bots that fill it are dropped server-side. */
-  const [website, setWebsite] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [success, setSuccess] = useState<{
@@ -281,7 +281,7 @@ export function FreshaBookingFlow({
       };
       if (!res.ok || json.sourceUnavailable) {
         setSlots([]);
-        setSlot(null);
+        // Keep a locked orario so Conferma still works after a transient reload error.
         setSlotsState("error");
         setSlotsWarning(
           publicAvailabilityMessage(json.warning || json.error) ||
@@ -294,10 +294,25 @@ export function FreshaBookingFlow({
       const availableOnly = incoming.filter((s) => !isSlotTaken(s));
       setSlots(availableOnly);
       setSlot((curr) => {
-        if (!curr) return curr;
-        const match = availableOnly.find((s) => s.start === curr.start);
-        if (!match) return null;
-        return match;
+        const want = lockedStartTime || curr?.label;
+        if (!want) return curr;
+        const match = availableOnly.find(
+          (s) => s.label === want || s.start === curr?.start,
+        );
+        if (match) return match;
+        // Past orario step: keep prior object so Conferma can still POST the locked time.
+        if (lockedStartTime && curr) return curr;
+        if (lockedStartTime) {
+          return {
+            start: "",
+            end: "",
+            label: lockedStartTime,
+            barberId,
+            available: true,
+            booked: false,
+          };
+        }
+        return null;
       });
       if (Array.isArray(json.days)) {
         const next: Record<string, DayOccupancyChip> = {};
@@ -310,11 +325,18 @@ export function FreshaBookingFlow({
       setSlotsState("ready");
     } catch {
       setSlots([]);
-      setSlot(null);
       setSlotsState("error");
       setSlotsWarning(CALENDAR_UNAVAILABLE_IT);
     }
-  }, [date, barberId, totals.durationMin, selectedIds, days, onlineBlockedReason]);
+  }, [
+    date,
+    barberId,
+    totals.durationMin,
+    selectedIds,
+    days,
+    onlineBlockedReason,
+    lockedStartTime,
+  ]);
 
   useEffect(() => {
     if (step >= 3 && totals.durationMin > 0 && !onlineBlockedReason) {
@@ -324,6 +346,7 @@ export function FreshaBookingFlow({
 
   useEffect(() => {
     setSlot(null);
+    setLockedStartTime(null);
   }, [date, barberId, selectedIds.join("|")]);
 
   useEffect(() => {
@@ -343,7 +366,9 @@ export function FreshaBookingFlow({
     }
     if (step === 2) return Boolean(barberId);
     if (step === 3) return Boolean(date);
-    if (step === 4) return Boolean(slot && !isSlotTaken(slot));
+    if (step === 4) {
+      return Boolean((slot && !isSlotTaken(slot)) || lockedStartTime);
+    }
     if (step === 5) {
       return (
         firstName.trim().length > 1 &&
@@ -353,11 +378,18 @@ export function FreshaBookingFlow({
         gdpr
       );
     }
+    if (step === 6) {
+      return Boolean(lockedStartTime || slot?.label);
+    }
     return true;
   }
 
   async function confirm() {
-    if (!slot) return;
+    const startTime = lockedStartTime || slot?.label || "";
+    if (!startTime) {
+      setSubmitError("Seleziona di nuovo l'orario e riprova.");
+      return;
+    }
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -368,13 +400,14 @@ export function FreshaBookingFlow({
           serviceIds: selectedIds,
           barberId,
           date,
-          startTime: slot.label,
+          startTime,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           email: email.trim(),
           phone: resolveBookingPhone(phone) || phone,
           gdprConsent: true,
-          website,
+          // Never send honeypot from the UI — browser autofill on hidden
+          // "website" fields was silently accepting without saving the booking.
         }),
       });
       const json = (await res.json()) as {
@@ -386,6 +419,7 @@ export function FreshaBookingFlow({
         googleCalendarUrl?: string;
         warnings?: string[];
         persisted?: boolean;
+        honeypot?: boolean;
         customerWhatsAppUrl?: string | null;
         salonWhatsAppUrl?: string | null;
       };
@@ -394,7 +428,16 @@ export function FreshaBookingFlow({
           publicAvailabilityMessage(json.error) ||
             "Prenotazione non riuscita.",
         );
-        if (res.status === 409) void loadSlots();
+        if (res.status === 409) {
+          setLockedStartTime(null);
+          setSlot(null);
+          void loadSlots();
+          setStep(4);
+        }
+        return;
+      }
+      if (json.honeypot || (res.ok && json.persisted === false && !json.ics)) {
+        setSubmitError("Prenotazione non riuscita. Riprova tra un momento.");
         return;
       }
       const bookingWhatsAppUrl = getBookingConfirmWhatsAppUrl({
@@ -404,7 +447,7 @@ export function FreshaBookingFlow({
         email: email.trim(),
         service: totals.names,
         dateLabel: formatItalianDate(date),
-        timeLabel: slot.label,
+        timeLabel: startTime,
         barberName: json.barberName || barber?.name || "",
         priceLabel: totals.priceLabel,
         durationMin: totals.durationMin > 0 ? totals.durationMin : undefined,
@@ -438,6 +481,10 @@ export function FreshaBookingFlow({
       setStep((s) => s + 1);
       return;
     }
+    if (!canContinue()) {
+      setSubmitError("Seleziona di nuovo l'orario e riprova.");
+      return;
+    }
     void confirm();
   }
 
@@ -461,7 +508,7 @@ export function FreshaBookingFlow({
             </li>
             <li>
               <span>Ora</span>
-              <strong>{slot?.label}</strong>
+              <strong>{lockedStartTime || slot?.label}</strong>
             </li>
             <li>
               <span>Barbiere</span>
@@ -779,14 +826,18 @@ export function FreshaBookingFlow({
             {slots.length > 0 && (
               <div className="slot-grid" role="list" aria-label="Orari disponibili">
                 {slots.map((s) => {
-                  const selected = slot?.start === s.start;
+                  const selected =
+                    lockedStartTime === s.label || slot?.start === s.start;
                   return (
                   <button
                     key={s.start}
                     type="button"
                     className={`slot-btn${selected ? " selected" : ""}`}
                     aria-label={s.label}
-                    onClick={() => setSlot(s)}
+                    onClick={() => {
+                      setSlot(s);
+                      setLockedStartTime(s.label);
+                    }}
                   >
                     {s.label}
                   </button>
@@ -865,18 +916,6 @@ export function FreshaBookingFlow({
                   <a href="/privacy-policy">Informativa privacy</a>.
                 </span>
               </label>
-              <div className="hp-field" aria-hidden="true">
-                <label htmlFor="booking-website">Sito web</label>
-                <input
-                  id="booking-website"
-                  name="website"
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                />
-              </div>
             </div>
           </>
         )}
@@ -894,7 +933,7 @@ export function FreshaBookingFlow({
               <li>
                 Quando{" "}
                 <strong>
-                  {formatItalianDate(date)} · {slot?.label}
+                  {formatItalianDate(date)} · {lockedStartTime || slot?.label}
                 </strong>
               </li>
               <li>
@@ -977,9 +1016,9 @@ export function FreshaBookingFlow({
           </span>
           <strong>{selectedIds.length ? totals.priceLabel : "—"}</strong>
         </div>
-        {step >= 4 && slot ? (
+        {step >= 4 && (lockedStartTime || slot) ? (
           <p className="appointment-sidebar-when">
-            {formatItalianDate(date)} · {slot.label}
+            {formatItalianDate(date)} · {lockedStartTime || slot?.label}
             {barber ? ` · ${barber.name}` : ""}
           </p>
         ) : null}
