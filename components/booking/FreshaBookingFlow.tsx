@@ -1004,30 +1004,6 @@ export function BookingSectionNote() {
         Scegli servizio, barbiere, data e orario — anche prima dell&apos;apertura
         ufficiale.
       </p>
-      <div className="booking-note-blocks" role="list">
-        <div className="booking-note-block" role="listitem">
-          <span className="booking-note-label">Orari</span>
-          <p>{SITE.hours.weekdays}</p>
-          <p className="booking-note-sub">Domenica chiuso</p>
-        </div>
-        <div className="booking-note-block" role="listitem">
-          <span className="booking-note-label">Primo giorno</span>
-          <p>{formatItalianDate(getFirstBookableDate())}</p>
-          <p className="booking-note-sub">Apertura ufficiale</p>
-        </div>
-        <div className="booking-note-block" role="listitem">
-          <span className="booking-note-label">Barbiere</span>
-          <p>Felice</p>
-          <p className="booking-note-sub">Poltrona unica</p>
-        </div>
-        <div className="booking-note-block" role="listitem">
-          <span className="booking-note-label">Disponibilità</span>
-          <p>in tempo reale</p>
-          <p className="booking-note-sub">
-            Gli orari disponibili vengono aggiornati in tempo reale.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

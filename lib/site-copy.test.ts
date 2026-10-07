@@ -336,13 +336,11 @@ describe("public copy vs official identity", () => {
     expect(wizard).not.toMatch(/nel wizard/i);
     expect(wizard).toMatch(/getRealBarbers\(\)/);
     expect(wizard).toMatch(/useState\("felice"\)/);
-    expect(wizard).toMatch(/>Felice</);
-    expect(wizard).toMatch(/Poltrona unica/);
     expect(wizard).not.toMatch(/Davide/);
     expect(wizard).toMatch(/booking-note-headline/);
-    expect(wizard).toMatch(/booking-note-blocks/);
-    expect(wizard).toMatch(/booking-note-block/);
-    expect(wizard).toMatch(/in tempo reale/);
+    expect(wizard).not.toMatch(/booking-note-blocks/);
+    expect(wizard).not.toMatch(/booking-note-block/);
+    expect(wizard).not.toMatch(/Poltrona unica/);
     expect(wizard).toMatch(/durata prevista si (aggiorna|somma)/i);
     expect(wizard).not.toMatch(/Durata non definita|niente durata inventata|senza durata nota|durationUnknown/i);
     expect(wizard).toMatch(/Scegli la data/);
@@ -512,8 +510,7 @@ describe("public copy vs official identity", () => {
     expect(HERO_CALENDAR_DAYS).toBeGreaterThanOrEqual(12);
     const wizard = readFileSync(join(process.cwd(), "components/booking/FreshaBookingFlow.tsx"), "utf8");
     expect(wizard).toMatch(/BOOKING_UI_DAYS/);
-    expect(wizard).toMatch(/in tempo reale/);
-    expect(wizard).toMatch(/aggiornati in tempo reale/i);
+    expect(wizard).toMatch(/Prenota già ora/);
     const crm = readFileSync(join(process.cwd(), "app/api/admin/crm/route.ts"), "utf8");
     expect(crm).toMatch(/fetchAllPages/);
     expect(crm).not.toMatch(/\.limit\(4000\)/);
