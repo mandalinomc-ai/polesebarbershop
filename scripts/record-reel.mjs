@@ -15,14 +15,19 @@ config({ path: join(root, ".env.video") });
 const BASE = (process.env.VIDEO_BASE_URL || "").replace(/\/$/, "");
 const AUTH = join(root, ".auth", "admin.json");
 
+// Record viewport == video size (true 9:16). Mismatched recordVideo.size
+// left the UI in a corner of a grey 1080×1920 canvas.
+const VW = 540;
+const VH = 960;
 const VIEW = {
-  viewport: { width: 540, height: 960 },
-  deviceScaleFactor: 2,
+  viewport: { width: VW, height: VH },
+  deviceScaleFactor: 1,
   isMobile: true,
   hasTouch: true,
   locale: "it-IT",
   timezoneId: "Europe/Rome",
 };
+const VIDEO_SIZE = { width: VW, height: VH };
 
 function assertSafeBase(url) {
   if (!url) {
@@ -48,8 +53,8 @@ if (!existsSync(AUTH)) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function slowScrollBy(page, deltaY, durationMs = 2800) {
-  const steps = Math.max(24, Math.round(durationMs / 16));
+async function slowScrollBy(page, deltaY, durationMs = 1400) {
+  const steps = Math.max(12, Math.round(durationMs / 16));
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
   const start = await page.evaluate(() => window.scrollY);
   for (let i = 1; i <= steps; i += 1) {
@@ -59,7 +64,7 @@ async function slowScrollBy(page, deltaY, durationMs = 2800) {
   }
 }
 
-async function slowScrollTo(page, selector, { offset = 72, durationMs = 3200 } = {}) {
+async function slowScrollTo(page, selector, { offset = 72, durationMs = 1600 } = {}) {
   const target = await page.evaluate(
     ({ selector, offset }) => {
       const el = document.querySelector(selector);
@@ -164,7 +169,7 @@ async function injectPrivacyCss(page) {
 async function humanType(locator, text) {
   await locator.click();
   await locator.fill("");
-  await locator.pressSequentially(text, { delay: 110 });
+  await locator.pressSequentially(text, { delay: 40 });
 }
 
 async function clickContinua(page) {
@@ -264,7 +269,7 @@ async function recordSite() {
   });
   const context = await browser.newContext({
     ...VIEW,
-    recordVideo: { dir, size: { width: 1080, height: 1920 } },
+    recordVideo: { dir, size: VIDEO_SIZE },
   });
   await injectFakeCursor(context);
   await context.addInitScript(() => {
@@ -291,28 +296,27 @@ async function recordSite() {
   await page.waitForFunction(() => /Felice Polese/i.test(document.title || ""), null, {
     timeout: 10_000,
   });
-  // Hold hero so the reel doesn't open on a blank paint frame
   await page.waitForSelector("#hero, header, .site-header", { timeout: 15_000 }).catch(() => null);
-  await sleep(3500);
+  await sleep(1600);
 
-  await slowScrollBy(page, 420, 2400);
-  await sleep(600);
-  await slowScrollTo(page, "#prenota", { durationMs: 3600, offset: 56 });
-  await sleep(1200);
+  await slowScrollBy(page, 420, 1200);
+  await sleep(250);
+  await slowScrollTo(page, "#prenota", { durationMs: 1600, offset: 56 });
+  await sleep(450);
 
   const card = page.locator(".listino-box").filter({ hasText: /Taglio Standard/i }).first();
   await card.scrollIntoViewIfNeeded();
-  await sleep(600);
+  await sleep(300);
   await card.locator("button.btn-listino-prenota").click();
-  await sleep(1100);
+  await sleep(500);
   const goCal = page.getByRole("button", { name: /Prenota sul calendario/i }).first();
   if (await goCal.isVisible().catch(() => false)) await goCal.click();
   await page.locator("#booking-wizard").scrollIntoViewIfNeeded();
-  await sleep(800);
+  await sleep(350);
 
   const felice = page.locator("#booking-wizard button").filter({ hasText: /Felice/i }).first();
   if (await felice.count()) await felice.click().catch(() => null);
-  await sleep(400);
+  await sleep(200);
   await clickContinua(page);
 
   const picked = await pickSlot(page);
@@ -327,13 +331,13 @@ async function recordSite() {
   );
   await humanType(page.locator('#booking-wizard input[type="tel"]').last(), "3330000000");
   await page.locator("#booking-wizard .gdpr-row input[type='checkbox']").check();
-  await sleep(700);
+  await sleep(300);
   await clickContinua(page);
-  await sleep(500);
+  await sleep(250);
   await clickContinua(page);
 
   await page.waitForSelector("text=Prenotazione confermata", { timeout: 30_000 });
-  await sleep(2500);
+  await sleep(1400);
 
   let dateIso = picked.dateIso;
   if (!dateIso) {
@@ -362,7 +366,7 @@ async function recordAdmin(bookingMeta = {}) {
   const context = await browser.newContext({
     ...VIEW,
     storageState: AUTH,
-    recordVideo: { dir, size: { width: 1080, height: 1920 } },
+    recordVideo: { dir, size: VIDEO_SIZE },
   });
   await injectFakeCursor(context);
   await context.addInitScript(() => {
@@ -393,7 +397,7 @@ async function recordAdmin(bookingMeta = {}) {
   const agenda = page.getByRole("button", { name: /^Agenda$/i }).first();
   await agenda.waitFor({ timeout: 20_000 });
   await agenda.click();
-  await sleep(1000);
+  await sleep(500);
   await injectPrivacyCss(page);
 
   // Jump agenda date to the day we just booked
@@ -401,7 +405,7 @@ async function recordAdmin(bookingMeta = {}) {
     const dateInput = page.locator('input[type="date"]').first();
     if (await dateInput.count()) {
       await dateInput.fill(bookingMeta.dateIso);
-      await sleep(1200);
+      await sleep(700);
       await injectPrivacyCss(page);
     }
   }
@@ -473,7 +477,7 @@ async function recordAdmin(bookingMeta = {}) {
   }
 
   await mario.scrollIntoViewIfNeeded();
-  await slowScrollBy(page, 120, 1400);
+  await slowScrollBy(page, 120, 700);
   await page.evaluate(() => {
     const el = [...document.querySelectorAll("*")].find(
       (n) => (n.textContent || "").includes("Mario Rossi") && n.children.length <= 2,
@@ -481,12 +485,12 @@ async function recordAdmin(bookingMeta = {}) {
     if (!el) return;
     el.style.outline = "3px solid #c9a24b";
     el.style.outlineOffset = "6px";
-    el.style.transition = "transform 1.8s ease";
-    el.style.transform = "scale(1.06)";
+    el.style.transition = "transform 1s ease";
+    el.style.transform = "scale(1.05)";
   });
   await maskNames();
   await injectPrivacyCss(page);
-  await sleep(4000);
+  await sleep(2200);
   await maskNames();
 
   await page.close();
