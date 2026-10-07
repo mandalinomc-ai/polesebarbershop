@@ -1094,6 +1094,12 @@ a.btn-whatsapp.contact-wa,
   gap: 0.65rem;
   pointer-events: none;
 }
+/* While using the wizard, keep FABs from covering Continua / Conferma. */
+body:has(#booking-wizard:focus-within) .fab-stack {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
 .wa-fab, .maps-fab {
   width: 52px;
   height: 52px;
