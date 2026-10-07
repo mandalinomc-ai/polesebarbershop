@@ -146,6 +146,32 @@ async function clickContinua(page) {
   await sleep(900);
 }
 
+const IT_MONTHS = {
+  gennaio: "01",
+  febbraio: "02",
+  marzo: "03",
+  aprile: "04",
+  maggio: "05",
+  giugno: "06",
+  luglio: "07",
+  agosto: "08",
+  settembre: "09",
+  ottobre: "10",
+  novembre: "11",
+  dicembre: "12",
+};
+
+function italianDateToIso(text) {
+  if (!text) return null;
+  const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const m = text.match(/(\d{1,2})\s+([a-zà]+)\s+(\d{4})/i);
+  if (!m) return null;
+  const month = IT_MONTHS[m[2].toLowerCase()];
+  if (!month) return null;
+  return `${m[3]}-${month}-${String(m[1]).padStart(2, "0")}`;
+}
+
 async function pickSlot(page) {
   const days = page.locator("#booking-wizard button.cal-day:not(.muted):not([disabled])");
   const n = await days.count();
@@ -153,7 +179,9 @@ async function pickSlot(page) {
     a < 2 && b >= 2 ? 1 : b < 2 && a >= 2 ? -1 : a - b,
   );
   for (const i of order) {
-    await days.nth(i).click();
+    const dayBtn = days.nth(i);
+    const aria = (await dayBtn.getAttribute("aria-label")) || "";
+    await dayBtn.click();
     await sleep(500);
     const step = await page.locator(".fresha-step-label").innerText().catch(() => "");
     if (/Data/i.test(step)) await clickContinua(page);
@@ -162,7 +190,7 @@ async function pickSlot(page) {
       await slot.waitFor({ state: "visible", timeout: 8000 });
       await slot.click();
       await sleep(700);
-      return true;
+      return { ok: true, dateIso: italianDateToIso(aria), aria };
     } catch {
       const back = page
         .locator("#booking-wizard button.fresha-back")
@@ -171,7 +199,7 @@ async function pickSlot(page) {
       await sleep(500);
     }
   }
-  return false;
+  return { ok: false, dateIso: null, aria: "" };
 }
 
 function claimVideo(dir, dest) {
@@ -241,7 +269,8 @@ async function recordSite() {
   await sleep(400);
   await clickContinua(page);
 
-  if (!(await pickSlot(page))) throw new Error("No available slots for demo booking");
+  const picked = await pickSlot(page);
+  if (!picked.ok) throw new Error("No available slots for demo booking");
   await clickContinua(page);
 
   await humanType(page.locator('#booking-wizard input[placeholder="Nome"]'), "Mario");
@@ -260,13 +289,24 @@ async function recordSite() {
   await page.waitForSelector("text=Prenotazione confermata", { timeout: 30_000 });
   await sleep(2500);
 
+  let dateIso = picked.dateIso;
+  if (!dateIso) {
+    const when = await page
+      .locator(".success-details, .summary-list, .fresha-body")
+      .innerText()
+      .catch(() => "");
+    dateIso = italianDateToIso(when);
+  }
+  console.log(`Site booking dateIso=${dateIso || "unknown"} aria=${picked.aria || ""}`);
+
   await page.close();
   await context.close();
   await browser.close();
   claimVideo(dir, join(root, "video", "site.webm"));
+  return { dateIso };
 }
 
-async function recordAdmin() {
+async function recordAdmin(bookingMeta = {}) {
   const dir = join(root, "video", "admin");
   mkdirSync(dir, { recursive: true });
   const browser = await chromium.launch({
@@ -294,14 +334,46 @@ async function recordAdmin() {
   await sleep(1000);
   await injectPrivacyCss(page);
 
+  // Jump agenda date to the day we just booked
+  if (bookingMeta.dateIso) {
+    const dateInput = page.locator('input[type="date"]').first();
+    if (await dateInput.count()) {
+      await dateInput.fill(bookingMeta.dateIso);
+      await sleep(1200);
+      await injectPrivacyCss(page);
+    }
+  }
+
+  // Mask any customer labels that are not Mario / Cliente Demo*
+  const maskNames = async () => {
+    await page.evaluate(() => {
+      const allow = /Mario Rossi|Cliente Demo/i;
+      const nameLike = /^[A-ZÀ-Ü][a-zà-ü'’]+(?:\s+[A-ZÀ-Ü][a-zà-ü'’]+)+$/;
+      document
+        .querySelectorAll(
+          ".occupancy-block, .agenda-card p, .agenda-card strong, .occupancy-taken, .agenda-card, td, li",
+        )
+        .forEach((el) => {
+          const t = (el.textContent || "").trim().replace(/\s+/g, " ");
+          if (!t || t.length > 40) return;
+          if (allow.test(t)) return;
+          if (nameLike.test(t)) {
+            el.textContent = "Cliente Demo";
+          }
+        });
+    });
+  };
+  await maskNames();
+
   const mario = page.locator("text=Mario Rossi").first();
   try {
-    await mario.waitFor({ state: "visible", timeout: 10_000 });
+    await mario.waitFor({ state: "visible", timeout: 15_000 });
   } catch {
     throw new Error(
-      "Mario Rossi not in agenda within 10s — aborting (wrong DB / booking failed).",
+      "Mario Rossi not in agenda within 15s — aborting (wrong day / booking failed).",
     );
   }
+  await maskNames();
 
   const bad = await page.evaluate(() => {
     const nodes = [
@@ -313,15 +385,23 @@ async function recordAdmin() {
     for (const n of nodes) {
       const t = (n.textContent || "").trim().replace(/\s+/g, " ");
       if (!t || t.length < 3 || t.length > 48) continue;
-      if (/€|Incasso|Standard|Taglio|Barba|min|confermat|Non disponib|Operatore|Pausa/i.test(t)) {
+      if (
+        /€|Incasso|Standard|Taglio|Barba|min|confermat|Non disponib|Operatore|Pausa|Cliente Demo/i.test(
+          t,
+        )
+      ) {
         continue;
       }
-      if (/Mario Rossi|Cliente Demo/i.test(t)) continue;
+      if (/Mario Rossi/i.test(t)) continue;
       if (/^[A-ZÀ-Ü][a-zà-ü]+\s+[A-ZÀ-Ü][a-zà-ü]+/.test(t)) suspects.push(t);
     }
     return [...new Set(suspects)];
   });
   if (bad.length) {
+    console.warn(`Masked leftover names still visible: ${bad.slice(0, 5).join(", ")}`);
+    await maskNames();
+  }
+  if (bad.length && process.env.VIDEO_ALLOW_PRODUCTION !== "1") {
     throw new Error(`Unexpected names in agenda (abort): ${bad.slice(0, 5).join(", ")}`);
   }
 
@@ -347,6 +427,6 @@ async function recordAdmin() {
 
 mkdirSync(join(root, "video"), { recursive: true });
 console.log(`Recording against ${BASE}`);
-await recordSite();
-await recordAdmin();
+const bookingMeta = await recordSite();
+await recordAdmin(bookingMeta);
 console.log("Wrote video/site.webm and video/admin.webm");
