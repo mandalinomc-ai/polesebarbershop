@@ -48,31 +48,53 @@ function log(step) {
   console.log(`→ ${step}`);
 }
 
-async function pickFirstAvailableDay(page) {
-  // Prefer calendar day buttons that are not disabled / closed
-  const day = page.locator(".month-cal button:not([disabled]), .day-chip:not([disabled]), button.day-btn:not([disabled])").first();
-  if (await day.count()) {
-    await day.click();
-    await sleep(800);
-    return true;
-  }
-  // Fallback: any open day in the scroller
-  const chip = page.locator("[class*='day'] button, .day-scroller button").first();
-  if (await chip.count()) {
-    await chip.click();
-    await sleep(800);
-    return true;
-  }
-  return false;
+function openDays(page) {
+  return page.locator("#booking-wizard button.cal-day:not(.muted):not([disabled])");
 }
 
 async function pickFirstSlot(page) {
-  const slot = page.locator(".slot-btn:not([disabled])").first();
-  await slot.waitFor({ state: "visible", timeout: 25_000 });
+  const slot = page.locator("#booking-wizard .slot-btn:not([disabled])").first();
+  await slot.waitFor({ state: "visible", timeout: 12_000 });
   await sleep(600);
   await slot.click();
   await sleep(900);
   return (await slot.innerText()).trim();
+}
+
+/** Walk open calendar days until an orario grid appears. */
+async function pickDayWithSlots(page) {
+  const days = openDays(page);
+  const n = await days.count();
+  // Prefer mid-list days (often more open than "today")
+  const order = [];
+  for (let i = 0; i < n; i += 1) order.push(i);
+  // try from index 2 onward first, then earlier
+  order.sort((a, b) => (a < 2 && b >= 2 ? 1 : b < 2 && a >= 2 ? -1 : a - b));
+
+  for (const i of order) {
+    const day = days.nth(i);
+    const label = (await day.innerText()).trim();
+    log(`Try day ${label}`);
+    await day.click();
+    await sleep(700);
+    // Advance to orario step if still on data
+    const stepLabel = await page.locator(".fresha-step-label").innerText().catch(() => "");
+    if (/Data/i.test(stepLabel)) {
+      await clickContinua(page);
+    }
+    try {
+      const slotLabel = await pickFirstSlot(page);
+      return slotLabel;
+    } catch {
+      // back to date step and try next day
+      const back = page.locator("#booking-wizard button.fresha-back").filter({ hasText: /Indietro/i });
+      if (await back.count()) {
+        await back.click();
+        await sleep(800);
+      }
+    }
+  }
+  return "";
 }
 
 async function clickContinua(page) {
@@ -95,11 +117,6 @@ async function runBooking(page) {
   await smoothScrollTo(page, "#prenota", { durationMs: 3200, offset: 80 });
   await sleep(1200);
 
-  const wizard = page.locator("#booking-wizard");
-  await wizard.waitFor({ state: "visible", timeout: 20_000 });
-  await wizard.scrollIntoViewIfNeeded();
-  await sleep(800);
-
   // Dismiss cookie banner if it blocks taps
   const cookie = page.locator(".cookie-banner button, button:has-text('Accetta')").first();
   if (await cookie.count()) {
@@ -107,17 +124,32 @@ async function runBooking(page) {
     await sleep(400);
   }
 
-  log("Select mock service (Taglio Standard)");
-  const service = page
-    .locator("#booking-wizard .fresha-option")
-    .filter({ hasText: /Taglio Standard|Taglio/i })
+  log("Select Taglio Standard from listino (Prenota ora)");
+  // Landing uses listino beside wizard — services are NOT inside #booking-wizard step 1.
+  const taglioCard = page
+    .locator(".listino-box")
+    .filter({ hasText: /Taglio Standard/i })
     .first();
-  await service.click();
-  await sleep(1000);
-  await clickContinua(page);
+  await taglioCard.waitFor({ state: "visible", timeout: 20_000 });
+  await taglioCard.scrollIntoViewIfNeeded();
+  await sleep(700);
+  await taglioCard.locator("button.btn-listino-prenota").click();
+  await sleep(1400);
+
+  // Mini-cart may offer «Prenota sul calendario» — click if visible
+  const goCal = page.getByRole("button", { name: /Prenota sul calendario/i }).first();
+  if (await goCal.isVisible().catch(() => false)) {
+    await goCal.click();
+    await sleep(1000);
+  }
+
+  const wizard = page.locator("#booking-wizard");
+  await wizard.waitFor({ state: "visible", timeout: 20_000 });
+  await wizard.scrollIntoViewIfNeeded();
+  await sleep(900);
 
   log("Barber step");
-  // Felice is default — just continue if already selected
+  // «Prenota ora» jumps to barber step with Felice selected
   const felice = page.locator("#booking-wizard .fresha-option, #booking-wizard button").filter({ hasText: /Felice/i }).first();
   if (await felice.count()) {
     await felice.click().catch(() => null);
@@ -125,30 +157,8 @@ async function runBooking(page) {
   }
   await clickContinua(page);
 
-  log("Date step");
-  await pickFirstAvailableDay(page);
-  // Advance a few days if no slots yet — try Continua when date is set
-  await clickContinua(page);
-
-  log("Time step");
-  let slotLabel = "";
-  try {
-    slotLabel = await pickFirstSlot(page);
-  } catch {
-    // Day might be full — poke next open days
-    const days = page.locator(".month-cal button:not([disabled]), .day-scroller button");
-    const n = Math.min(8, await days.count());
-    for (let i = 1; i < n; i += 1) {
-      await days.nth(i).click();
-      await sleep(900);
-      try {
-        slotLabel = await pickFirstSlot(page);
-        break;
-      } catch {
-        /* try next */
-      }
-    }
-  }
+  log("Date + time — find an open day with slots");
+  const slotLabel = await pickDayWithSlots(page);
   if (!slotLabel) throw new Error("No available slots found for demo booking");
   log(`Slot locked: ${slotLabel}`);
   await clickContinua(page);

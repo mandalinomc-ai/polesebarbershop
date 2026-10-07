@@ -2,6 +2,8 @@
  * Shared helpers for slow, reel-friendly Playwright demos.
  * Privacy-first: mock customer data only.
  */
+import { existsSync, readFileSync } from "node:fs";
+import { join as pathJoin } from "node:path";
 
 export const MOCK_CUSTOMER = Object.freeze({
   firstName: "Mario",
@@ -117,10 +119,9 @@ export async function applyPrivacyMask(page) {
   });
 }
 
-export async function loadEnvFile(dir) {
-  const { readFileSync, existsSync } = await import("node:fs");
-  const { join } = await import("node:path");
-  const envPath = join(dir, ".env");
+/** Sync — must finish before reading process.env in entry scripts. */
+export function loadEnvFile(dir) {
+  const envPath = pathJoin(dir, ".env");
   if (!existsSync(envPath)) return;
   for (const line of readFileSync(envPath, "utf8").split("\n")) {
     const trimmed = line.trim();
@@ -135,7 +136,10 @@ export async function loadEnvFile(dir) {
     ) {
       val = val.slice(1, -1);
     }
-    if (process.env[key] === undefined) process.env[key] = val;
+    // Prefer .env over empty inherited env (Cloud agents often set ADMIN_PASSWORD="").
+    if (process.env[key] === undefined || process.env[key] === "") {
+      process.env[key] = val;
+    }
   }
 }
 
