@@ -105,22 +105,41 @@ async function injectFakeCursor(context) {
   });
 }
 
+async function dismissCookies(page) {
+  const accept = page.getByRole("button", { name: /^Accetta$/i }).first();
+  if (await accept.isVisible().catch(() => false)) {
+    await accept.click({ force: true }).catch(() => null);
+    await sleep(400);
+  }
+  await page
+    .locator(".cookie-banner, [class*='cookie']")
+    .evaluateAll((nodes) => {
+      for (const n of nodes) n.style.setProperty("display", "none", "important");
+    })
+    .catch(() => null);
+}
+
 async function injectPrivacyCss(page) {
   await page.addStyleTag({
     content: `
       .crm-kpis,
+      .crm-kpi,
+      .takings,
       .subscription-panel,
       .fab-stack,
       .booking-mini-cart-dock,
-      .agenda-price { display: none !important; }
+      .agenda-price,
+      .cookie-banner { display: none !important; }
     `,
   });
   await page.evaluate(() => {
     const hide = /clienti|statistiche|storico|dashboard|incasso/i;
-    document.querySelectorAll("button, a, [role='tab'], section").forEach((el) => {
+    document.querySelectorAll("button, a, [role='tab'], section, article, div").forEach((el) => {
       const t = (el.textContent || "").trim();
-      if (hide.test(t) && t.length < 64) {
-        el.style.setProperty("display", "none", "important");
+      if (!t || t.length > 80) return;
+      if (/^Incasso/i.test(t) || (hide.test(t) && t.length < 40)) {
+        const card = el.closest(".kpi-card, .crm-kpis, section, article") || el;
+        card.style.setProperty("display", "none", "important");
       }
     });
   });
@@ -235,6 +254,15 @@ async function recordSite() {
   await context.addInitScript(() => {
     try {
       localStorage.setItem("felice-polese-scissors-intro-seen", "1");
+      localStorage.setItem(
+        "polese_cookie_consent",
+        JSON.stringify({
+          necessary: true,
+          preferences: true,
+          updatedAt: new Date().toISOString(),
+          version: 1,
+        }),
+      );
     } catch {
       /* */
     }
@@ -243,7 +271,7 @@ async function recordSite() {
 
   await page.goto(`${BASE}/`, { waitUntil: "commit", timeout: 60_000 });
   await page.waitForSelector("#hero", { timeout: 30_000 });
-  await page.locator(".cookie-banner button").first().click({ timeout: 3000 }).catch(() => null);
+  await dismissCookies(page);
   await sleep(2000);
   await page.waitForFunction(() => /Felice Polese/i.test(document.title || ""), null, {
     timeout: 10_000,
@@ -326,6 +354,7 @@ async function recordAdmin(bookingMeta = {}) {
     throw new Error("Gestionale login visible — re-run npm run reel:auth on local/staging");
   }
 
+  await dismissCookies(page);
   await injectPrivacyCss(page);
 
   const agenda = page.getByRole("button", { name: /^Agenda$/i }).first();
@@ -348,19 +377,31 @@ async function recordAdmin(bookingMeta = {}) {
   const maskNames = async () => {
     await page.evaluate(() => {
       const allow = /Mario Rossi|Cliente Demo/i;
-      const nameLike = /^[A-ZÀ-Ü][a-zà-ü'’]+(?:\s+[A-ZÀ-Ü][a-zà-ü'’]+)+$/;
-      document
-        .querySelectorAll(
-          ".occupancy-block, .agenda-card p, .agenda-card strong, .occupancy-taken, .agenda-card, td, li",
-        )
-        .forEach((el) => {
-          const t = (el.textContent || "").trim().replace(/\s+/g, " ");
-          if (!t || t.length > 40) return;
-          if (allow.test(t)) return;
-          if (nameLike.test(t)) {
-            el.textContent = "Cliente Demo";
+      const nameLike =
+        /^[A-ZÀ-Ü][A-Za-zÀ-ü'’.-]+(?:\s+[A-ZÀ-Ü][A-Za-zÀ-ü'’.-]+)+$/;
+      document.querySelectorAll("td, p, strong, span, div, button").forEach((el) => {
+        if (el.children.length > 3) return;
+        const raw = (el.textContent || "").trim().replace(/\s+/g, " ");
+        if (!raw || raw.length > 48) return;
+        // "Verify Fix - Taglio Standard" → mask leading person-like segment
+        const head = raw.split(/\s[-–—]\s/)[0] || raw;
+        if (allow.test(head)) return;
+        if (nameLike.test(head) || /Verify Fix/i.test(head)) {
+          if (el.children.length === 0) {
+            el.textContent = raw.includes(" - ")
+              ? raw.replace(head, "Cliente Demo")
+              : "Cliente Demo";
+          } else if (/Verify Fix|Mario|Rossi/i.test(raw) === false && nameLike.test(head)) {
+            /* leave nested */
+          } else {
+            for (const child of el.childNodes) {
+              if (child.nodeType === Node.TEXT_NODE && child.textContent) {
+                child.textContent = child.textContent.replace(head, "Cliente Demo");
+              }
+            }
           }
-        });
+        }
+      });
     });
   };
   await maskNames();
