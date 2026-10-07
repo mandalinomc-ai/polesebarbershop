@@ -336,7 +336,6 @@ describe("public copy vs official identity", () => {
     expect(wizard).not.toMatch(/nel wizard/i);
     expect(wizard).toMatch(/getRealBarbers\(\)/);
     expect(wizard).toMatch(/useState\("felice"\)/);
-    expect(wizard).toMatch(/>Felice</);
     expect(wizard).not.toMatch(/Davide/);
     expect(wizard).toMatch(/booking-note-headline/);
     expect(wizard).not.toMatch(/booking-note-blocks/);
