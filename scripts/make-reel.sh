@@ -12,22 +12,6 @@ if [[ ! -f "$SITE" || ! -f "$ADMIN" ]]; then
   exit 1
 fi
 
-# Normalize each input to true 9:16 full-bleed:
-# - if capture left UI in a corner of a larger canvas, crop that region first
-# - then scale to 1080×1920 and speed up
-normalize() {
-  local in="$1" label="$2"
-  local wh w h
-  wh="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$in")"
-  w="${wh%,*}"; h="${wh#*,}"
-  if [[ "$w" == "1080" && "$h" == "1920" ]]; then
-    # Legacy broken capture: UI only in top-left 540×960
-    echo "[0:v]crop=540:960:0:0,scale=1080:1920:flags=lanczos,setsar=1,fps=30,setpts=PTS/${SPEED},format=yuv420p[${label}]"
-  else
-    echo "[0:v]scale=1080:1920:flags=lanczos:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,setpts=PTS/${SPEED},format=yuv420p[${label}]"
-  fi
-}
-
 # Build per-input filters (site=0, admin=1) with correct crop/scale
 site_wh="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$SITE")"
 admin_wh="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$ADMIN")"
@@ -37,6 +21,7 @@ admin_w="${admin_wh%,*}"; admin_h="${admin_wh#*,}"
 norm_filter() {
   local idx="$1" w="$2" h="$3" label="$4"
   if [[ "$w" == "1080" && "$h" == "1920" ]]; then
+    # Legacy broken capture: UI only in top-left 540×960
     echo "[${idx}:v]crop=540:960:0:0,scale=1080:1920:flags=lanczos,setsar=1,fps=30,setpts=PTS/${SPEED},format=yuv420p[${label}]"
   else
     echo "[${idx}:v]scale=1080:1920:flags=lanczos:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30,setpts=PTS/${SPEED},format=yuv420p[${label}]"

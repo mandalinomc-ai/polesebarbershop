@@ -183,7 +183,7 @@ async function clickContinua(page) {
   }
   if (!(await btn.isEnabled())) throw new Error("Wizard Continua/Conferma disabled");
   await btn.click();
-  await sleep(900);
+  await sleep(400);
 }
 
 const IT_MONTHS = {
@@ -222,21 +222,21 @@ async function pickSlot(page) {
     const dayBtn = days.nth(i);
     const aria = (await dayBtn.getAttribute("aria-label")) || "";
     await dayBtn.click();
-    await sleep(500);
+    await sleep(280);
     const step = await page.locator(".fresha-step-label").innerText().catch(() => "");
     if (/Data/i.test(step)) await clickContinua(page);
     try {
       const slot = page.locator("#booking-wizard .slot-btn:not([disabled])").first();
       await slot.waitFor({ state: "visible", timeout: 8000 });
       await slot.click();
-      await sleep(700);
+      await sleep(350);
       return { ok: true, dateIso: italianDateToIso(aria), aria };
     } catch {
       const back = page
         .locator("#booking-wizard button.fresha-back")
         .filter({ hasText: /Indietro/i });
       if (await back.count()) await back.click();
-      await sleep(500);
+      await sleep(280);
     }
   }
   return { ok: false, dateIso: null, aria: "" };
