@@ -15,7 +15,8 @@
     "reel:auth": "node scripts/auth.mjs",
     "reel:record": "node scripts/record-reel.mjs",
     "reel:make": "bash scripts/make-reel.sh",
-    "reel:all": "npm run reel:seed && npm run reel:auth && npm run reel:record && npm run reel:make",
+    "reel:cleanup": "node scripts/reel-cleanup.mjs",
+    "reel:all": "npm run reel:seed && npm run reel:auth && npm run reel:record && npm run reel:make && npm run reel:cleanup",
     "postinstall": "npx playwright install chromium"
   },
   "engines": {
