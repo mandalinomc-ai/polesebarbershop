@@ -10,7 +10,14 @@
     "start:standalone": "node .next/standalone/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "backup:offline": "node scripts/export-offline-backup.mjs"
+    "backup:offline": "node scripts/export-offline-backup.mjs",
+    "reel:seed": "node scripts/reel-seed.mjs",
+    "reel:auth": "node scripts/auth.mjs",
+    "reel:record": "node scripts/record-reel.mjs",
+    "reel:make": "bash scripts/make-reel.sh",
+    "reel:cleanup": "node scripts/reel-cleanup.mjs",
+    "reel:all": "npm run reel:seed && npm run reel:auth && npm run reel:record && npm run reel:make && npm run reel:cleanup",
+    "postinstall": "npx playwright install chromium"
   },
   "engines": {
     "node": ">=20"
@@ -36,6 +43,8 @@
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
+    "dotenv": "^16.6.1",
+    "playwright": "^1.55.0",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.9.2",
     "vercel": "^59.10.0",
