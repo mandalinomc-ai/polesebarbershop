@@ -13,14 +13,24 @@ type DayDraft = {
   lunchEnd: string;
 };
 
-type RescheduleRow = {
+export type OutsideHoursAppt = {
   id: string;
   customerName: string;
-  oldLabel: string;
-  newLabel: string | null;
-  ok: boolean;
-  reason?: string;
-  notified?: boolean;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  email?: string;
+  barberId: string;
+  barberName: string;
+  serviceNames: string;
+  dateLabel: string;
+  timeLabel: string;
+  startsAt: string;
+  endsAt?: string;
+  durationMin: number;
+  durationOverrideMin?: number | null;
+  effectiveDurationMin: number;
+  reason: string;
 };
 
 const EMPTY: DayDraft[] = Array.from({ length: 7 }, (_, weekday) => ({
@@ -34,12 +44,17 @@ const EMPTY: DayDraft[] = Array.from({ length: 7 }, (_, weekday) => ({
   lunchEnd: "14:00",
 }));
 
-export function HoursAdminPanel() {
+export function HoursAdminPanel({
+  onReschedule,
+}: {
+  /** Opens the existing “Sposta” modal so the barber picks date/time. */
+  onReschedule?: (appt: OutsideHoursAppt) => void;
+}) {
   const [days, setDays] = useState<DayDraft[]>(EMPTY);
   const [error, setError] = useState("");
   const [okMsg, setOkMsg] = useState("");
   const [saving, setSaving] = useState(false);
-  const [rescheduled, setRescheduled] = useState<RescheduleRow[]>([]);
+  const [needsReschedule, setNeedsReschedule] = useState<OutsideHoursAppt[]>([]);
 
   const load = useCallback(async () => {
     setError("");
@@ -57,6 +72,7 @@ export function HoursAdminPanel() {
           lunchStart: string | null;
           lunchEnd: string | null;
         }>;
+        needsReschedule?: OutsideHoursAppt[];
       };
       if (!res.ok) {
         setError(json.error || "Impossibile caricare gli orari.");
@@ -76,6 +92,7 @@ export function HoursAdminPanel() {
           lunchEnd: d.lunchEnd || "14:00",
         }));
       if (next.length === 7) setDays(next);
+      setNeedsReschedule(json.needsReschedule || []);
     } catch {
       setError("Connessione non disponibile.");
     }
@@ -94,13 +111,11 @@ export function HoursAdminPanel() {
     setSaving(true);
     setError("");
     setOkMsg("");
-    setRescheduled([]);
     try {
       const res = await fetch("/api/admin/hours", {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          rescheduleOutside: true,
           days: days.map((d) => ({
             weekday: d.weekday,
             isClosed: d.isClosed,
@@ -114,23 +129,20 @@ export function HoursAdminPanel() {
       });
       const json = (await res.json()) as {
         error?: string;
-        rescheduled?: RescheduleRow[];
-        rescheduledCount?: number;
-        unmetCount?: number;
+        needsReschedule?: OutsideHoursAppt[];
       };
       if (!res.ok) {
         setError(json.error || "Salvataggio non riuscito.");
         return;
       }
-      const moved = json.rescheduledCount ?? 0;
-      const unmet = json.unmetCount ?? 0;
-      setRescheduled(json.rescheduled || []);
+      const pending = json.needsReschedule || [];
+      setNeedsReschedule(pending);
       setOkMsg(
-        moved || unmet
-          ? `Orari salvati. ${moved} prenotazion${moved === 1 ? "e riprogrammata" : "i riprogrammate"}${
-              unmet ? `, ${unmet} da sistemare a mano` : ""
-            }.`
-          : "Orari salvati. Sito e agenda aggiornati.",
+        pending.length
+          ? `Orari salvati. ${pending.length} prenotazion${
+              pending.length === 1 ? "e da riprogrammare" : "i da riprogrammare"
+            } — scegli tu il nuovo orario.`
+          : "Orari salvati. Nessuna prenotazione fuori orario.",
       );
       await load();
     } catch {
@@ -140,7 +152,6 @@ export function HoursAdminPanel() {
     }
   }
 
-  // Show Mon→Sun (1..6,0)
   const ordered = [1, 2, 3, 4, 5, 6, 0]
     .map((wd) => days.find((d) => d.weekday === wd))
     .filter(Boolean) as DayDraft[];
@@ -149,8 +160,8 @@ export function HoursAdminPanel() {
     <section className="crm-hours-admin">
       <p className="crm-note">
         Imposta apertura, chiusura e pausa pranzo. Le modifiche aggiornano subito il sito e gli
-        slot prenotabili. Se una prenotazione finisce fuori orario, viene spostata al primo
-        posto libero (stesso barbiere) e il cliente viene avvisato.
+        slot prenotabili. Le prenotazioni che restano fuori orario non vengono spostate da sole:
+        le riprogrammi tu quando vuoi.
       </p>
 
       <form className="crm-hours-form" onSubmit={save}>
@@ -245,24 +256,30 @@ export function HoursAdminPanel() {
         </div>
       </form>
 
-      {rescheduled.length ? (
-        <section className="crm-hours-reschedule" aria-label="Prenotazioni riprogrammate">
-          <h3 className="font-serif">Prenotazioni fuori orario</h3>
+      {needsReschedule.length ? (
+        <section className="crm-hours-reschedule" aria-label="Prenotazioni da riprogrammare">
+          <h3 className="font-serif">Da riprogrammare ({needsReschedule.length})</h3>
+          <p className="crm-note">
+            Queste prenotazioni non rientrano più negli orari. Tocca &quot;Scegli orario&quot; e
+            decidi tu giorno e ora.
+          </p>
           <ul>
-            {rescheduled.map((r) => (
-              <li key={r.id} className={r.ok ? "ok" : "warn"}>
+            {needsReschedule.map((r) => (
+              <li key={r.id} className="warn">
                 <strong>{r.customerName}</strong>
                 <span>
-                  {r.oldLabel}
-                  {r.newLabel ? ` → ${r.newLabel}` : ""}
+                  {r.dateLabel} · {r.timeLabel} · {r.serviceNames}
                 </span>
-                <small>
-                  {r.ok
-                    ? r.notified
-                      ? "Spostata e cliente avvisato"
-                      : "Spostata (avviso non inviato)"
-                    : r.reason || "Da sistemare"}
-                </small>
+                <small>{r.reason}</small>
+                {onReschedule ? (
+                  <button
+                    type="button"
+                    className="btn btn-gold"
+                    onClick={() => onReschedule(r)}
+                  >
+                    Scegli orario
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

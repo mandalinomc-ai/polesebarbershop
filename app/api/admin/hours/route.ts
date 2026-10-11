@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { revalidateBookingPaths } from "@/lib/revalidate-booking";
-import { rescheduleAppointmentsOutsideHours } from "@/lib/reschedule-out-of-hours";
+import { listAppointmentsOutsideHours } from "@/lib/reschedule-out-of-hours";
 import {
   formatDisplayHours,
   loadShopHours,
@@ -28,7 +28,6 @@ const daySchema = z.object({
 
 const putSchema = z.object({
   days: z.array(daySchema).length(7),
-  rescheduleOutside: z.boolean().optional().default(true),
 });
 
 export async function GET() {
@@ -36,10 +35,12 @@ export async function GET() {
     return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
   }
   const state = await loadShopHours();
+  const needsReschedule = await listAppointmentsOutsideHours(state.days);
   return NextResponse.json({
     days: state.days.map((d) => ({ ...d, label: weekdayLabel(d.weekday) })),
     display: formatDisplayHours(state),
     source: state.source,
+    needsReschedule,
   });
 }
 
@@ -64,10 +65,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: saved.error }, { status: 400 });
   }
 
-  let rescheduled: Awaited<ReturnType<typeof rescheduleAppointmentsOutsideHours>> = [];
-  if (parsed.data.rescheduleOutside) {
-    rescheduled = await rescheduleAppointmentsOutsideHours(saved.state.days);
-  }
+  // List only — barber decides when to move each appointment.
+  const needsReschedule = await listAppointmentsOutsideHours(saved.state.days);
 
   revalidateBookingPaths();
   return NextResponse.json({
@@ -75,8 +74,6 @@ export async function PUT(request: Request) {
     days: saved.state.days.map((d) => ({ ...d, label: weekdayLabel(d.weekday) })),
     display: formatDisplayHours(saved.state),
     source: saved.state.source,
-    rescheduled,
-    rescheduledCount: rescheduled.filter((r) => r.ok).length,
-    unmetCount: rescheduled.filter((r) => !r.ok).length,
+    needsReschedule,
   });
 }

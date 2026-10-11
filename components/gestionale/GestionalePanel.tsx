@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
-import { HoursAdminPanel } from "@/components/gestionale/HoursAdminPanel";
+import { HoursAdminPanel, type OutsideHoursAppt } from "@/components/gestionale/HoursAdminPanel";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
 import { TeamAdminPanel } from "@/components/gestionale/TeamAdminPanel";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices, setRuntimeBarbersOverlay, SHOP_HOURS, type Barber } from "@/lib/catalog";
@@ -702,7 +702,33 @@ export function GestionalePanel() {
           </>
         ) : null}
         {tab === "listino" ? <ServicesAdminPanel /> : null}
-        {tab === "orari" ? <HoursAdminPanel /> : null}
+        {tab === "orari" ? (
+          <HoursAdminPanel
+            onReschedule={(a: OutsideHoursAppt) => {
+              const day = (a.startsAt || "").slice(0, 10);
+              if (day) setDate(day);
+              setMoveAppt({
+                id: a.id,
+                status: "confirmed",
+                barberId: a.barberId,
+                barberName: a.barberName,
+                serviceNames: a.serviceNames,
+                firstName: a.firstName,
+                lastName: a.lastName,
+                phone: a.phone,
+                email: a.email,
+                timeLabel: a.timeLabel,
+                durationMin: a.durationMin,
+                durationOverrideMin: a.durationOverrideMin,
+                effectiveDurationMin: a.effectiveDurationMin,
+                priceCents: 0,
+                isWalkIn: false,
+                startsAt: a.startsAt,
+                endsAt: a.endsAt,
+              });
+            }}
+          />
+        ) : null}
         {tab === "team" ? <TeamAdminPanel /> : null}
         {tab === "clienti" ? (
           <ClientiView
