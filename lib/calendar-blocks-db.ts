@@ -45,7 +45,11 @@ function rowToBlock(row: BlockRow): CalendarBlock {
 
 /** Lunch from shop_hours (or CONFIG defaults) + DB custom blocks. */
 export async function loadMergedCalendarBlocks(): Promise<CalendarBlock[]> {
-  const { loadShopHours, lunchBlocksFromHours } = await import("@/lib/runtime-shop-hours");
+  const {
+    loadShopHours,
+    lunchBlocksFromHours,
+    SHOP_HOURS_BLOCK_LABEL,
+  } = await import("@/lib/runtime-shop-hours");
   const hours = await loadShopHours();
   const lunch = lunchBlocksFromHours(hours.days);
 
@@ -60,8 +64,12 @@ export async function loadMergedCalendarBlocks(): Promise<CalendarBlock[]> {
     if (error || !data) return lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
     const fromDb = (data as BlockRow[])
       .map(rowToBlock)
-      // Drop DB lunch rows that would duplicate shop_hours lunch
-      .filter((b) => !(b.kind === "lunch" && b.weekday != null && !b.date));
+      // Drop metadata open-hours rows + DB lunch that would duplicate shop_hours lunch
+      .filter(
+        (b) =>
+          b.label !== SHOP_HOURS_BLOCK_LABEL &&
+          !(b.kind === "lunch" && b.weekday != null && !b.date),
+      );
     const base = lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
     return [...base, ...fromDb];
   } catch {

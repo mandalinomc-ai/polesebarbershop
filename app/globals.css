@@ -2094,7 +2094,31 @@ body:has(#booking-wizard:focus-within) .fab-stack {
   color: var(--ink);
   min-height: 44px;
 }
-.crm-hours-check.lunch-toggle { margin-top: 0.15rem; }
+.crm-hours-check.lunch-toggle { margin: 0; }
+.crm-hours-lunch {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px dashed rgba(10, 10, 10, 0.22);
+  background: rgba(201, 162, 39, 0.08);
+}
+.crm-hours-lunch.is-on {
+  border-style: solid;
+  border-color: rgba(10, 10, 10, 0.28);
+  background: rgba(201, 162, 39, 0.14);
+}
+.crm-hours-lunch-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.crm-hours-lunch input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .crm-hours-closed-note { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .crm-hours-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 .crm-ok { color: #1f6b3a; margin: 0; }

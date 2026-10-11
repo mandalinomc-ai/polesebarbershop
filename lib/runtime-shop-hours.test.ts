@@ -38,5 +38,7 @@ describe("runtime shop hours", () => {
     expect(display.sunday).toMatch(/Chiuso/);
     expect(display.monday).toMatch(/15:00/);
     expect(display.weekdays).toMatch(/09:00/);
+    expect(display.tuesday).toMatch(/pausa 13:00–14:00/);
+    expect(display.weekdays).toMatch(/pausa/);
   });
 });
