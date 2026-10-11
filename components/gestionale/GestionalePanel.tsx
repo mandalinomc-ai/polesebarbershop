@@ -117,13 +117,26 @@ type HistoryAppt = {
 const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "agenda", label: "Agenda", icon: CalendarDays },
-  { id: "listino", label: "Listino", icon: Scissors },
   { id: "orari", label: "Orari", icon: Clock },
+  { id: "listino", label: "Listino", icon: Scissors },
   { id: "team", label: "Team", icon: Users },
   { id: "clienti", label: "Clienti", icon: Users },
   { id: "statistiche", label: "Statistiche", icon: BarChart3 },
   { id: "storico", label: "Storico", icon: History },
 ];
+
+const TAB_IDS = new Set<Tab>(TABS.map((t) => t.id));
+
+function tabFromSearch(): Tab | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = new URLSearchParams(window.location.search).get("tab");
+    if (raw && TAB_IDS.has(raw as Tab)) return raw as Tab;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
 
 const STATUS_IT: Record<string, string> = {
   pending: "Da confermare",
@@ -221,7 +234,7 @@ export function GestionalePanel() {
   const [password, setPassword] = useState("");
   const [auth, setAuth] = useState<"unknown" | "needed" | "ok">("unknown");
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() => tabFromSearch() || "dashboard");
   const [date, setDate] = useState(getFirstBookableDate());
   const [agenda, setAgenda] = useState<Agenda | null>(null);
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -240,6 +253,18 @@ export function GestionalePanel() {
   const [bellTick, setBellTick] = useState(0);
   const [offlineIds, setOfflineIds] = useState<string[]>([]);
   const [offlineBusy, setOfflineBusy] = useState<string | null>(null);
+
+  const goToTab = useCallback((id: Tab) => {
+    setTab(id);
+    try {
+      const url = new URL(window.location.href);
+      if (id === "dashboard") url.searchParams.delete("tab");
+      else url.searchParams.set("tab", id);
+      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const refreshOffline = useCallback(async () => {
     const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
@@ -531,7 +556,7 @@ export function GestionalePanel() {
                 key={t.id}
                 type="button"
                 className={tab === t.id ? "active" : ""}
-                onClick={() => setTab(t.id)}
+                onClick={() => goToTab(t.id)}
               >
                 <Icon size={18} aria-hidden />
                 {t.label}
@@ -563,7 +588,7 @@ export function GestionalePanel() {
               reloadToken={bellTick}
               onOpenAppointment={(d) => {
                 setDate(d);
-                setTab("agenda");
+                goToTab("agenda");
               }}
             />
             <input
@@ -629,8 +654,9 @@ export function GestionalePanel() {
             agenda={agenda}
             onOpenClient={(c) => {
               setSelected(c);
-              setTab("clienti");
+              goToTab("clienti");
             }}
+            onOpenOrari={() => goToTab("orari")}
           />
         ) : null}
         {tab === "agenda" ? (
@@ -787,7 +813,7 @@ export function GestionalePanel() {
         ) : null}
       </div>
 
-      <CrmBottomNav tab={tab} onTab={setTab} />
+      <CrmBottomNav tab={tab} onTab={goToTab} />
 
       {walkOpen ? (
         <WalkInModal
@@ -839,12 +865,14 @@ function DashboardView({
   date,
   agenda,
   onOpenClient,
+  onOpenOrari,
 }: {
   stats: CrmStats | null;
   clients: ClientRecord[];
   date: string;
   agenda: Agenda | null;
   onOpenClient: (c: ClientRecord) => void;
+  onOpenOrari: () => void;
 }) {
   const recent = clients.slice(0, 6);
   const todayAppts = (agenda?.appointments || []).filter((a) => a.status !== "cancelled");
@@ -855,6 +883,15 @@ function DashboardView({
     .slice(0, 5);
   return (
     <div className="crm-stack">
+      <section className="crm-orari-shortcut" aria-label="Orari salone">
+        <div>
+          <h2 className="font-serif">Orari del salone</h2>
+          <p className="slot-status">Apertura, chiusura e pausa pranzo — aggiornano subito sito e prenotazioni.</p>
+        </div>
+        <button type="button" className="btn btn-gold" onClick={onOpenOrari}>
+          <Clock size={16} aria-hidden /> Apri Orari
+        </button>
+      </section>
       <section className="crm-kpis">
         <Kpi label="Oggi in agenda" value={String(stats?.todayAppointments ?? todayAppts.length)} hint={formatItalianDate(date)} />
         <Kpi label="Prossimi" value={String(stats?.upcomingCount ?? 0)} hint="Appuntamenti futuri confermati" />
