@@ -79,6 +79,8 @@ function serialize(row: AppointmentRow) {
 
 export async function GET(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
+  const { warmShopHoursCache } = await import("@/lib/runtime-shop-hours");
+  await warmShopHoursCache();
   await ensureRuntimeBarbers();
   const { searchParams } = new URL(request.url);
   const parsed = adminAppointmentsQuerySchema.safeParse({
