@@ -33,12 +33,22 @@ export type OutsideHoursAppt = {
   reason: string;
 };
 
+const DAY_LABELS_IT = [
+  "Domenica",
+  "Lunedì",
+  "Martedì",
+  "Mercoledì",
+  "Giovedì",
+  "Venerdì",
+  "Sabato",
+] as const;
+
 const EMPTY: DayDraft[] = Array.from({ length: 7 }, (_, weekday) => ({
   weekday,
-  label: "",
+  label: DAY_LABELS_IT[weekday] || `Giorno ${weekday}`,
   isClosed: weekday === 0,
-  open: "09:00",
-  close: "19:00",
+  open: weekday === 1 ? "15:00" : "09:00",
+  close: weekday === 1 ? "19:00" : weekday >= 4 && weekday <= 6 ? "20:00" : "19:00",
   lunchEnabled: weekday >= 2 && weekday <= 6,
   lunchStart: "13:00",
   lunchEnd: "14:00",
@@ -83,7 +93,7 @@ export function HoursAdminPanel({
         .sort((a, b) => a.weekday - b.weekday)
         .map((d) => ({
           weekday: d.weekday,
-          label: d.label,
+          label: d.label || DAY_LABELS_IT[d.weekday] || `Giorno ${d.weekday}`,
           isClosed: d.isClosed,
           open: d.open || "09:00",
           close: d.close || "19:00",
@@ -169,7 +179,7 @@ export function HoursAdminPanel({
           {ordered.map((d) => (
             <article key={d.weekday} className={`crm-hours-day${d.isClosed ? " is-closed" : ""}`}>
               <header className="crm-hours-day-head">
-                <strong>{d.label || `Giorno ${d.weekday}`}</strong>
+                <strong>{d.label || DAY_LABELS_IT[d.weekday] || `Giorno ${d.weekday}`}</strong>
                 <label className="crm-hours-check">
                   <input
                     type="checkbox"
