@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import {
   BarChart3,
   CalendarDays,
+  Clock,
   History,
   LayoutDashboard,
   LogOut,
@@ -17,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
+import { HoursAdminPanel } from "@/components/gestionale/HoursAdminPanel";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
 import { TeamAdminPanel } from "@/components/gestionale/TeamAdminPanel";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices, setRuntimeBarbersOverlay, SHOP_HOURS, type Barber } from "@/lib/catalog";
@@ -28,7 +30,7 @@ import {
   OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
-import { BOOKING_BUFFER_MINUTES, CONFIG_CALENDAR_BLOCKS, type CalendarBlock } from "@/lib/booking";
+import { BOOKING_BUFFER_MINUTES, type CalendarBlock } from "@/lib/booking";
 import {
   formatAgendaBlockLabel,
   formatFreeSlotLabel,
@@ -50,7 +52,15 @@ import {
   type NotifyTemplate,
 } from "@/lib/crm-notify";
 
-type Tab = "dashboard" | "agenda" | "listino" | "team" | "clienti" | "statistiche" | "storico";
+type Tab =
+  | "dashboard"
+  | "agenda"
+  | "listino"
+  | "orari"
+  | "team"
+  | "clienti"
+  | "statistiche"
+  | "storico";
 
 type AdminAppt = {
   id: string;
@@ -108,6 +118,7 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "agenda", label: "Agenda", icon: CalendarDays },
   { id: "listino", label: "Listino", icon: Scissors },
+  { id: "orari", label: "Orari", icon: Clock },
   { id: "team", label: "Team", icon: Users },
   { id: "clienti", label: "Clienti", icon: Users },
   { id: "statistiche", label: "Statistiche", icon: BarChart3 },
@@ -691,6 +702,7 @@ export function GestionalePanel() {
           </>
         ) : null}
         {tab === "listino" ? <ServicesAdminPanel /> : null}
+        {tab === "orari" ? <HoursAdminPanel /> : null}
         {tab === "team" ? <TeamAdminPanel /> : null}
         {tab === "clienti" ? (
           <ClientiView
@@ -982,11 +994,11 @@ function AgendaView({
     };
   }, [date, agenda]);
   const occupancy = useMemo(() => {
-    const dayBlocks: CalendarBlock[] = calendarBlocks.filter((b) => b.date === date);
+    // calendarBlocks already includes shop lunch (weekday) + DB blocks from API
     return getOccupancyGrid({
       date,
       appointments: occupying,
-      calendarBlocks: [...CONFIG_CALENDAR_BLOCKS, ...dayBlocks],
+      calendarBlocks,
     });
   }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);

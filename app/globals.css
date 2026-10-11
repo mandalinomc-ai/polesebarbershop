@@ -2035,6 +2035,76 @@ body:has(#booking-wizard:focus-within) .fab-stack {
 .crm-view-toggle button.active { background: var(--ink); color: #fff; }
 .crm-notes-field textarea { min-height: 5rem; resize: vertical; }
 .crm-services-admin { display: grid; gap: 1.25rem; }
+.crm-hours-admin { display: grid; gap: 1.25rem; }
+.crm-hours-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+.crm-hours-day {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+.crm-hours-day.is-closed { opacity: 0.85; }
+.crm-hours-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.crm-hours-day-head strong { font-family: var(--font-serif, Georgia, serif); font-size: 1.15rem; }
+.crm-hours-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+.crm-hours-row label,
+.crm-hours-check {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.crm-hours-check {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+  min-height: 44px;
+}
+.crm-hours-check.lunch-toggle { margin-top: 0.15rem; }
+.crm-hours-closed-note { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.crm-hours-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.crm-ok { color: #1f6b3a; margin: 0; }
+.crm-hours-reschedule {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+.crm-hours-reschedule ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.crm-hours-reschedule li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--white, #fff);
+}
+.crm-hours-reschedule li.warn { border-color: #c45c26; }
+.crm-hours-reschedule li small { color: var(--muted); }
 .crm-services-group h3 { margin: 0 0 0.65rem; font-size: 1.25rem; }
 .crm-services-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
 .crm-service-row {
