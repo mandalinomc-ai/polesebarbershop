@@ -3,19 +3,69 @@ export type SalonPhoto = {
   id: string;
   src: string;
   alt: string;
-  /** Wider tile in the salone strip (logo / landscape). */
-  wide?: boolean;
   width: number;
   height: number;
 };
 
-/** Compact strip under About — logo, opening plaque, equipment. */
-export const SALON_LOCALE_PHOTOS: SalonPhoto[] = [
+/** All utensil / station shots — shown in the locale carousel. */
+export const SALON_UTENSILI_PHOTOS: SalonPhoto[] = [
+  {
+    id: "utensili-01",
+    src: "/assets/images/salone/utensili-01.jpg",
+    alt: "Attrezzatura professionale in postazione",
+    width: 934,
+    height: 1400,
+  },
+  {
+    id: "utensili-02",
+    src: "/assets/images/salone/utensili-02.jpg",
+    alt: "Forbici e igiene in salone",
+    width: 934,
+    height: 1400,
+  },
+  {
+    id: "utensili-03",
+    src: "/assets/images/salone/utensili-03.jpg",
+    alt: "Clipper e utensili da barbiere",
+    width: 1600,
+    height: 1067,
+  },
+  {
+    id: "utensili-04",
+    src: "/assets/images/salone/utensili-04.jpg",
+    alt: "Postazione con forbici e spray",
+    width: 1600,
+    height: 1067,
+  },
+  {
+    id: "utensili-05",
+    src: "/assets/images/salone/utensili-05.jpg",
+    alt: "Dettaglio utensili e phon",
+    width: 1600,
+    height: 1067,
+  },
+  {
+    id: "utensili-06",
+    src: "/assets/images/salone/utensili-06.jpg",
+    alt: "Lavaggio e postazione del nuovo locale",
+    width: 1600,
+    height: 1067,
+  },
+  {
+    id: "utensili-07",
+    src: "/assets/images/salone/utensili-07.jpg",
+    alt: "Dettaglio igiene e forbici",
+    width: 934,
+    height: 1400,
+  },
+];
+
+/** Logo on the wall + opening plaque — shown together under the carousel. */
+export const SALON_BRAND_PHOTOS: SalonPhoto[] = [
   {
     id: "logo-muro",
     src: "/assets/images/salone/logo-muro.jpg",
     alt: "Logo Felice Polese sul muro del nuovo salone",
-    wide: true,
     width: 1600,
     height: 1067,
   },
@@ -23,20 +73,6 @@ export const SALON_LOCALE_PHOTOS: SalonPhoto[] = [
     id: "targhetta",
     src: "/assets/images/salone/targhetta-apertura.jpg",
     alt: "Targhetta in onore dell'apertura — 7 settembre 2026",
-    width: 800,
-    height: 1200,
-  },
-  {
-    id: "attrezzatura-igiene",
-    src: "/assets/images/salone/attrezzatura-igiene.jpg",
-    alt: "Attrezzatura professionale e igiene in postazione",
-    width: 800,
-    height: 1200,
-  },
-  {
-    id: "attrezzatura-postazione",
-    src: "/assets/images/salone/attrezzatura-postazione.jpg",
-    alt: "Dettaglio attrezzatura da barbiere in salone",
     width: 800,
     height: 1200,
   },

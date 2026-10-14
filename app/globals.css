@@ -838,40 +838,106 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .product-price { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .product-order { width: 100%; margin-top: 0.35rem; font-size: 0.62rem; }
 
-/* New locale photo strip (light — under About) */
-.salone-photo-grid {
+/* Locale section: utensil carousel + logo/plaque pair */
+.salone-carousel-wrap {
+  margin-top: 1.75rem;
+  max-width: 46rem;
+}
+.salone-carousel {
   display: grid;
   gap: 0.75rem;
-  margin-top: 1.75rem;
-  grid-template-columns: 1fr 1fr;
 }
-@media (min-width: 800px) {
-  .salone-photo-grid {
-    grid-template-columns: 1.35fr 0.9fr 0.9fr 0.9fr;
-    gap: 0.85rem;
-  }
+.salone-carousel-track {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x;
 }
-.salone-photo {
-  margin: 0;
+.salone-carousel-track::-webkit-scrollbar { display: none; }
+.salone-carousel-slide {
+  flex: 0 0 min(100%, 36rem);
+  scroll-snap-align: center;
   min-width: 0;
 }
-.salone-photo--wide {
-  grid-column: 1 / -1;
-}
-@media (min-width: 800px) {
-  .salone-photo--wide {
-    grid-column: auto;
-  }
-}
-.salone-photo-media {
+.salone-carousel-media {
   position: relative;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
 }
-.salone-photo--wide .salone-photo-media {
-  aspect-ratio: 3 / 2;
+.salone-carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+}
+.salone-carousel-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+}
+.salone-carousel-nav:hover { background: var(--surface); }
+.salone-carousel-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.salone-carousel-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: rgba(10, 10, 10, 0.22);
+  cursor: pointer;
+}
+.salone-carousel-dot.is-active { background: var(--ink); }
+.salone-carousel-count {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.salone-brand-pair {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+  max-width: 52rem;
+}
+@media (min-width: 720px) {
+  .salone-brand-pair {
+    grid-template-columns: 1.35fr 0.9fr;
+    align-items: stretch;
+  }
+}
+.salone-brand-photo { min-width: 0; }
+.salone-brand-media {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.salone-brand-photo--logo .salone-brand-media { aspect-ratio: 3 / 2; }
+.salone-brand-photo--plaque .salone-brand-media { aspect-ratio: 3 / 4; }
+@media (min-width: 720px) {
+  .salone-brand-photo--plaque .salone-brand-media {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 100%;
+  }
 }
 
 /* Product vetrina (linea salone) */
