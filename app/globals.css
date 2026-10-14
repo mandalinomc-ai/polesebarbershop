@@ -853,9 +853,6 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .salone-photo {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
   min-width: 0;
 }
 .salone-photo--wide {
@@ -875,12 +872,6 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 .salone-photo--wide .salone-photo-media {
   aspect-ratio: 3 / 2;
-}
-.salone-photo-caption {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
 }
 
 /* Product vetrina (linea salone) */

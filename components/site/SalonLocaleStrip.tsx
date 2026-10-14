@@ -12,7 +12,7 @@ export function SalonLocaleStrip() {
       </p>
       <div className="salone-photo-grid">
         {SALON_LOCALE_PHOTOS.map((photo) => (
-          <figure
+          <div
             key={photo.id}
             className={`salone-photo${photo.wide ? " salone-photo--wide" : ""}`}
           >
@@ -28,8 +28,7 @@ export function SalonLocaleStrip() {
                 quality={80}
               />
             </div>
-            <figcaption className="salone-photo-caption">{photo.caption}</figcaption>
-          </figure>
+          </div>
         ))}
       </div>
     </section>
