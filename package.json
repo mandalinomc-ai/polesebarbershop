@@ -10,7 +10,8 @@
     "start:standalone": "node .next/standalone/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "backup:offline": "node scripts/export-offline-backup.mjs"
+    "backup:offline": "node scripts/export-offline-backup.mjs",
+    "client:scaffold": "node scripts/scaffold-client.mjs"
   },
   "engines": {
     "node": ">=20"

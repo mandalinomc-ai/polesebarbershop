@@ -3,6 +3,7 @@
  * Pure functions; no DB writes. Missing buffer_time → 0 (retrocompat).
  */
 import { SHOP_HOURS } from "@/lib/catalog";
+import { getRuntimeShopHoursMap } from "@/lib/runtime-shop-hours";
 import { BOOKING_BUFFER_MINUTES, chairBlockMinutes } from "@/lib/booking";
 import {
   addMinutes,
@@ -113,7 +114,8 @@ export type BusyForGap = {
 
 /** Shop close HH:MM for a date (Europe/Rome weekday), or null if closed. */
 export function shopCloseTimeForDate(date: string): string | null {
-  const hours = SHOP_HOURS[weekdayOfDate(date)] ?? null;
+  const hours =
+    getRuntimeShopHoursMap()[weekdayOfDate(date)] ?? SHOP_HOURS[weekdayOfDate(date)] ?? null;
   return hours?.close ?? null;
 }
 

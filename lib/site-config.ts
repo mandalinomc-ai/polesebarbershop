@@ -1,3 +1,4 @@
+import { CLIENT } from "@/clients/active";
 import { normalizeWhatsAppNumber, sanitizeWhatsAppPhone } from "./phone";
 
 export const TIMEZONE = "Europe/Rome";
@@ -6,62 +7,16 @@ export const TIMEZONE = "Europe/Rome";
 export const IS_COMING_SOON =
   process.env.NEXT_PUBLIC_IS_COMING_SOON === "true";
 
-export const SITE = {
-  brand: "FELICE POLESE",
-  name: "Felice Polese Barber Shop",
-  legalName: "Felice Polese Barber Shop",
-  tagline: "MODERN BARBERING & FADE STUDIO",
-  heroHeadline: "MODERN BARBERING & FADE STUDIO",
-  siteUrl:
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://felicepolesebarbershop.it",
-  address: "Corso Dante Alighieri, 44",
-  addressFull: "Corso Dante Alighieri, 44 – 82100 Benevento (BN)",
-  streetAddress: "Corso Dante Alighieri, 44",
-  city: "Benevento",
-  province: "BN",
-  postalCode: "82100",
-  country: "Italia",
-  region: "Campania",
-  latitude: 41.1298,
-  longitude: 14.7825,
-  openingDate: "2026-09-07",
-  phone: "+39 327 015 6225",
-  phoneDisplay: "327 015 6225",
-  phoneTel: "+393270156225",
-  whatsapp: "393270156225",
-  email: "felicepolese550@gmail.com",
-  instagram: "https://instagram.com/felicepolese_barber",
-  instagramHandle: "@felicepolese_barber",
-  fiscalCode: "PLSFLC04S21A783K",
-  vatNumber: "01894030624",
-  pricesIncludeVat: "Tutti i prezzi si intendono IVA inclusa.",
-  hours: {
-    monday: "Lun · 15:00 — 19:00",
-    tuesday: "Mar · 09:00 — 19:00",
-    wednesday: "Mer · 09:00 — 19:00",
-    thursday: "Gio · 09:00 — 20:00",
-    friday: "Ven · 09:00 — 20:00",
-    saturday: "Sab · 09:00 — 20:00",
-    sunday: "Dom · Chiuso",
-    weekdays:
-      "Lun 15:00—19:00 · Mar–Mer 09:00—19:00 · Gio–Sab 09:00—20:00 · Dom chiuso",
-  },
-  seo: {
-    keywords:
-      "barbiere Benevento, Felice Polese Barber Shop, Felice Polese, Corso Dante Alighieri 44",
-    description:
-      "Felice Polese Barber Shop — barberia d'élite a Benevento, Corso Dante Alighieri, 44. Prenota online.",
-  },
-} as const;
+/** Brand / NAP / SEO — sourced from the active white-label client pack. */
+export const SITE = CLIENT.site;
 
 /** Liked-page document title (pre-overwrite marble HTML). */
-export const SITE_DOCUMENT_TITLE = "Felice Polese | Modern Barbering & Fade Studio";
+export const SITE_DOCUMENT_TITLE = CLIENT.copy.documentTitle;
 
 /** Public FAB / disdette on the website (customers write here). Not salon booking alerts. */
-export const PUBLIC_CONTACT_WHATSAPP = "+393270156225";
+export const PUBLIC_CONTACT_WHATSAPP = CLIENT.copy.publicContactWhatsApp;
 /** Official salon WhatsApp for automatic booking alerts. */
-export const SALON_NOTIFY_WHATSAPP_FALLBACK = "+393270156225";
+export const SALON_NOTIFY_WHATSAPP_FALLBACK = CLIENT.copy.salonNotifyWhatsAppFallback;
 
 export function getSalonNotifyWhatsApp(): string {
   const fromEnv = normalizeWhatsAppNumber(process.env.SALON_NOTIFY_WHATSAPP || "");
@@ -92,29 +47,24 @@ export function canCancelAppointment(
     (new Date(startsAt).getTime() - now.getTime()) / 60_000;
   return minutesLeft >= CANCEL_MINUTES_BEFORE;
 }
-export const MAPS_DESTINATION =
-  "Corso Dante Alighieri, 44, 82100 Benevento";
+export const MAPS_DESTINATION = CLIENT.copy.mapsDestination;
 
 /** Generic salon contact — info, hours, prices or a quick tip. */
-export const SALON_CONTACT_MESSAGE =
-  "Ciao, vorrei informazioni su orari, prezzi o servizi.";
+export const SALON_CONTACT_MESSAGE = CLIENT.copy.salonContactMessage;
 
 /** Coming-soon WhatsApp CTA — notify me at opening. */
-export const NOTIFY_WHATSAPP_MESSAGE =
-  "Ciao, vorrei essere avvisato all'apertura di Felice Polese Barber Shop.";
+export const NOTIFY_WHATSAPP_MESSAGE = CLIENT.copy.notifyWhatsAppMessage;
 
 /** Homepage / stories CTA — booking stays visible before official opening. */
-export const HERO_CTA = "Prenota il tuo appuntamento";
-export const HERO_SLOT_CTA = "Prenota il tuo posto";
-export const HERO_MENU_CTA = "Vedi il menu";
+export const HERO_CTA = CLIENT.copy.heroCta;
+export const HERO_SLOT_CTA = CLIENT.copy.heroSlotCta;
+export const HERO_MENU_CTA = CLIENT.copy.heroMenuCta;
 /** Dispatched when the scissors intro overlay fully dismisses. */
 export const SCISSORS_INTRO_FINISHED_EVENT = "polese-scissors-intro-finished";
-export const HERO_SENTENCE = "Precisione tecnica, stile contemporaneo.";
-export const HERO_LEAD =
-  "Fade ad alta definizione, grooming e skincare. Studio pulito, ritmo veloce, risultato netto. Benevento.";
-export const HERO_PRE_OPENING_EYEBROW = "Prenotazioni online già aperte";
-export const HERO_BEFORE_OPENING =
-  "Prenota il tuo appuntamento per l'apertura";
+export const HERO_SENTENCE = CLIENT.copy.heroSentence;
+export const HERO_LEAD = CLIENT.copy.heroLead;
+export const HERO_PRE_OPENING_EYEBROW = CLIENT.copy.heroPreOpeningEyebrow;
+export const HERO_BEFORE_OPENING = CLIENT.copy.heroBeforeOpening;
 export const BOOKING_DATE_PARAM = "data";
 export const BOOKING_SERVICE_PARAM = "servizio";
 export const BOOKING_DATE_STORAGE_KEY = "polese-booking-date";
@@ -311,7 +261,7 @@ export const SALON_CONTACT = {
   id: "scrivici",
   title: "Scrivici",
   eyebrow: "Contatti",
-  body: "Info, orari, prezzi o un consiglio — Felice risponde dal salone su WhatsApp o email.",
+  body: CLIENT.copy.salonContactBody,
   cta: "WhatsApp",
   prefill: SALON_CONTACT_MESSAGE,
 } as const;
@@ -411,7 +361,7 @@ export function isResendTestFrom(): boolean {
 }
 
 /** Gmail del salone per avvisi prenotazioni. */
-export const ADMIN_EMAIL_FALLBACK = "felicepolese550@gmail.com";
+export const ADMIN_EMAIL_FALLBACK = CLIENT.copy.adminEmailFallback;
 
 export function getAdminEmail(): string {
   return (

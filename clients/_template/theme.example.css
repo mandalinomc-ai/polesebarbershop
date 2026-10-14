@@ -1,0 +1,13 @@
+/*
+  Opzionale: dopo aver scelto i colori in profile.theme,
+  puoi allinearli in app/globals.css (:root) oppure importare
+  un override dedicato. Non viene applicato automaticamente.
+*/
+:root {
+  --ink: #000000;
+  --muted: #1a1a1a;
+  --surface: #f9f9f9;
+  --white: #ffffff;
+  --gold: #c9a962;
+  --marble: #f7f5f2;
+}

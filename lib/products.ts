@@ -1,4 +1,6 @@
-/** Felice Polese Barber Solutions — vetrina in salone, acquisto in sede / accordo WhatsApp. */
+import { CLIENT } from "@/clients/active";
+
+/** Vetrina in salone — acquisto in sede / accordo WhatsApp. */
 export type Product = {
   id: string;
   name: string;
@@ -24,5 +26,5 @@ export const PRODUCTS: Product[] = [
 ];
 
 export function productOrderMessage(name: string): string {
-  return `Ciao, vorrei informazioni su ${name} della linea Felice Polese (acquisto in sede / accordo su WhatsApp).`;
+  return `Ciao, vorrei informazioni su ${name} della linea ${CLIENT.productLineName} (acquisto in sede / accordo su WhatsApp).`;
 }

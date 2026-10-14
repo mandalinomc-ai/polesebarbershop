@@ -1,3 +1,4 @@
+import { CLIENT } from "@/clients/active";
 import { SITE } from "./site-config";
 
 export type DayHours = { open: string; close: string } | null;
@@ -240,12 +241,18 @@ export const ANYONE_BARBER_ID = "anyone";
 export const BARBERS: Barber[] = [
   {
     id: ANYONE_BARBER_ID,
-    name: "Felice",
-    title: "Poltrona di Felice",
+    name: CLIENT.primaryBarberName,
+    title: `Poltrona di ${CLIENT.primaryBarberName}`,
     virtual: true,
     hours: SHOP_HOURS,
   },
-  { id: "felice", name: "Felice", title: "Master barber · " + SITE.name, virtual: false, hours: SHOP_HOURS },
+  {
+    id: "felice",
+    name: CLIENT.primaryBarberName,
+    title: `${CLIENT.primaryBarberTitle} · ${SITE.name}`,
+    virtual: false,
+    hours: SHOP_HOURS,
+  },
 ];
 
 /** Display name for archived / legacy barber ids still present on old rows. */

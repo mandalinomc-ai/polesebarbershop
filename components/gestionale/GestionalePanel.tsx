@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import {
   BarChart3,
   CalendarDays,
+  Clock,
   History,
   LayoutDashboard,
   LogOut,
@@ -17,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
+import { HoursAdminPanel, type OutsideHoursAppt } from "@/components/gestionale/HoursAdminPanel";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
 import { TeamAdminPanel } from "@/components/gestionale/TeamAdminPanel";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices, setRuntimeBarbersOverlay, SHOP_HOURS, type Barber } from "@/lib/catalog";
@@ -28,7 +30,7 @@ import {
   OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
-import { BOOKING_BUFFER_MINUTES, CONFIG_CALENDAR_BLOCKS, type CalendarBlock } from "@/lib/booking";
+import { BOOKING_BUFFER_MINUTES, type CalendarBlock } from "@/lib/booking";
 import {
   formatAgendaBlockLabel,
   formatFreeSlotLabel,
@@ -50,7 +52,15 @@ import {
   type NotifyTemplate,
 } from "@/lib/crm-notify";
 
-type Tab = "dashboard" | "agenda" | "listino" | "team" | "clienti" | "statistiche" | "storico";
+type Tab =
+  | "dashboard"
+  | "agenda"
+  | "listino"
+  | "orari"
+  | "team"
+  | "clienti"
+  | "statistiche"
+  | "storico";
 
 type AdminAppt = {
   id: string;
@@ -107,12 +117,26 @@ type HistoryAppt = {
 const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "agenda", label: "Agenda", icon: CalendarDays },
+  { id: "orari", label: "Orari", icon: Clock },
   { id: "listino", label: "Listino", icon: Scissors },
   { id: "team", label: "Team", icon: Users },
   { id: "clienti", label: "Clienti", icon: Users },
   { id: "statistiche", label: "Statistiche", icon: BarChart3 },
   { id: "storico", label: "Storico", icon: History },
 ];
+
+const TAB_IDS = new Set<Tab>(TABS.map((t) => t.id));
+
+function tabFromSearch(): Tab | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = new URLSearchParams(window.location.search).get("tab");
+    if (raw && TAB_IDS.has(raw as Tab)) return raw as Tab;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
 
 const STATUS_IT: Record<string, string> = {
   pending: "Da confermare",
@@ -210,7 +234,7 @@ export function GestionalePanel() {
   const [password, setPassword] = useState("");
   const [auth, setAuth] = useState<"unknown" | "needed" | "ok">("unknown");
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() => tabFromSearch() || "dashboard");
   const [date, setDate] = useState(getFirstBookableDate());
   const [agenda, setAgenda] = useState<Agenda | null>(null);
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -229,6 +253,18 @@ export function GestionalePanel() {
   const [bellTick, setBellTick] = useState(0);
   const [offlineIds, setOfflineIds] = useState<string[]>([]);
   const [offlineBusy, setOfflineBusy] = useState<string | null>(null);
+
+  const goToTab = useCallback((id: Tab) => {
+    setTab(id);
+    try {
+      const url = new URL(window.location.href);
+      if (id === "dashboard") url.searchParams.delete("tab");
+      else url.searchParams.set("tab", id);
+      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const refreshOffline = useCallback(async () => {
     const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
@@ -520,7 +556,7 @@ export function GestionalePanel() {
                 key={t.id}
                 type="button"
                 className={tab === t.id ? "active" : ""}
-                onClick={() => setTab(t.id)}
+                onClick={() => goToTab(t.id)}
               >
                 <Icon size={18} aria-hidden />
                 {t.label}
@@ -552,7 +588,7 @@ export function GestionalePanel() {
               reloadToken={bellTick}
               onOpenAppointment={(d) => {
                 setDate(d);
-                setTab("agenda");
+                goToTab("agenda");
               }}
             />
             <input
@@ -618,8 +654,9 @@ export function GestionalePanel() {
             agenda={agenda}
             onOpenClient={(c) => {
               setSelected(c);
-              setTab("clienti");
+              goToTab("clienti");
             }}
+            onOpenOrari={() => goToTab("orari")}
           />
         ) : null}
         {tab === "agenda" ? (
@@ -691,6 +728,33 @@ export function GestionalePanel() {
           </>
         ) : null}
         {tab === "listino" ? <ServicesAdminPanel /> : null}
+        {tab === "orari" ? (
+          <HoursAdminPanel
+            onReschedule={(a: OutsideHoursAppt) => {
+              const day = (a.startsAt || "").slice(0, 10);
+              if (day) setDate(day);
+              setMoveAppt({
+                id: a.id,
+                status: "confirmed",
+                barberId: a.barberId,
+                barberName: a.barberName,
+                serviceNames: a.serviceNames,
+                firstName: a.firstName,
+                lastName: a.lastName,
+                phone: a.phone,
+                email: a.email,
+                timeLabel: a.timeLabel,
+                durationMin: a.durationMin,
+                durationOverrideMin: a.durationOverrideMin,
+                effectiveDurationMin: a.effectiveDurationMin,
+                priceCents: 0,
+                isWalkIn: false,
+                startsAt: a.startsAt,
+                endsAt: a.endsAt,
+              });
+            }}
+          />
+        ) : null}
         {tab === "team" ? <TeamAdminPanel /> : null}
         {tab === "clienti" ? (
           <ClientiView
@@ -749,7 +813,7 @@ export function GestionalePanel() {
         ) : null}
       </div>
 
-      <CrmBottomNav tab={tab} onTab={setTab} />
+      <CrmBottomNav tab={tab} onTab={goToTab} />
 
       {walkOpen ? (
         <WalkInModal
@@ -801,12 +865,14 @@ function DashboardView({
   date,
   agenda,
   onOpenClient,
+  onOpenOrari,
 }: {
   stats: CrmStats | null;
   clients: ClientRecord[];
   date: string;
   agenda: Agenda | null;
   onOpenClient: (c: ClientRecord) => void;
+  onOpenOrari: () => void;
 }) {
   const recent = clients.slice(0, 6);
   const todayAppts = (agenda?.appointments || []).filter((a) => a.status !== "cancelled");
@@ -817,6 +883,15 @@ function DashboardView({
     .slice(0, 5);
   return (
     <div className="crm-stack">
+      <section className="crm-orari-shortcut" aria-label="Orari salone">
+        <div>
+          <h2 className="font-serif">Orari del salone</h2>
+          <p className="slot-status">Apertura, chiusura e pausa pranzo — aggiornano subito sito e prenotazioni.</p>
+        </div>
+        <button type="button" className="btn btn-gold" onClick={onOpenOrari}>
+          <Clock size={16} aria-hidden /> Apri Orari
+        </button>
+      </section>
       <section className="crm-kpis">
         <Kpi label="Oggi in agenda" value={String(stats?.todayAppointments ?? todayAppts.length)} hint={formatItalianDate(date)} />
         <Kpi label="Prossimi" value={String(stats?.upcomingCount ?? 0)} hint="Appuntamenti futuri confermati" />
@@ -982,11 +1057,11 @@ function AgendaView({
     };
   }, [date, agenda]);
   const occupancy = useMemo(() => {
-    const dayBlocks: CalendarBlock[] = calendarBlocks.filter((b) => b.date === date);
+    // calendarBlocks already includes shop lunch (weekday) + DB blocks from API
     return getOccupancyGrid({
       date,
       appointments: occupying,
-      calendarBlocks: [...CONFIG_CALENDAR_BLOCKS, ...dayBlocks],
+      calendarBlocks,
     });
   }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
