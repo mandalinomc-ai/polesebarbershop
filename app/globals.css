@@ -838,7 +838,66 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .product-price { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .product-order { width: 100%; margin-top: 0.35rem; font-size: 0.62rem; }
 
+/* New locale photo strip (light — under About) */
+.salone-photo-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  grid-template-columns: 1fr 1fr;
+}
+@media (min-width: 800px) {
+  .salone-photo-grid {
+    grid-template-columns: 1.35fr 0.9fr 0.9fr 0.9fr;
+    gap: 0.85rem;
+  }
+}
+.salone-photo {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.salone-photo--wide {
+  grid-column: 1 / -1;
+}
+@media (min-width: 800px) {
+  .salone-photo--wide {
+    grid-column: auto;
+  }
+}
+.salone-photo-media {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.salone-photo--wide .salone-photo-media {
+  aspect-ratio: 3 / 2;
+}
+.salone-photo-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 /* Product vetrina (linea salone) */
+.product-vetrina-banner {
+  position: relative;
+  aspect-ratio: 21 / 9;
+  max-width: 52rem;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+@media (max-width: 600px) {
+  .product-vetrina-banner {
+    aspect-ratio: 16 / 10;
+  }
+}
 .products-vetrina-grid {
   display: grid;
   gap: 1.25rem;

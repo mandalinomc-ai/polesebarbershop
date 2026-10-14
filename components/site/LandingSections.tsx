@@ -6,6 +6,7 @@ import {
 import { ServiceListino, MiniCartDock } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
 import { ProductVetrina } from "@/components/site/ProductVetrina";
+import { SalonLocaleStrip } from "@/components/site/SalonLocaleStrip";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import { SocialQrGrid } from "@/components/site/SocialQr";
 import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
@@ -67,6 +68,8 @@ export async function LandingSections() {
           </div>
         </div>
       </section>
+
+      <SalonLocaleStrip />
 
       <VideoReelGrid />
 
