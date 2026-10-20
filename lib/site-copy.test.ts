@@ -460,7 +460,7 @@ describe("public copy vs official identity", () => {
     expect(contact).toMatch(/Raggiungimi ora su Google Maps/);
     expect(contact).toMatch(/Scrivici su WhatsApp/);
     expect(contact).toMatch(/getWhatsAppUrl/);
-    expect(contact).toMatch(/SITE\.hours/);
+    expect(contact).toMatch(/ShopHoursDisplay/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).not.toMatch(/SITE_PDFS\.logo/);
     expect(chrome).not.toMatch(/SITE_PDFS\.hoursPanel/);
