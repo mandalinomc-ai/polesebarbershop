@@ -2189,11 +2189,24 @@ function WalkInModal({
   const [saving, setSaving] = useState(false);
   const [finding, setFinding] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [calendarBlocks, setCalendarBlocks] = useState<CalendarBlock[]>([]);
   const totals = useMemo(() => totalsForServices(SERVICES.filter((s) => serviceIds.includes(s.id))), [serviceIds]);
   const hasUnknownDuration = useMemo(
     () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
     [serviceIds],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch("/api/admin/calendar-blocks");
+      const json = (await res.json()) as { blocks?: CalendarBlock[] };
+      if (!cancelled && res.ok) setCalendarBlocks(json.blocks || []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
 
   const freeMinutes = useMemo(
     () =>
@@ -2209,8 +2222,9 @@ function WalkInModal({
           bufferTime: a.bufferTime,
           status: a.status,
         })),
+        calendarBlocks,
       }),
-    [appointments, barberId, date, startTime],
+    [appointments, barberId, calendarBlocks, date, startTime],
   );
 
   const effectiveServiceMin = useMemo(() => {

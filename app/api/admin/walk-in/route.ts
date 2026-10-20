@@ -105,6 +105,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 503 });
   }
 
+  const calendarBlocks = await loadMergedCalendarBlocks();
   const freeMinutes = freeMinutesFromStart({
     date: body.date,
     startTime: body.startTime,
@@ -114,6 +115,7 @@ export async function POST(request: Request) {
       startsAt: a.startsAt,
       endsAt: a.endsAt,
     })),
+    calendarBlocks,
   });
   const neededBlock = newBookingBlockMinutes(occupancyDuration);
   if (neededBlock > freeMinutes) {
@@ -128,7 +130,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const calendarBlocks = await loadMergedCalendarBlocks();
+  // FLEXIBLE: gestionale must accept every free half-hour the agenda shows as Libero.
   const slots = getAvailableSlots({
     date: body.date,
     barberId: body.barberId,
@@ -137,6 +139,7 @@ export async function POST(request: Request) {
     minNoticeMinutes: 0,
     now: new Date(0),
     fullSearch: true,
+    optimizationMode: "FLEXIBLE",
     calendarBlocks,
   });
   let slot = findSlot(slots, startsAt);
@@ -149,7 +152,8 @@ export async function POST(request: Request) {
     }));
     return NextResponse.json(
       {
-        error: "Orario non disponibile per questa poltrona.",
+        error:
+          "Orario non disponibile per questa poltrona (prenotazione, pausa pranzo o fascia bloccata).",
         conflict: true,
         alternatives,
       },

@@ -116,6 +116,7 @@ export async function POST(request: Request) {
     durationMinutes: occupancyDuration,
     appointments: dayAppointments,
     fullSearch: true,
+    optimizationMode: "FLEXIBLE",
     calendarBlocks,
   });
   const slot = findSlot(slots, startsAt);
