@@ -842,20 +842,38 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .salone-head {
   display: grid;
   gap: 1.5rem;
-  align-items: end;
-  max-width: 52rem;
+  align-items: start;
+  width: 100%;
+  max-width: none;
 }
 @media (min-width: 800px) {
   .salone-head {
-    grid-template-columns: minmax(0, 1.4fr) minmax(14rem, 0.9fr);
-    gap: 2rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    justify-content: space-between;
+    column-gap: clamp(2rem, 6vw, 4rem);
   }
+}
+.salone-head-copy {
+  max-width: 36rem;
 }
 .salone-head-copy .section-title { margin-bottom: 0.5rem; }
 .salone-head-cta {
   display: grid;
   gap: 0.75rem;
   justify-items: start;
+  width: min(100%, 18rem);
+}
+@media (min-width: 800px) {
+  .salone-head-cta {
+    justify-self: end;
+    justify-items: end;
+    text-align: right;
+    margin-top: 0.35rem;
+  }
+  .salone-address {
+    justify-items: end;
+  }
 }
 .salone-address {
   margin: 0;
