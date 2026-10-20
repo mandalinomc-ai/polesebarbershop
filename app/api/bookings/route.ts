@@ -20,6 +20,7 @@ import {
   servicesSnapshot,
 } from "@/lib/appointments";
 import { revalidateBookingPaths } from "@/lib/revalidate-booking";
+import { warmShopHoursCache } from "@/lib/runtime-shop-hours";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ function honeypotOkResponse() {
 }
 
 export async function POST(request: Request) {
+  await warmShopHoursCache();
   const ip = getClientIp(request);
   const limited = rateLimit(`booking-create:${ip}`, RATE_LIMITS.bookingCreate);
   if (!limited.ok) {
@@ -114,6 +116,7 @@ export async function POST(request: Request) {
     durationMinutes: occupancyDuration,
     appointments: dayAppointments,
     fullSearch: true,
+    optimizationMode: "FLEXIBLE",
     calendarBlocks,
   });
   const slot = findSlot(slots, startsAt);
