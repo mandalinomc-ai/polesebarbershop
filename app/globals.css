@@ -854,9 +854,9 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 }
 @media (min-width: 900px) {
   .salone-gallery-row {
-    grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem);
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 17.5rem);
     gap: clamp(1.25rem, 3vw, 2.5rem);
-    align-items: center;
+    align-items: start;
   }
 }
 .salone-carousel-wrap {
@@ -868,7 +868,7 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   display: grid;
   gap: 0.7rem;
   justify-items: stretch;
-  align-content: center;
+  align-content: start;
   padding: 1rem 1.1rem;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.72);
@@ -876,8 +876,9 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 @media (min-width: 900px) {
   .salone-side-cta {
     justify-self: stretch;
-    min-height: 100%;
-    padding: 1.35rem 1.25rem;
+    /* Align with photo plane, not carousel dots */
+    margin-top: 0;
+    padding: 1.25rem 1.2rem;
   }
 }
 .salone-address {
