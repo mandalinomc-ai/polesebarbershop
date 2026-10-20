@@ -839,6 +839,55 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .product-order { width: 100%; margin-top: 0.35rem; font-size: 0.62rem; }
 
 /* Locale section: utensil carousel + logo/plaque pair */
+.salone-head {
+  display: grid;
+  gap: 1.5rem;
+  align-items: end;
+  max-width: 52rem;
+}
+@media (min-width: 800px) {
+  .salone-head {
+    grid-template-columns: minmax(0, 1.4fr) minmax(14rem, 0.9fr);
+    gap: 2rem;
+  }
+}
+.salone-head-copy .section-title { margin-bottom: 0.5rem; }
+.salone-head-cta {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+.salone-address {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+.salone-address-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.salone-address strong {
+  font-weight: 600;
+}
+.salone-wa-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.7rem 1.25rem;
+  width: auto;
+  text-decoration: none;
+}
+.salone-wa-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
 .salone-carousel-wrap {
   margin-top: 1.75rem;
   max-width: 46rem;
