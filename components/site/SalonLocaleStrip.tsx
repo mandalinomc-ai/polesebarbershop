@@ -13,16 +13,20 @@ export function SalonLocaleStrip() {
 
   return (
     <section id="salone" className="section-pad bg-marble-light marble-accent" aria-label="Il nuovo salone">
-      <div className="salone-head reveal">
-        <div className="salone-head-copy">
-          <div className="eyebrow">Il locale</div>
-          <h2 className="section-title font-serif">Il nuovo salone</h2>
-          <p className="prose technique-lead">
-            Attrezzatura e dettagli del nuovo locale — scorri le foto.
-          </p>
+      <div className="salone-head-copy reveal">
+        <div className="eyebrow">Il locale</div>
+        <h2 className="section-title font-serif">Il nuovo salone</h2>
+        <p className="prose technique-lead">
+          Attrezzatura e dettagli del nuovo locale — scorri le foto.
+        </p>
+      </div>
+
+      <div className="salone-gallery-row reveal reveal-d2">
+        <div className="salone-carousel-wrap">
+          <SalonPhotoCarousel photos={SALON_UTENSILI_PHOTOS} />
         </div>
 
-        <aside className="salone-head-cta" aria-label="Indirizzo e consulenza">
+        <aside className="salone-side-cta" aria-label="Indirizzo e consulenza">
           <p className="salone-address">
             <span className="salone-address-label">Via</span>
             <strong>{SITE.address}</strong>
@@ -40,10 +44,6 @@ export function SalonLocaleStrip() {
           </a>
           <p className="salone-wa-note">Consulenza gratuita su WhatsApp</p>
         </aside>
-      </div>
-
-      <div className="salone-carousel-wrap reveal reveal-d2">
-        <SalonPhotoCarousel photos={SALON_UTENSILI_PHOTOS} />
       </div>
 
       {logo && plaque ? (
