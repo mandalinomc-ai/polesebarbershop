@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { headers } from "next/headers";
 import { SITE, getMapsUrl, IS_COMING_SOON, SITE_DOCUMENT_TITLE } from "@/lib/site-config";
+import { isCanonicalHost, requestHost } from "@/lib/canonical-host";
+import { loadShopHours, type WeekdayHours } from "@/lib/runtime-shop-hours";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -50,7 +53,28 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-function jsonLd() {
+const SCHEMA_DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+function openingHoursSpec(days: WeekdayHours[]) {
+  return days
+    .filter((d) => !d.isClosed && d.open && d.close)
+    .map((d) => ({
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: SCHEMA_DAYS[d.weekday],
+      opens: d.open,
+      closes: d.close,
+    }));
+}
+
+function jsonLd(days: WeekdayHours[]) {
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -79,32 +103,7 @@ function jsonLd() {
           addressCountry: "IT",
         },
         geo: { "@type": "GeoCoordinates", latitude: SITE.latitude, longitude: SITE.longitude },
-        openingHoursSpecification: [
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: "Monday",
-            opens: "15:00",
-            closes: "19:00",
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Tuesday", "Wednesday"],
-            opens: "09:00",
-            closes: "19:00",
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: "Thursday",
-            opens: "09:00",
-            closes: "20:00",
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Friday", "Saturday"],
-            opens: "09:00",
-            closes: "20:00",
-          },
-        ],
+        openingHoursSpecification: openingHoursSpec(days),
         sameAs: [SITE.instagram],
         employee: [{ "@type": "Person", name: "Felice" }],
         hasMap: getMapsUrl(),
@@ -113,8 +112,12 @@ function jsonLd() {
   };
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const modeClass = IS_COMING_SOON ? "mode-coming-soon" : "mode-live";
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const host = requestHost(await headers());
+  const legacyOffline = !isCanonicalHost(host);
+  const modeClass =
+    IS_COMING_SOON || legacyOffline ? "mode-coming-soon" : "mode-live";
+  const hours = await loadShopHours();
 
   return (
     <html
@@ -125,7 +128,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           id="schema-json"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(hours.days)) }}
         />
       </head>
       <body className="site-white-canvas">{children}</body>

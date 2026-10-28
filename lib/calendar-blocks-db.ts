@@ -43,21 +43,37 @@ function rowToBlock(row: BlockRow): CalendarBlock {
   };
 }
 
-/** Config lunch + DB custom blocks. Falls back to config-only if table missing. */
+/** Lunch from shop_hours (or CONFIG defaults) + DB custom blocks. */
 export async function loadMergedCalendarBlocks(): Promise<CalendarBlock[]> {
-  if (!isSupabaseConfigured()) return [...CONFIG_CALENDAR_BLOCKS];
+  const {
+    loadShopHours,
+    lunchBlocksFromHours,
+    SHOP_HOURS_BLOCK_LABEL,
+  } = await import("@/lib/runtime-shop-hours");
+  const hours = await loadShopHours();
+  const lunch = lunchBlocksFromHours(hours.days);
+
+  if (!isSupabaseConfigured()) return lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
   const db = getSupabaseAdmin();
-  if (!db) return [...CONFIG_CALENDAR_BLOCKS];
+  if (!db) return lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
   try {
     const { data, error } = await db
       .from("calendar_blocks")
       .select("id, block_date, weekday, barber_id, start_time, end_time, kind, label")
       .order("created_at", { ascending: true });
-    if (error || !data) return [...CONFIG_CALENDAR_BLOCKS];
-    const fromDb = (data as BlockRow[]).map(rowToBlock);
-    return [...CONFIG_CALENDAR_BLOCKS, ...fromDb];
+    if (error || !data) return lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
+    const fromDb = (data as BlockRow[])
+      .map(rowToBlock)
+      // Drop metadata open-hours rows + DB lunch that would duplicate shop_hours lunch
+      .filter(
+        (b) =>
+          b.label !== SHOP_HOURS_BLOCK_LABEL &&
+          !(b.kind === "lunch" && b.weekday != null && !b.date),
+      );
+    const base = lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
+    return [...base, ...fromDb];
   } catch {
-    return [...CONFIG_CALENDAR_BLOCKS];
+    return lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
   }
 }
 

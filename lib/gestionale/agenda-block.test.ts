@@ -104,6 +104,47 @@ describe("freeMinutesFromStart + Fresha fit", () => {
     expect(free).toBe(0);
   });
 
+  it("stops at lunch / Non disponibile calendar blocks, not only appointments", () => {
+    const free = freeMinutesFromStart({
+      date: DAY,
+      startTime: "11:30",
+      barberId: "felice",
+      appointments: [],
+      calendarBlocks: [
+        {
+          id: "lunch",
+          weekday: 2,
+          start: "12:30",
+          end: "14:30",
+          kind: "lunch",
+          label: "Pausa pranzo",
+        },
+      ],
+    });
+    expect(free).toBe(60);
+  });
+
+  it("returns 0 when start is inside a Non disponibile block", () => {
+    const free = freeMinutesFromStart({
+      date: DAY,
+      startTime: "14:00",
+      barberId: "felice",
+      appointments: [],
+      calendarBlocks: [
+        {
+          id: "nd",
+          date: DAY,
+          barberId: "felice",
+          start: "14:00",
+          end: "14:30",
+          kind: "custom",
+          label: "Non disponibile",
+        },
+      ],
+    });
+    expect(free).toBe(0);
+  });
+
   it("treats service duration as total block when buffer is zero", () => {
     expect(newBookingBlockMinutes(50)).toBe(50 + BOOKING_BUFFER_MINUTES);
     expect(serviceFitsInFreeMinutes(50, 60)).toBe(true);
