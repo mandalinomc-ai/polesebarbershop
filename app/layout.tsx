@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { headers } from "next/headers";
 import { SITE, getMapsUrl, IS_COMING_SOON, SITE_DOCUMENT_TITLE } from "@/lib/site-config";
+import { isCanonicalHost, requestHost } from "@/lib/canonical-host";
 import { loadShopHours, type WeekdayHours } from "@/lib/runtime-shop-hours";
 import "./globals.css";
 
@@ -111,7 +113,10 @@ function jsonLd(days: WeekdayHours[]) {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const modeClass = IS_COMING_SOON ? "mode-coming-soon" : "mode-live";
+  const host = requestHost(await headers());
+  const legacyOffline = !isCanonicalHost(host);
+  const modeClass =
+    IS_COMING_SOON || legacyOffline ? "mode-coming-soon" : "mode-live";
   const hours = await loadShopHours();
 
   return (

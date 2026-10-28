@@ -472,6 +472,42 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   color: var(--muted);
 }
 .coming-soon-address strong { color: var(--ink); font-weight: 600; }
+.coming-soon-moved {
+  width: 100%;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.15rem 1.15rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 246, 242, 0.96));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+.coming-soon-moved-label {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.coming-soon-moved-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--ink);
+  max-width: 22rem;
+}
+.coming-soon-moved-btn {
+  margin-top: 0.35rem;
+  letter-spacing: 0.04em;
+}
+.coming-soon-moved-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 22rem;
+}
 .coming-soon-social {
   display: flex;
   gap: 1.25rem;
