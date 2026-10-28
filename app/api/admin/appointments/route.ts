@@ -79,6 +79,8 @@ function serialize(row: AppointmentRow) {
 
 export async function GET(request: Request) {
   if (!(await isAdminRequest())) return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
+  const { warmShopHoursCache } = await import("@/lib/runtime-shop-hours");
+  await warmShopHoursCache();
   await ensureRuntimeBarbers();
   const { searchParams } = new URL(request.url);
   const parsed = adminAppointmentsQuerySchema.safeParse({
@@ -416,6 +418,7 @@ export async function PATCH(request: Request) {
         minNoticeMinutes: 0,
         now: new Date(0),
         fullSearch: true,
+        optimizationMode: "FLEXIBLE",
         calendarBlocks,
       });
       const slot = findSlot(slots, start);
@@ -428,7 +431,8 @@ export async function PATCH(request: Request) {
         }));
         return NextResponse.json(
           {
-            error: "Orario occupato per questo barbiere. Ecco alternative libere.",
+            error:
+              "Orario occupato per questo barbiere (prenotazione, pausa o blocco). Ecco alternative libere.",
             conflict: true,
             alternatives,
           },
@@ -468,6 +472,7 @@ export async function PATCH(request: Request) {
           minNoticeMinutes: 0,
           now: new Date(0),
           fullSearch: true,
+          optimizationMode: "FLEXIBLE",
           calendarBlocks,
         });
         return NextResponse.json(
