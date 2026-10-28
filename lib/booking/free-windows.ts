@@ -178,10 +178,9 @@ export function candidateStartsInWindows(
         // Public UI uses the wall-clock grid (:00 / :30), NOT offsets from the
         // free-window start. Relative offsets hid real half-hours after uneven
         // busy ends (e.g. busy until 10:15 → 10:30 vanished).
-        const onClockGrid = startMin % displayStep === 0;
-        // Clock half-hours + rare perfect-fit ends. Off-grid window starts are
-        // gestionale / fullSearch only (displayIntervalMinutes: null).
-        if (!onClockGrid && leftoverMin !== 0) continue;
+        // Perfect-fit leftovers off the clock (e.g. 12:15 for a 15′ service before
+        // lunch) stay gestionale-only via displayIntervalMinutes: null.
+        if (startMin % displayStep !== 0) continue;
       }
 
       out.push({

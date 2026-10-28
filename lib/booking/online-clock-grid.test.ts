@@ -49,4 +49,25 @@ describe("online clock half-hour grid", () => {
     expect(labels).toContain("11:00");
     expect(labels.some((l) => l === "10:15")).toBe(false);
   });
+
+  it("short services stay on :00/:30 online (no perfect-fit 12:15 / 18:45)", () => {
+    const ranked = candidateStartsInWindows(
+      [
+        { startMin: 9 * 60, endMin: 12 * 60 + 30 },
+        { startMin: 14 * 60 + 30, endMin: 19 * 60 },
+      ],
+      15,
+      {
+        mode: "REDUCE_GAPS",
+        displayIntervalMinutes: 30,
+        searchIntervalMinutes: 5,
+      },
+    );
+    const labels = ranked.map((r) => r.label);
+    expect(labels).toContain("12:00");
+    expect(labels).toContain("18:30");
+    expect(labels).not.toContain("12:15");
+    expect(labels).not.toContain("18:45");
+    expect(labels.every((l) => l.endsWith(":00") || l.endsWith(":30"))).toBe(true);
+  });
 });
