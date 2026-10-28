@@ -204,15 +204,18 @@ export async function GET(request: Request) {
 
   const calendarBlocks = await loadMergedCalendarBlocks();
 
-  const slots = getScheduleSlots({
-    date,
+  // FLEXIBLE + wall-clock half-hours: same Libero starts the gestionale agenda
+  // shows for this duration (no REDUCE_GAPS packed subset).
+  const onlineOpts = {
     barberId,
     durationMinutes,
     appointments,
-    fullSearch: false,
+    fullSearch: false as const,
+    optimizationMode: "FLEXIBLE" as const,
     displayIntervalMinutes: onlineDisplayIntervalForDuration(durationMinutes),
     calendarBlocks,
-  });
+  };
+  const slots = getScheduleSlots({ date, ...onlineOpts });
   const occupancy = summarizeSchedule(date, slots, { openDay: true });
   const days = summaryDates.map((iso) => {
     if (iso === date) return occupancy;
@@ -221,15 +224,7 @@ export async function GET(request: Request) {
     }
     return summarizeSchedule(
       iso,
-      getScheduleSlots({
-        date: iso,
-        barberId,
-        durationMinutes,
-        appointments,
-        fullSearch: false,
-        displayIntervalMinutes: onlineDisplayIntervalForDuration(durationMinutes),
-        calendarBlocks,
-      }),
+      getScheduleSlots({ date: iso, ...onlineOpts }),
       { openDay: true },
     );
   });
