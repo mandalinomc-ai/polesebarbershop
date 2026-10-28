@@ -43,6 +43,7 @@ import {
 } from "@/lib/gestionale/agenda-block";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
+import { notifyAgendaChanged } from "@/lib/booking-live-sync";
 import { formatEuroCents, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
 import {
   NOTIFY_TEMPLATE_LABEL,
@@ -410,6 +411,7 @@ export function GestionalePanel() {
       }
       await refreshOffline();
       await loadAgenda();
+      notifyAgendaChanged("operator-offline");
     } finally {
       setOfflineBusy(null);
     }
@@ -442,7 +444,10 @@ export function GestionalePanel() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, ...body }),
     });
-    if (res.ok) void load();
+    if (res.ok) {
+      notifyAgendaChanged("appointment-patch");
+      void load();
+    }
   }
 
   /** Mark a specific half-hour as unavailable (blocks online booking for that chair). */
@@ -464,6 +469,7 @@ export function GestionalePanel() {
       setError(json.error || "Impossibile bloccare la fascia.");
       return;
     }
+    notifyAgendaChanged("block");
     void load();
   }
 
@@ -477,6 +483,7 @@ export function GestionalePanel() {
       setError(json.error || "Impossibile rendere disponibile la fascia.");
       return;
     }
+    notifyAgendaChanged("unblock");
     void load();
   }
 
@@ -804,6 +811,7 @@ export function GestionalePanel() {
                 return false;
               }
               setError("");
+              notifyAgendaChanged("appointment-delete");
               await loadHistory();
               await loadCrm();
               await loadAgenda();
@@ -828,6 +836,7 @@ export function GestionalePanel() {
           onSaved={() => {
             setWalkOpen(false);
             setWalkPreset(null);
+            notifyAgendaChanged("walk-in");
             void load();
           }}
         />
@@ -841,6 +850,7 @@ export function GestionalePanel() {
           onClose={() => setMoveAppt(null)}
           onSaved={() => {
             setMoveAppt(null);
+            notifyAgendaChanged("move");
             void load();
           }}
         />

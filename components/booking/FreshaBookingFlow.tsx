@@ -45,6 +45,7 @@ import {
   publicAvailabilityMessage,
   publicBookingWarnings,
 } from "@/lib/booking";
+import { subscribeAgendaLiveReload } from "@/lib/booking-live-sync";
 
 const STEPS = ["Servizio", "Barbiere", "Data", "Orario", "I tuoi dati", "Conferma"] as const;
 
@@ -270,8 +271,13 @@ export function FreshaBookingFlow({
         serviceIds: selectedIds.join(","),
         duration: String(totals.durationMin),
         summaryDates: days.map((d) => d.date).join(","),
+        // Cache-bust for aggressive mobile HTTP caches (Safari / PWA standalone).
+        _ts: String(Date.now()),
       });
-      const res = await fetch(`/api/availability?${params.toString()}`);
+      const res = await fetch(`/api/availability?${params.toString()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      });
       const json = (await res.json()) as {
         slots?: ApiSlot[];
         days?: { date: string; full?: boolean }[];
@@ -300,17 +306,10 @@ export function FreshaBookingFlow({
           (s) => s.label === want || s.start === curr?.start,
         );
         if (match) return match;
-        // Past orario step: keep prior object so Conferma can still POST the locked time.
-        if (lockedStartTime && curr) return curr;
-        if (lockedStartTime) {
-          return {
-            start: "",
-            end: "",
-            label: lockedStartTime,
-            barberId,
-            available: true,
-            booked: false,
-          };
+        // Slot taken after gestionale update / another client: clear stale lock.
+        if (lockedStartTime && !match) {
+          setLockedStartTime(null);
+          return null;
         }
         return null;
       });
@@ -342,6 +341,15 @@ export function FreshaBookingFlow({
     if (step >= 3 && totals.durationMin > 0 && !onlineBlockedReason) {
       void loadSlots();
     }
+  }, [step, loadSlots, totals.durationMin, onlineBlockedReason]);
+
+  // Mobile / PWA: refresh slots when returning to the tab (gestionale may have
+  // changed blocks) or when another tab broadcasts an agenda update.
+  useEffect(() => {
+    if (step < 3 || totals.durationMin <= 0 || onlineBlockedReason) return;
+    return subscribeAgendaLiveReload(() => {
+      void loadSlots();
+    });
   }, [step, loadSlots, totals.durationMin, onlineBlockedReason]);
 
   useEffect(() => {

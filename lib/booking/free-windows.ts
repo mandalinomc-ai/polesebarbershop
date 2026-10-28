@@ -175,16 +175,13 @@ export function candidateStartsInWindows(
       const { rank, score, leftoverMin } = rankStart(startMin, w, block, mode);
 
       if (displayStep != null) {
-        const offset = startMin - w.startMin;
-        const onDisplayGrid = offset % displayStep === 0;
-        const keep =
-          startMin === w.startMin ||
-          leftoverMin === 0 ||
-          rank === "OPTIMAL" ||
-          onDisplayGrid;
-        if (!keep) continue;
-        // Online REDUCE_GAPS: hide weak POSSIBLE micro-slots even on display grid
-        if (mode === "REDUCE_GAPS" && rank === "POSSIBLE" && !onDisplayGrid) continue;
+        // Public UI uses the wall-clock grid (:00 / :30), NOT offsets from the
+        // free-window start. Relative offsets hid real half-hours after uneven
+        // busy ends (e.g. busy until 10:15 → 10:30 vanished).
+        const onClockGrid = startMin % displayStep === 0;
+        // Clock half-hours + rare perfect-fit ends. Off-grid window starts are
+        // gestionale / fullSearch only (displayIntervalMinutes: null).
+        if (!onClockGrid && leftoverMin !== 0) continue;
       }
 
       out.push({

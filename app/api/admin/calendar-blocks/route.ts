@@ -6,6 +6,7 @@ import {
   insertCalendarBlock,
   loadMergedCalendarBlocks,
 } from "@/lib/calendar-blocks-db";
+import { revalidateBookingPaths } from "@/lib/revalidate-booking";
 import { warmShopHoursCache } from "@/lib/runtime-shop-hours";
 import { flattenZodError } from "@/lib/validations";
 
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 503 });
   }
+  revalidateBookingPaths();
   return NextResponse.json({ ok: true, block: result.block });
 }
 
@@ -71,5 +73,6 @@ export async function DELETE(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
+  revalidateBookingPaths();
   return NextResponse.json({ ok: true });
 }
