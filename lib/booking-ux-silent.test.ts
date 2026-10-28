@@ -49,17 +49,17 @@ describe("multi-service booking combos (silent UX)", () => {
   const waOnlyCombos: { ids: string[]; minutes: number; label: string }[] = [
     {
       ids: ["taglio-pro", "decolorazione-meches"],
-      minutes: 200,
+      minutes: 180, // 30 + 150
       label: "Taglio Pro + Decolorazione Meches",
     },
     {
       ids: ["taglio-pro", "barba-pro"],
-      minutes: 70,
+      minutes: 50, // 30 + 20
       label: "Taglio Pro + Barba Pro",
     },
     {
       ids: ["taglio-pro", "acconciatura"],
-      minutes: 60,
+      minutes: 40, // 30 + 10
       label: "Taglio Pro + Acconciatura",
     },
   ];

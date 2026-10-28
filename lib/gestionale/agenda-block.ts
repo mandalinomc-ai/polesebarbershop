@@ -3,7 +3,13 @@
  * Pure functions; no DB writes. Missing buffer_time → 0 (retrocompat).
  */
 import { SHOP_HOURS } from "@/lib/catalog";
-import { BOOKING_BUFFER_MINUTES, chairBlockMinutes } from "@/lib/booking";
+import { getRuntimeShopHoursMap } from "@/lib/runtime-shop-hours";
+import {
+  BOOKING_BUFFER_MINUTES,
+  busyMinutesFromBlocks,
+  chairBlockMinutes,
+  type CalendarBlock,
+} from "@/lib/booking";
 import {
   addMinutes,
   formatWallTime,
@@ -113,12 +119,14 @@ export type BusyForGap = {
 
 /** Shop close HH:MM for a date (Europe/Rome weekday), or null if closed. */
 export function shopCloseTimeForDate(date: string): string | null {
-  const hours = SHOP_HOURS[weekdayOfDate(date)] ?? null;
+  const hours =
+    getRuntimeShopHoursMap()[weekdayOfDate(date)] ?? SHOP_HOURS[weekdayOfDate(date)] ?? null;
   return hours?.close ?? null;
 }
 
 /**
  * Minutes free from `startTime` until the next busy block (or shop close).
+ * Counts appointments AND calendar blocks (pausa pranzo / Non disponibile).
  * Overlap at start → 0.
  */
 export function freeMinutesFromStart(input: {
@@ -126,6 +134,8 @@ export function freeMinutesFromStart(input: {
   startTime: string;
   barberId: string;
   appointments: BusyForGap[];
+  /** Lunch / Non disponibile / offline — same source as occupancy + booking engine. */
+  calendarBlocks?: CalendarBlock[];
   closeTime?: string | null;
   timeZone?: string;
 }): number {
@@ -154,6 +164,27 @@ export function freeMinutesFromStart(input: {
     }
     if (block.start.getTime() >= start.getTime() && block.start.getTime() < nextBusy) {
       nextBusy = block.start.getTime();
+    }
+  }
+
+  // Pausa pranzo / Non disponibile / operatore offline — must match getAvailableSlots.
+  if (input.calendarBlocks?.length) {
+    const startMin = timeToMinutes(input.startTime);
+    for (const busy of busyMinutesFromBlocks(
+      input.date,
+      input.calendarBlocks,
+      input.barberId,
+    )) {
+      if (busy.endMin <= startMin) continue;
+      if (busy.startMin < startMin && busy.endMin > startMin) return 0;
+      if (busy.startMin >= startMin) {
+        const busyStart = wallTimeToUtc(
+          input.date,
+          minutesToTime(busy.startMin),
+          input.timeZone,
+        ).getTime();
+        if (busyStart < nextBusy) nextBusy = busyStart;
+      }
     }
   }
 

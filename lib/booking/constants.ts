@@ -28,8 +28,9 @@ export function onlineDisplayIntervalForDuration(durationMin: number): number {
 
 /**
  * Gap optimization — internal default for Felice (no confusing UI toggle).
- * - FLEXIBLE: all search-interval starts inside free windows
- * - REDUCE_GAPS (default): prefer packing from free-window start; online shows smart subset
+ * - FLEXIBLE: all search-interval starts inside free windows (public online uses this
+ *   with displayIntervalMinutes=30 so sito half-hours == gestionale Libero)
+ * - REDUCE_GAPS (default for find-best): prefer packing from free-window start; ranking only
  * - ELIMINATE_GAPS: only starts that leave no unusable leftover (left-aligned / perfect fit)
  *
  * `REGULAR` is a deprecated alias of `FLEXIBLE` (kept for older tests/callers).

@@ -163,29 +163,31 @@ export function candidateStartsInWindows(
     }
 
     const rawStarts: number[] = [];
-    for (let t = w.startMin; t <= lastStart; t += searchStep) {
-      rawStarts.push(t);
-    }
-    if (rawStarts[rawStarts.length - 1] !== lastStart) {
-      rawStarts.push(lastStart);
+    if (displayStep != null) {
+      // Online / display thinning: iterate the wall-clock grid (:00 / :30), not
+      // searchStep offsets from the free-window start.
+      // Stepping from an off-grid window start (e.g. 10:07) by 5′ never hits
+      // 10:30/11:00 — those stay Libero in the gestionale agenda but vanished
+      // from /api/availability. Seed from the first clock tick ≥ window start.
+      const firstClock =
+        w.startMin % displayStep === 0
+          ? w.startMin
+          : w.startMin + (displayStep - (w.startMin % displayStep));
+      for (let t = firstClock; t <= lastStart; t += displayStep) {
+        rawStarts.push(t);
+      }
+    } else {
+      for (let t = w.startMin; t <= lastStart; t += searchStep) {
+        rawStarts.push(t);
+      }
+      if (rawStarts.length === 0 || rawStarts[rawStarts.length - 1] !== lastStart) {
+        rawStarts.push(lastStart);
+      }
     }
 
     for (const startMin of [...new Set(rawStarts)].sort((a, b) => a - b)) {
       if (startMin < w.startMin || startMin > lastStart) continue;
       const { rank, score, leftoverMin } = rankStart(startMin, w, block, mode);
-
-      if (displayStep != null) {
-        const offset = startMin - w.startMin;
-        const onDisplayGrid = offset % displayStep === 0;
-        const keep =
-          startMin === w.startMin ||
-          leftoverMin === 0 ||
-          rank === "OPTIMAL" ||
-          onDisplayGrid;
-        if (!keep) continue;
-        // Online REDUCE_GAPS: hide weak POSSIBLE micro-slots even on display grid
-        if (mode === "REDUCE_GAPS" && rank === "POSSIBLE" && !onDisplayGrid) continue;
-      }
 
       out.push({
         startMin,

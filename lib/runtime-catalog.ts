@@ -59,12 +59,9 @@ function mergeService(base: Service, row?: ServiceDbRow | null): Service {
 }
 
 async function fetchDbRows(): Promise<Map<string, ServiceDbRow>> {
-  await runNoBufferMaintenance().then(() => {
-    cache = null;
-  });
-  await runSoloFeliceMigration().then(() => {
-    cache = null;
-  });
+  // One-shot migrations must not block or bust the services cache on every request.
+  void runNoBufferMaintenance();
+  void runSoloFeliceMigration();
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.rows;
   const empty = new Map<string, ServiceDbRow>();
   if (!isSupabaseConfigured()) {

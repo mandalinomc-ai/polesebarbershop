@@ -472,6 +472,42 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
   color: var(--muted);
 }
 .coming-soon-address strong { color: var(--ink); font-weight: 600; }
+.coming-soon-moved {
+  width: 100%;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.15rem 1.15rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 246, 242, 0.96));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+.coming-soon-moved-label {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.coming-soon-moved-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--ink);
+  max-width: 22rem;
+}
+.coming-soon-moved-btn {
+  margin-top: 0.35rem;
+  letter-spacing: 0.04em;
+}
+.coming-soon-moved-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 22rem;
+}
 .coming-soon-social {
   display: flex;
   gap: 1.25rem;
@@ -838,7 +874,220 @@ body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
 .product-price { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .product-order { width: 100%; margin-top: 0.35rem; font-size: 0.62rem; }
 
+/* Locale section: utensil carousel + logo/plaque pair */
+.salone-head-copy {
+  max-width: 36rem;
+}
+.salone-head-copy .section-title { margin-bottom: 0.5rem; }
+
+/* Gallery + via/WhatsApp on one horizontal row (desktop) */
+.salone-gallery-row {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  width: 100%;
+  align-items: stretch;
+}
+@media (min-width: 900px) {
+  .salone-gallery-row {
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 17.5rem);
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    align-items: start;
+  }
+}
+.salone-carousel-wrap {
+  margin-top: 0;
+  max-width: none;
+  min-width: 0;
+}
+.salone-side-cta {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: stretch;
+  align-content: start;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+}
+@media (min-width: 900px) {
+  .salone-side-cta {
+    justify-self: stretch;
+    /* Align with photo plane, not carousel dots */
+    margin-top: 0;
+    padding: 1.25rem 1.2rem;
+  }
+}
+.salone-address {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+.salone-address-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.salone-address strong {
+  font-weight: 600;
+}
+.salone-wa-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.75rem 1.1rem;
+  width: 100%;
+  text-decoration: none;
+  text-align: center;
+}
+.salone-wa-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+}
+@media (max-width: 899px) {
+  .salone-gallery-row {
+    gap: 1rem;
+  }
+  .salone-side-cta {
+    order: 0;
+    padding: 0.95rem 1rem;
+  }
+  .salone-address {
+    font-size: 0.9rem;
+  }
+  .salone-wa-cta {
+    min-height: 52px;
+    font-size: 0.95rem;
+  }
+}
+.salone-carousel {
+  display: grid;
+  gap: 0.75rem;
+}
+.salone-carousel-track {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+.salone-carousel-track::-webkit-scrollbar { display: none; }
+.salone-carousel-slide {
+  flex: 0 0 min(100%, 36rem);
+  scroll-snap-align: center;
+  min-width: 0;
+}
+@media (max-width: 899px) {
+  .salone-carousel-slide {
+    flex-basis: 88%;
+  }
+}
+.salone-carousel-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+@media (max-width: 899px) {
+  .salone-carousel-media {
+    aspect-ratio: 5 / 4;
+  }
+}
+.salone-carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+}
+.salone-carousel-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+}
+.salone-carousel-nav:hover { background: var(--surface); }
+.salone-carousel-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.salone-carousel-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: rgba(10, 10, 10, 0.22);
+  cursor: pointer;
+}
+.salone-carousel-dot.is-active { background: var(--ink); }
+.salone-carousel-count {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.salone-brand-pair {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+  max-width: 52rem;
+}
+@media (min-width: 720px) {
+  .salone-brand-pair {
+    grid-template-columns: 1.35fr 0.9fr;
+    align-items: stretch;
+  }
+}
+.salone-brand-photo { min-width: 0; }
+.salone-brand-media {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.salone-brand-photo--logo .salone-brand-media { aspect-ratio: 3 / 2; }
+.salone-brand-photo--plaque .salone-brand-media { aspect-ratio: 3 / 4; }
+@media (min-width: 720px) {
+  .salone-brand-photo--plaque .salone-brand-media {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 100%;
+  }
+}
+
 /* Product vetrina (linea salone) */
+.product-vetrina-banner {
+  position: relative;
+  aspect-ratio: 21 / 9;
+  max-width: 52rem;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+@media (max-width: 600px) {
+  .product-vetrina-banner {
+    aspect-ratio: 16 / 10;
+  }
+}
 .products-vetrina-grid {
   display: grid;
   gap: 1.25rem;
@@ -1379,6 +1628,25 @@ body:has(#booking-wizard:focus-within) .fab-stack {
   color: var(--smoke);
 }
 .slot-status { color: var(--muted); padding: 0.85rem 0; }
+.slot-grid-skeleton { pointer-events: none; }
+.slot-skeleton {
+  display: block;
+  min-height: 44px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: slot-skeleton-shimmer 1.1s ease-in-out infinite;
+}
+@keyframes slot-skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
 .customer-fields { display: flex; flex-direction: column; gap: 0.65rem; }
 .input-lux {
   width: 100%;
@@ -2035,6 +2303,116 @@ body:has(#booking-wizard:focus-within) .fab-stack {
 .crm-view-toggle button.active { background: var(--ink); color: #fff; }
 .crm-notes-field textarea { min-height: 5rem; resize: vertical; }
 .crm-services-admin { display: grid; gap: 1.25rem; }
+.crm-orari-shortcut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(201, 162, 39, 0.12), transparent 55%),
+    var(--white);
+}
+.crm-orari-shortcut h2 { margin: 0 0 0.25rem; font-size: 1.35rem; font-weight: 500; }
+.crm-orari-shortcut .slot-status { margin: 0; max-width: 28rem; }
+.crm-orari-shortcut .btn { flex: 0 0 auto; }
+.crm-hours-admin { display: grid; gap: 1.25rem; }
+.crm-hours-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+.crm-hours-day {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+.crm-hours-day.is-closed { opacity: 0.85; }
+.crm-hours-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.crm-hours-day-head strong { font-family: var(--font-serif, Georgia, serif); font-size: 1.15rem; }
+.crm-hours-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+.crm-hours-row label,
+.crm-hours-check {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.crm-hours-check {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+  min-height: 44px;
+}
+.crm-hours-check.lunch-toggle { margin: 0; }
+.crm-hours-lunch {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px dashed rgba(10, 10, 10, 0.22);
+  background: rgba(201, 162, 39, 0.08);
+}
+.crm-hours-lunch.is-on {
+  border-style: solid;
+  border-color: rgba(10, 10, 10, 0.28);
+  background: rgba(201, 162, 39, 0.14);
+}
+.crm-hours-lunch-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.crm-hours-lunch input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.crm-hours-closed-note { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.crm-hours-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.crm-ok { color: #1f6b3a; margin: 0; }
+.crm-hours-reschedule {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+.crm-hours-reschedule ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.crm-hours-reschedule li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  background: var(--white, #fff);
+}
+.crm-hours-reschedule li.warn { border-color: #c45c26; }
+.crm-hours-reschedule li small { color: var(--muted); }
+.crm-hours-reschedule li .btn { margin-top: 0.35rem; justify-self: start; }
 .crm-services-group h3 { margin: 0 0 0.65rem; font-size: 1.25rem; }
 .crm-services-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
 .crm-service-row {
@@ -2087,7 +2465,7 @@ body:has(#booking-wizard:focus-within) .fab-stack {
   max-width: 100%;
   margin: 0;
   background: var(--ink);
-  padding: 0.2rem calc(0.25rem + var(--safe-right)) calc(0.2rem + var(--safe-bottom));
+  padding: 0.25rem calc(0.35rem + var(--safe-right)) calc(0.25rem + var(--safe-bottom)) calc(0.35rem + var(--safe-left, 0px));
   z-index: 10050;
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
@@ -2095,14 +2473,36 @@ body:has(#booking-wizard:focus-within) .fab-stack {
   backface-visibility: hidden;
   /* Stay above Safari chrome quirks; do not inherit containing blocks */
   isolation: isolate;
+  /* 8 tabs: scroll horizontally so Orari / Team / etc. stay tappable */
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.15rem;
+  align-items: stretch;
 }
+.crm-bottom::-webkit-scrollbar { display: none; }
 html.crm-gestionale,
 body.crm-gestionale {
   /* overflow-x: clip breaks position:fixed descendants on some WebKit builds */
   overflow-x: visible;
   overscroll-behavior-y: none;
 }
-.crm-bottom button { flex-direction: column; font-size: 0.58rem; color: rgba(255,255,255,0.75); min-height: 44px; justify-content: center; }
+.crm-bottom button {
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: auto;
+  min-width: 4.35rem;
+  max-width: 5.5rem;
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.75);
+  min-height: 48px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.4rem;
+}
 .crm-mobile-logout { display: none; }
 .admin-modal-backdrop {
   position: fixed;
