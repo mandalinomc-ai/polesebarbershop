@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getBarber,
   getRealBarbers,
@@ -115,6 +115,9 @@ export function FreshaBookingFlow({
   const [slot, setSlot] = useState<ApiSlot | null>(null);
   /** HH:MM locked when the client picks an orario — survives slot reloads. */
   const [lockedStartTime, setLockedStartTime] = useState<string | null>(null);
+  /** Ignore stale /api/availability responses when date/barber/services change mid-flight. */
+  const slotsRequestIdRef = useRef(0);
+  const slotsAbortRef = useRef<AbortController | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -260,83 +263,122 @@ export function FreshaBookingFlow({
     };
   }, []);
 
-  const loadSlots = useCallback(async () => {
-    if (!date || totals.durationMin <= 0 || onlineBlockedReason) return;
-    setSlotsState("loading");
-    setSlotsWarning("");
-    try {
-      const params = new URLSearchParams({
-        date,
-        barberId,
-        serviceIds: selectedIds.join(","),
-        duration: String(totals.durationMin),
-        summaryDates: days.map((d) => d.date).join(","),
-        // Cache-bust for aggressive mobile HTTP caches (Safari / PWA standalone).
-        _ts: String(Date.now()),
-      });
-      const res = await fetch(`/api/availability?${params.toString()}`, {
-        cache: "no-store",
-        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-      });
-      const json = (await res.json()) as {
-        slots?: ApiSlot[];
-        days?: { date: string; full?: boolean }[];
-        error?: string;
-        warning?: string;
-        sourceUnavailable?: boolean;
-      };
-      if (!res.ok || json.sourceUnavailable) {
-        setSlots([]);
-        // Keep a locked orario so Conferma still works after a transient reload error.
-        setSlotsState("error");
-        setSlotsWarning(
-          publicAvailabilityMessage(json.warning || json.error) ||
-            CALENDAR_UNAVAILABLE_IT,
-        );
-        return;
-      }
-      const incoming = Array.isArray(json.slots) ? json.slots : [];
-      // Smart available starts only — no endless booked micro-slots.
-      const availableOnly = incoming.filter((s) => !isSlotTaken(s));
-      setSlots(availableOnly);
-      setSlot((curr) => {
-        const want = lockedStartTime || curr?.label;
-        if (!want) return curr;
-        const match = availableOnly.find(
-          (s) => s.label === want || s.start === curr?.start,
-        );
-        if (match) return match;
-        // Slot taken after gestionale update / another client: clear stale lock.
-        if (lockedStartTime && !match) {
-          setLockedStartTime(null);
-          return null;
-        }
-        return null;
-      });
-      if (Array.isArray(json.days)) {
-        const next: Record<string, DayOccupancyChip> = {};
-        for (const row of json.days) {
-          if (row?.date) next[row.date] = { full: Boolean(row.full) };
-        }
-        setDayOccupancy(next);
-      }
-      setSlotsWarning(publicAvailabilityMessage(json.warning) || "");
-      setSlotsState("ready");
-    } catch {
-      setSlots([]);
-      setSlotsState("error");
-      setSlotsWarning(CALENDAR_UNAVAILABLE_IT);
-    }
-  }, [
-    date,
-    barberId,
-    totals.durationMin,
-    selectedIds,
-    days,
-    onlineBlockedReason,
-    lockedStartTime,
-  ]);
+  const loadSlots = useCallback(
+    async (overrideDate?: string) => {
+      const targetDate = overrideDate || date;
+      if (!targetDate || totals.durationMin <= 0 || onlineBlockedReason) return;
 
+      // Abort any in-flight fetch so a slower previous day cannot overwrite.
+      try {
+        slotsAbortRef.current?.abort();
+      } catch {
+        /* ignore */
+      }
+      const ac = new AbortController();
+      slotsAbortRef.current = ac;
+      const requestId = ++slotsRequestIdRef.current;
+
+      // Drop previous day's orari immediately — never flash stale slots.
+      setSlots([]);
+      setSlotsState("loading");
+      setSlotsWarning("");
+
+      try {
+        const params = new URLSearchParams({
+          date: targetDate,
+          barberId,
+          serviceIds: selectedIds.join(","),
+          duration: String(totals.durationMin),
+          summaryDates: days.map((d) => d.date).join(","),
+          // Cache-bust for aggressive mobile HTTP caches (Safari / PWA standalone).
+          _ts: String(Date.now()),
+        });
+        const res = await fetch(`/api/availability?${params.toString()}`, {
+          cache: "no-store",
+          signal: ac.signal,
+          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        });
+        if (requestId !== slotsRequestIdRef.current) return;
+        const json = (await res.json()) as {
+          slots?: ApiSlot[];
+          days?: { date: string; full?: boolean }[];
+          error?: string;
+          warning?: string;
+          sourceUnavailable?: boolean;
+        };
+        if (requestId !== slotsRequestIdRef.current) return;
+        if (!res.ok || json.sourceUnavailable) {
+          setSlots([]);
+          // Keep a locked orario so Conferma still works after a transient reload error.
+          setSlotsState("error");
+          setSlotsWarning(
+            publicAvailabilityMessage(json.warning || json.error) ||
+              CALENDAR_UNAVAILABLE_IT,
+          );
+          return;
+        }
+        const incoming = Array.isArray(json.slots) ? json.slots : [];
+        // Smart available starts only — no endless booked micro-slots.
+        const availableOnly = incoming.filter((s) => !isSlotTaken(s));
+        setSlots(availableOnly);
+        setSlot((curr) => {
+          const want = lockedStartTime || curr?.label;
+          if (!want) return curr;
+          const match = availableOnly.find(
+            (s) => s.label === want || s.start === curr?.start,
+          );
+          if (match) return match;
+          // Slot taken after gestionale update / another client: clear stale lock.
+          if (lockedStartTime && !match) {
+            setLockedStartTime(null);
+            return null;
+          }
+          return null;
+        });
+        if (Array.isArray(json.days)) {
+          const next: Record<string, DayOccupancyChip> = {};
+          for (const row of json.days) {
+            if (row?.date) next[row.date] = { full: Boolean(row.full) };
+          }
+          setDayOccupancy(next);
+        }
+        setSlotsWarning(publicAvailabilityMessage(json.warning) || "");
+        setSlotsState("ready");
+      } catch {
+        if (ac.signal.aborted || requestId !== slotsRequestIdRef.current) return;
+        setSlots([]);
+        setSlotsState("error");
+        setSlotsWarning(CALENDAR_UNAVAILABLE_IT);
+      }
+    },
+    [
+      date,
+      barberId,
+      totals.durationMin,
+      selectedIds,
+      days,
+      onlineBlockedReason,
+      lockedStartTime,
+    ],
+  );
+
+  /** Selecting a calendar day clears stale orari and fetches live availability immediately. */
+  const selectDate = useCallback(
+    (iso: string) => {
+      setDate(iso);
+      setSlot(null);
+      setLockedStartTime(null);
+      setSlots([]);
+      setSlotsState("loading");
+      setSlotsWarning("");
+      if (totals.durationMin > 0 && !onlineBlockedReason) {
+        void loadSlots(iso);
+      }
+    },
+    [loadSlots, totals.durationMin, onlineBlockedReason],
+  );
+
+  // Prefetch on date step + hard-refresh when orario step opens / deps change.
   useEffect(() => {
     if (step >= 3 && totals.durationMin > 0 && !onlineBlockedReason) {
       void loadSlots();
@@ -355,11 +397,27 @@ export function FreshaBookingFlow({
   useEffect(() => {
     setSlot(null);
     setLockedStartTime(null);
+    // Clear previous day's orari so step 4 never shows a stale grid.
+    setSlots([]);
+    setSlotsWarning("");
+    if (step >= 3 && totals.durationMin > 0 && !onlineBlockedReason) {
+      setSlotsState("loading");
+    }
   }, [date, barberId, selectedIds.join("|")]);
 
   useEffect(() => {
     setMonth(startOfMonth(date));
   }, [date]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        slotsAbortRef.current?.abort();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, []);
 
   function toggleService(id: string) {
     if (isWhatsAppOnlyService(id)) return;
@@ -792,7 +850,7 @@ export function FreshaBookingFlow({
                       disabled={!bookable}
                       onClick={() => {
                         if (!bookable) return;
-                        setDate(cell.date);
+                        selectDate(cell.date);
                       }}
                       aria-label={
                         full
