@@ -4,8 +4,9 @@ import { isAdminRequest } from "@/lib/admin-auth";
 import {
   deleteCalendarBlock,
   insertCalendarBlock,
-  listDbCalendarBlocks,
+  loadMergedCalendarBlocks,
 } from "@/lib/calendar-blocks-db";
+import { warmShopHoursCache } from "@/lib/runtime-shop-hours";
 import { flattenZodError } from "@/lib/validations";
 
 export const runtime = "nodejs";
@@ -24,7 +25,8 @@ export async function GET() {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
   }
-  const blocks = await listDbCalendarBlocks();
+  await warmShopHoursCache();
+  const blocks = await loadMergedCalendarBlocks();
   return NextResponse.json({ blocks });
 }
 

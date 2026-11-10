@@ -6,11 +6,13 @@ import {
 import { ServiceListino, MiniCartDock } from "@/components/booking/ServiceListino";
 import { VideoReelGrid } from "@/components/site/VideoReelGrid";
 import { ProductVetrina } from "@/components/site/ProductVetrina";
+import { SalonLocaleStrip } from "@/components/site/SalonLocaleStrip";
 import { SalonVideo } from "@/components/site/SalonVideo";
 import { SocialQrGrid } from "@/components/site/SocialQr";
 import { FELICE_WORKING_VIDEO } from "@/lib/site-videos";
+import { ShopHoursDisplay } from "@/components/site/ShopHoursDisplay";
 
-export function LandingSections() {
+export async function LandingSections() {
   return (
     <>
       <section id="prenota" className="section-pad bg-marble-light marble-accent">
@@ -67,6 +69,8 @@ export function LandingSections() {
         </div>
       </section>
 
+      <SalonLocaleStrip />
+
       <VideoReelGrid />
 
       <ProductVetrina />
@@ -118,19 +122,7 @@ export function LandingSections() {
             <p>
               <strong>Orari</strong>
               <br />
-              {SITE.hours.monday}
-              <br />
-              {SITE.hours.tuesday}
-              <br />
-              {SITE.hours.wednesday}
-              <br />
-              {SITE.hours.thursday}
-              <br />
-              {SITE.hours.friday}
-              <br />
-              {SITE.hours.saturday}
-              <br />
-              {SITE.hours.sunday}
+              <ShopHoursDisplay />
             </p>
             <p>
               <a

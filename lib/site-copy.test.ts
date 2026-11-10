@@ -259,11 +259,31 @@ describe("public copy vs official identity", () => {
     expect(IS_COMING_SOON).toBe(false);
     expect(NOTIFY_WHATSAPP_MESSAGE).toMatch(/avvisato all'apertura/i);
     const coming = readFileSync(join(process.cwd(), "components/site/ComingSoon.tsx"), "utf8");
-    expect(coming).toMatch(/OpeningCountdown/);
-    expect(coming).toMatch(/Avvisami su WhatsApp/);
+    expect(coming).toMatch(/showMovedNotice/);
+    expect(coming).toMatch(/Nuovo sito disponibile/);
+    expect(coming).toMatch(/CANONICAL_SITE_HOST/);
+    expect(coming).toMatch(/CANONICAL_SITE_URL/);
+    expect(coming).toMatch(/coming-soon-page/);
     const page = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
     expect(page).toMatch(/IS_COMING_SOON/);
     expect(page).toMatch(/ComingSoon/);
+    expect(page).toMatch(/isCanonicalHost/);
+    const mw = readFileSync(join(process.cwd(), "middleware.ts"), "utf8");
+    expect(mw).toMatch(/isCanonicalHost/);
+    expect(mw).toMatch(/308/);
+    expect(mw).toMatch(/X-Robots-Tag/);
+    expect(mw).toMatch(/robots\.txt/);
+    const robots = readFileSync(join(process.cwd(), "app/robots.ts"), "utf8");
+    expect(robots).toMatch(/disallow:\s*"\/"/i);
+    expect(robots).toMatch(/CANONICAL_SITE_URL/);
+    const vercelJson = readFileSync(join(process.cwd(), "vercel.json"), "utf8");
+    expect(vercelJson).toMatch(/felicepolesebarbershop\.vercel\.app/);
+    expect(vercelJson).toMatch(/308/);
+    // robots.txt must stay on the vercel host (Disallow:/), not 308 → .it Allow:/
+    expect(vercelJson).toMatch(/robots\\\\\.txt/);
+    expect(vercelJson).toMatch(/temporary-prompt-quasar-rndxhgh\.vercel\.app/);
+    expect(vercelJson).toMatch(/noindex, nofollow/);
+
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
     expect(page).toMatch(/ScissorsIntro/);
@@ -460,7 +480,7 @@ describe("public copy vs official identity", () => {
     expect(contact).toMatch(/Raggiungimi ora su Google Maps/);
     expect(contact).toMatch(/Scrivici su WhatsApp/);
     expect(contact).toMatch(/getWhatsAppUrl/);
-    expect(contact).toMatch(/SITE\.hours/);
+    expect(contact).toMatch(/ShopHoursDisplay/);
     const chrome = readFileSync(join(process.cwd(), "components/site/Chrome.tsx"), "utf8");
     expect(chrome).not.toMatch(/SITE_PDFS\.logo/);
     expect(chrome).not.toMatch(/SITE_PDFS\.hoursPanel/);

@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { headers } from "next/headers";
 import { SITE, getMapsUrl, IS_COMING_SOON, SITE_DOCUMENT_TITLE } from "@/lib/site-config";
+import {
+  CANONICAL_SITE_URL,
+  isCanonicalHost,
+  requestHost,
+} from "@/lib/canonical-host";
+import { loadShopHours, type WeekdayHours } from "@/lib/runtime-shop-hours";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -18,29 +25,45 @@ const cormorant = Cormorant_Garamond({
 
 const title = SITE_DOCUMENT_TITLE;
 const description = SITE.seo.description;
-const ogImage = `${SITE.siteUrl}/assets/images/og-cover.png`;
+const ogImage = `${CANONICAL_SITE_URL}/assets/images/og-cover.png`;
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE.siteUrl),
-  title,
-  description,
-  keywords: SITE.seo.keywords,
-  authors: [{ name: SITE.brand }],
-  robots: { index: true, follow: true, "max-image-preview": "large" },
-  alternates: { canonical: SITE.siteUrl },
-  openGraph: {
-    type: "website",
-    locale: "it_IT",
-    siteName: SITE.name,
+export async function generateMetadata(): Promise<Metadata> {
+  const host = requestHost(await headers());
+  const legacy = !isCanonicalHost(host);
+
+  return {
+    metadataBase: new URL(CANONICAL_SITE_URL),
     title,
     description,
-    url: SITE.siteUrl,
-    images: [{ url: ogImage, alt: `${SITE.name} — ${SITE.brand}` }],
-  },
-  twitter: { card: "summary_large_image", title, description, images: [ogImage] },
-  icons: { icon: "/assets/images/logo-512.png", apple: "/assets/images/logo-512.png" },
-  manifest: "/site.webmanifest",
-};
+    keywords: SITE.seo.keywords,
+    authors: [{ name: SITE.brand }],
+    robots: legacy
+      ? { index: false, follow: false, nocache: true }
+      : { index: true, follow: true, "max-image-preview": "large" },
+    // Always self-ref the .it domain so Google consolidates ranking there.
+    alternates: { canonical: CANONICAL_SITE_URL },
+    openGraph: {
+      type: "website",
+      locale: "it_IT",
+      siteName: SITE.name,
+      title,
+      description,
+      url: CANONICAL_SITE_URL,
+      images: [{ url: ogImage, alt: `${SITE.name} — ${SITE.brand}` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    icons: {
+      icon: "/assets/images/logo-512.png",
+      apple: "/assets/images/logo-512.png",
+    },
+    manifest: "/site.webmanifest",
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -50,21 +73,42 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-function jsonLd() {
+const SCHEMA_DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+function openingHoursSpec(days: WeekdayHours[]) {
+  return days
+    .filter((d) => !d.isClosed && d.open && d.close)
+    .map((d) => ({
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: SCHEMA_DAYS[d.weekday],
+      opens: d.open,
+      closes: d.close,
+    }));
+}
+
+function jsonLd(days: WeekdayHours[]) {
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "WebSite",
-        "@id": `${SITE.siteUrl}#website`,
-        url: SITE.siteUrl,
+        "@id": `${CANONICAL_SITE_URL}#website`,
+        url: CANONICAL_SITE_URL,
         name: SITE.name,
         description,
         inLanguage: "it-IT",
       },
       {
         "@type": "HairSalon",
-        "@id": `${SITE.siteUrl}#business`,
+        "@id": `${CANONICAL_SITE_URL}#business`,
         name: SITE.name,
         telephone: SITE.phone,
         email: SITE.email,
@@ -78,33 +122,12 @@ function jsonLd() {
           postalCode: SITE.postalCode,
           addressCountry: "IT",
         },
-        geo: { "@type": "GeoCoordinates", latitude: SITE.latitude, longitude: SITE.longitude },
-        openingHoursSpecification: [
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: "Monday",
-            opens: "15:00",
-            closes: "19:00",
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Tuesday", "Wednesday"],
-            opens: "09:00",
-            closes: "19:00",
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: "Thursday",
-            opens: "09:00",
-            closes: "20:00",
-          },
-          {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Friday", "Saturday"],
-            opens: "09:00",
-            closes: "20:00",
-          },
-        ],
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: SITE.latitude,
+          longitude: SITE.longitude,
+        },
+        openingHoursSpecification: openingHoursSpec(days),
         sameAs: [SITE.instagram],
         employee: [{ "@type": "Person", name: "Felice" }],
         hasMap: getMapsUrl(),
@@ -113,8 +136,16 @@ function jsonLd() {
   };
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const modeClass = IS_COMING_SOON ? "mode-coming-soon" : "mode-live";
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const host = requestHost(await headers());
+  const legacyOffline = !isCanonicalHost(host);
+  const modeClass =
+    IS_COMING_SOON || legacyOffline ? "mode-coming-soon" : "mode-live";
+  const hours = await loadShopHours();
 
   return (
     <html
@@ -122,11 +153,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`scroll-smooth ${jakarta.variable} ${cormorant.variable} ${modeClass}`}
     >
       <head>
-        <script
-          id="schema-json"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
-        />
+        {!legacyOffline ? (
+          <script
+            id="schema-json"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLd(hours.days)),
+            }}
+          />
+        ) : null}
       </head>
       <body className="site-white-canvas">{children}</body>
     </html>

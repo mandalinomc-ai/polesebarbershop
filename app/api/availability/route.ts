@@ -30,6 +30,7 @@ import { BOOKING_UI_DAYS, SITE } from "@/lib/site-config";
 import { availabilityQuerySchema, flattenZodError } from "@/lib/validations";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
+import { warmShopHoursCache } from "@/lib/runtime-shop-hours";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,6 +86,7 @@ function emptyPayload(
 }
 
 export async function GET(request: Request) {
+  await warmShopHoursCache();
   const { searchParams } = new URL(request.url);
   const parsed = availabilityQuerySchema.safeParse({
     date: searchParams.get("date") || "",

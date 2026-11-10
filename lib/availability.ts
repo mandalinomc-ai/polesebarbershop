@@ -6,6 +6,7 @@ import {
   SHOP_HOURS,
   type DayHours,
 } from "./catalog";
+import { getRuntimeShopHoursMap } from "./runtime-shop-hours";
 import {
   BOOKING_BUFFER_MINUTES,
   DEFAULT_OPTIMIZATION_MODE,
@@ -217,14 +218,19 @@ function asDate(value: Date | string): Date {
   return value instanceof Date ? value : new Date(value);
 }
 
-export function getHoursForDate(barber: Barber, date: string): DayHours {
+export function getHoursForDate(_barber: Barber, date: string): DayHours {
+  // Shop hours from gestionale (cached) are the single source of truth.
   return (
-    barber.hours[weekdayOfDate(date)] ?? SHOP_HOURS[weekdayOfDate(date)] ?? null
+    getRuntimeShopHoursMap()[weekdayOfDate(date)] ??
+    SHOP_HOURS[weekdayOfDate(date)] ??
+    null
   );
 }
 
 export function isClosedDay(date: string, barber?: Barber): boolean {
   if (barber) return getHoursForDate(barber, date) === null;
+  const runtime = getRuntimeShopHoursMap()[weekdayOfDate(date)];
+  if (runtime !== undefined) return runtime === null;
   return SHOP_HOURS[weekdayOfDate(date)] === null;
 }
 
@@ -786,7 +792,9 @@ export function listDayHourStarts(
 ): string[] {
   const hours = barber
     ? getHoursForDate(barber, date)
-    : (SHOP_HOURS[weekdayOfDate(date)] ?? null);
+    : (getRuntimeShopHoursMap()[weekdayOfDate(date)] ??
+      SHOP_HOURS[weekdayOfDate(date)] ??
+      null);
   if (!hours) return [];
   const open = toMinutes(hours.open);
   const close = toMinutes(hours.close);

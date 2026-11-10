@@ -393,7 +393,20 @@ export function getMailtoUrl(message?: string): string {
 }
 
 export function getSiteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || SITE.siteUrl).replace(/\/$/, "");
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL || SITE.siteUrl).replace(
+    /\/$/,
+    "",
+  );
+  // Never advertise *.vercel.app in sitemaps / absolute public URLs.
+  try {
+    const host = new URL(raw).hostname.toLowerCase();
+    if (host.endsWith(".vercel.app")) {
+      return "https://felicepolesebarbershop.it";
+    }
+  } catch {
+    /* keep raw */
+  }
+  return raw;
 }
 
 /** Host for ICS UID — follows public site URL (Vercel, .it, white-label). */
