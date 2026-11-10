@@ -1,36 +1,69 @@
 {
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/",
       "has": [
         {
           "type": "host",
           "value": "felicepolesebarbershop.vercel.app"
         }
       ],
-      "destination": "https://felicepolesebarbershop.it/:path*",
+      "destination": "https://felicepolesebarbershop.it/",
       "statusCode": 308
     },
     {
-      "source": "/:path*",
+      "source": "/:path((?!robots\\.txt$).+)",
+      "has": [
+        {
+          "type": "host",
+          "value": "felicepolesebarbershop.vercel.app"
+        }
+      ],
+      "destination": "https://felicepolesebarbershop.it/:path",
+      "statusCode": 308
+    },
+    {
+      "source": "/",
       "has": [
         {
           "type": "host",
           "value": "temporary-prompt-quasar-rndxhgh.vercel.app"
         }
       ],
-      "destination": "https://felicepolesebarbershop.it/:path*",
+      "destination": "https://felicepolesebarbershop.it/",
       "statusCode": 308
     },
     {
-      "source": "/:path*",
+      "source": "/:path((?!robots\\.txt$).+)",
+      "has": [
+        {
+          "type": "host",
+          "value": "temporary-prompt-quasar-rndxhgh.vercel.app"
+        }
+      ],
+      "destination": "https://felicepolesebarbershop.it/:path",
+      "statusCode": 308
+    },
+    {
+      "source": "/",
       "has": [
         {
           "type": "host",
           "value": "polesebarbershop.vercel.app"
         }
       ],
-      "destination": "https://felicepolesebarbershop.it/:path*",
+      "destination": "https://felicepolesebarbershop.it/",
+      "statusCode": 308
+    },
+    {
+      "source": "/:path((?!robots\\.txt$).+)",
+      "has": [
+        {
+          "type": "host",
+          "value": "polesebarbershop.vercel.app"
+        }
+      ],
+      "destination": "https://felicepolesebarbershop.it/:path",
       "statusCode": 308
     }
   ],
@@ -41,6 +74,36 @@
         {
           "type": "host",
           "value": "felicepolesebarbershop.vercel.app"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "temporary-prompt-quasar-rndxhgh.vercel.app"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "polesebarbershop.vercel.app"
         }
       ],
       "headers": [

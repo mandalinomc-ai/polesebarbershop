@@ -279,6 +279,10 @@ describe("public copy vs official identity", () => {
     const vercelJson = readFileSync(join(process.cwd(), "vercel.json"), "utf8");
     expect(vercelJson).toMatch(/felicepolesebarbershop\.vercel\.app/);
     expect(vercelJson).toMatch(/308/);
+    // robots.txt must stay on the vercel host (Disallow:/), not 308 → .it Allow:/
+    expect(vercelJson).toMatch(/robots\\\\\.txt/);
+    expect(vercelJson).toMatch(/temporary-prompt-quasar-rndxhgh\.vercel\.app/);
+    expect(vercelJson).toMatch(/noindex, nofollow/);
 
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
