@@ -35,3 +35,15 @@ describe("canonical-host", () => {
     expect(CANONICAL_SITE_URL).toBe(`https://${CANONICAL_SITE_HOST}`);
   });
 });
+
+describe("getSiteUrl never advertises vercel.app", () => {
+  it("rewrites *.vercel.app env URLs to the .it canonical", async () => {
+    const prev = process.env.NEXT_PUBLIC_SITE_URL;
+    process.env.NEXT_PUBLIC_SITE_URL = "https://felicepolesebarbershop.vercel.app";
+    const { getSiteUrl } = await import("./site-config");
+    expect(getSiteUrl()).toBe("https://felicepolesebarbershop.it");
+    if (prev === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = prev;
+  });
+});
+

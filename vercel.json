@@ -1,5 +1,55 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "felicepolesebarbershop.vercel.app"
+        }
+      ],
+      "destination": "https://felicepolesebarbershop.it/:path*",
+      "statusCode": 308
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "temporary-prompt-quasar-rndxhgh.vercel.app"
+        }
+      ],
+      "destination": "https://felicepolesebarbershop.it/:path*",
+      "statusCode": 308
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "polesebarbershop.vercel.app"
+        }
+      ],
+      "destination": "https://felicepolesebarbershop.it/:path*",
+      "statusCode": 308
+    }
+  ],
   "headers": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "felicepolesebarbershop.vercel.app"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
     {
       "source": "/assets/(.*)",
       "headers": [
