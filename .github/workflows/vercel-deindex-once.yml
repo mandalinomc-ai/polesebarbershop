@@ -1,0 +1,71 @@
+# One-shot: push the deindex build to the legacy Vercel production alias.
+# Does NOT run on push — only workflow_dispatch.
+# Requires repo secrets: VERCEL_TOKEN (and optionally VERCEL_ORG_ID / VERCEL_PROJECT_ID).
+
+name: Vercel deindex once
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check token
+        id: check
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "missing=true" >> "$GITHUB_OUTPUT"
+            echo "::error::VERCEL_TOKEN secret is not set — cannot update felicepolesebarbershop.vercel.app"
+            exit 1
+          fi
+          echo "missing=false" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@39.1.1
+
+      - name: Pull project settings
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          # Prefer linked project ids from secrets; fall back to project name.
+          if [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            mkdir -p .vercel
+            printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
+          fi
+          vercel pull --yes --environment=production --token "$VERCEL_TOKEN" \
+            || vercel link --yes --project temporary-prompt-quasar-rndxhgh --token "$VERCEL_TOKEN"
+
+      - name: Build
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token "$VERCEL_TOKEN"
+
+      - name: Deploy prebuilt production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN")
+          echo "Deployed: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Verify redirect
+        run: |
+          sleep 5
+          code=$(curl -sI -o /tmp/vh.txt -w "%{http_code}" "https://felicepolesebarbershop.vercel.app/")
+          echo "HTTP $code"
+          cat /tmp/vh.txt | head -20
+          echo "$code" | grep -E '^(308|301)$'
+          grep -i 'location: https://felicepolesebarbershop.it' /tmp/vh.txt
