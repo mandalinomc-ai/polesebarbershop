@@ -1,9 +1,29 @@
 import type { MetadataRoute } from "next";
-import { getSiteUrl } from "@/lib/site-config";
+import { headers } from "next/headers";
+import {
+  CANONICAL_SITE_URL,
+  isCanonicalHost,
+  requestHost,
+} from "@/lib/canonical-host";
 
-/** Dynamic robots — always matches NEXT_PUBLIC_SITE_URL / SITE.siteUrl (VPS .it). */
-export default function robots(): MetadataRoute.Robots {
-  const base = getSiteUrl();
+/**
+ * Canonical (.it): allow public pages, point sitemap at .it only.
+ * Any other host (vercel.app, IP, previews): disallow all + no sitemap.
+ */
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const host = requestHost(await headers());
+
+  if (!isCanonicalHost(host)) {
+    return {
+      rules: [
+        {
+          userAgent: "*",
+          disallow: "/",
+        },
+      ],
+    };
+  }
+
   return {
     rules: [
       {
@@ -12,6 +32,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/gestionale", "/admin", "/api/admin"],
       },
     ],
-    sitemap: `${base}/sitemap.xml`,
+    sitemap: `${CANONICAL_SITE_URL}/sitemap.xml`,
   };
 }

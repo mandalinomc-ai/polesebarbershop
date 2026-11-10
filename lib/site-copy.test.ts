@@ -271,6 +271,15 @@ describe("public copy vs official identity", () => {
     const mw = readFileSync(join(process.cwd(), "middleware.ts"), "utf8");
     expect(mw).toMatch(/isCanonicalHost/);
     expect(mw).toMatch(/308/);
+    expect(mw).toMatch(/X-Robots-Tag/);
+    expect(mw).toMatch(/robots\.txt/);
+    const robots = readFileSync(join(process.cwd(), "app/robots.ts"), "utf8");
+    expect(robots).toMatch(/disallow:\s*"\/"/i);
+    expect(robots).toMatch(/CANONICAL_SITE_URL/);
+    const vercelJson = readFileSync(join(process.cwd(), "vercel.json"), "utf8");
+    expect(vercelJson).toMatch(/felicepolesebarbershop\.vercel\.app/);
+    expect(vercelJson).toMatch(/308/);
+
     expect(page).toMatch(/LandingSections/);
     expect(page).toMatch(/Hero/);
     expect(page).toMatch(/ScissorsIntro/);
