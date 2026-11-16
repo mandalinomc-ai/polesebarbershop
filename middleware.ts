@@ -32,6 +32,12 @@ export function middleware(request: NextRequest) {
   const host = requestHost(request.headers);
   const { pathname, search } = request.nextUrl;
 
+  // Never Host-gate Next internals — image optimizer must fetch /assets without 308.
+  // Matcher already excludes these; keep an explicit guard if matcher config drifts.
+  if (pathname.startsWith("/_next/") || pathname === "/_next") {
+    return NextResponse.next();
+  }
+
   if (!isCanonicalHost(host)) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(

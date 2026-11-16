@@ -1,23 +1,31 @@
 import Image, { type ImageProps } from "next/image";
 import { SITE_LOGO } from "@/lib/site-images";
 
-type SiteLogoProps = Omit<ImageProps, "src" | "width" | "height" | "alt"> & {
+type SiteLogoProps = {
   alt: string;
+  className?: string;
+  sizes?: string;
+  priority?: boolean;
 };
 
-/** Brand logo with correct intrinsic dimensions and responsive object-fit. */
-export function SiteLogo({ alt, className, sizes, priority, quality = 80, ...rest }: SiteLogoProps) {
+/**
+ * Brand logo — plain <img> to /assets (not /_next/image).
+ * Avoids optimizer/middleware Host failures and sticky broken caches.
+ */
+export function SiteLogo({ alt, className, sizes, priority }: SiteLogoProps) {
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element -- logos must not depend on image optimizer
+    <img
       src={SITE_LOGO.src}
       alt={alt}
       width={SITE_LOGO.width}
       height={SITE_LOGO.height}
       className={className}
       sizes={sizes ?? "(max-width: 420px) 48px, 64px"}
-      quality={quality}
-      priority={priority}
-      {...rest}
+      decoding="async"
+      {...(priority
+        ? { fetchPriority: "high" as const }
+        : { loading: "lazy" as const })}
     />
   );
 }

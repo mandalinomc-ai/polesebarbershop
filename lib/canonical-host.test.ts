@@ -40,3 +40,30 @@ describe("canonical-host", () => {
     expect(CANONICAL_SITE_URL).toBe(`https://${CANONICAL_SITE_HOST}`);
   });
 });
+
+describe("logo assets bypass image optimizer", () => {
+  it("SiteLogo and intro shears use plain /assets img, not /_next/image", () => {
+    const { readFileSync } = require("node:fs") as typeof import("node:fs");
+    const { join } = require("node:path") as typeof import("node:path");
+    const siteImage = readFileSync(
+      join(process.cwd(), "components/site/SiteImage.tsx"),
+      "utf8",
+    );
+    const scissors = readFileSync(
+      join(process.cwd(), "components/site/ScissorsIcon.tsx"),
+      "utf8",
+    );
+    const mw = readFileSync(join(process.cwd(), "middleware.ts"), "utf8");
+    const logoFn = siteImage.slice(
+      siteImage.indexOf("export function SiteLogo"),
+      siteImage.indexOf("export function FillCoverImage"),
+    );
+    expect(logoFn).toMatch(/<img/);
+    expect(logoFn).toMatch(/src=\{SITE_LOGO\.src\}/);
+    expect(logoFn).not.toMatch(/<Image\b/);
+    expect(scissors).toMatch(/src="\/assets\/3d\/shear-intro\.png"/);
+    expect(scissors).toMatch(/<img/);
+    expect(scissors).not.toMatch(/from ["']next\/image["']/);
+    expect(mw).toMatch(/pathname\.startsWith\("\/_next\/"\)/);
+  });
+});
