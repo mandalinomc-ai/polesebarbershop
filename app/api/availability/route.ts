@@ -30,6 +30,7 @@ import { BOOKING_UI_DAYS, SITE } from "@/lib/site-config";
 import { availabilityQuerySchema, flattenZodError } from "@/lib/validations";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { loadMergedCalendarBlocks } from "@/lib/calendar-blocks-db";
+import { loadShopHours } from "@/lib/runtime-shop-hours";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -96,6 +97,8 @@ export async function GET(request: Request) {
   const date = searchParams.get("date") || "";
   const barberId = searchParams.get("barberId") || ANYONE_BARBER_ID;
   const serviceIdsRaw = searchParams.get("serviceIds") || "";
+  // summary=0 → selected-day slots only (fast path for date clicks / orario step).
+  const wantSummary = searchParams.get("summary") !== "0";
 
   // Public availability never trusts client `duration` — only catalog/DB via serviceIds.
   if (!serviceIdsRaw) {
@@ -110,8 +113,24 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   }
-  await ensureRuntimeBarbers();
-  const services = await resolveRuntimeServices(parsed.data.serviceIds);
+
+  if (!DATE_RE.test(date)) {
+    return NextResponse.json(
+      { error: "Parametro date non valido (YYYY-MM-DD)." },
+      { status: 400 },
+    );
+  }
+
+  // Parallel: shop hours (TTL cache), barbers, services — no invalidate-on-read.
+  const [, , services] = await Promise.all([
+    loadShopHours(),
+    ensureRuntimeBarbers(),
+    resolveRuntimeServices(parsed.data.serviceIds),
+  ]);
+
+  if (!getBarber(barberId)) {
+    return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
+  }
   if (!services) {
     return NextResponse.json(
       { error: "Uno o più servizi non sono validi." },
@@ -140,16 +159,6 @@ export async function GET(request: Request) {
     );
   }
   const durationMinutes = resolved.durationMin;
-
-  if (!DATE_RE.test(date)) {
-    return NextResponse.json(
-      { error: "Parametro date non valido (YYYY-MM-DD)." },
-      { status: 400 },
-    );
-  }
-  if (!getBarber(barberId)) {
-    return NextResponse.json({ error: "Barbiere non valido." }, { status: 400 });
-  }
 
   const first = getFirstBookableDate();
   if (date < first) {
@@ -182,16 +191,24 @@ export async function GET(request: Request) {
     });
   }
 
-  const summaryDates = parseSummaryDates(searchParams.get("summaryDates"), date);
+  const summaryDates = wantSummary
+    ? parseSummaryDates(searchParams.get("summaryDates"), date)
+    : [date];
   const rangeStart = summaryDates.reduce((min, d) => (d < min ? d : min), date);
   const rangeEnd = summaryDates.reduce((max, d) => (d > max ? d : max), date);
 
+  // Appointments + calendar blocks in parallel (blocks reuse short in-process TTL).
   let appointments;
+  let calendarBlocks;
   try {
-    appointments =
+    const appointmentsPromise =
       summaryDates.length > 1
-        ? await loadAppointmentsBetween(rangeStart, rangeEnd)
-        : await loadDayAppointments(date);
+        ? loadAppointmentsBetween(rangeStart, rangeEnd)
+        : loadDayAppointments(date);
+    [appointments, calendarBlocks] = await Promise.all([
+      appointmentsPromise,
+      loadMergedCalendarBlocks(),
+    ]);
   } catch (err) {
     const message =
       err instanceof AppointmentsUnavailableError ? err.message : RETRY_MESSAGE;
@@ -200,17 +217,18 @@ export async function GET(request: Request) {
     });
   }
 
-  const calendarBlocks = await loadMergedCalendarBlocks();
-
-  const slots = getScheduleSlots({
-    date,
+  // FLEXIBLE + wall-clock half-hours: same Libero starts the gestionale agenda
+  // shows for this duration (no REDUCE_GAPS packed subset).
+  const onlineOpts = {
     barberId,
     durationMinutes,
     appointments,
-    fullSearch: false,
+    fullSearch: false as const,
+    optimizationMode: "FLEXIBLE" as const,
     displayIntervalMinutes: onlineDisplayIntervalForDuration(durationMinutes),
     calendarBlocks,
-  });
+  };
+  const slots = getScheduleSlots({ date, ...onlineOpts });
   const occupancy = summarizeSchedule(date, slots, { openDay: true });
   const days = summaryDates.map((iso) => {
     if (iso === date) return occupancy;
@@ -219,15 +237,7 @@ export async function GET(request: Request) {
     }
     return summarizeSchedule(
       iso,
-      getScheduleSlots({
-        date: iso,
-        barberId,
-        durationMinutes,
-        appointments,
-        fullSearch: false,
-        displayIntervalMinutes: onlineDisplayIntervalForDuration(durationMinutes),
-        calendarBlocks,
-      }),
+      getScheduleSlots({ date: iso, ...onlineOpts }),
       { openDay: true },
     );
   });
