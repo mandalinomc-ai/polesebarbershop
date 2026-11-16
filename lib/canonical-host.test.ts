@@ -7,12 +7,17 @@ import {
 } from "./canonical-host";
 
 describe("canonical-host", () => {
-  it("accepts .it and www, plus localhost for dev", () => {
+  it("accepts .it and www, plus localhost/Docker bind for dev and image opt", () => {
     expect(isCanonicalHost("felicepolesebarbershop.it")).toBe(true);
     expect(isCanonicalHost("www.felicepolesebarbershop.it")).toBe(true);
     expect(isCanonicalHost("FelicePoleseBarbershop.it:443")).toBe(true);
     expect(isCanonicalHost("localhost")).toBe(true);
     expect(isCanonicalHost("127.0.0.1:3000")).toBe(true);
+    // Docker Next sets HOSTNAME=0.0.0.0; image optimizer must not hit legacy 308.
+    expect(isCanonicalHost("0.0.0.0")).toBe(true);
+    expect(isCanonicalHost("0.0.0.0:3000")).toBe(true);
+    expect(isCanonicalHost("::1")).toBe(true);
+    expect(isCanonicalHost("[::1]:3000")).toBe(true);
   });
 
   it("rejects Vercel / preview / IP hosts so they stay on legacy offline", () => {
