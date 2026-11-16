@@ -56,7 +56,7 @@ describe("logo assets bypass image optimizer", () => {
     const mw = readFileSync(join(process.cwd(), "middleware.ts"), "utf8");
     const logoFn = siteImage.slice(
       siteImage.indexOf("export function SiteLogo"),
-      siteImage.indexOf("export function FillCoverImage"),
+      siteImage.indexOf("export function PlainFillCoverImage"),
     );
     expect(logoFn).toMatch(/<img/);
     expect(logoFn).toMatch(/src=\{SITE_LOGO\.src\}/);
@@ -65,5 +65,62 @@ describe("logo assets bypass image optimizer", () => {
     expect(scissors).toMatch(/<img/);
     expect(scissors).not.toMatch(/from ["']next\/image["']/);
     expect(mw).toMatch(/pathname\.startsWith\("\/_next\/"\)/);
+  });
+});
+
+describe("salone gallery bypass image optimizer", () => {
+  it("carousel, brand pair and shelf use PlainFillCoverImage plain /assets img", () => {
+    const { existsSync, readFileSync, readdirSync } =
+      require("node:fs") as typeof import("node:fs");
+    const { join } = require("node:path") as typeof import("node:path");
+    const carousel = readFileSync(
+      join(process.cwd(), "components/site/SalonPhotoCarousel.tsx"),
+      "utf8",
+    );
+    const locale = readFileSync(
+      join(process.cwd(), "components/site/SalonLocaleStrip.tsx"),
+      "utf8",
+    );
+    const vetrina = readFileSync(
+      join(process.cwd(), "components/site/ProductVetrina.tsx"),
+      "utf8",
+    );
+    const siteImage = readFileSync(
+      join(process.cwd(), "components/site/SiteImage.tsx"),
+      "utf8",
+    );
+    const photos = readFileSync(
+      join(process.cwd(), "lib/salon-photos.ts"),
+      "utf8",
+    );
+    expect(siteImage).toMatch(/export function PlainFillCoverImage/);
+    expect(carousel).toMatch(/PlainFillCoverImage/);
+    expect(carousel).not.toMatch(/from ["']next\/image["']/);
+    expect(carousel).not.toMatch(/(?<!Plain)FillCoverImage/);
+    expect(locale).toMatch(/PlainFillCoverImage/);
+    expect(locale).not.toMatch(/(?<!Plain)FillCoverImage/);
+    expect(vetrina).toMatch(/PlainFillCoverImage/);
+    expect(vetrina).toMatch(/SALON_PRODUCTS_SHELF/);
+    expect(photos).toMatch(/\/assets\/images\/salone\/utensili-01\.jpg/);
+
+    const dir = join(process.cwd(), "public/assets/images/salone");
+    const required = [
+      "utensili-01.jpg",
+      "utensili-02.jpg",
+      "utensili-03.jpg",
+      "utensili-04.jpg",
+      "utensili-05.jpg",
+      "utensili-06.jpg",
+      "utensili-07.jpg",
+      "logo-muro.jpg",
+      "targhetta-apertura.jpg",
+      "prodotti-scaffale.jpg",
+    ];
+    for (const name of required) {
+      expect(existsSync(join(dir, name))).toBe(true);
+    }
+    expect(readdirSync(dir).filter((f) => f.endsWith(".jpg")).sort()).toEqual(
+      [...required].sort(),
+    );
   });
 });

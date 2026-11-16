@@ -1,4 +1,4 @@
-import { FillCoverImage } from "@/components/site/SiteImage";
+import { PlainFillCoverImage } from "@/components/site/SiteImage";
 import { SalonPhotoCarousel } from "@/components/site/SalonPhotoCarousel";
 import { SALON_BRAND_PHOTOS, SALON_UTENSILI_PHOTOS } from "@/lib/salon-photos";
 import { SITE, getWhatsAppUrl } from "@/lib/site-config";
@@ -50,22 +50,12 @@ export function SalonLocaleStrip() {
         <div className="salone-brand-pair reveal reveal-d3">
           <div className="salone-brand-photo salone-brand-photo--logo">
             <div className="salone-brand-media">
-              <FillCoverImage
-                src={logo.src}
-                alt={logo.alt}
-                sizes="(max-width: 800px) 100vw, 55vw"
-                quality={80}
-              />
+              <PlainFillCoverImage src={logo.src} alt={logo.alt} />
             </div>
           </div>
           <div className="salone-brand-photo salone-brand-photo--plaque">
             <div className="salone-brand-media">
-              <FillCoverImage
-                src={plaque.src}
-                alt={plaque.alt}
-                sizes="(max-width: 800px) 100vw, 35vw"
-                quality={80}
-              />
+              <PlainFillCoverImage src={plaque.src} alt={plaque.alt} />
             </div>
           </div>
         </div>

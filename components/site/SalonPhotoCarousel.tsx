@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { FillCoverImage } from "@/components/site/SiteImage";
+import { PlainFillCoverImage } from "@/components/site/SiteImage";
 import type { SalonPhoto } from "@/lib/salon-photos";
 
 /** Swipeable photo carousel — used only in the locale section. */
@@ -60,11 +60,9 @@ export function SalonPhotoCarousel({ photos }: { photos: SalonPhoto[] }) {
             aria-label={`${i + 1} di ${count}`}
           >
             <div className="salone-carousel-media">
-              <FillCoverImage
+              <PlainFillCoverImage
                 src={photo.src}
                 alt={photo.alt}
-                sizes="(max-width: 900px) 92vw, 720px"
-                quality={80}
                 priority={i === 0}
               />
             </div>

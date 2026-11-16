@@ -34,6 +34,50 @@ type FillImageProps = Omit<ImageProps, "fill" | "width" | "height"> & {
   alt: string;
 };
 
+type PlainFillCoverProps = {
+  src: string;
+  alt: string;
+  className?: string;
+  priority?: boolean;
+  loading?: "lazy" | "eager";
+  objectPosition?: string;
+};
+
+/**
+ * Cover fill for salone /assets photos — plain <img>, not /_next/image.
+ * Avoids optimizer Content-Disposition:attachment and Host/cache failures
+ * that show as a broken gallery icon for users.
+ */
+export function PlainFillCoverImage({
+  src,
+  alt,
+  className,
+  priority,
+  loading,
+  objectPosition = "center",
+}: PlainFillCoverProps) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- salone gallery must not depend on image optimizer
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      decoding="async"
+      {...(priority
+        ? { fetchPriority: "high" as const }
+        : { loading: (loading ?? "lazy") as "lazy" | "eager" })}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        objectPosition,
+      }}
+    />
+  );
+}
+
 /** Cover image for fixed-aspect containers (gallery, hero background). */
 export function FillCoverImage({
   alt,

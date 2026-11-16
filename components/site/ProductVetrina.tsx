@@ -1,4 +1,4 @@
-import { FillCoverImage } from "@/components/site/SiteImage";
+import { FillCoverImage, PlainFillCoverImage } from "@/components/site/SiteImage";
 import { PRODUCTS, productOrderMessage } from "@/lib/products";
 import { SALON_PRODUCTS_SHELF } from "@/lib/salon-photos";
 import { getWhatsAppUrl } from "@/lib/site-config";
@@ -13,11 +13,9 @@ export function ProductVetrina() {
         WhatsApp per prezzi e disponibilità.
       </p>
       <div className="product-vetrina-banner reveal reveal-d2" aria-hidden={false}>
-        <FillCoverImage
+        <PlainFillCoverImage
           src={SALON_PRODUCTS_SHELF.src}
           alt={SALON_PRODUCTS_SHELF.alt}
-          sizes="(max-width: 900px) 100vw, 900px"
-          quality={80}
         />
       </div>
       <div className="products-vetrina-grid">
