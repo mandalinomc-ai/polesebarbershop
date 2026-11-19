@@ -43,21 +43,64 @@ function rowToBlock(row: BlockRow): CalendarBlock {
   };
 }
 
-/** Config lunch + DB custom blocks. Falls back to config-only if table missing. */
+const BLOCKS_CACHE_TTL_MS = 3_000;
+let blocksCache: { at: number; blocks: CalendarBlock[] } | null = null;
+
+/** Drop short-lived merged-blocks cache (admin writes / tests). */
+export function invalidateMergedCalendarBlocksCache() {
+  blocksCache = null;
+}
+
+/** Lunch from shop_hours (or CONFIG defaults) + DB custom blocks. */
 export async function loadMergedCalendarBlocks(): Promise<CalendarBlock[]> {
-  if (!isSupabaseConfigured()) return [...CONFIG_CALENDAR_BLOCKS];
+  if (blocksCache && Date.now() - blocksCache.at < BLOCKS_CACHE_TTL_MS) {
+    return blocksCache.blocks;
+  }
+  const {
+    loadShopHours,
+    lunchBlocksFromHours,
+    SHOP_HOURS_BLOCK_LABEL,
+  } = await import("@/lib/runtime-shop-hours");
+  const hours = await loadShopHours();
+  const lunch = lunchBlocksFromHours(hours.days);
+
+  if (!isSupabaseConfigured()) {
+    const blocks = lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
+    blocksCache = { at: Date.now(), blocks };
+    return blocks;
+  }
   const db = getSupabaseAdmin();
-  if (!db) return [...CONFIG_CALENDAR_BLOCKS];
+  if (!db) {
+    const blocks = lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
+    blocksCache = { at: Date.now(), blocks };
+    return blocks;
+  }
   try {
     const { data, error } = await db
       .from("calendar_blocks")
       .select("id, block_date, weekday, barber_id, start_time, end_time, kind, label")
       .order("created_at", { ascending: true });
-    if (error || !data) return [...CONFIG_CALENDAR_BLOCKS];
-    const fromDb = (data as BlockRow[]).map(rowToBlock);
-    return [...CONFIG_CALENDAR_BLOCKS, ...fromDb];
+    if (error || !data) {
+      const blocks = lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
+      blocksCache = { at: Date.now(), blocks };
+      return blocks;
+    }
+    const fromDb = (data as BlockRow[])
+      .map(rowToBlock)
+      // Drop metadata open-hours rows + DB lunch that would duplicate shop_hours lunch
+      .filter(
+        (b) =>
+          b.label !== SHOP_HOURS_BLOCK_LABEL &&
+          !(b.kind === "lunch" && b.weekday != null && !b.date),
+      );
+    const base = lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
+    const blocks = [...base, ...fromDb];
+    blocksCache = { at: Date.now(), blocks };
+    return blocks;
   } catch {
-    return [...CONFIG_CALENDAR_BLOCKS];
+    const blocks = lunch.length ? lunch : [...CONFIG_CALENDAR_BLOCKS];
+    blocksCache = { at: Date.now(), blocks };
+    return blocks;
   }
 }
 
@@ -114,6 +157,7 @@ export async function insertCalendarBlock(input: {
           : error?.message || "Impossibile salvare il blocco.",
     };
   }
+  invalidateMergedCalendarBlocksCache();
   return { ok: true, block: rowToBlock(data as BlockRow) };
 }
 
@@ -127,6 +171,7 @@ export async function deleteCalendarBlock(
   if (!db) return { ok: false, error: "Database non collegato." };
   const { error } = await db.from("calendar_blocks").delete().eq("id", id);
   if (error) return { ok: false, error: error.message || "Eliminazione non riuscita." };
+  invalidateMergedCalendarBlocksCache();
   return { ok: true };
 }
 

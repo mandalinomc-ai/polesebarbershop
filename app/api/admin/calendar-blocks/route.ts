@@ -4,8 +4,10 @@ import { isAdminRequest } from "@/lib/admin-auth";
 import {
   deleteCalendarBlock,
   insertCalendarBlock,
-  listDbCalendarBlocks,
+  loadMergedCalendarBlocks,
 } from "@/lib/calendar-blocks-db";
+import { revalidateBookingPaths } from "@/lib/revalidate-booking";
+import { warmShopHoursCache } from "@/lib/runtime-shop-hours";
 import { flattenZodError } from "@/lib/validations";
 
 export const runtime = "nodejs";
@@ -24,7 +26,8 @@ export async function GET() {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: "Non autorizzato." }, { status: 401 });
   }
-  const blocks = await listDbCalendarBlocks();
+  await warmShopHoursCache();
+  const blocks = await loadMergedCalendarBlocks();
   return NextResponse.json({ blocks });
 }
 
@@ -53,6 +56,7 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 503 });
   }
+  revalidateBookingPaths();
   return NextResponse.json({ ok: true, block: result.block });
 }
 
@@ -69,5 +73,6 @@ export async function DELETE(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
+  revalidateBookingPaths();
   return NextResponse.json({ ok: true });
 }

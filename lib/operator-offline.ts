@@ -1,5 +1,6 @@
 import { SHOP_HOURS, getBarber, getRealBarbers } from "@/lib/catalog";
 import type { CalendarBlock } from "@/lib/booking/calendar-blocks";
+import { getRuntimeShopHoursMap } from "@/lib/runtime-shop-hours";
 
 /** Stable label stored on calendar_blocks for full-day operator offline. */
 export const OPERATOR_OFFLINE_LABEL = "Operatore offline";
@@ -11,6 +12,8 @@ export function isRealOperatorId(barberId: string): boolean {
 
 export function shopHoursForDate(date: string): { open: string; close: string } | null {
   const wd = new Date(`${date}T12:00:00`).getDay();
+  const runtime = getRuntimeShopHoursMap()[wd];
+  if (runtime !== undefined) return runtime;
   return SHOP_HOURS[wd] ?? null;
 }
 

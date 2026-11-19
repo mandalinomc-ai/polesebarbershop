@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import {
   Header,
   Footer,
@@ -11,17 +12,19 @@ import { MicroMotion } from "@/components/site/MicroMotion";
 import { ScissorsIntro } from "@/components/site/ScissorsIntro";
 import { SiteShell } from "@/components/site/SiteShell";
 import { IS_COMING_SOON } from "@/lib/site-config";
-
+import { isCanonicalHost, requestHost } from "@/lib/canonical-host";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
-export default function HomePage() {
-  if (IS_COMING_SOON) {
+export default async function HomePage() {
+  const host = requestHost(await headers());
+  const onLegacyHost = !isCanonicalHost(host);
+
+  // Vercel / old URLs → social offline + link to .it (avoid client confusion).
+  if (onLegacyHost || IS_COMING_SOON) {
     return (
       <SiteShell>
-        <ComingSoon />
-        <SiteFabs />
+        <ComingSoon showMovedNotice={onLegacyHost} />
         <ClientEffects />
         <MicroMotion />
       </SiteShell>

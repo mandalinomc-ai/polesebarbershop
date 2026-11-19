@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import {
   BarChart3,
   CalendarDays,
+  Clock,
   History,
   LayoutDashboard,
   LogOut,
@@ -17,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { CrmNotificationBell } from "@/components/gestionale/CrmNotificationBell";
+import { HoursAdminPanel, type OutsideHoursAppt } from "@/components/gestionale/HoursAdminPanel";
 import { ServicesAdminPanel } from "@/components/gestionale/ServicesAdminPanel";
 import { TeamAdminPanel } from "@/components/gestionale/TeamAdminPanel";
 import { getRealBarbers, SERVICES, formatPrice, totalsForServices, setRuntimeBarbersOverlay, SHOP_HOURS, type Barber } from "@/lib/catalog";
@@ -28,7 +30,7 @@ import {
   OCCUPANCY_STEP_MINUTES,
   wallTimeToUtc,
 } from "@/lib/availability";
-import { BOOKING_BUFFER_MINUTES, CONFIG_CALENDAR_BLOCKS, type CalendarBlock } from "@/lib/booking";
+import { BOOKING_BUFFER_MINUTES, type CalendarBlock } from "@/lib/booking";
 import {
   formatAgendaBlockLabel,
   formatFreeSlotLabel,
@@ -41,6 +43,7 @@ import {
 } from "@/lib/gestionale/agenda-block";
 import { SITE } from "@/lib/site-config";
 import { SiteLogo } from "@/components/site/SiteImage";
+import { notifyAgendaChanged } from "@/lib/booking-live-sync";
 import { formatEuroCents, type ClientRecord, type CrmStats, type StatsPeriod } from "@/lib/crm";
 import {
   NOTIFY_TEMPLATE_LABEL,
@@ -50,7 +53,15 @@ import {
   type NotifyTemplate,
 } from "@/lib/crm-notify";
 
-type Tab = "dashboard" | "agenda" | "listino" | "team" | "clienti" | "statistiche" | "storico";
+type Tab =
+  | "dashboard"
+  | "agenda"
+  | "listino"
+  | "orari"
+  | "team"
+  | "clienti"
+  | "statistiche"
+  | "storico";
 
 type AdminAppt = {
   id: string;
@@ -107,12 +118,26 @@ type HistoryAppt = {
 const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "agenda", label: "Agenda", icon: CalendarDays },
+  { id: "orari", label: "Orari", icon: Clock },
   { id: "listino", label: "Listino", icon: Scissors },
   { id: "team", label: "Team", icon: Users },
   { id: "clienti", label: "Clienti", icon: Users },
   { id: "statistiche", label: "Statistiche", icon: BarChart3 },
   { id: "storico", label: "Storico", icon: History },
 ];
+
+const TAB_IDS = new Set<Tab>(TABS.map((t) => t.id));
+
+function tabFromSearch(): Tab | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = new URLSearchParams(window.location.search).get("tab");
+    if (raw && TAB_IDS.has(raw as Tab)) return raw as Tab;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
 
 const STATUS_IT: Record<string, string> = {
   pending: "Da confermare",
@@ -210,7 +235,7 @@ export function GestionalePanel() {
   const [password, setPassword] = useState("");
   const [auth, setAuth] = useState<"unknown" | "needed" | "ok">("unknown");
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() => tabFromSearch() || "dashboard");
   const [date, setDate] = useState(getFirstBookableDate());
   const [agenda, setAgenda] = useState<Agenda | null>(null);
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -229,6 +254,21 @@ export function GestionalePanel() {
   const [bellTick, setBellTick] = useState(0);
   const [offlineIds, setOfflineIds] = useState<string[]>([]);
   const [offlineBusy, setOfflineBusy] = useState<string | null>(null);
+  /** Bumps when runtime barbers overlay loads so offline UI sees the full team. */
+  const [teamTick, setTeamTick] = useState(0);
+  const realBarbers = useMemo(() => getRealBarbers(), [teamTick, tab, auth]);
+
+  const goToTab = useCallback((id: Tab) => {
+    setTab(id);
+    try {
+      const url = new URL(window.location.href);
+      if (id === "dashboard") url.searchParams.delete("tab");
+      else url.searchParams.set("tab", id);
+      window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const refreshOffline = useCallback(async () => {
     const res = await fetch(`/api/admin/operator-offline?date=${encodeURIComponent(date)}`);
@@ -271,6 +311,7 @@ export function GestionalePanel() {
           },
         ];
         setRuntimeBarbersOverlay(overlay);
+        if (!cancelled) setTeamTick((n) => n + 1);
       } catch {
         /* seed barbers */
       }
@@ -356,24 +397,60 @@ export function GestionalePanel() {
     }
   }, [loadAgenda, loadCrm, loadHistory]);
 
-  async function toggleOfflineDay(barberId: "felice") {
+  async function postOperatorOffline(barberId: string, offline: boolean): Promise<string | null> {
+    const res = await fetch("/api/admin/operator-offline", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, barberId, offline }),
+    });
+    const json = (await res.json()) as { error?: string };
+    if (!res.ok) {
+      return json.error || (offline ? "Impossibile mettere offline." : "Impossibile rimettere online.");
+    }
+    return null;
+  }
+
+  /** Toggle full-day offline for one real barber. */
+  async function toggleOfflineDay(barberId: string) {
     if (offlineBusy) return;
     setOfflineBusy(barberId);
     setError("");
     try {
       const offline = !offlineIds.includes(barberId);
-      const res = await fetch("/api/admin/operator-offline", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, barberId, offline }),
-      });
-      const json = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        setError(json.error || (offline ? "Impossibile mettere offline." : "Impossibile rimettere online."));
+      const err = await postOperatorOffline(barberId, offline);
+      if (err) {
+        setError(err);
         return;
       }
       await refreshOffline();
       await loadAgenda();
+      notifyAgendaChanged("operator-offline");
+    } finally {
+      setOfflineBusy(null);
+    }
+  }
+
+  /**
+   * Set offline/online for several barbers (e.g. «Entrambi»).
+   * Calls /api/admin/operator-offline once per selected id.
+   */
+  async function setOfflineForBarbers(barberIds: string[], offline: boolean) {
+    if (offlineBusy || barberIds.length === 0) return;
+    setOfflineBusy(barberIds.length > 1 ? "__all__" : barberIds[0]!);
+    setError("");
+    try {
+      for (const barberId of barberIds) {
+        const already = offlineIds.includes(barberId);
+        if (offline === already) continue;
+        const err = await postOperatorOffline(barberId, offline);
+        if (err) {
+          setError(err);
+          break;
+        }
+      }
+      await refreshOffline();
+      await loadAgenda();
+      notifyAgendaChanged("operator-offline");
     } finally {
       setOfflineBusy(null);
     }
@@ -406,7 +483,10 @@ export function GestionalePanel() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, ...body }),
     });
-    if (res.ok) void load();
+    if (res.ok) {
+      notifyAgendaChanged("appointment-patch");
+      void load();
+    }
   }
 
   /** Mark a specific half-hour as unavailable (blocks online booking for that chair). */
@@ -428,6 +508,7 @@ export function GestionalePanel() {
       setError(json.error || "Impossibile bloccare la fascia.");
       return;
     }
+    notifyAgendaChanged("block");
     void load();
   }
 
@@ -441,6 +522,7 @@ export function GestionalePanel() {
       setError(json.error || "Impossibile rendere disponibile la fascia.");
       return;
     }
+    notifyAgendaChanged("unblock");
     void load();
   }
 
@@ -520,7 +602,7 @@ export function GestionalePanel() {
                 key={t.id}
                 type="button"
                 className={tab === t.id ? "active" : ""}
-                onClick={() => setTab(t.id)}
+                onClick={() => goToTab(t.id)}
               >
                 <Icon size={18} aria-hidden />
                 {t.label}
@@ -552,7 +634,7 @@ export function GestionalePanel() {
               reloadToken={bellTick}
               onOpenAppointment={(d) => {
                 setDate(d);
-                setTab("agenda");
+                goToTab("agenda");
               }}
             />
             <input
@@ -563,25 +645,75 @@ export function GestionalePanel() {
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
-            <div className="offline-day-bar" aria-label="Stato giornata Felice">
-              {offlineIds.includes("felice") ? (
-                <button
-                  type="button"
-                  className="offline-day-btn is-on"
-                  disabled={offlineBusy === "felice"}
-                  onClick={() => void toggleOfflineDay("felice")}
-                >
-                  {offlineBusy === "felice" ? "…" : "Online intera giornata"}
-                </button>
+            <div className="offline-day-bar" aria-label="Offline intera giornata">
+              {realBarbers.length <= 1 ? (
+                (() => {
+                  const only = realBarbers[0]?.id || "felice";
+                  const off = offlineIds.includes(only);
+                  const busy = offlineBusy === only || offlineBusy === "__all__";
+                  return (
+                    <button
+                      type="button"
+                      className={`offline-day-btn${off ? " is-on" : ""}`}
+                      disabled={Boolean(offlineBusy)}
+                      onClick={() => void toggleOfflineDay(only)}
+                    >
+                      {busy ? "…" : off ? "Online intera giornata" : "Offline intera giornata"}
+                    </button>
+                  );
+                })()
               ) : (
-                <button
-                  type="button"
-                  className="offline-day-btn"
-                  disabled={offlineBusy === "felice"}
-                  onClick={() => void toggleOfflineDay("felice")}
-                >
-                  {offlineBusy === "felice" ? "…" : "Offline intera giornata"}
-                </button>
+                <>
+                  {realBarbers.map((b) => {
+                    const off = offlineIds.includes(b.id);
+                    const busy = offlineBusy === b.id || offlineBusy === "__all__";
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        className={`offline-day-btn${off ? " is-on" : ""}`}
+                        disabled={Boolean(offlineBusy)}
+                        title={
+                          off
+                            ? `Rimettere ${b.name} online per questa giornata`
+                            : `Mettere ${b.name} offline per l'intera giornata`
+                        }
+                        onClick={() => void toggleOfflineDay(b.id)}
+                      >
+                        {busy && offlineBusy === b.id
+                          ? "…"
+                          : off
+                            ? `Online ${b.name}`
+                            : `Offline ${b.name}`}
+                      </button>
+                    );
+                  })}
+                  {(() => {
+                    const ids = realBarbers.map((b) => b.id);
+                    const allOff = ids.every((id) => offlineIds.includes(id));
+                    const bothLabel = ids.length === 2 ? "Entrambi" : "Tutti";
+                    const busy = offlineBusy === "__all__";
+                    return (
+                      <button
+                        type="button"
+                        className={`offline-day-btn offline-day-btn-all${allOff ? " is-on" : ""}`}
+                        disabled={Boolean(offlineBusy)}
+                        title={
+                          allOff
+                            ? `Rimettere ${bothLabel.toLowerCase()} online`
+                            : `Mettere ${bothLabel.toLowerCase()} offline`
+                        }
+                        onClick={() => void setOfflineForBarbers(ids, !allOff)}
+                      >
+                        {busy
+                          ? "…"
+                          : allOff
+                            ? `Online ${bothLabel.toLowerCase()}`
+                            : `Offline ${bothLabel.toLowerCase()}`}
+                      </button>
+                    );
+                  })()}
+                </>
               )}
             </div>
             <button
@@ -618,8 +750,9 @@ export function GestionalePanel() {
             agenda={agenda}
             onOpenClient={(c) => {
               setSelected(c);
-              setTab("clienti");
+              goToTab("clienti");
             }}
+            onOpenOrari={() => goToTab("orari")}
           />
         ) : null}
         {tab === "agenda" ? (
@@ -632,6 +765,9 @@ export function GestionalePanel() {
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
+            offlineIds={offlineIds}
+            offlineBusy={offlineBusy}
+            onToggleOffline={(barberId) => void toggleOfflineDay(barberId)}
             onQuickWalkIn={(barberId, startTime) => {
               setWalkPreset({ barberId, startTime });
               setWalkOpen(true);
@@ -691,6 +827,33 @@ export function GestionalePanel() {
           </>
         ) : null}
         {tab === "listino" ? <ServicesAdminPanel /> : null}
+        {tab === "orari" ? (
+          <HoursAdminPanel
+            onReschedule={(a: OutsideHoursAppt) => {
+              const day = (a.startsAt || "").slice(0, 10);
+              if (day) setDate(day);
+              setMoveAppt({
+                id: a.id,
+                status: "confirmed",
+                barberId: a.barberId,
+                barberName: a.barberName,
+                serviceNames: a.serviceNames,
+                firstName: a.firstName,
+                lastName: a.lastName,
+                phone: a.phone,
+                email: a.email,
+                timeLabel: a.timeLabel,
+                durationMin: a.durationMin,
+                durationOverrideMin: a.durationOverrideMin,
+                effectiveDurationMin: a.effectiveDurationMin,
+                priceCents: 0,
+                isWalkIn: false,
+                startsAt: a.startsAt,
+                endsAt: a.endsAt,
+              });
+            }}
+          />
+        ) : null}
         {tab === "team" ? <TeamAdminPanel /> : null}
         {tab === "clienti" ? (
           <ClientiView
@@ -740,6 +903,7 @@ export function GestionalePanel() {
                 return false;
               }
               setError("");
+              notifyAgendaChanged("appointment-delete");
               await loadHistory();
               await loadCrm();
               await loadAgenda();
@@ -749,7 +913,7 @@ export function GestionalePanel() {
         ) : null}
       </div>
 
-      <CrmBottomNav tab={tab} onTab={setTab} />
+      <CrmBottomNav tab={tab} onTab={goToTab} />
 
       {walkOpen ? (
         <WalkInModal
@@ -764,6 +928,7 @@ export function GestionalePanel() {
           onSaved={() => {
             setWalkOpen(false);
             setWalkPreset(null);
+            notifyAgendaChanged("walk-in");
             void load();
           }}
         />
@@ -777,6 +942,7 @@ export function GestionalePanel() {
           onClose={() => setMoveAppt(null)}
           onSaved={() => {
             setMoveAppt(null);
+            notifyAgendaChanged("move");
             void load();
           }}
         />
@@ -801,12 +967,14 @@ function DashboardView({
   date,
   agenda,
   onOpenClient,
+  onOpenOrari,
 }: {
   stats: CrmStats | null;
   clients: ClientRecord[];
   date: string;
   agenda: Agenda | null;
   onOpenClient: (c: ClientRecord) => void;
+  onOpenOrari: () => void;
 }) {
   const recent = clients.slice(0, 6);
   const todayAppts = (agenda?.appointments || []).filter((a) => a.status !== "cancelled");
@@ -817,6 +985,15 @@ function DashboardView({
     .slice(0, 5);
   return (
     <div className="crm-stack">
+      <section className="crm-orari-shortcut" aria-label="Orari salone">
+        <div>
+          <h2 className="font-serif">Orari del salone</h2>
+          <p className="slot-status">Apertura, chiusura e pausa pranzo — aggiornano subito sito e prenotazioni.</p>
+        </div>
+        <button type="button" className="btn btn-gold" onClick={onOpenOrari}>
+          <Clock size={16} aria-hidden /> Apri Orari
+        </button>
+      </section>
       <section className="crm-kpis">
         <Kpi label="Oggi in agenda" value={String(stats?.todayAppointments ?? todayAppts.length)} hint={formatItalianDate(date)} />
         <Kpi label="Prossimi" value={String(stats?.upcomingCount ?? 0)} hint="Appuntamenti futuri confermati" />
@@ -929,6 +1106,9 @@ function AgendaView({
   onQuickWalkIn,
   onQuickBlock,
   onQuickUnblock,
+  offlineIds,
+  offlineBusy,
+  onToggleOffline,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -940,6 +1120,9 @@ function AgendaView({
   onQuickWalkIn: (barberId: string, startTime: string) => void;
   onQuickBlock: (barberId: string, startTime: string) => void;
   onQuickUnblock: (blockId: string) => void;
+  offlineIds: string[];
+  offlineBusy: string | null;
+  onToggleOffline: (barberId: string) => void;
 }) {
   const occupying = useMemo(
     () =>
@@ -982,11 +1165,11 @@ function AgendaView({
     };
   }, [date, agenda]);
   const occupancy = useMemo(() => {
-    const dayBlocks: CalendarBlock[] = calendarBlocks.filter((b) => b.date === date);
+    // calendarBlocks already includes shop lunch (weekday) + DB blocks from API
     return getOccupancyGrid({
       date,
       appointments: occupying,
-      calendarBlocks: [...CONFIG_CALENDAR_BLOCKS, ...dayBlocks],
+      calendarBlocks,
     });
   }, [date, occupying, calendarBlocks]);
   const byBarber = (id: string) => (agenda?.appointments || []).filter((a) => a.barberId === id);
@@ -1071,9 +1254,34 @@ function AgendaView({
               <thead>
                 <tr>
                   <th>Ora</th>
-                  {getRealBarbers().map((b) => (
-                    <th key={b.id}>{b.name}</th>
-                  ))}
+                  {getRealBarbers().map((b) => {
+                    const off = offlineIds.includes(b.id);
+                    const busy = offlineBusy === b.id || offlineBusy === "__all__";
+                    return (
+                      <th key={b.id}>
+                        <div className="occupancy-barber-head">
+                          <span>{b.name}</span>
+                          <button
+                            type="button"
+                            className={`operator-offline-btn${off ? " is-off" : ""}`}
+                            disabled={Boolean(offlineBusy)}
+                            title={
+                              off
+                                ? `Riattiva ${b.name} per questa giornata`
+                                : `${b.name} offline — blocca tutti gli orari oggi`
+                            }
+                            onClick={() => onToggleOffline(b.id)}
+                          >
+                            {busy && offlineBusy === b.id
+                              ? "…"
+                              : off
+                                ? "Offline giornata"
+                                : "Operatore offline"}
+                          </button>
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -1196,8 +1404,13 @@ function AgendaView({
       </section>
       <section className="agenda-columns">
         {getRealBarbers().map((b) => (
-          <div key={b.id} className="agenda-col">
-            <h2 className="font-serif">{b.name}</h2>
+          <div key={b.id} className={`agenda-col${offlineIds.includes(b.id) ? " is-offline-day" : ""}`}>
+            <h2 className="font-serif">
+              {b.name}
+              {offlineIds.includes(b.id) ? (
+                <span className="agenda-offline-badge">Offline giornata</span>
+              ) : null}
+            </h2>
             {byBarber(b.id).length === 0 ? (
               <p className="slot-status">Nessun appuntamento</p>
             ) : (
@@ -2114,11 +2327,24 @@ function WalkInModal({
   const [saving, setSaving] = useState(false);
   const [finding, setFinding] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [calendarBlocks, setCalendarBlocks] = useState<CalendarBlock[]>([]);
   const totals = useMemo(() => totalsForServices(SERVICES.filter((s) => serviceIds.includes(s.id))), [serviceIds]);
   const hasUnknownDuration = useMemo(
     () => SERVICES.some((s) => serviceIds.includes(s.id) && !s.durationKnown),
     [serviceIds],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch("/api/admin/calendar-blocks");
+      const json = (await res.json()) as { blocks?: CalendarBlock[] };
+      if (!cancelled && res.ok) setCalendarBlocks(json.blocks || []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
 
   const freeMinutes = useMemo(
     () =>
@@ -2134,8 +2360,9 @@ function WalkInModal({
           bufferTime: a.bufferTime,
           status: a.status,
         })),
+        calendarBlocks,
       }),
-    [appointments, barberId, date, startTime],
+    [appointments, barberId, calendarBlocks, date, startTime],
   );
 
   const effectiveServiceMin = useMemo(() => {

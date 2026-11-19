@@ -39,10 +39,18 @@ sudo bash scripts/vps-bootstrap.sh
 
 ```bash
 cd /var/www/felice-polese
+# Preferito: ripristina HTTPS dopo git reset e ricostruisce l'app
+sudo bash scripts/vps-deploy.sh main
+
+# Manuale (attenzione: non fare solo git reset su nginx.active.conf)
 git fetch origin && git pull --ff-only
-docker compose down && docker compose up -d --build
+cp deploy/nginx.conf deploy/nginx.active.conf   # obbligatorio se i cert esistono
+docker compose up -d --build app
+docker compose exec -T nginx nginx -s reload
 docker compose ps
 ```
+
+**Dominio produzione:** solo `https://felicepolesebarbershop.it` (non usare `*.vercel.app`).
 
 ## Cron keep-alive (sostituisce Vercel Cron)
 
