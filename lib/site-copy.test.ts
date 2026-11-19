@@ -239,6 +239,9 @@ describe("public copy vs official identity", () => {
     expect(crm).toMatch(/Offline intera giornata/);
     expect(crm).toMatch(/Online intera giornata/);
     expect(crm).toMatch(/Impossibile rimettere online/);
+    expect(crm).toMatch(/setOfflineForBarbers/);
+    expect(crm).toMatch(/Offline entrambi|Offline Tutti|Offline \$\{bothLabel/);
+    expect(crm).toMatch(/operator-offline-btn|Offline giornata/);
     expect(crm).not.toMatch(/Davide Offline/);
     expect(crm).toMatch(/Da confermare/);
     expect(crm).toMatch(/Scegli orario/);

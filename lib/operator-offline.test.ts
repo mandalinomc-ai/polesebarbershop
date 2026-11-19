@@ -33,6 +33,33 @@ describe("operator offline", () => {
     ]);
   });
 
+  it("tracks per-barber offline independently when multiple operators are off", () => {
+    const blocks = [
+      {
+        id: "1",
+        date: "2026-09-15",
+        barberId: "felice",
+        start: "09:00",
+        end: "19:00",
+        kind: "closed" as const,
+        label: OPERATOR_OFFLINE_LABEL,
+      },
+      {
+        id: "2",
+        date: "2026-09-15",
+        barberId: "marco",
+        start: "09:00",
+        end: "19:00",
+        kind: "closed" as const,
+        label: OPERATOR_OFFLINE_LABEL,
+      },
+    ];
+    expect(isBarberOfflineOnDate(blocks, "2026-09-15", "felice")).toBe(true);
+    expect(isBarberOfflineOnDate(blocks, "2026-09-15", "marco")).toBe(true);
+    expect(isOperatorOfflineBlock(blocks[1]!, "2026-09-15", "felice")).toBe(false);
+    expect(isOperatorOfflineBlock(blocks[0]!, "2026-09-15", "marco")).toBe(false);
+  });
+
   it("does not treat Non disponibile half-hours as day offline", () => {
     const date = "2026-10-06"; // Tue
     const blocks = [

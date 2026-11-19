@@ -2244,8 +2244,10 @@ body:has(#booking-wizard:focus-within) .fab-stack {
 }
 .offline-day-bar {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
+  max-width: min(100%, 28rem);
 }
 .offline-day-btn {
   appearance: none;
@@ -2257,19 +2259,62 @@ body:has(#booking-wizard:focus-within) .fab-stack {
   padding: 0.4rem 0.7rem;
   cursor: pointer;
 }
-.offline-day-btn.is-off {
-  background: var(--ink);
-  color: var(--white);
-  border-color: var(--ink);
-}
+.offline-day-btn.is-off,
 .offline-day-btn.is-on {
   background: var(--ink);
   color: var(--white);
   border-color: var(--ink);
 }
+.offline-day-btn-all {
+  border-style: dashed;
+}
 .offline-day-btn:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+.occupancy-barber-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.operator-offline-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--smoke);
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.45rem;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.operator-offline-btn.is-off {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+.operator-offline-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.agenda-offline-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--smoke);
+  border: 1px solid var(--line);
+  padding: 0.15rem 0.4rem;
+  vertical-align: middle;
+}
+.agenda-col.is-offline-day {
+  opacity: 0.85;
+  background: #f3f1ed;
 }
 .occupancy-table td.free { background: var(--white); color: var(--smoke); }
 .agenda-columns { display: grid; gap: 1rem; }

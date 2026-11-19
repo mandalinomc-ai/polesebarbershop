@@ -254,6 +254,9 @@ export function GestionalePanel() {
   const [bellTick, setBellTick] = useState(0);
   const [offlineIds, setOfflineIds] = useState<string[]>([]);
   const [offlineBusy, setOfflineBusy] = useState<string | null>(null);
+  /** Bumps when runtime barbers overlay loads so offline UI sees the full team. */
+  const [teamTick, setTeamTick] = useState(0);
+  const realBarbers = useMemo(() => getRealBarbers(), [teamTick, tab, auth]);
 
   const goToTab = useCallback((id: Tab) => {
     setTab(id);
@@ -308,6 +311,7 @@ export function GestionalePanel() {
           },
         ];
         setRuntimeBarbersOverlay(overlay);
+        if (!cancelled) setTeamTick((n) => n + 1);
       } catch {
         /* seed barbers */
       }
@@ -393,21 +397,56 @@ export function GestionalePanel() {
     }
   }, [loadAgenda, loadCrm, loadHistory]);
 
-  async function toggleOfflineDay(barberId: "felice") {
+  async function postOperatorOffline(barberId: string, offline: boolean): Promise<string | null> {
+    const res = await fetch("/api/admin/operator-offline", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, barberId, offline }),
+    });
+    const json = (await res.json()) as { error?: string };
+    if (!res.ok) {
+      return json.error || (offline ? "Impossibile mettere offline." : "Impossibile rimettere online.");
+    }
+    return null;
+  }
+
+  /** Toggle full-day offline for one real barber. */
+  async function toggleOfflineDay(barberId: string) {
     if (offlineBusy) return;
     setOfflineBusy(barberId);
     setError("");
     try {
       const offline = !offlineIds.includes(barberId);
-      const res = await fetch("/api/admin/operator-offline", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, barberId, offline }),
-      });
-      const json = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        setError(json.error || (offline ? "Impossibile mettere offline." : "Impossibile rimettere online."));
+      const err = await postOperatorOffline(barberId, offline);
+      if (err) {
+        setError(err);
         return;
+      }
+      await refreshOffline();
+      await loadAgenda();
+      notifyAgendaChanged("operator-offline");
+    } finally {
+      setOfflineBusy(null);
+    }
+  }
+
+  /**
+   * Set offline/online for several barbers (e.g. «Entrambi»).
+   * Calls /api/admin/operator-offline once per selected id.
+   */
+  async function setOfflineForBarbers(barberIds: string[], offline: boolean) {
+    if (offlineBusy || barberIds.length === 0) return;
+    setOfflineBusy(barberIds.length > 1 ? "__all__" : barberIds[0]!);
+    setError("");
+    try {
+      for (const barberId of barberIds) {
+        const already = offlineIds.includes(barberId);
+        if (offline === already) continue;
+        const err = await postOperatorOffline(barberId, offline);
+        if (err) {
+          setError(err);
+          break;
+        }
       }
       await refreshOffline();
       await loadAgenda();
@@ -606,25 +645,75 @@ export function GestionalePanel() {
               onChange={(e) => setDate(e.target.value)}
               aria-label="Data agenda"
             />
-            <div className="offline-day-bar" aria-label="Stato giornata Felice">
-              {offlineIds.includes("felice") ? (
-                <button
-                  type="button"
-                  className="offline-day-btn is-on"
-                  disabled={offlineBusy === "felice"}
-                  onClick={() => void toggleOfflineDay("felice")}
-                >
-                  {offlineBusy === "felice" ? "…" : "Online intera giornata"}
-                </button>
+            <div className="offline-day-bar" aria-label="Offline intera giornata">
+              {realBarbers.length <= 1 ? (
+                (() => {
+                  const only = realBarbers[0]?.id || "felice";
+                  const off = offlineIds.includes(only);
+                  const busy = offlineBusy === only || offlineBusy === "__all__";
+                  return (
+                    <button
+                      type="button"
+                      className={`offline-day-btn${off ? " is-on" : ""}`}
+                      disabled={Boolean(offlineBusy)}
+                      onClick={() => void toggleOfflineDay(only)}
+                    >
+                      {busy ? "…" : off ? "Online intera giornata" : "Offline intera giornata"}
+                    </button>
+                  );
+                })()
               ) : (
-                <button
-                  type="button"
-                  className="offline-day-btn"
-                  disabled={offlineBusy === "felice"}
-                  onClick={() => void toggleOfflineDay("felice")}
-                >
-                  {offlineBusy === "felice" ? "…" : "Offline intera giornata"}
-                </button>
+                <>
+                  {realBarbers.map((b) => {
+                    const off = offlineIds.includes(b.id);
+                    const busy = offlineBusy === b.id || offlineBusy === "__all__";
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        className={`offline-day-btn${off ? " is-on" : ""}`}
+                        disabled={Boolean(offlineBusy)}
+                        title={
+                          off
+                            ? `Rimettere ${b.name} online per questa giornata`
+                            : `Mettere ${b.name} offline per l'intera giornata`
+                        }
+                        onClick={() => void toggleOfflineDay(b.id)}
+                      >
+                        {busy && offlineBusy === b.id
+                          ? "…"
+                          : off
+                            ? `Online ${b.name}`
+                            : `Offline ${b.name}`}
+                      </button>
+                    );
+                  })}
+                  {(() => {
+                    const ids = realBarbers.map((b) => b.id);
+                    const allOff = ids.every((id) => offlineIds.includes(id));
+                    const bothLabel = ids.length === 2 ? "Entrambi" : "Tutti";
+                    const busy = offlineBusy === "__all__";
+                    return (
+                      <button
+                        type="button"
+                        className={`offline-day-btn offline-day-btn-all${allOff ? " is-on" : ""}`}
+                        disabled={Boolean(offlineBusy)}
+                        title={
+                          allOff
+                            ? `Rimettere ${bothLabel.toLowerCase()} online`
+                            : `Mettere ${bothLabel.toLowerCase()} offline`
+                        }
+                        onClick={() => void setOfflineForBarbers(ids, !allOff)}
+                      >
+                        {busy
+                          ? "…"
+                          : allOff
+                            ? `Online ${bothLabel.toLowerCase()}`
+                            : `Offline ${bothLabel.toLowerCase()}`}
+                      </button>
+                    );
+                  })()}
+                </>
               )}
             </div>
             <button
@@ -676,6 +765,9 @@ export function GestionalePanel() {
             onViewChange={setAgendaView}
             onPatch={patch}
             onMove={setMoveAppt}
+            offlineIds={offlineIds}
+            offlineBusy={offlineBusy}
+            onToggleOffline={(barberId) => void toggleOfflineDay(barberId)}
             onQuickWalkIn={(barberId, startTime) => {
               setWalkPreset({ barberId, startTime });
               setWalkOpen(true);
@@ -1014,6 +1106,9 @@ function AgendaView({
   onQuickWalkIn,
   onQuickBlock,
   onQuickUnblock,
+  offlineIds,
+  offlineBusy,
+  onToggleOffline,
 }: {
   agenda: Agenda | null;
   date: string;
@@ -1025,6 +1120,9 @@ function AgendaView({
   onQuickWalkIn: (barberId: string, startTime: string) => void;
   onQuickBlock: (barberId: string, startTime: string) => void;
   onQuickUnblock: (blockId: string) => void;
+  offlineIds: string[];
+  offlineBusy: string | null;
+  onToggleOffline: (barberId: string) => void;
 }) {
   const occupying = useMemo(
     () =>
@@ -1156,9 +1254,34 @@ function AgendaView({
               <thead>
                 <tr>
                   <th>Ora</th>
-                  {getRealBarbers().map((b) => (
-                    <th key={b.id}>{b.name}</th>
-                  ))}
+                  {getRealBarbers().map((b) => {
+                    const off = offlineIds.includes(b.id);
+                    const busy = offlineBusy === b.id || offlineBusy === "__all__";
+                    return (
+                      <th key={b.id}>
+                        <div className="occupancy-barber-head">
+                          <span>{b.name}</span>
+                          <button
+                            type="button"
+                            className={`operator-offline-btn${off ? " is-off" : ""}`}
+                            disabled={Boolean(offlineBusy)}
+                            title={
+                              off
+                                ? `Riattiva ${b.name} per questa giornata`
+                                : `${b.name} offline — blocca tutti gli orari oggi`
+                            }
+                            onClick={() => onToggleOffline(b.id)}
+                          >
+                            {busy && offlineBusy === b.id
+                              ? "…"
+                              : off
+                                ? "Offline giornata"
+                                : "Operatore offline"}
+                          </button>
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -1281,8 +1404,13 @@ function AgendaView({
       </section>
       <section className="agenda-columns">
         {getRealBarbers().map((b) => (
-          <div key={b.id} className="agenda-col">
-            <h2 className="font-serif">{b.name}</h2>
+          <div key={b.id} className={`agenda-col${offlineIds.includes(b.id) ? " is-offline-day" : ""}`}>
+            <h2 className="font-serif">
+              {b.name}
+              {offlineIds.includes(b.id) ? (
+                <span className="agenda-offline-badge">Offline giornata</span>
+              ) : null}
+            </h2>
             {byBarber(b.id).length === 0 ? (
               <p className="slot-status">Nessun appuntamento</p>
             ) : (
